@@ -1,0 +1,14 @@
+# إعدادات نشر خُطى على Netlify
+# هذا الملف يخبر Netlify أين يجد ملفات الموقع وأين يجد الدوال الوسيطة (Functions)
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# رؤوس أمان إضافية بسيطة (لا تؤثر على عمل الموقع، تحسّن فقط سلوك المتصفح الأمني الافتراضي)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
