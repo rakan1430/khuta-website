@@ -1,0 +1,37 @@
+{
+  "lastUpdated": "18 يوليو 2026",
+  "ehab": {
+    "totalSections": 215,
+    "minutesPerSection": 7
+  },
+  "monsif": {
+    "totalBanks": 120,
+    "questionsPerBankLabel": "48-50",
+    "minutesPerBank": 50
+  },
+  "mufakkirSections": {
+    "total": 90,
+    "questionsPerSectionLabel": "11",
+    "minutesPerSection": 30
+  },
+  "mufakkirRepeated": {
+    "total": 814,
+    "minutesPer10Questions": 30
+  },
+  "moasserFoundation": {
+    "days": 30,
+    "pagesPerDay": 8,
+    "edition": "الإصدار 2026"
+  },
+  "moasserTraining": {
+    "totalBanks": 120,
+    "questionsPerBankLabel": "43-47",
+    "minutesPerBank": 50
+  },
+  "einstein": {
+    "totalVideos": 57,
+    "reviewVideos": 9,
+    "minutesPerVideo": 60,
+    "outdatedNotice": true
+  }
+}

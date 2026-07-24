@@ -1,0 +1,442 @@
+[
+  {
+    "id": "medicine",
+    "icon": "fa-user-doctor",
+    "track": "science",
+    "ar": {
+      "name": "الطب البشري",
+      "desc": "دراسة تشخيص وعلاج الأمراض، 6 سنوات + امتياز.",
+      "career": "طبيب عام أو أخصائي بعد التدريب.",
+      "note": "من أعلى التخصصات تنافسية؛ يتطلب STEP في أغلب الجامعات.",
+      "branches": [
+        "الطب الباطني",
+        "الجراحة",
+        "طب الأطفال",
+        "النساء والولادة",
+        "الطب النفسي",
+        "طب الطوارئ"
+      ],
+      "universities": [
+        "جامعة الملك سعود",
+        "جامعة الملك عبدالعزيز",
+        "جامعة الملك سعود بن عبدالعزيز للعلوم الصحية",
+        "جامعة الملك فيصل"
+      ]
+    },
+    "en": {
+      "name": "Medicine",
+      "desc": "Diagnosing and treating illness, 6 years + internship.",
+      "career": "General practitioner or specialist after training.",
+      "note": "One of the most competitive majors; STEP is required at most universities.",
+      "branches": [
+        "Internal Medicine",
+        "Surgery",
+        "Pediatrics",
+        "OB/GYN",
+        "Psychiatry",
+        "Emergency Medicine"
+      ],
+      "universities": [
+        "King Saud University",
+        "King Abdulaziz University",
+        "KSAU-HS",
+        "King Faisal University"
+      ]
+    }
+  },
+  {
+    "id": "dentistry",
+    "icon": "fa-tooth",
+    "track": "science",
+    "ar": {
+      "name": "طب الأسنان",
+      "desc": "دراسة صحة الفم والأسنان وعلاجها جراحياً وتحفظياً.",
+      "career": "طبيب أسنان عام أو أخصائي.",
+      "note": "تنافسية عالية، غالباً تتطلب STEP."
+    },
+    "en": {
+      "name": "Dentistry",
+      "desc": "Oral and dental health, surgical and conservative treatment.",
+      "career": "General or specialist dentist.",
+      "note": "Highly competitive, usually requires STEP."
+    }
+  },
+  {
+    "id": "pharmacy",
+    "icon": "fa-pills",
+    "track": "science",
+    "ar": {
+      "name": "الصيدلة",
+      "desc": "دراسة الأدوية وتركيبها وتأثيرها العلاجي.",
+      "career": "صيدلي في مستشفى، صيدلية، أو صناعة دوائية.",
+      "note": "تنافسية عالية جداً."
+    },
+    "en": {
+      "name": "Pharmacy",
+      "desc": "Study of drugs, formulation, and therapeutic effects.",
+      "career": "Pharmacist in hospitals, pharmacies, or the pharma industry.",
+      "note": "Very competitive."
+    }
+  },
+  {
+    "id": "engineering_cs",
+    "icon": "fa-microchip",
+    "track": "science",
+    "ar": {
+      "name": "هندسة/علوم الحاسب",
+      "desc": "برمجة، خوارزميات، أنظمة، وذكاء اصطناعي.",
+      "career": "مطوّر برمجيات، مهندس بيانات، أمن سيبراني.",
+      "note": "طلب سوقي مرتفع جداً حالياً.",
+      "branches": [
+        "الذكاء الاصطناعي وتعلم الآلة",
+        "أمن المعلومات",
+        "هندسة البرمجيات",
+        "علم البيانات",
+        "الشبكات وأنظمة التشغيل"
+      ],
+      "universities": [
+        "جامعة الملك فهد للبترول والمعادن",
+        "جامعة الملك سعود",
+        "جامعة الملك عبدالعزيز",
+        "جامعة الأميرة نورة"
+      ]
+    },
+    "en": {
+      "name": "Computer Science/Engineering",
+      "desc": "Programming, algorithms, systems, and AI.",
+      "career": "Software developer, data engineer, cybersecurity.",
+      "note": "Very high market demand currently.",
+      "branches": [
+        "AI & Machine Learning",
+        "Cybersecurity",
+        "Software Engineering",
+        "Data Science",
+        "Networks & OS"
+      ],
+      "universities": [
+        "KFUPM",
+        "King Saud University",
+        "King Abdulaziz University",
+        "Princess Nourah University"
+      ]
+    }
+  },
+  {
+    "id": "engineering_civil",
+    "icon": "fa-drafting-compass",
+    "track": "science",
+    "ar": {
+      "name": "الهندسة المدنية",
+      "desc": "تصميم وإنشاء الطرق والمباني والبنية التحتية.",
+      "career": "مهندس مواقع، استشاري إنشائي.",
+      "note": "طلب مستقر مرتبط بمشاريع البنية التحتية."
+    },
+    "en": {
+      "name": "Civil Engineering",
+      "desc": "Designing roads, buildings, and infrastructure.",
+      "career": "Site engineer, structural consultant.",
+      "note": "Steady demand tied to infrastructure projects."
+    }
+  },
+  {
+    "id": "business",
+    "icon": "fa-briefcase",
+    "track": "admin",
+    "ar": {
+      "name": "إدارة الأعمال",
+      "desc": "إدارة، تسويق، موارد بشرية، وريادة أعمال.",
+      "career": "مدير مشروع، مسوّق، رائد أعمال.",
+      "note": "تخصص واسع بفرص متنوعة.",
+      "branches": [
+        "التسويق",
+        "الموارد البشرية",
+        "إدارة المشاريع",
+        "ريادة الأعمال",
+        "الأعمال الدولية"
+      ],
+      "universities": [
+        "جامعة الملك سعود",
+        "جامعة الملك فهد للبترول والمعادن",
+        "جامعة الإمام محمد بن سعود"
+      ]
+    },
+    "en": {
+      "name": "Business Administration",
+      "desc": "Management, marketing, HR, entrepreneurship.",
+      "career": "Project manager, marketer, entrepreneur.",
+      "note": "Broad field with diverse opportunities.",
+      "branches": [
+        "Marketing",
+        "HR",
+        "Project Management",
+        "Entrepreneurship",
+        "International Business"
+      ],
+      "universities": [
+        "King Saud University",
+        "KFUPM",
+        "Imam Mohammad Ibn Saud University"
+      ]
+    }
+  },
+  {
+    "id": "accounting",
+    "icon": "fa-calculator",
+    "track": "admin",
+    "ar": {
+      "name": "المحاسبة",
+      "desc": "القياس والتقارير المالية والمراجعة.",
+      "career": "محاسب قانوني، مراجع داخلي، محلل مالي.",
+      "note": "طلب ثابت في كل القطاعات تقريباً."
+    },
+    "en": {
+      "name": "Accounting",
+      "desc": "Financial measurement, reporting, and auditing.",
+      "career": "Certified accountant, internal auditor, financial analyst.",
+      "note": "Steady demand across nearly all sectors."
+    }
+  },
+  {
+    "id": "finance",
+    "icon": "fa-chart-line",
+    "track": "admin",
+    "ar": {
+      "name": "التمويل والاستثمار",
+      "desc": "الأسواق المالية، إدارة المحافظ، والتحليل المالي.",
+      "career": "محلل مالي، مستشار استثمار.",
+      "note": "مرتبط بقطاع البنوك والأسواق المالية المتنامي."
+    },
+    "en": {
+      "name": "Finance & Investment",
+      "desc": "Financial markets, portfolio management, analysis.",
+      "career": "Financial analyst, investment advisor.",
+      "note": "Tied to the growing banking and capital-markets sector."
+    }
+  },
+  {
+    "id": "law",
+    "icon": "fa-scale-balanced",
+    "track": "humanities",
+    "ar": {
+      "name": "القانون",
+      "desc": "دراسة الأنظمة القانونية والتشريعات.",
+      "career": "محامٍ، مستشار قانوني، قاضٍ (بعد مسار مختص).",
+      "note": "يتطلب اجتياز اختبار الرخصة القانونية للممارسة.",
+      "branches": [
+        "القانون التجاري",
+        "القانون الجنائي",
+        "القانون الدولي",
+        "التحكيم التجاري"
+      ],
+      "universities": [
+        "جامعة الملك سعود",
+        "جامعة الإمام محمد بن سعود",
+        "جامعة الملك عبدالعزيز"
+      ]
+    },
+    "en": {
+      "name": "Law",
+      "desc": "Study of legal systems and legislation.",
+      "career": "Lawyer, legal consultant, judge (via a specialized path).",
+      "note": "Requires passing the legal licensing exam to practice.",
+      "branches": [
+        "Commercial Law",
+        "Criminal Law",
+        "International Law",
+        "Commercial Arbitration"
+      ],
+      "universities": [
+        "King Saud University",
+        "Imam Mohammad Ibn Saud University",
+        "King Abdulaziz University"
+      ]
+    }
+  },
+  {
+    "id": "sharia",
+    "icon": "fa-mosque",
+    "track": "humanities",
+    "ar": {
+      "name": "الشريعة والدراسات الإسلامية",
+      "desc": "الفقه، أصول الفقه، والدراسات الشرعية.",
+      "career": "قاضٍ شرعي، إمام وخطيب، باحث شرعي، تدريس.",
+      "note": "عادة لا تتطلب STEP؛ بعض الكليات تشترط اختبار تلاوة/حفظ."
+    },
+    "en": {
+      "name": "Sharia & Islamic Studies",
+      "desc": "Islamic jurisprudence and its foundations.",
+      "career": "Sharia judge, imam, researcher, teaching.",
+      "note": "Usually no STEP requirement; some colleges require a recitation/memorization test."
+    }
+  },
+  {
+    "id": "education",
+    "icon": "fa-chalkboard-user",
+    "track": "humanities",
+    "ar": {
+      "name": "التربية وطرق التدريس",
+      "desc": "إعداد معلمين لمختلف المراحل الدراسية.",
+      "career": "معلم، مشرف تربوي، أخصائي مناهج.",
+      "note": "طلب مستقر مرتبط بوزارة التعليم."
+    },
+    "en": {
+      "name": "Education",
+      "desc": "Preparing teachers for various school stages.",
+      "career": "Teacher, educational supervisor, curriculum specialist.",
+      "note": "Steady demand tied to the Ministry of Education."
+    }
+  },
+  {
+    "id": "arabic",
+    "icon": "fa-feather",
+    "track": "humanities",
+    "ar": {
+      "name": "اللغة العربية وآدابها",
+      "desc": "النحو، الأدب، البلاغة، واللسانيات.",
+      "career": "تدريس، تحرير، إعلام، ترجمة.",
+      "note": "عادة لا تتطلب STEP."
+    },
+    "en": {
+      "name": "Arabic Language & Literature",
+      "desc": "Grammar, literature, rhetoric, and linguistics.",
+      "career": "Teaching, editing, media, translation.",
+      "note": "Usually no STEP requirement."
+    }
+  },
+  {
+    "id": "english_translation",
+    "icon": "fa-language",
+    "track": "humanities",
+    "ar": {
+      "name": "اللغة الإنجليزية والترجمة",
+      "desc": "إتقان اللغة الإنجليزية وأصول الترجمة.",
+      "career": "مترجم، تدريس، إعلام، علاقات دولية.",
+      "note": "غالباً تتطلب درجة STEP مرتفعة نسبياً."
+    },
+    "en": {
+      "name": "English & Translation",
+      "desc": "English fluency and translation principles.",
+      "career": "Translator, teaching, media, international relations.",
+      "note": "Usually requires a relatively high STEP score."
+    }
+  },
+  {
+    "id": "nursing",
+    "icon": "fa-user-nurse",
+    "track": "science",
+    "ar": {
+      "name": "التمريض",
+      "desc": "الرعاية الصحية للمرضى في مختلف الأقسام الطبية.",
+      "career": "ممرض/ة في مستشفيات حكومية وخاصة.",
+      "note": "طلب سوقي مرتفع ومستقر."
+    },
+    "en": {
+      "name": "Nursing",
+      "desc": "Patient care across medical departments.",
+      "career": "Nurse in public and private hospitals.",
+      "note": "High and steady market demand."
+    }
+  },
+  {
+    "id": "architecture",
+    "icon": "fa-building",
+    "track": "science",
+    "ar": {
+      "name": "العمارة",
+      "desc": "تصميم المباني من الناحية الجمالية والوظيفية.",
+      "career": "مهندس معماري، مصمم داخلي، مخطط عمراني.",
+      "note": "يتطلب موهبة تصميمية إلى جانب الأساس الهندسي."
+    },
+    "en": {
+      "name": "Architecture",
+      "desc": "Designing buildings aesthetically and functionally.",
+      "career": "Architect, interior designer, urban planner.",
+      "note": "Requires design talent alongside engineering fundamentals."
+    }
+  },
+  {
+    "id": "psychology",
+    "icon": "fa-brain",
+    "track": "humanities",
+    "ar": {
+      "name": "علم النفس",
+      "desc": "دراسة السلوك الإنساني والعمليات النفسية.",
+      "career": "أخصائي نفسي (بعد ترخيص)، موارد بشرية، بحث علمي.",
+      "note": "يحتاج غالباً دراسات عليا للممارسة الإكلينيكية."
+    },
+    "en": {
+      "name": "Psychology",
+      "desc": "Study of human behavior and mental processes.",
+      "career": "Licensed psychologist, HR, research.",
+      "note": "Clinical practice usually requires graduate studies."
+    }
+  },
+  {
+    "id": "industrial_eng",
+    "icon": "fa-industry",
+    "track": "science",
+    "ar": {
+      "name": "الهندسة الصناعية",
+      "desc": "تحسين العمليات الإنتاجية وسلاسل الإمداد وإدارة الجودة.",
+      "career": "مهندس عمليات، مستشار سلاسل إمداد.",
+      "note": "مطلوبة في القطاع الصناعي واللوجستي المتنامي."
+    },
+    "en": {
+      "name": "Industrial Engineering",
+      "desc": "Optimizing production processes, supply chains, and quality.",
+      "career": "Process engineer, supply-chain consultant.",
+      "note": "In demand across the growing industrial and logistics sector."
+    }
+  },
+  {
+    "id": "petroleum_eng",
+    "icon": "fa-oil-well",
+    "track": "science",
+    "ar": {
+      "name": "هندسة البترول",
+      "desc": "استكشاف واستخراج النفط والغاز.",
+      "career": "مهندس حفر، مهندس مكامن.",
+      "note": "مرتبطة تاريخياً بأرامكو وقطاع الطاقة."
+    },
+    "en": {
+      "name": "Petroleum Engineering",
+      "desc": "Oil and gas exploration and extraction.",
+      "career": "Drilling engineer, reservoir engineer.",
+      "note": "Historically tied to Aramco and the energy sector."
+    }
+  },
+  {
+    "id": "media",
+    "icon": "fa-video",
+    "track": "humanities",
+    "ar": {
+      "name": "الإعلام والاتصال",
+      "desc": "الصحافة، الإعلام الرقمي، والعلاقات العامة.",
+      "career": "صحفي، منتج محتوى، مسؤول علاقات عامة.",
+      "note": "تطوّر كثيراً مع نمو الإعلام الرقمي ووسائل التواصل."
+    },
+    "en": {
+      "name": "Media & Communication",
+      "desc": "Journalism, digital media, and public relations.",
+      "career": "Journalist, content producer, PR officer.",
+      "note": "Growing rapidly alongside digital media and social platforms."
+    }
+  },
+  {
+    "id": "veterinary",
+    "icon": "fa-paw",
+    "track": "science",
+    "ar": {
+      "name": "الطب البيطري",
+      "desc": "تشخيص وعلاج أمراض الحيوانات.",
+      "career": "طبيب بيطري في عيادات أو قطاع الثروة الحيوانية.",
+      "note": "تخصص متوسط التنافسية نسبياً."
+    },
+    "en": {
+      "name": "Veterinary Medicine",
+      "desc": "Diagnosing and treating animal illnesses.",
+      "career": "Veterinarian in clinics or the livestock sector.",
+      "note": "Moderately competitive."
+    }
+  }
+]
