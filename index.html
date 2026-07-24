@@ -5,6 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>خُطى | مساعدك الذكي لاختبار القدرات</title>
 <meta name="description" content="خُطى - منصة تنظيم جداول مذاكرة القدرات وحساب الموزونة للجامعات السعودية">
+
+<!-- بطاقات المشاركة الاحترافية — تظهر عند مشاركة رابط الموقع في واتساب/تيك توك/تيليجرام/تويتر -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="خُطى">
+<meta property="og:title" content="خُطى — رفيقك الذكي في رحلة اختبار القدرات">
+<meta property="og:description" content="جدول مذاكرة ذكي يتكيّف معك، حاسبة موزونة لكل الجامعات السعودية، ومجتمع طلاب يذاكرون معك. مجاني بالكامل.">
+<meta property="og:image" content="https://khutaa.netlify.app/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:url" content="https://khutaa.netlify.app/">
+<meta property="og:locale" content="ar_SA">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="خُطى — رفيقك الذكي في رحلة اختبار القدرات">
+<meta name="twitter:description" content="جدول مذاكرة ذكي يتكيّف معك، حاسبة موزونة لكل الجامعات السعودية، ومجتمع طلاب يذاكرون معك. مجاني بالكامل.">
+<meta name="twitter:image" content="https://khutaa.netlify.app/icon-512.png">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#C9962E">
 <link rel="icon" href="icon-192.png">
@@ -274,6 +290,19 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
     width:44px; height:44px; border-radius:50%; border:1px solid var(--border); background:var(--bg-alt);
     color:var(--text-1); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.25s var(--ease); font-size:16px;
 }
+
+/* ============ الجولة التعريفية ============ */
+.onboarding-overlay{ position:fixed; inset:0; z-index:5500; pointer-events:none; }
+.onboarding-spotlight{
+    position:fixed; border-radius:14px; box-shadow:0 0 0 9999px rgba(0,0,0,0.72);
+    transition:.3s var(--ease); pointer-events:none; border:2px solid var(--gold);
+}
+.onboarding-card{
+    position:fixed; max-width:280px; background:var(--surface); border:1px solid var(--border);
+    border-radius:16px; padding:16px; box-shadow:var(--shadow-lg); pointer-events:auto; z-index:5501;
+}
+.onboarding-card b{ display:block; font-size:14.5px; margin-bottom:6px; color:var(--gold); }
+.onboarding-card p{ font-size:12.5px; color:var(--text-2); line-height:1.7; }
 /* ============ عناصر زخرفية خفيفة في الخلفية — غير مشتتة عمداً ============ */
 .bg-decor{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
 .bg-decor svg{ position:absolute; opacity:0.16; color:var(--gold); transition:opacity 0.6s ease, filter 0.6s ease, color 0.6s ease; }
@@ -631,6 +660,9 @@ tbody tr:last-child td{ border-bottom:none; }
     display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-2); transition:.2s;
 }
 .icon-action:hover{ background:var(--rose); color:#fff; border-color:var(--rose); }
+/* زر الملاحظة السريعة يستخدم لون تحفيزي (ذهبي) بدل الأحمر التحذيري الخاص بالحذف */
+.icon-action.has-note, .icon-action[title="ملاحظة"]:hover, .icon-action[title="Quick note"]:hover, .icon-action[title="ملاحظة سريعة"]:hover{ background:var(--gold); color:#fff; border-color:var(--gold); }
+.icon-action.has-note{ color:var(--gold); background:rgba(201,150,46,0.1); }
 .progress-pct{ font-family:var(--font-mono); font-size:12px; color:var(--text-3); font-weight:600; }
 
 /* ============ المؤقت ============ */
@@ -1073,7 +1105,31 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         </div>
 
         <p class="hint" style="margin-top:14px;">إدارة قائمة المشرفين نفسها تتم من Supabase Table Editor مباشرة (جدول app_admins) — أضف أي حساب Google تريد منحه هذه الصلاحية.</p>
+        <div class="divider"></div>
+        <button type="button" class="btn btn-sm btn-outline btn-block" onclick="openErrorLogsPanel()"><i class="fa-solid fa-bug"></i> سجل الأخطاء البرمجية</button>
+        <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openAnalyticsPanel()"><i class="fa-solid fa-chart-line"></i> لوحة التحليلات</button>
         <button type="button" class="btn btn-sm btn-outline" style="margin-top:10px;" onclick="document.getElementById('admin-overlay').style.display='none'">إغلاق</button>
+    </div>
+</div>
+
+<div id="error-logs-overlay" class="overlay-screen" style="display:none; z-index:5100;">
+    <div class="wizard-card" style="max-width:640px; text-align:start;">
+        <h2 style="margin-bottom:6px;"><i class="fa-solid fa-bug"></i> سجل الأخطاء البرمجية</h2>
+        <p class="card-sub" style="margin-bottom:14px;">آخر الأخطاء الحقيقية التي واجهها طلاب فعليون — بدون أي بيانات شخصية.</p>
+        <div id="error-logs-list" style="max-height:400px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+        <div style="display:flex; gap:10px; margin-top:14px;">
+            <button type="button" class="btn btn-sm btn-outline" onclick="clearErrorLogs()"><i class="fa-solid fa-trash"></i> مسح السجل</button>
+            <button type="button" class="btn btn-sm" onclick="document.getElementById('error-logs-overlay').style.display='none'">إغلاق</button>
+        </div>
+    </div>
+</div>
+
+<div id="analytics-overlay" class="overlay-screen" style="display:none; z-index:5100;">
+    <div class="wizard-card" style="max-width:520px; text-align:start;">
+        <h2 style="margin-bottom:6px;"><i class="fa-solid fa-chart-line"></i> لوحة التحليلات</h2>
+        <p class="card-sub" style="margin-bottom:14px;">نظرة سريعة على استخدام الموقع فعلياً.</p>
+        <div id="analytics-content" style="display:flex; flex-direction:column; gap:12px;"></div>
+        <button type="button" class="btn btn-sm" style="margin-top:14px;" onclick="document.getElementById('analytics-overlay').style.display='none'">إغلاق</button>
     </div>
 </div>
 
@@ -1108,7 +1164,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
             <div class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)"><i class="fa-solid fa-calendar-check"></i> <span data-i18n="nav.dashboard">الخطة والجدول</span></div>
             <div class="nav-item" data-tab="calculator" onclick="switchTab('calculator',this)"><i class="fa-solid fa-calculator"></i> <span data-i18n="nav.calculator">حساب الموزونة</span></div>
             <div class="nav-item" data-tab="links" onclick="switchTab('links',this)"><i class="fa-solid fa-link"></i> <span data-i18n="nav.links">الروابط المباشرة</span></div>
-            <div class="nav-item" data-tab="profile" onclick="switchTab('profile',this)"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
+            <div class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
             <div class="nav-item" data-tab="specialties" onclick="switchTab('specialties',this)"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
             <div class="nav-item" data-tab="community" onclick="switchTab('community',this)"><i class="fa-solid fa-users"></i> <span data-i18n="nav.community">المجتمع</span></div>
             <div class="nav-item" id="nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;"><i class="fa-solid fa-clipboard-question"></i> <span data-i18n="nav.examSim">اختبارات محاكية</span></div>
@@ -1169,7 +1225,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <!-- ===================== لوحة الجدول ===================== -->
         <section id="view-dashboard" class="view-section active">
             <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
-                <button type="button" class="btn btn-outline btn-sm btn-shimmer" onclick="toggleDashboardCustomizer()">
+                <button type="button" id="btn-customize-dashboard" class="btn btn-outline btn-sm btn-shimmer" onclick="toggleDashboardCustomizer()">
                     <i class="fa-solid fa-sliders"></i> <span data-i18n="dash.customize">تخصيص لوحتك</span>
                 </button>
             </div>
@@ -1675,6 +1731,18 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                         <button type="button" class="btn btn-sm acc-btn" onclick="linkRecoveryEmail()"><span data-i18n="account.sendLink">إرسال رابط التأكيد</span></button>
                     </div>
                 </div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-bell" style="color:var(--gold);"></i> <span data-i18n="push.title">التذكير اليومي</span></h2>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="push.desc">إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.</p>
+                <button type="button" class="btn btn-block" onclick="subscribeToPushNotifications()"><i class="fa-solid fa-bell"></i> <span data-i18n="push.enable">فعّل التذكير اليومي</span></button>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus" style="color:var(--gold);"></i> <span data-i18n="referral.title">ادعُ صديقاً</span></h2>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="referral.desc">كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.</p>
+                <button type="button" class="btn btn-block" onclick="shareReferralLink()"><i class="fa-solid fa-share-nodes"></i> <span data-i18n="referral.share">مشاركة رابط الدعوة</span></button>
             </div>
 
             <div class="card">

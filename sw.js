@@ -42,3 +42,36 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(event.request))
   );
 });
+
+/* ============================================================
+   إشعارات Push الحقيقية — تصل حتى مع إغلاق الموقع تماماً. الإشعار
+   يُرسَل من دالة Netlify مجدولة يومياً (netlify/functions/send-reminders.js)،
+   وهذا الجزء هنا فقط يستقبله ويعرضه للطالب.
+   ============================================================ */
+self.addEventListener("push", (event) => {
+  let payload = { title: "خُطى", body: "لا تنسَ جلستك اليوم!" };
+  try { if (event.data) payload = event.data.json(); } catch (e) { /* نص عادي بدل JSON */ }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || "خُطى", {
+      body: payload.body || "",
+      icon: "icon-192.png",
+      badge: "icon-192.png",
+      dir: "rtl",
+      lang: "ar",
+      tag: "khuta-daily-reminder",
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow("./");
+    })
+  );
+});

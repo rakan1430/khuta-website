@@ -461,6 +461,8 @@ ar:{
 "account.linkEmail":"ربط بريد لاسترجاع كلمة المرور","account.linkEmailDesc":"اربط بريدك الحقيقي مرة واحدة لتتمكّن من استرجاع كلمة المرور مستقبلاً إن نسيتها. سنرسل رابط تأكيد لهذا البريد — لن يكون فعّالاً إلا بعد الضغط عليه.","account.realEmail":"بريدك الإلكتروني الحقيقي","account.sendLink":"إرسال رابط التأكيد",
 "account.forgotPass":"نسيت كلمة المرور؟","account.forgotPassDesc":"يعمل فقط إن كنت قد ربطت بريداً حقيقياً بحسابك سابقاً من الملف الشخصي. أدخله هنا وسنرسل لك رابط إعادة تعيين كلمة المرور.","account.sendResetLink":"إرسال رابط إعادة التعيين",
 "account.setNewPassTitle":"عيّن كلمة مرور جديدة","account.setNewPassDesc":"وصلت هنا عبر رابط إعادة تعيين كلمة المرور — اكتب كلمة مرورك الجديدة.",
+"referral.title":"ادعُ صديقاً","referral.desc":"كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.","referral.share":"مشاركة رابط الدعوة",
+"push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
 "account.noRecoveryNote":"⚠️ تذكير: حسابات اسم المستخدم لا تدعم استرجاع كلمة مرور منسية (لا نطلب بريدك الحقيقي أبداً) — احفظها في مكان آمن. بياناتك المحلية على جهازك تبقى آمنة دائماً بغض النظر.",
 "spec.title":"دليل التخصصات الذكي","spec.sub":"نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة","spec.search":"ابحث عن تخصص...",
 "room.title":"غرفة المذاكرة","room.sub":"لست وحدك — بدون شات، فقط إحساس بالرفقة","room.studying":"طالب يذاكر الآن معك",
@@ -605,6 +607,8 @@ en:{
 "account.linkEmail":"Link email for password recovery","account.linkEmailDesc":"Link your real email once so you can recover your password later if forgotten. We'll send a confirmation link to it — it only takes effect once clicked.","account.realEmail":"Your real email","account.sendLink":"Send confirmation link",
 "account.forgotPass":"Forgot password?","account.forgotPassDesc":"Only works if you previously linked a real email to your account from Profile. Enter it here and we'll send a password reset link.","account.sendResetLink":"Send reset link",
 "account.setNewPassTitle":"Set a new password","account.setNewPassDesc":"You arrived here via a password reset link — enter your new password.",
+"referral.title":"Invite a friend","referral.desc":"Every friend who joins via your link gives you both 50 XP.","referral.share":"Share invite link",
+"push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
 "account.noRecoveryNote":"⚠️ Reminder: username accounts don't support forgotten-password recovery (we never ask for your real email) — save it somewhere safe. Your local data on this device stays safe regardless.",
 "spec.title":"Smart Specialty Guide","spec.sub":"A general overview — check university sites for exact college details","spec.search":"Search a major...",
 "room.title":"Study Room","room.sub":"You're not alone — no chat, just a sense of company","room.studying":"student(s) studying with you now",
@@ -740,6 +744,7 @@ setInterval(() => {
    5) تسجيل الدخول والتخصيص
    ============================================================ */
 window.onload = () => {
+    captureReferralParam();
     applyI18n();
     ensureTaskStatusFreshToday();
     tryLoadUniversitiesFromSupabase();
@@ -755,6 +760,7 @@ window.onload = () => {
     restoreSession();
     checkAdminStatus();
     renderAccountUI();
+    checkAndClaimReferralRewards();
     checkExamReminder();
 
     if(localStorage.getItem("khuta_theme") === "dark"){
@@ -1127,6 +1133,7 @@ function finalizeSetup(){
     switchTab("dashboard");
     showToast(t("toast.planReady"));
     debouncedSync();
+    setTimeout(startOnboardingTour, 700);
 }
 
 /* ============================================================
@@ -1372,6 +1379,7 @@ function appendTaskRow(task, status){
         </td>
         <td data-label="${currentLang==='ar'?'إجراء':'Action'}">
             <div class="row-actions">
+                <div class="icon-action ${getTaskNotes()[task.id] ? 'has-note' : ''}" onclick="editTaskNote('${task.id}')" title="${currentLang==='ar'?'ملاحظة سريعة':'Quick note'}"><i class="fa-solid fa-note-sticky"></i></div>
                 <div class="icon-action" onclick="removeTaskRow('${task.id}')" title="حذف"><i class="fa-solid fa-trash"></i></div>
             </div>
         </td>
@@ -1403,6 +1411,7 @@ function appendMobileTaskCard(task, status){
             <div style="display:flex; align-items:center; gap:8px;">
                 <div class="mini-progress"><div style="width:${pct}%; background:${pct===100 ? 'linear-gradient(90deg, var(--teal), #38B897)' : pct===50 ? 'linear-gradient(90deg, var(--gold), var(--gold-soft))' : 'var(--border)'};"></div></div>
                 <span class="progress-pct">${pct}%</span>
+                <div class="icon-action ${getTaskNotes()[task.id] ? 'has-note' : ''}" onclick="editTaskNote('${task.id}')" title="ملاحظة"><i class="fa-solid fa-note-sticky"></i></div>
                 <div class="icon-action" onclick="removeTaskRow('${task.id}')" title="حذف"><i class="fa-solid fa-trash"></i></div>
             </div>
         </div>
@@ -2995,6 +3004,40 @@ function initOverlayScrollLock(){
     updateLock();
 }
 
+/* ============================================================
+   30) تتبّع الأخطاء البرمجية الحقيقية — بدون أي بيانات شخصية، مع تحديد
+   لعدد التسجيلات لكل جلسة حتى لا تُغرق الجدول عند تكرار نفس الخطأ.
+   ============================================================ */
+const loggedErrorMessages = new Set();
+let errorLogCountThisSession = 0;
+const MAX_ERROR_LOGS_PER_SESSION = 15;
+
+function logClientError(message, stackSummary){
+    if(!sb) return;
+    if(errorLogCountThisSession >= MAX_ERROR_LOGS_PER_SESSION) return;
+    const key = String(message).slice(0, 150);
+    if(loggedErrorMessages.has(key)) return; // نفس الخطأ لا يُسجَّل مرتين في نفس الجلسة
+    loggedErrorMessages.add(key);
+    errorLogCountThisSession++;
+    sb.from("error_logs").insert({
+        message: String(message).slice(0, 500),
+        stack_summary: stackSummary ? String(stackSummary).slice(0, 800) : null,
+        page_url: location.pathname,
+        user_agent: navigator.userAgent.slice(0, 200),
+    }).then(() => {}, () => {}); // فشل تسجيل الخطأ نفسه لا يجب أن يُنشئ خطأً آخر
+}
+
+window.addEventListener("error", (event) => {
+    logClientError(event.message, event.error && event.error.stack);
+});
+window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason;
+    logClientError(
+        reason && reason.message ? reason.message : String(reason),
+        reason && reason.stack
+    );
+});
+
 function applyFeatureFlags(){
     document.getElementById("nav-exam-simulator").style.display = FEATURE_EXAM_SIMULATOR ? "" : "none";
     document.getElementById("mobile-nav-exam-simulator").style.display = FEATURE_EXAM_SIMULATOR ? "" : "none";
@@ -3065,6 +3108,254 @@ async function deleteTutor(id){
     const { error } = await sb.from("tutors").delete().eq("id", id);
     if(error){ showToast(currentLang==='ar'?'تعذّر الحذف':'Could not delete'); return; }
     renderTutors();
+}
+
+function getTaskNotes(){
+    try{ return JSON.parse(localStorage.getItem("khuta_task_notes")) || {}; }catch(e){ return {}; }
+}
+function editTaskNote(id){
+    const notes = getTaskNotes();
+    const current = notes[id] || "";
+    const updated = prompt(currentLang==='ar' ? "ملاحظتك السريعة على هذه المهمة (تُمسح بترك الحقل فارغاً):" : "Your quick note for this task (leave empty to clear):", current);
+    if(updated === null) return; // إلغاء
+    if(updated.trim() === ""){ delete notes[id]; } else { notes[id] = updated.trim(); }
+    localStorage.setItem("khuta_task_notes", JSON.stringify(notes));
+    buildScheduleTable();
+    debouncedSync();
+}
+
+async function openErrorLogsPanel(){
+    if(!isAdmin || !sb) return;
+    document.getElementById("admin-overlay").style.display = "none";
+    document.getElementById("error-logs-overlay").style.display = "flex";
+    const list = document.getElementById("error-logs-list");
+    list.innerHTML = `<div class="empty-note">جارٍ التحميل...</div>`;
+    const { data, error } = await sb.from("error_logs").select("*").order("created_at", { ascending:false }).limit(50);
+    if(error || !data || data.length === 0){
+        list.innerHTML = `<div class="empty-note">لا توجد أخطاء مسجَّلة 🎉</div>`;
+        return;
+    }
+    list.innerHTML = data.map(e => `
+        <div style="padding:10px 12px; background:var(--bg-alt); border-radius:10px; border:1px solid var(--border); font-size:12px;">
+            <b style="color:var(--rose);">${escapeHtml(e.message || "")}</b>
+            <div style="color:var(--text-3); margin-top:4px;">${escapeHtml(e.page_url || "")} · ${new Date(e.created_at).toLocaleString("ar-SA")}</div>
+            ${e.stack_summary ? `<div style="color:var(--text-3); margin-top:4px; font-family:var(--font-mono); font-size:10.5px; white-space:pre-wrap; word-break:break-word;">${escapeHtml(e.stack_summary.slice(0,300))}</div>` : ""}
+        </div>`).join("");
+}
+
+async function clearErrorLogs(){
+    if(!isAdmin || !sb) return;
+    if(!confirm("مسح كل سجل الأخطاء؟")) return;
+    await sb.from("error_logs").delete().gte("id", 0);
+    openErrorLogsPanel();
+}
+
+async function openAnalyticsPanel(){
+    if(!isAdmin || !sb) return;
+    document.getElementById("admin-overlay").style.display = "none";
+    document.getElementById("analytics-overlay").style.display = "flex";
+    const box = document.getElementById("analytics-content");
+    box.innerHTML = `<div class="empty-note">جارٍ التحميل...</div>`;
+    const { data, error } = await sb.rpc("get_admin_analytics");
+    if(error || !data){
+        box.innerHTML = `<div class="empty-note">تعذّر التحميل — تأكد من تشغيل SUPABASE_SETUP.sql المحدَّث</div>`;
+        console.error(error);
+        return;
+    }
+    const rows = [
+        ["إجمالي الحسابات المسجَّلة", data.total_users],
+        ["نشِطون هذا الأسبوع", data.active_this_week],
+        ["مشاركون في لوحة الصدارة", data.leaderboard_entries],
+        ["رسائل حائط الأسئلة", data.forum_posts],
+        ["قوالب خطط منشورة", data.templates_published],
+        ["تقارير مصادر مخصَّصة", data.source_reports],
+    ];
+    box.innerHTML = rows.map(([label, val]) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--bg-alt); border-radius:12px;">
+            <span style="font-size:13.5px; color:var(--text-2);">${label}</span>
+            <b style="font-size:20px; color:var(--gold);">${val ?? 0}</b>
+        </div>`).join("");
+}
+
+/* ============================================================
+   31) نظام دعوة الأصدقاء
+   ============================================================ */
+const REFERRAL_XP_REWARD = 50;
+
+function captureReferralParam(){
+    const params = new URLSearchParams(location.search);
+    const ref = params.get("ref");
+    if(ref && ref.length > 10){ // فحص بسيط أنه يشبه UID فعلي
+        localStorage.setItem("khuta_pending_referral", ref);
+    }
+}
+
+async function recordPendingReferral(newUid){
+    if(!sb) return;
+    const referrerId = localStorage.getItem("khuta_pending_referral");
+    if(!referrerId || referrerId === newUid) return; // لا يمكن دعوة نفسك
+    try{
+        const { error } = await sb.from("referrals").insert({ referrer_id: referrerId, referred_id: newUid });
+        if(!error){
+            awardXP(REFERRAL_XP_REWARD);
+            showToast(currentLang==='ar' ? `🎁 +${REFERRAL_XP_REWARD} XP لانضمامك عبر دعوة صديق!` : `🎁 +${REFERRAL_XP_REWARD} XP for joining via a friend's invite!`);
+        }
+    }catch(e){ /* فشل تسجيل الدعوة ليس خطأً حرجاً — نتجاهله بصمت */ }
+    localStorage.removeItem("khuta_pending_referral");
+}
+
+async function checkAndClaimReferralRewards(){
+    if(!sb) return;
+    const session = getSession();
+    if(!session) return;
+    const { data, error } = await sb.from("referrals").select("id").eq("referrer_id", session.uid).eq("referrer_rewarded", false);
+    if(error || !data || data.length === 0) return;
+    let claimed = 0;
+    for(const row of data){
+        const { error: updateError } = await sb.from("referrals").update({ referrer_rewarded:true }).eq("id", row.id).eq("referrer_id", session.uid);
+        if(!updateError) claimed++;
+    }
+    if(claimed > 0){
+        awardXP(REFERRAL_XP_REWARD * claimed);
+        showToast(currentLang==='ar'
+            ? `🎉 انضم ${claimed} صديق عبر دعوتك — حصلت على ${REFERRAL_XP_REWARD * claimed} XP!`
+            : `🎉 ${claimed} friend(s) joined via your invite — you earned ${REFERRAL_XP_REWARD * claimed} XP!`);
+    }
+}
+
+function getReferralLink(){
+    const session = getSession();
+    if(!session) return null;
+    return location.origin + location.pathname + "?ref=" + session.uid;
+}
+
+async function shareReferralLink(){
+    const link = getReferralLink();
+    if(!link){ showToast(currentLang==='ar' ? "سجّل دخولك أولاً لمشاركة رابط الدعوة" : "Sign in first to share your invite link"); return; }
+    const shareText = currentLang==='ar'
+        ? `جرّب خُطى — رفيقك الذكي لمذاكرة القدرات 🚀\n${link}`
+        : `Try Khuta — your smart GAT study companion 🚀\n${link}`;
+    if(navigator.share){
+        try{ await navigator.share({ text: shareText }); return; }catch(e){ /* ألغى المستخدم المشاركة */ return; }
+    }
+    try{
+        await navigator.clipboard.writeText(shareText);
+        showToast(currentLang==='ar' ? "📋 نُسخ رابط الدعوة" : "📋 Invite link copied");
+    }catch(e){
+        prompt(currentLang==='ar' ? "انسخ رابط دعوتك:" : "Copy your invite link:", link);
+    }
+}
+
+/* ============================================================
+   32) الجولة التعريفية للمستخدم الجديد — تظهر مرة واحدة فقط بعد إكمال
+   الإعداد لأول مرة، تسلّط الضوء على أهم الميزات التي قد لا يكتشفها
+   الطالب بنفسه.
+   ============================================================ */
+const ONBOARDING_STEPS = [
+    {
+        id: "btn-plan-session",
+        titleAr: "ابدأ جلستك من هنا", titleEn: "Start your session here",
+        textAr: "المؤقت يقسّم وقتك تلقائياً بين اللفظي والكمي، ويتعلّم من أدائك مع الوقت ليُعدّل التوزيع بنفسه.",
+        textEn: "The timer auto-splits your time between verbal and quant, and learns from your pace over time to rebalance itself.",
+    },
+    {
+        id: "btn-customize-dashboard",
+        titleAr: "خصّص لوحتك", titleEn: "Customize your dashboard",
+        textAr: "أضف بطاقة الأوسمة أو المجتمع للوحتك، أو أخفِ ما لا تحتاجه — من زر «تخصيص لوحتك».",
+        textEn: "Add the badges or community card to your dashboard, or hide what you don't need — from the 'Customize dashboard' button.",
+    },
+    {
+        id: "chatbot-fab",
+        titleAr: "مساعدك دائماً هنا", titleEn: "Your assistant is always here",
+        textAr: "اسأل عن أي سؤال كمي أو لفظي، أو عن أي ميزة في الموقع لا تعرفها بعد.",
+        textEn: "Ask any quant or verbal question, or about any site feature you haven't discovered yet.",
+    },
+];
+
+function shouldShowOnboardingTour(){
+    return !localStorage.getItem("khuta_onboarding_done") && !!localStorage.getItem("khuta_plan_days");
+}
+
+function startOnboardingTour(){
+    if(!shouldShowOnboardingTour()) return;
+    localStorage.setItem("khuta_onboarding_done", "1"); // نُعلّم فوراً حتى لا تتكرر حتى لو أُغلقت الصفحة منتصف الجولة
+    runOnboardingStep(0);
+}
+
+function runOnboardingStep(index){
+    document.getElementById("onboarding-overlay")?.remove();
+    if(index >= ONBOARDING_STEPS.length) return;
+    const step = ONBOARDING_STEPS[index];
+    let target = document.getElementById(step.id);
+    if((!target || target.offsetParent === null) && step.fallbackId) target = document.getElementById(step.fallbackId);
+    if(!target || target.offsetParent === null){ runOnboardingStep(index + 1); return; } // العنصر غير ظاهر في هذا الجهاز — تخطَّ الخطوة
+
+    const rect = target.getBoundingClientRect();
+    const overlay = document.createElement("div");
+    overlay.id = "onboarding-overlay";
+    overlay.className = "onboarding-overlay";
+    const pad = 8;
+    overlay.innerHTML = `
+        <div class="onboarding-spotlight" style="top:${rect.top - pad}px; left:${rect.left - pad}px; width:${rect.width + pad*2}px; height:${rect.height + pad*2}px;"></div>
+        <div class="onboarding-card" style="top:${Math.min(rect.bottom + 16, window.innerHeight - 180)}px; left:${Math.max(16, Math.min(rect.left, window.innerWidth - 300))}px;">
+            <b>${currentLang==='ar' ? step.titleAr : step.titleEn}</b>
+            <p>${currentLang==='ar' ? step.textAr : step.textEn}</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+                <button type="button" class="btn-ghost" style="font-size:12px;" onclick="document.getElementById('onboarding-overlay').remove()">${currentLang==='ar'?'تخطّي':'Skip'}</button>
+                <button type="button" class="btn btn-sm" onclick="runOnboardingStep(${index + 1})">${index === ONBOARDING_STEPS.length - 1 ? (currentLang==='ar'?'إنهاء':'Done') : (currentLang==='ar'?'التالي':'Next')}</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+/* ============================================================
+   33) إشعارات Push الحقيقية — تصل حتى لو أُغلق الموقع تماماً.
+   المفتاح هنا "عام" بطبيعته (VAPID public key) ولا يُشكّل أي خطر أمني
+   ظهوره في الكود — هذا هو الاستخدام الصحيح والمُتوقَّع له. المفتاح
+   الخاص (Private) موجود فقط في متغيّر بيئة على Netlify، لا يصل هنا إطلاقاً.
+   ============================================================ */
+const VAPID_PUBLIC_KEY = "BMWllR59gW0Z5EHMNv1CQxEKzGjvoNY8SEznutD9Du1KVVGohKA8lu9Z8Rx7tnBSfW2ZypVGiXIcPdBRE-id9gA";
+
+function urlBase64ToUint8Array(base64String){
+    const padding = "=".repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function subscribeToPushNotifications(){
+    if(!("serviceWorker" in navigator) || !("PushManager" in window)){
+        showToast(currentLang==='ar' ? "متصفحك لا يدعم إشعارات Push" : "Your browser doesn't support push notifications");
+        return;
+    }
+    const session = getSession();
+    if(!session || !sb){
+        showToast(currentLang==='ar' ? "سجّل دخولك أولاً لتفعيل الإشعارات" : "Sign in first to enable notifications");
+        return;
+    }
+    try{
+        const permission = await Notification.requestPermission();
+        if(permission !== "granted"){
+            showToast(currentLang==='ar' ? "لم تُمنح صلاحية الإشعارات" : "Notification permission not granted");
+            return;
+        }
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+        const { error } = await sb.from("push_subscriptions").upsert({
+            user_id: session.uid,
+            endpoint: subscription.endpoint,
+            subscription: subscription.toJSON(),
+        }, { onConflict: "endpoint" });
+        if(error){ console.error("[خُطى] تعذّر حفظ اشتراك الإشعارات:", error); return; }
+        localStorage.setItem("khuta_push_enabled", "1");
+        showToast(currentLang==='ar' ? "🔔 فُعِّلت إشعاراتك اليومية" : "🔔 Your daily reminders are on");
+    }catch(e){
+        console.error("[خُطى] تعذّر تفعيل إشعارات Push:", e);
+        showToast(currentLang==='ar' ? "تعذّر تفعيل الإشعارات" : "Couldn't enable notifications");
+    }
 }
 
 function loadProfileForm(){
@@ -3432,6 +3723,7 @@ function finishLoginBoot(){
     } else {
         buildScheduleTable();
         renderProgress();
+        setTimeout(startOnboardingTour, 900);
     }
     updateShortBreakLabel();
     updateCustomMinHint();
@@ -3466,6 +3758,7 @@ function initOAuthListener(){
             const username = displayName || (currentLang==='ar' ? "طالب" : "Student") + "_" + uid.slice(0,5);
             await sb.from("user_data").insert({ id: uid, username, data: collectLocalSnapshot() });
             setSession({ uid, username });
+            recordPendingReferral(uid);
         }
         document.getElementById("login-overlay").style.display = "none";
         updateWelcomeText();
@@ -3562,6 +3855,7 @@ async function signUpWithCreds(userId, passId, pass2Id, fromLoginScreen){
     if(uid){
         await sb.from("user_data").insert({ id: uid, username, data: collectLocalSnapshot() });
         setSession({ uid, username });
+        recordPendingReferral(uid);
     }
     setAccountBusy(false);
 
