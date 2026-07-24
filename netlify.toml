@@ -1,0 +1,19 @@
+# إعدادات نشر خُطى على Netlify
+# هذا الملف يخبر Netlify أين يجد ملفات الموقع وأين يجد الدوال الوسيطة (Functions)
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# الدالة المجدولة لإرسال التذكير اليومي — تعمل كل يوم الساعة 6 مساءً بتوقيت
+# السعودية (UTC+3)؛ الجدولة دائماً بتوقيت UTC، لذا 15:00 UTC = 18:00 السعودية
+[functions."send-reminders"]
+  schedule = "0 15 * * *"
+
+# رؤوس أمان إضافية بسيطة (لا تؤثر على عمل الموقع، تحسّن فقط سلوك المتصفح الأمني الافتراضي)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
