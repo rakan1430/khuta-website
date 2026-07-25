@@ -4283,11 +4283,20 @@ async function signInWithCreds(userId, passId, fromLoginScreen){
     if(row && row.data){
         applyRemoteSnapshot(row.data);
     }
+    // ⚠️ لم نعد نُعيد تحميل الصفحة إطلاقاً بعد الآن — كانت هذه المقامرة على
+    // توقيت حفظ Supabase لجلسته الداخلية في التخزين هي السبب الجذري الحقيقي
+    // لعودة الطالب لشاشة الدخول رغم دخوله الناجح. بدلاً من ذلك، نُكمل كل شيء
+    // في نفس الصفحة مباشرة (بنفس أسلوب إنشاء الحساب الذي كان يعمل بثبات دائماً)
+    if(fromLoginScreen){ document.getElementById("login-overlay").style.display = "none"; }
+    updateWelcomeText();
+    loadProfileForm();
+    renderAccountUI();
+    checkAdminStatus();
+    renderGamification();
+    checkBadges();
+    finishLoginBoot();
+    manualAuthInProgress = false;
     showToast(currentLang==='ar' ? "أهلاً بعودتك 👋" : "Welcome back 👋");
-    // مهلة قصيرة قبل إعادة التحميل — تمنح عميل Supabase وقتاً كافياً لحفظ
-    // الجلسة فعلياً في التخزين المحلي قبل تفريغ الصفحة (كان السبب الجذري
-    // لخروج طلاب من حساباتهم عند إعادة الفتح رغم تسجيل دخولهم بنجاح)
-    setTimeout(() => location.reload(), 400);
 }
 
 function toggleRecoveryEmailForm(){
