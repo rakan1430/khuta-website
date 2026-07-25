@@ -427,7 +427,7 @@ ar:{
 "contact.whatsapp":"واتساب للاستفسارات والشكاوى","contact.tiktok":"تابعنا على تيك توك","contact.tiktokSub":"آخر التحديثات والدعم",
 "contact.telegram":"قناتنا على تيليجرام","contact.telegramSub":"إعلانات وتحديثات فورية",
 "contact.support":"ادعم استمرار الموقع",
-"profile.title":"الملف الشخصي","profile.noGoal":"لم تحدد جامعة الهدف بعد",
+"profile.title":"الملف الشخصي","profile.noGoal":"لم تحدد جامعة الهدف بعد","profile.choosePreset":"أو اختر صورة جاهزة",
 "profile.first":"الاسم الأول","profile.last":"اللقب","profile.birth":"تاريخ الميلاد",
 "profile.gender":"الجنس","profile.male":"طالب","profile.female":"طالبة",
 "profile.track":"المسار الدراسي","profile.science":"علمي","profile.admin":"إداري","profile.humanities":"شرعي/أدبي",
@@ -573,7 +573,7 @@ en:{
 "contact.whatsapp":"WhatsApp for questions & complaints","contact.tiktok":"Follow us on TikTok","contact.tiktokSub":"Latest updates & support",
 "contact.telegram":"Our Telegram channel","contact.telegramSub":"Instant announcements & updates",
 "contact.support":"Support the site",
-"profile.title":"Profile","profile.noGoal":"No target university set yet",
+"profile.title":"Profile","profile.noGoal":"No target university set yet","profile.choosePreset":"Or choose a preset avatar",
 "profile.first":"First name","profile.last":"Last name","profile.birth":"Date of birth",
 "profile.gender":"Gender","profile.male":"Male","profile.female":"Female",
 "profile.track":"Track","profile.science":"Science","profile.admin":"Business","profile.humanities":"Sharia/Humanities",
@@ -2751,6 +2751,7 @@ function renderProfileStats(){
     const el = document.getElementById("stat-total-hours");
     if(!el) return; // العنصر غير موجود إن لم تفتح صفحة الملف الشخصي بعد
     refreshDeepReportButton();
+    applyEquippedFrame(); // إعادة التطبيق عند كل زيارة للصفحة — لم تكن تُستدعى إلا مرة واحدة عند التحميل الأول
 
     const totalMin = parseInt(localStorage.getItem("khuta_total_minutes")) || 0;
     document.getElementById("stat-total-hours").textContent = (totalMin / 60).toFixed(1);
@@ -3457,7 +3458,7 @@ function renderFrameShop(){
     const equipped = getEquippedFrame();
     box.innerHTML = AVATAR_FRAMES.map(f => `
         <button type="button" class="path-card ${equipped===f.id?'selected':''}" style="padding:10px 12px; cursor:pointer;" onclick="${owned.includes(f.id) ? `equipFrame('${f.id}')` : `purchaseFrame('${f.id}')`}">
-            <b style="font-size:12px; display:block;">${currentLang==='ar'?f.nameAr:f.nameEn}</b>
+            <b style="font-size:12px; display:block; color:var(--text-1);">${currentLang==='ar'?f.nameAr:f.nameEn}</b>
             <span style="font-size:11px; color:var(--text-3);">${owned.includes(f.id) ? (equipped===f.id ? (currentLang==='ar'?'مُفعَّل ✓':'Equipped ✓') : (currentLang==='ar'?'تفعيل':'Equip')) : `${f.cost} XP`}</span>
         </button>`).join("");
     applyEquippedFrame();
@@ -3604,6 +3605,78 @@ function showDeepReport(){
     document.getElementById("deep-report-overlay").style.display = "flex";
 }
 
+const PRESET_AVATARS = [
+    { id:"rocket", icon:"fa-rocket", color:"#C9962E" },
+    { id:"book", icon:"fa-book-open", color:"#1C8A72" },
+    { id:"star", icon:"fa-star", color:"#C4436B" },
+    { id:"bolt", icon:"fa-bolt", color:"#4F46C7" },
+    { id:"brain", icon:"fa-brain", color:"#D97B1F" },
+    { id:"crown", icon:"fa-crown", color:"#948CE0" },
+    { id:"owl", icon:"fa-kiwi-bird", color:"#38B897" },
+    { id:"target", icon:"fa-bullseye", color:"#E06B93" },
+];
+
+function deleteAvatar(){
+    if(!confirm(currentLang==='ar' ? "حذف صورتك الشخصية؟" : "Delete your profile photo?")) return;
+    localStorage.removeItem("khuta_avatar");
+    localStorage.removeItem("khuta_avatar_preset");
+    renderAvatarDisplay();
+    debouncedSync();
+}
+
+function togglePresetAvatars(){
+    const row = document.getElementById("preset-avatars-row");
+    const opening = row.style.display === "none";
+    row.style.display = opening ? "flex" : "none";
+    if(opening){
+        row.innerHTML = PRESET_AVATARS.map(p => `
+            <button type="button" onclick="choosePresetAvatar('${p.id}')" style="width:52px; height:52px; border-radius:50%; border:2px solid var(--border); background:${p.color}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer;">
+                <i class="fa-solid ${p.icon}"></i>
+            </button>`).join("");
+    }
+}
+
+function choosePresetAvatar(id){
+    const preset = PRESET_AVATARS.find(p => p.id === id);
+    if(!preset) return;
+    localStorage.setItem("khuta_avatar_preset", id);
+    localStorage.removeItem("khuta_avatar"); // الصورة المرفوعة والرمز الجاهز لا يجتمعان معاً
+    renderAvatarDisplay();
+    debouncedSync();
+    showToast(currentLang==='ar' ? "✅ تم اختيار الصورة" : "✅ Avatar selected");
+}
+
+function renderAvatarDisplay(){
+    const img = document.getElementById("avatar-img");
+    const placeholder = document.getElementById("avatar-placeholder");
+    const deleteBtn = document.getElementById("avatar-delete-btn");
+    const uploaded = localStorage.getItem("khuta_avatar");
+    const presetId = localStorage.getItem("khuta_avatar_preset");
+    const preset = PRESET_AVATARS.find(p => p.id === presetId);
+
+    if(uploaded){
+        img.src = uploaded; img.style.display = "block";
+        placeholder.style.display = "none";
+        deleteBtn.style.display = "flex";
+    } else if(preset){
+        img.style.display = "none";
+        placeholder.style.display = "flex";
+        placeholder.style.background = preset.color;
+        placeholder.style.color = "#fff";
+        placeholder.style.borderColor = preset.color;
+        placeholder.innerHTML = `<i class="fa-solid ${preset.icon}"></i>`;
+        deleteBtn.style.display = "flex";
+    } else {
+        img.style.display = "none";
+        placeholder.style.display = "flex";
+        placeholder.style.background = "var(--bg-alt)";
+        placeholder.style.color = "var(--text-3)";
+        placeholder.style.borderColor = "var(--border)";
+        placeholder.innerHTML = '<i class="fa-solid fa-user"></i>';
+        deleteBtn.style.display = "none";
+    }
+}
+
 function loadProfileForm(){
     document.getElementById("prof-name").value = localStorage.getItem("khuta_name") || "";
     document.getElementById("prof-last").value = localStorage.getItem("khuta_last") || "";
@@ -3613,12 +3686,7 @@ function loadProfileForm(){
     document.getElementById("prof-goal-score").value = localStorage.getItem("khuta_goal_score") || "";
     document.getElementById("prof-exam-date").value = localStorage.getItem("khuta_exam_date") || "";
 
-    const avatar = localStorage.getItem("khuta_avatar");
-    if(avatar){
-        document.getElementById("avatar-img").src = avatar;
-        document.getElementById("avatar-img").style.display = "block";
-        document.getElementById("avatar-placeholder").style.display = "none";
-    }
+    renderAvatarDisplay();
     updateProfileHeader();
     renderFrameShop();
 }
@@ -3645,9 +3713,9 @@ function handleAvatarUpload(e){
     const reader = new FileReader();
     reader.onload = (ev) => {
         localStorage.setItem("khuta_avatar", ev.target.result);
-        document.getElementById("avatar-img").src = ev.target.result;
-        document.getElementById("avatar-img").style.display = "block";
-        document.getElementById("avatar-placeholder").style.display = "none";
+        localStorage.removeItem("khuta_avatar_preset"); // الصورة المرفوعة والرمز الجاهز لا يجتمعان معاً
+        renderAvatarDisplay();
+        debouncedSync();
     };
     reader.readAsDataURL(file);
 }
@@ -4588,7 +4656,7 @@ async function refreshForum(){
     box.innerHTML = sorted.map(row => {
         const isPinned = row.pinned_until && new Date(row.pinned_until).getTime() > now;
         return `
-        <div style="padding:10px 6px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; gap:10px; align-items:flex-start; ${isPinned ? 'background:rgba(201,150,46,0.06); border-radius:10px;' : ''}">
+        <div class="${isPinned ? 'pinned-template-glow' : ''}" style="padding:10px 10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; gap:10px; align-items:flex-start; ${isPinned ? 'border-radius:12px; margin-bottom:6px;' : ''}">
             <div style="flex:1;">
                 ${isPinned ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span><br>` : ""}
                 <div style="font-size:13.5px;">${escapeHtml(row.message)}</div>
@@ -4729,7 +4797,7 @@ async function refreshTemplates(){
         const comments = ratings.filter(r => r.comment).slice(0, 2);
         const isPinned = tpl.pinned_until && new Date(tpl.pinned_until).getTime() > now;
         return `
-        <div style="padding:16px; border-radius:16px; background:var(--bg-alt); border:1px solid var(--border); margin-bottom:12px; ${isPinned ? 'border-color:var(--gold);' : ''}">
+        <div class="${isPinned ? 'pinned-template-glow' : ''}" style="padding:16px; border-radius:16px; background:var(--bg-alt); border:1px solid var(--border); margin-bottom:12px;">
             ${isPinned ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700; display:block; margin-bottom:6px;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span>` : ""}
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
                 <div>
