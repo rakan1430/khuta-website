@@ -1595,15 +1595,49 @@ function getEarnedBadges(){ try{ return JSON.parse(localStorage.getItem("khuta_b
 function checkBadges(){
     const earned = getEarnedBadges();
     let changed = false;
+    const newlyEarned = [];
     BADGES.forEach(b => {
         if(!earned.includes(b.id) && b.cond()){
             earned.push(b.id);
             changed = true;
-            showToast((currentLang === "ar" ? "🏅 وسام جديد: " : "🏅 New badge: ") + (currentLang === "ar" ? b.ar : b.en));
+            newlyEarned.push(b);
         }
     });
     if(changed) localStorage.setItem("khuta_badges", JSON.stringify(earned));
+    newlyEarned.forEach((b, i) => setTimeout(() => celebrateBadgeUnlock(b), i * 1600));
     renderBadges();
+}
+
+function celebrateBadgeUnlock(badge){
+    const overlay = document.createElement("div");
+    overlay.className = "badge-celebrate-overlay";
+    overlay.onclick = () => overlay.remove();
+    overlay.innerHTML = `
+        <div class="badge-celebrate-card">
+            <div class="badge-celebrate-burst"></div>
+            <div class="badge-celebrate-icon"><i class="fa-solid ${badge.icon}"></i></div>
+            <b>${currentLang==='ar' ? "🏅 وسام جديد!" : "🏅 New badge!"}</b>
+            <span>${currentLang==='ar' ? badge.ar : badge.en}</span>
+        </div>`;
+    document.body.appendChild(overlay);
+    setTimeout(() => { if(overlay.isConnected) overlay.remove(); }, 3800);
+}
+
+/* عدّاد أرقام متحرّك بسيط — يجعل تغيّر XP/السلسلة إحساساً حياً بدل قفزة فجائية */
+function animateNumberTo(el, newValue, suffix){
+    suffix = suffix || "";
+    if(!el) return;
+    const current = parseInt(el.textContent);
+    if(isNaN(current) || current === newValue){ el.textContent = newValue + suffix; return; }
+    const duration = 500, start = performance.now(), from = current;
+    function step(now){
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = Math.round(from + (newValue - from) * eased);
+        el.textContent = value + suffix;
+        if(progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
 }
 
 function renderGamification(){
@@ -1613,9 +1647,9 @@ function renderGamification(){
     const xpEl = document.getElementById("xp-widget-value");
     const lvlEl = document.getElementById("xp-widget-level");
     const streakEl = document.getElementById("streak-widget-value");
-    if(xpEl) xpEl.textContent = xp + " XP";
+    if(xpEl) animateNumberTo(xpEl, xp, " XP");
     if(lvlEl) lvlEl.textContent = currentLang === "ar" ? lvl.ar : lvl.en;
-    if(streakEl) streakEl.textContent = streak;
+    if(streakEl) animateNumberTo(streakEl, streak);
     renderShieldUI();
 }
 
