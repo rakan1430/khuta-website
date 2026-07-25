@@ -2750,6 +2750,7 @@ function calcScore(){
 function renderProfileStats(){
     const el = document.getElementById("stat-total-hours");
     if(!el) return; // العنصر غير موجود إن لم تفتح صفحة الملف الشخصي بعد
+    refreshDeepReportButton();
 
     const totalMin = parseInt(localStorage.getItem("khuta_total_minutes")) || 0;
     document.getElementById("stat-total-hours").textContent = (totalMin / 60).toFixed(1);
@@ -3425,6 +3426,184 @@ function closeLiveUsersPanel(){
     document.getElementById("live-users-overlay").style.display = "none";
 }
 
+/* ============================================================
+   34) متجر إطارات الصورة الشخصية — يُصرف بها XP بدل الادّخار فقط
+   ============================================================ */
+const AVATAR_FRAMES = [
+    { id:"none", nameAr:"بلا إطار (افتراضي)", nameEn:"No frame (default)", cost:0, cls:"" },
+    { id:"silver", nameAr:"حلقة فضية", nameEn:"Silver ring", cost:40, cls:"frame-silver" },
+    { id:"fire", nameAr:"حلقة نارية", nameEn:"Fire ring", cost:80, cls:"frame-fire" },
+    { id:"diamond", nameAr:"حلقة ماسية", nameEn:"Diamond ring", cost:150, cls:"frame-diamond" },
+    { id:"royal", nameAr:"التاج الملكي", nameEn:"Royal crown", cost:300, cls:"frame-royal" },
+];
+
+function getOwnedFrames(){
+    try{ return JSON.parse(localStorage.getItem("khuta_owned_frames")) || ["none"]; }catch(e){ return ["none"]; }
+}
+function getEquippedFrame(){ return localStorage.getItem("khuta_equipped_frame") || "none"; }
+
+function applyEquippedFrame(){
+    const wrap = document.getElementById("avatar-wrap");
+    if(!wrap) return;
+    AVATAR_FRAMES.forEach(f => { if(f.cls) wrap.classList.remove(f.cls); });
+    const equipped = AVATAR_FRAMES.find(f => f.id === getEquippedFrame());
+    if(equipped && equipped.cls) wrap.classList.add(equipped.cls);
+}
+
+function renderFrameShop(){
+    const box = document.getElementById("frame-shop-list");
+    if(!box) return;
+    const owned = getOwnedFrames();
+    const equipped = getEquippedFrame();
+    box.innerHTML = AVATAR_FRAMES.map(f => `
+        <button type="button" class="path-card ${equipped===f.id?'selected':''}" style="padding:10px 12px; cursor:pointer;" onclick="${owned.includes(f.id) ? `equipFrame('${f.id}')` : `purchaseFrame('${f.id}')`}">
+            <b style="font-size:12px; display:block;">${currentLang==='ar'?f.nameAr:f.nameEn}</b>
+            <span style="font-size:11px; color:var(--text-3);">${owned.includes(f.id) ? (equipped===f.id ? (currentLang==='ar'?'مُفعَّل ✓':'Equipped ✓') : (currentLang==='ar'?'تفعيل':'Equip')) : `${f.cost} XP`}</span>
+        </button>`).join("");
+    applyEquippedFrame();
+}
+
+function purchaseFrame(id){
+    const frame = AVATAR_FRAMES.find(f => f.id === id);
+    if(!frame) return;
+    const owned = getOwnedFrames();
+    if(owned.includes(id)){ equipFrame(id); return; }
+    if(getXP() < frame.cost){
+        showToast(currentLang==='ar' ? `تحتاج ${frame.cost} XP على الأقل — لديك ${getXP()} فقط` : `You need at least ${frame.cost} XP — you have ${getXP()}`);
+        return;
+    }
+    if(!confirm(currentLang==='ar' ? `شراء "${frame.nameAr}" مقابل ${frame.cost} XP؟` : `Buy "${frame.nameEn}" for ${frame.cost} XP?`)) return;
+    setXP(getXP() - frame.cost);
+    owned.push(id);
+    localStorage.setItem("khuta_owned_frames", JSON.stringify(owned));
+    equipFrame(id);
+    showToast(currentLang==='ar' ? "🖼️ تم الشراء والتفعيل" : "🖼️ Purchased and equipped");
+}
+
+function equipFrame(id){
+    localStorage.setItem("khuta_equipped_frame", id);
+    renderFrameShop();
+    debouncedSync();
+}
+
+/* ============================================================
+   34) التقرير الأسبوعي المتعمّق — يُصرف بها XP مرة واحدة فقط (فتح دائم)،
+   يُبنى بالكامل من بيانات حقيقية موجودة أصلاً: سجل الدقائق اليومية،
+   ملاحظات المهام السريعة، وتواريخ الإكمال. لا بيانات مُلفَّقة أو مُقدَّرة.
+   ============================================================ */
+const DEEP_REPORT_COST = 60;
+const DAY_NAMES_AR = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const DAY_NAMES_EN = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+function isDeepReportUnlocked(){ return localStorage.getItem("khuta_deep_report_unlocked") === "1"; }
+
+function refreshDeepReportButton(){
+    const btn = document.getElementById("btn-deep-report");
+    if(!btn) return;
+    if(isDeepReportUnlocked()){
+        btn.innerHTML = `<i class="fa-solid fa-chart-column"></i> ${currentLang==='ar'?'عرض التقرير المتعمّق':'View deep report'}`;
+    } else {
+        btn.innerHTML = `<i class="fa-solid fa-lock"></i> ${currentLang==='ar'?`فتح التقرير المتعمّق (${DEEP_REPORT_COST} XP)`:`Unlock deep report (${DEEP_REPORT_COST} XP)`}`;
+    }
+}
+
+function handleDeepReportClick(){
+    if(isDeepReportUnlocked()){ showDeepReport(); return; }
+    if(getXP() < DEEP_REPORT_COST){
+        showToast(currentLang==='ar' ? `تحتاج ${DEEP_REPORT_COST} XP على الأقل — لديك ${getXP()} فقط` : `You need at least ${DEEP_REPORT_COST} XP — you have ${getXP()}`);
+        return;
+    }
+    if(!confirm(currentLang==='ar' ? `فتح التقرير المتعمّق نهائياً مقابل ${DEEP_REPORT_COST} XP؟` : `Permanently unlock the deep report for ${DEEP_REPORT_COST} XP?`)) return;
+    setXP(getXP() - DEEP_REPORT_COST);
+    localStorage.setItem("khuta_deep_report_unlocked", "1");
+    refreshDeepReportButton();
+    showDeepReport();
+}
+
+function showDeepReport(){
+    let dailyLog = {};
+    try{ dailyLog = JSON.parse(localStorage.getItem("khuta_daily_minutes_log")) || {}; }catch(e){}
+    const dayNames = currentLang==='ar' ? DAY_NAMES_AR : DAY_NAMES_EN;
+
+    // مقارنة 4 أسابيع فعلية
+    const weeks = [0,0,0,0];
+    const dayTotals = [0,0,0,0,0,0,0];
+    const dayCounts = [0,0,0,0,0,0,0];
+    for(let i = 0; i < 28; i++){
+        const d = new Date(); d.setDate(d.getDate() - i);
+        const mins = dailyLog[d.toDateString()] || 0;
+        weeks[Math.floor(i/7)] += mins;
+        if(mins > 0){ dayTotals[d.getDay()] += mins; dayCounts[d.getDay()]++; }
+    }
+    const dayAverages = dayTotals.map((t,i) => dayCounts[i] > 0 ? Math.round(t / dayCounts[i]) : 0);
+    const maxAvg = Math.max(...dayAverages, 1);
+    const bestDayIdx = dayAverages.indexOf(Math.max(...dayAverages));
+    const hasEnoughData = Object.keys(dailyLog).length >= 3;
+
+    // آخر 7 أيام كأعمدة (لمحة سريعة، أوضح بصرياً من متوسطات كل التاريخ)
+    const last7 = [];
+    for(let i = 6; i >= 0; i--){
+        const d = new Date(); d.setDate(d.getDate() - i);
+        last7.push({ label: dayNames[d.getDay()], mins: dailyLog[d.toDateString()] || 0 });
+    }
+    const maxBar = Math.max(...last7.map(d => d.mins), 1);
+    const barsHtml = last7.map(d => `
+        <div style="display:flex; flex-direction:column; align-items:center; gap:4px; flex:1;">
+            <div style="width:100%; height:70px; display:flex; align-items:flex-end;">
+                <div style="width:100%; height:${Math.max(4, (d.mins/maxBar)*100)}%; background:linear-gradient(180deg, var(--gold), var(--gold-soft)); border-radius:4px 4px 0 0;"></div>
+            </div>
+            <span style="font-size:9.5px; color:var(--text-3);">${d.label}</span>
+        </div>`).join("");
+
+    const notes = getTaskNotes();
+    const noteEntries = Object.values(notes);
+
+    const box = document.getElementById("deep-report-content");
+    if(!hasEnoughData){
+        box.innerHTML = `<div class="empty-note">${currentLang==='ar'?'تحتاج بضعة أيام إضافية من المذاكرة الفعلية حتى يصبح لدينا بيانات كافية لتقرير حقيقي.':'You need a few more days of real study data before we can build a genuine report.'}</div>`;
+    } else {
+        const weekBars = weeks.map((w,i) => {
+            const label = i===0 ? (currentLang==='ar'?'هذا الأسبوع':'This week') : (currentLang==='ar'?`منذ ${i+1} أسابيع`:`${i+1} weeks ago`);
+            const maxW = Math.max(...weeks, 1);
+            return `<div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                <span style="width:90px; font-size:11px; color:var(--text-3);">${label}</span>
+                <div class="mini-progress" style="flex:1;"><div style="width:${Math.max(3,(w/maxW)*100)}%; background:var(--gold);"></div></div>
+                <span style="width:50px; font-size:11px; text-align:end;">${(w/60).toFixed(1)} ${currentLang==='ar'?'س':'h'}</span>
+            </div>`;
+        }).join("");
+
+        const dayBars = dayAverages.map((avg,i) => `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:5px;">
+                <span style="width:70px; font-size:11px; color:${i===bestDayIdx?'var(--gold)':'var(--text-3)'}; font-weight:${i===bestDayIdx?'700':'400'};">${dayNames[i]}</span>
+                <div class="mini-progress" style="flex:1;"><div style="width:${Math.max(3,(avg/maxAvg)*100)}%; background:${i===bestDayIdx?'var(--gold)':'var(--border)'};"></div></div>
+                <span style="width:40px; font-size:11px; text-align:end;">${avg} ${currentLang==='ar'?'د':'m'}</span>
+            </div>`).join("");
+
+        box.innerHTML = `
+            <div>
+                <b style="font-size:13px; display:block; margin-bottom:8px;">${currentLang==='ar'?'آخر 7 أيام':'Last 7 days'}</b>
+                <div style="display:flex; gap:4px;">${barsHtml}</div>
+            </div>
+            <div>
+                <b style="font-size:13px; display:block; margin-bottom:8px;">${currentLang==='ar'?'مقارنة آخر 4 أسابيع':'Last 4 weeks compared'}</b>
+                ${weekBars}
+            </div>
+            <div>
+                <b style="font-size:13px; display:block; margin-bottom:8px;">${currentLang==='ar'?'متوسط دقائق المذاكرة حسب يوم الأسبوع (كل التاريخ)':'Average study minutes by day of week (all-time)'}</b>
+                ${dayBars}
+                <p class="hint" style="margin-top:8px;">${currentLang==='ar'?`أفضل يوم لديك تاريخياً هو ${dayNames[bestDayIdx]}.`:`Your historically strongest day is ${dayNames[bestDayIdx]}.`}</p>
+            </div>
+            ${noteEntries.length ? `
+            <div>
+                <b style="font-size:13px; display:block; margin-bottom:8px;">${currentLang==='ar'?'📝 نقاط وضعت عليها ملاحظات':'📝 Points you flagged with notes'}</b>
+                <div style="display:flex; flex-direction:column; gap:6px;">
+                    ${noteEntries.slice(0,5).map(n => `<div style="font-size:12px; color:var(--text-2); background:var(--bg-alt); padding:8px 10px; border-radius:8px;">${escapeHtml(n)}</div>`).join("")}
+                </div>
+            </div>` : ""}`;
+    }
+    document.getElementById("deep-report-overlay").style.display = "flex";
+}
+
 function loadProfileForm(){
     document.getElementById("prof-name").value = localStorage.getItem("khuta_name") || "";
     document.getElementById("prof-last").value = localStorage.getItem("khuta_last") || "";
@@ -3441,6 +3620,7 @@ function loadProfileForm(){
         document.getElementById("avatar-placeholder").style.display = "none";
     }
     updateProfileHeader();
+    renderFrameShop();
 }
 
 function updateProfileHeader(){
@@ -4386,23 +4566,56 @@ async function startPresenceHeartbeat(){
 }
 
 /* ---------- حائط الأسئلة السريعة ---------- */
+const PIN_FORUM_COST = 30;
+const PIN_TEMPLATE_COST = 50;
+
 async function refreshForum(){
     const box = document.getElementById("forum-list");
     if(!box || !sb) return;
-    const { data, error } = await sb.from("forum_posts").select("id, author_name, message, created_at").order("created_at", { ascending:false }).limit(20);
+    const { data, error } = await sb.from("forum_posts").select("id, author_name, message, created_at, pinned_until").order("created_at", { ascending:false }).limit(20);
     if(error || !data || !data.length){
         box.innerHTML = `<div class="empty-note">${currentLang==='ar'?'لا توجد أسئلة بعد — ابدأ أنت!':'No questions yet — be the first!'}</div>`;
         return;
     }
-    box.innerHTML = data.map(row => `
-        <div style="padding:10px 6px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+    const now = Date.now();
+    const sorted = [...data].sort((a,b) => {
+        const aPinned = a.pinned_until && new Date(a.pinned_until).getTime() > now;
+        const bPinned = b.pinned_until && new Date(b.pinned_until).getTime() > now;
+        if(aPinned && !bPinned) return -1;
+        if(!aPinned && bPinned) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+    box.innerHTML = sorted.map(row => {
+        const isPinned = row.pinned_until && new Date(row.pinned_until).getTime() > now;
+        return `
+        <div style="padding:10px 6px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; gap:10px; align-items:flex-start; ${isPinned ? 'background:rgba(201,150,46,0.06); border-radius:10px;' : ''}">
             <div style="flex:1;">
+                ${isPinned ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span><br>` : ""}
                 <div style="font-size:13.5px;">${escapeHtml(row.message)}</div>
                 <div style="font-size:11px; color:var(--text-3); margin-top:4px;">${escapeHtml(row.author_name)} · ${new Date(row.created_at).toLocaleDateString(currentLang==='ar'?"ar-SA":"en-US")}</div>
             </div>
-            ${isAdmin ? `<button type="button" class="icon-action" style="flex-shrink:0;" title="${currentLang==='ar'?'حذف (صلاحية مشرف)':'Delete (admin)'}" onclick="deleteForumMessage(${row.id})"><i class="fa-solid fa-trash"></i></button>` : ""}
-        </div>`).join("");
+            <div style="display:flex; gap:6px; flex-shrink:0;">
+                ${!isPinned ? `<button type="button" class="icon-action" title="${currentLang==='ar'?`تثبيت (${PIN_FORUM_COST} XP)`:`Pin (${PIN_FORUM_COST} XP)`}" onclick="pinForumPostWithXP(${row.id})"><i class="fa-solid fa-thumbtack"></i></button>` : ""}
+                ${isAdmin ? `<button type="button" class="icon-action" title="${currentLang==='ar'?'حذف (صلاحية مشرف)':'Delete (admin)'}" onclick="deleteForumMessage(${row.id})"><i class="fa-solid fa-trash"></i></button>` : ""}
+            </div>
+        </div>`;
+    }).join("");
 }
+
+async function pinForumPostWithXP(id){
+    if(!sb) return;
+    if(getXP() < PIN_FORUM_COST){
+        showToast(currentLang==='ar' ? `تحتاج ${PIN_FORUM_COST} XP على الأقل — لديك ${getXP()} فقط` : `You need at least ${PIN_FORUM_COST} XP — you have ${getXP()}`);
+        return;
+    }
+    if(!confirm(currentLang==='ar' ? `تثبيت هذه الرسالة لأعلى القائمة لـ3 أيام مقابل ${PIN_FORUM_COST} XP؟` : `Pin this message to the top for 3 days for ${PIN_FORUM_COST} XP?`)) return;
+    const { error } = await sb.rpc("pin_forum_post", { post_id: id, days: 3 });
+    if(error){ showToast(currentLang==='ar'?'تعذّر التثبيت':'Could not pin'); console.error(error); return; }
+    setXP(getXP() - PIN_FORUM_COST);
+    showToast(currentLang==='ar' ? "📌 تم التثبيت لـ3 أيام" : "📌 Pinned for 3 days");
+    refreshForum();
+}
+
 async function deleteForumMessage(id){
     if(!sb) return;
     if(!confirm(currentLang==='ar' ? "حذف هذه الرسالة نهائياً؟" : "Permanently delete this message?")) return;
@@ -4421,7 +4634,7 @@ async function postForumMessage(){
     if(!uid) return;
     const session = getSession();
     const name = (session && session.username) || (localStorage.getItem("khuta_name") || (currentLang==='ar'?"طالب":"Student"));
-    const { error } = await sb.from("forum_posts").insert({ author_name: name, message: msg });
+    const { error } = await sb.from("forum_posts").insert({ author_name: name, author_id: uid, message: msg });
     if(!error){ input.value = ""; refreshForum(); }
     else showToast(currentLang==='ar'?'تعذّر النشر':'Could not post');
 }
@@ -4500,14 +4713,24 @@ async function refreshTemplates(){
         box.innerHTML = `<div class="empty-note">${currentLang==='ar'?'لا توجد قوالب بعد — كن أول من يشارك!':'No templates yet — be the first to share!'}</div>`;
         return;
     }
+    const now = Date.now();
+    templates.sort((a,b) => {
+        const aPinned = a.pinned_until && new Date(a.pinned_until).getTime() > now;
+        const bPinned = b.pinned_until && new Date(b.pinned_until).getTime() > now;
+        if(aPinned && !bPinned) return -1;
+        if(!aPinned && bPinned) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
     const { data: allRatings } = await sb.from("template_ratings").select("template_id, vote, comment, rater_id");
     box.innerHTML = templates.map(tpl => {
         const ratings = (allRatings || []).filter(r => r.template_id === tpl.id);
         const likes = ratings.filter(r => r.vote === "like").length;
         const dislikes = ratings.filter(r => r.vote === "dislike").length;
         const comments = ratings.filter(r => r.comment).slice(0, 2);
+        const isPinned = tpl.pinned_until && new Date(tpl.pinned_until).getTime() > now;
         return `
-        <div style="padding:16px; border-radius:16px; background:var(--bg-alt); border:1px solid var(--border); margin-bottom:12px;">
+        <div style="padding:16px; border-radius:16px; background:var(--bg-alt); border:1px solid var(--border); margin-bottom:12px; ${isPinned ? 'border-color:var(--gold);' : ''}">
+            ${isPinned ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700; display:block; margin-bottom:6px;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span>` : ""}
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
                 <div>
                     <b style="font-size:14.5px;">${escapeHtml(tpl.title)}</b>
@@ -4515,6 +4738,7 @@ async function refreshTemplates(){
                 </div>
                 <div style="display:flex; gap:6px; flex-shrink:0;">
                     <button type="button" class="btn btn-sm" onclick="useTemplate(${tpl.id})"><i class="fa-solid fa-download"></i> ${currentLang==='ar'?'استخدم':'Use'}</button>
+                    ${!isPinned ? `<div class="icon-action" title="${currentLang==='ar'?`تثبيت (${PIN_TEMPLATE_COST} XP)`:`Pin (${PIN_TEMPLATE_COST} XP)`}" onclick="pinTemplateWithXP(${tpl.id})"><i class="fa-solid fa-thumbtack"></i></div>` : ""}
                     ${isAdmin ? `<button type="button" class="icon-action" title="${currentLang==='ar'?'حذف (صلاحية مشرف)':'Delete (admin)'}" onclick="deleteTemplate(${tpl.id})"><i class="fa-solid fa-trash"></i></button>` : ""}
                 </div>
             </div>
@@ -4535,6 +4759,20 @@ async function deleteTemplate(id){
     const { error } = await sb.from("plan_templates").delete().eq("id", id);
     if(error){ showToast(currentLang==='ar'?'تعذّر الحذف':'Could not delete'); return; }
     showToast(currentLang==='ar' ? "🗑️ تم الحذف" : "🗑️ Deleted");
+    refreshTemplates();
+}
+
+async function pinTemplateWithXP(id){
+    if(!sb) return;
+    if(getXP() < PIN_TEMPLATE_COST){
+        showToast(currentLang==='ar' ? `تحتاج ${PIN_TEMPLATE_COST} XP على الأقل — لديك ${getXP()} فقط` : `You need at least ${PIN_TEMPLATE_COST} XP — you have ${getXP()}`);
+        return;
+    }
+    if(!confirm(currentLang==='ar' ? `تثبيت هذا القالب لأعلى القائمة لـ5 أيام مقابل ${PIN_TEMPLATE_COST} XP؟` : `Pin this template to the top for 5 days for ${PIN_TEMPLATE_COST} XP?`)) return;
+    const { error } = await sb.rpc("pin_template", { template_id: id, days: 5 });
+    if(error){ showToast(currentLang==='ar'?'تعذّر التثبيت':'Could not pin'); console.error(error); return; }
+    setXP(getXP() - PIN_TEMPLATE_COST);
+    showToast(currentLang==='ar' ? "📌 تم التثبيت لـ5 أيام" : "📌 Pinned for 5 days");
     refreshTemplates();
 }
 

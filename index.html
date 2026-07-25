@@ -748,6 +748,37 @@ tbody tr:last-child td{ border-bottom:none; }
 .profile-head{ display:flex; align-items:center; gap:20px; margin-bottom:22px; flex-wrap:wrap; }
 .avatar-wrap{ position:relative; width:96px; height:96px; flex-shrink:0; }
 .avatar-wrap img{ width:96px; height:96px; border-radius:50%; object-fit:cover; border:3px solid var(--gold); background:var(--bg-alt); }
+
+/* ============ إطارات الصورة الشخصية القابلة للشراء بـXP ============ */
+.avatar-wrap.frame-silver img{ border-color:#C7CCD1; box-shadow:0 0 0 3px rgba(199,204,209,0.35), 0 0 14px rgba(199,204,209,0.5); }
+.avatar-wrap.frame-fire{ position:relative; }
+.avatar-wrap.frame-fire::before{
+    content:""; position:absolute; inset:-5px; border-radius:50%; z-index:-1;
+    background:conic-gradient(from 0deg, #FF6B00, #FFC107, #FF3D00, #FFC107, #FF6B00);
+    animation:khuta-frame-spin 4s linear infinite;
+}
+.avatar-wrap.frame-fire img{ border-color:transparent; }
+.avatar-wrap.frame-diamond{ position:relative; }
+.avatar-wrap.frame-diamond::before{
+    content:""; position:absolute; inset:-5px; border-radius:50%; z-index:-1;
+    background:conic-gradient(from 0deg, #8ec5ff, #ffffff, #8ec5ff, #4a90e2, #8ec5ff);
+    animation:khuta-frame-spin 3s linear infinite;
+    box-shadow:0 0 16px rgba(142,197,255,0.7);
+}
+.avatar-wrap.frame-diamond img{ border-color:transparent; }
+.avatar-wrap.frame-royal{ position:relative; }
+.avatar-wrap.frame-royal::before{
+    content:""; position:absolute; inset:-6px; border-radius:50%; z-index:-1;
+    background:conic-gradient(from 0deg, var(--gold), #fff2cc, var(--gold), #B0812A, #fff2cc, var(--gold));
+    animation:khuta-frame-spin 5s linear infinite;
+    box-shadow:0 0 20px rgba(201,150,46,0.8);
+}
+.avatar-wrap.frame-royal img{ border-color:transparent; }
+.avatar-wrap.frame-royal::after{
+    content:"\f521"; font-family:"Font Awesome 6 Free"; font-weight:900; position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+    color:var(--gold); font-size:18px; text-shadow:0 0 6px rgba(201,150,46,0.9);
+}
+@keyframes khuta-frame-spin{ to{ transform:rotate(360deg); } }
 .avatar-edit{ position:absolute; bottom:-2px; left:-2px; width:32px; height:32px; border-radius:50%; background:var(--gold); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; border:3px solid var(--surface); font-size:12px; }
 
 /* ============ التنبيه / التايمر المنتهي ============ */
@@ -1158,6 +1189,15 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <div id="live-users-count" style="font-size:56px; font-weight:800; color:var(--gold); font-family:var(--font-mono);">—</div>
         <p class="hint" style="margin-top:10px;">يشمل هذا العدد الحسابات المجهولة (زوّار لم يسجّلوا دخولاً) التي فتحت قسم المجتمع.</p>
         <button type="button" class="btn btn-sm" style="margin-top:14px;" onclick="closeLiveUsersPanel()">إغلاق</button>
+    </div>
+</div>
+
+<div id="deep-report-overlay" class="overlay-screen" style="display:none; z-index:5100;">
+    <div class="wizard-card" style="max-width:520px; text-align:start;">
+        <h2 style="margin-bottom:6px;"><i class="fa-solid fa-chart-column"></i> <span data-i18n="deepreport.title">تقريرك الأسبوعي المتعمّق</span></h2>
+        <p class="card-sub" style="margin-bottom:14px;" data-i18n="deepreport.sub">تحليل حقيقي من بيانات مذاكرتك الفعلية — ليس تقديراً.</p>
+        <div id="deep-report-content" style="display:flex; flex-direction:column; gap:14px;"></div>
+        <button type="button" class="btn btn-sm" style="margin-top:16px;" onclick="document.getElementById('deep-report-overlay').style.display='none'"><span data-i18n="dash.done">تم</span></button>
     </div>
 </div>
 
@@ -1658,7 +1698,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
             <div class="card">
                 <h2 style="margin-bottom:18px;"><i class="fa-solid fa-user" style="color:var(--gold);"></i> <span data-i18n="profile.title">الملف الشخصي</span></h2>
                 <div class="profile-head">
-                    <div class="avatar-wrap">
+                    <div class="avatar-wrap" id="avatar-wrap">
                         <img id="avatar-img" src="" alt="avatar" style="display:none;">
                         <div id="avatar-placeholder" style="width:96px;height:96px;border-radius:50%;background:var(--bg-alt);display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--text-3);border:3px solid var(--border);"><i class="fa-solid fa-user"></i></div>
                         <label class="avatar-edit"><i class="fa-solid fa-camera"></i><input type="file" accept="image/*" id="avatar-input" style="display:none;" onchange="handleAvatarUpload(event)"></label>
@@ -1668,6 +1708,8 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                         <div class="card-sub" id="profile-display-goal" data-i18n="profile.noGoal">لم تحدد جامعة الهدف بعد</div>
                     </div>
                 </div>
+
+                <div id="frame-shop-list" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);"></div>
 
                 <form onsubmit="return saveProfile(event)">
                     <div class="input-row">
@@ -1783,6 +1825,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                     <div class="weight-chip"><b id="stat-pace">—</b><span data-i18n="stats.pace">متوسط الوقت لكل درس</span></div>
                 </div>
                 <div id="stat-week-compare" style="margin-top:16px; padding:14px 16px; background:var(--bg-alt); border-radius:14px; font-size:13px; line-height:2;"></div>
+                <button type="button" id="btn-deep-report" class="btn btn-outline btn-block" style="margin-top:12px;" onclick="handleDeepReportClick()"></button>
             </div>
 
             <div class="card">
