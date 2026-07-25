@@ -4090,7 +4090,12 @@ function usernameToEmail(username){
 }
 
 function getSession(){ try{ return JSON.parse(localStorage.getItem("khuta_session")) || null; }catch(e){ return null; } }
-function setSession(s){ localStorage.setItem("khuta_session", JSON.stringify(s)); }
+function setSession(s){
+    localStorage.setItem("khuta_session", JSON.stringify(s));
+    // شبكة أمان: تأكد أن khuta_name معبّأ دائماً أيضاً — إن اختفت الجلسة لأي
+    // سبب مستقبلاً، يبقى الطالب "معروفاً" محلياً بدل أن يُعامَل كزائر جديد بالكامل
+    if(!localStorage.getItem("khuta_name") && s.username) localStorage.setItem("khuta_name", s.username);
+}
 function clearSession(){ localStorage.removeItem("khuta_session"); }
 
 /* ---------- القفل التصاعدي ضد محاولات التخمين ---------- */
@@ -4230,7 +4235,10 @@ async function signInWithCreds(userId, passId, fromLoginScreen){
         applyRemoteSnapshot(row.data);
     }
     showToast(currentLang==='ar' ? "أهلاً بعودتك 👋" : "Welcome back 👋");
-    location.reload();
+    // مهلة قصيرة قبل إعادة التحميل — تمنح عميل Supabase وقتاً كافياً لحفظ
+    // الجلسة فعلياً في التخزين المحلي قبل تفريغ الصفحة (كان السبب الجذري
+    // لخروج طلاب من حساباتهم عند إعادة الفتح رغم تسجيل دخولهم بنجاح)
+    setTimeout(() => location.reload(), 400);
 }
 
 function toggleRecoveryEmailForm(){
@@ -4367,8 +4375,22 @@ async function updateAccountAuthButtonsVisibility(){
 /* استرجاع الجلسة تلقائياً عند فتح التطبيق (إن كان قد سجّل دخوله سابقاً) */
 async function restoreSession(){
     if(!sb) return;
-    const { data } = await sb.auth.getSession();
+    let { data } = await sb.auth.getSession();
     const session = getSession();
+
+    // ⚠️ إصلاح خلل حرج: getSession() قد يُرجع لا-جلسة عابرة لحظة تحميل الصفحة
+    // (خاصة مباشرة بعد تسجيل الدخول وإعادة تحميل الصفحة)، قبل أن يُكمل عميل
+    // Supabase قراءة الجلسة المحفوظة فعلياً من التخزين المحلي. كنا نمسح جلسة
+    // الطالب المحفوظة فوراً عند أول فحص، دون أي فرصة ثانية — هذا كان يُخرج
+    // طلاباً مسجَّلين فعلياً لشاشة الدخول خطأً. الآن: إن كانت لدينا جلسة محلية
+    // (khuta_session) لكن Supabase يقول "لا جلسة"، نُعيد المحاولة مرة واحدة
+    // بعد مهلة قصيرة قبل أن نستنتج أن الجلسة فعلاً منتهية.
+    if(session && (!data || !data.session)){
+        await new Promise(r => setTimeout(r, 600));
+        const retry = await sb.auth.getSession();
+        data = retry.data;
+    }
+
     if(data && data.session && session){
         renderAccountUI();
     } else if(!data || !data.session){

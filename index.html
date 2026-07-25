@@ -758,37 +758,39 @@ tbody tr:last-child td{ border-bottom:none; }
 
 /* ============ الملف الشخصي ============ */
 .profile-head{ display:flex; align-items:center; gap:20px; margin-bottom:22px; flex-wrap:wrap; }
-.avatar-wrap{ position:relative; width:96px; height:96px; flex-shrink:0; }
-.avatar-wrap img{ width:96px; height:96px; border-radius:50%; object-fit:cover; border:3px solid var(--gold); background:var(--bg-alt); }
+.avatar-wrap{ position:relative; width:96px; height:96px; flex-shrink:0; isolation:isolate; }
+.avatar-wrap img{ width:96px; height:96px; border-radius:50%; object-fit:cover; border:3px solid var(--gold); background:var(--bg-alt); position:relative; z-index:1; }
+.avatar-wrap #avatar-placeholder{ position:relative; z-index:1; }
 
-/* ============ إطارات الصورة الشخصية القابلة للشراء بـXP ============ */
-.avatar-wrap.frame-silver img{ border-color:#C7CCD1; box-shadow:0 0 0 3px rgba(199,204,209,0.35), 0 0 14px rgba(199,204,209,0.5); }
-.avatar-wrap.frame-fire{ position:relative; }
+/* ============ إطارات الصورة الشخصية القابلة للشراء بـXP ============
+   ⚠️ كل قاعدة هنا تُطبَّق على الصورة المرفوعة (img) وعلى الأيقونة الافتراضية
+   (#avatar-placeholder) معاً — هذا كان سبب عدم ظهور أي إطار لمن لم يرفع صورة
+   بعد. كذلك استُبدل z-index:-1 بـisolation:isolate + z-index:0 لتفادي مشكلة
+   شائعة حيث تختفي الحلقة خلف خلفية البطاقة في بعض المتصفحات. */
+.avatar-wrap.frame-silver img, .avatar-wrap.frame-silver #avatar-placeholder{ border-color:#C7CCD1; box-shadow:0 0 0 3px rgba(199,204,209,0.35), 0 0 14px rgba(199,204,209,0.5); }
 .avatar-wrap.frame-fire::before{
-    content:""; position:absolute; inset:-5px; border-radius:50%; z-index:-1;
+    content:""; position:absolute; inset:-5px; border-radius:50%; z-index:0;
     background:conic-gradient(from 0deg, #FF6B00, #FFC107, #FF3D00, #FFC107, #FF6B00);
     animation:khuta-frame-spin 4s linear infinite;
 }
-.avatar-wrap.frame-fire img{ border-color:transparent; }
-.avatar-wrap.frame-diamond{ position:relative; }
+.avatar-wrap.frame-fire img, .avatar-wrap.frame-fire #avatar-placeholder{ border-color:transparent; }
 .avatar-wrap.frame-diamond::before{
-    content:""; position:absolute; inset:-5px; border-radius:50%; z-index:-1;
+    content:""; position:absolute; inset:-5px; border-radius:50%; z-index:0;
     background:conic-gradient(from 0deg, #8ec5ff, #ffffff, #8ec5ff, #4a90e2, #8ec5ff);
     animation:khuta-frame-spin 3s linear infinite;
     box-shadow:0 0 16px rgba(142,197,255,0.7);
 }
-.avatar-wrap.frame-diamond img{ border-color:transparent; }
-.avatar-wrap.frame-royal{ position:relative; }
+.avatar-wrap.frame-diamond img, .avatar-wrap.frame-diamond #avatar-placeholder{ border-color:transparent; }
 .avatar-wrap.frame-royal::before{
-    content:""; position:absolute; inset:-6px; border-radius:50%; z-index:-1;
+    content:""; position:absolute; inset:-6px; border-radius:50%; z-index:0;
     background:conic-gradient(from 0deg, var(--gold), #fff2cc, var(--gold), #B0812A, #fff2cc, var(--gold));
     animation:khuta-frame-spin 5s linear infinite;
     box-shadow:0 0 20px rgba(201,150,46,0.8);
 }
-.avatar-wrap.frame-royal img{ border-color:transparent; }
+.avatar-wrap.frame-royal img, .avatar-wrap.frame-royal #avatar-placeholder{ border-color:transparent; }
 .avatar-wrap.frame-royal::after{
     content:"\f521"; font-family:"Font Awesome 6 Free"; font-weight:900; position:absolute; top:-14px; left:50%; transform:translateX(-50%);
-    color:var(--gold); font-size:18px; text-shadow:0 0 6px rgba(201,150,46,0.9);
+    color:var(--gold); font-size:18px; text-shadow:0 0 6px rgba(201,150,46,0.9); z-index:2;
 }
 @keyframes khuta-frame-spin{ to{ transform:rotate(360deg); } }
 .avatar-edit{ position:absolute; bottom:-2px; left:-2px; width:32px; height:32px; border-radius:50%; background:var(--gold); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; border:3px solid var(--surface); font-size:12px; }
