@@ -3014,6 +3014,9 @@ const MAX_ERROR_LOGS_PER_SESSION = 15;
 
 function logClientError(message, stackSummary){
     if(!sb) return;
+    // "Script error." رسالة أمان عامة يضعها المتصفح لأي خطأ من سكربت خارجي (CDN
+    // مثلاً) بدون تفاصيل حقيقية — لا قيمة تشخيصية لها، تسجيلها مجرد إزعاج بصري
+    if(String(message).trim() === "Script error." || String(message).trim() === "Script error") return;
     if(errorLogCountThisSession >= MAX_ERROR_LOGS_PER_SESSION) return;
     const key = String(message).slice(0, 150);
     if(loggedErrorMessages.has(key)) return; // نفس الخطأ لا يُسجَّل مرتين في نفس الجلسة
@@ -3124,6 +3127,20 @@ function editTaskNote(id){
     debouncedSync();
 }
 
+/* شرح مبسّط بالعربية لأكثر أنماط الأخطاء البرمجية شيوعاً — ليست ترجمة حرفية،
+   بل توضيح لما يعنيه الخطأ عملياً وهل يستحق قلقاً حقيقياً أم لا */
+function explainErrorInArabic(message){
+    const m = String(message).toLowerCase();
+    if(m.includes("is not defined")) return "دالة أو متغيّر غير معرَّف في الكود — خطأ برمجي حقيقي يحتاج مراجعة.";
+    if(m.includes("cannot read propert") && (m.includes("null") || m.includes("undefined"))) return "الكود حاول قراءة قيمة من عنصر غير موجود (عادة عنصر HTML لم يُحمَّل بعد أو أُزيل).";
+    if(m.includes("is not a function")) return "الكود حاول استدعاء شيء ليس دالة فعلياً — خطأ برمجي يحتاج مراجعة.";
+    if(m.includes("failed to fetch") || m.includes("networkerror")) return "مشكلة اتصال بالإنترنت أو بالخادم — غالباً مؤقتة وتخص جهاز الطالب نفسه، ليست بالضرورة خللاً في الموقع.";
+    if(m.includes("quotaexceeded")) return "مساحة التخزين المحلي في متصفح الطالب ممتلئة — نادر ولا علاقة له بالموقع.";
+    if(m.includes("unexpected token") || m.includes("syntaxerror")) return "خطأ في صياغة الكود نفسه — يحتاج مراجعة عاجلة، نادراً ما يحدث من كود مكتمل الاختبار.";
+    if(m.includes("not authorized") || m.includes("permission")) return "محاولة وصول لبيانات بدون صلاحية كافية — تحقّق من إعدادات RLS في Supabase.";
+    return "خطأ غير مصنَّف — راجع التفاصيل الكاملة أدناه، أو أرسلها لي إن لم يتضح السبب.";
+}
+
 async function openErrorLogsPanel(){
     if(!isAdmin || !sb) return;
     document.getElementById("admin-overlay").style.display = "none";
@@ -3138,6 +3155,7 @@ async function openErrorLogsPanel(){
     list.innerHTML = data.map(e => `
         <div style="padding:10px 12px; background:var(--bg-alt); border-radius:10px; border:1px solid var(--border); font-size:12px;">
             <b style="color:var(--rose);">${escapeHtml(e.message || "")}</b>
+            <div style="color:var(--gold); margin-top:6px; font-weight:600;">💡 ${explainErrorInArabic(e.message)}</div>
             <div style="color:var(--text-3); margin-top:4px;">${escapeHtml(e.page_url || "")} · ${new Date(e.created_at).toLocaleString("ar-SA")}</div>
             ${e.stack_summary ? `<div style="color:var(--text-3); margin-top:4px; font-family:var(--font-mono); font-size:10.5px; white-space:pre-wrap; word-break:break-word;">${escapeHtml(e.stack_summary.slice(0,300))}</div>` : ""}
         </div>`).join("");
@@ -3265,10 +3283,34 @@ const ONBOARDING_STEPS = [
         textEn: "Add the badges or community card to your dashboard, or hide what you don't need — from the 'Customize dashboard' button.",
     },
     {
+        selector: '[data-tab="calculator"]',
+        titleAr: "حاسبة الموزونة", titleEn: "Weighted score calculator",
+        textAr: "احسب نسبتك الموزونة لأكثر من 30 جامعة سعودية، مع توضيح إن كان STEP مطلوباً لجامعتك أو تخصصك تحديداً.",
+        textEn: "Calculate your weighted score for 30+ Saudi universities, with clarity on whether STEP is required for your specific university or major.",
+    },
+    {
+        selector: '[data-tab="links"]',
+        titleAr: "روابط كل مصادرك", titleEn: "All your source links",
+        textAr: "روابط مباشرة لكل الدورات (إيهاب، المنصف، المعاصر، المفكر) في مكان واحد، بدل البحث عنها كل مرة.",
+        textEn: "Direct links to every course (Ehab, Monsif, Moasser, Mufakkir) in one place, instead of searching for them each time.",
+    },
+    {
+        selector: '[data-tab="specialties"]',
+        titleAr: "دليل التخصصات", titleEn: "Specialty guide",
+        textAr: "أكثر من 20 تخصصاً جامعياً مع وصف كل واحد ومساره الوظيفي والجامعات التي توفره — مفيد إن كنت لم تحسم تخصصك بعد.",
+        textEn: "20+ university majors with descriptions, career paths, and which universities offer them — useful if you haven't decided on a major yet.",
+    },
+    {
+        selector: '[data-tab="community"]',
+        titleAr: "لست وحدك", titleEn: "You're not alone",
+        textAr: "شاهد كم طالباً يذاكر الآن معك، شارك في لوحة الصدارة الأسبوعية، أو اطرح سؤالاً سريعاً على حائط الأسئلة.",
+        textEn: "See how many students are studying right now with you, join the weekly leaderboard, or ask a quick question on the community wall.",
+    },
+    {
         id: "chatbot-fab",
         titleAr: "مساعدك دائماً هنا", titleEn: "Your assistant is always here",
-        textAr: "اسأل عن أي سؤال كمي أو لفظي، أو عن أي ميزة في الموقع لا تعرفها بعد.",
-        textEn: "Ask any quant or verbal question, or about any site feature you haven't discovered yet.",
+        textAr: "اسأل عن أي سؤال كمي أو لفظي، أو عن أي ميزة في الموقع لا تعرفها بعد — أو حتى عن الأوسمة السرّية 👀",
+        textEn: "Ask any quant or verbal question, or about any site feature you haven't discovered yet — even the secret badges 👀",
     },
 ];
 
@@ -3278,15 +3320,27 @@ function shouldShowOnboardingTour(){
 
 function startOnboardingTour(){
     if(!shouldShowOnboardingTour()) return;
+    if(isLoginOverlayVisible()){ setTimeout(startOnboardingTour, 1000); return; } // انتظر حتى تُغلق شاشة الدخول أولاً
     localStorage.setItem("khuta_onboarding_done", "1"); // نُعلّم فوراً حتى لا تتكرر حتى لو أُغلقت الصفحة منتصف الجولة
     runOnboardingStep(0);
+}
+
+function isLoginOverlayVisible(){
+    const el = document.getElementById("login-overlay");
+    if(!el) return false;
+    const display = el.style.display || getComputedStyle(el).display;
+    return display !== "none";
 }
 
 function runOnboardingStep(index){
     document.getElementById("onboarding-overlay")?.remove();
     if(index >= ONBOARDING_STEPS.length) return;
+    if(isLoginOverlayVisible()) return; // ظهرت شاشة الدخول أثناء الجولة (تجديد جلسة مثلاً) — نتوقف بأمان
     const step = ONBOARDING_STEPS[index];
-    let target = document.getElementById(step.id);
+    let target = step.id ? document.getElementById(step.id) : null;
+    if((!target || target.offsetParent === null) && step.selector){
+        target = Array.from(document.querySelectorAll(step.selector)).find(el => el.offsetParent !== null);
+    }
     if((!target || target.offsetParent === null) && step.fallbackId) target = document.getElementById(step.fallbackId);
     if(!target || target.offsetParent === null){ runOnboardingStep(index + 1); return; } // العنصر غير ظاهر في هذا الجهاز — تخطَّ الخطوة
 
@@ -3298,6 +3352,7 @@ function runOnboardingStep(index){
     overlay.innerHTML = `
         <div class="onboarding-spotlight" style="top:${rect.top - pad}px; left:${rect.left - pad}px; width:${rect.width + pad*2}px; height:${rect.height + pad*2}px;"></div>
         <div class="onboarding-card" style="top:${Math.min(rect.bottom + 16, window.innerHeight - 180)}px; left:${Math.max(16, Math.min(rect.left, window.innerWidth - 300))}px;">
+            <span class="onboarding-step-count">${index + 1} / ${ONBOARDING_STEPS.length}</span>
             <b>${currentLang==='ar' ? step.titleAr : step.titleEn}</b>
             <p>${currentLang==='ar' ? step.textAr : step.textEn}</p>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
@@ -3356,6 +3411,18 @@ async function subscribeToPushNotifications(){
         console.error("[خُطى] تعذّر تفعيل إشعارات Push:", e);
         showToast(currentLang==='ar' ? "تعذّر تفعيل الإشعارات" : "Couldn't enable notifications");
     }
+}
+
+async function openLiveUsersPanel(){
+    if(!isAdmin) return;
+    document.getElementById("admin-overlay").style.display = "none";
+    document.getElementById("live-users-overlay").style.display = "flex";
+    if(!presenceChannel) await startPresenceHeartbeat(); // نضمن اتصال قناة الحضور حتى لو لم يزر المشرف صفحة المجتمع
+    const count = presenceChannel ? Object.keys(presenceChannel.presenceState()).length || 1 : 1;
+    document.getElementById("live-users-count").textContent = count;
+}
+function closeLiveUsersPanel(){
+    document.getElementById("live-users-overlay").style.display = "none";
 }
 
 function loadProfileForm(){
@@ -4248,7 +4315,7 @@ async function upsertLeaderboardRow(){
 async function refreshLeaderboard(){
     const box = document.getElementById("leaderboard-list");
     if(!box || !sb) return;
-    const { data, error } = await sb.from("leaderboard").select("display_name, xp").order("xp", { ascending:false }).limit(10);
+    const { data, error } = await sb.from("leaderboard").select("id, display_name, xp").order("xp", { ascending:false }).limit(10);
     if(error || !data || !data.length){
         box.innerHTML = `<div class="empty-note">${currentLang==='ar'?'لا يوجد طلاب مشاركون بعد — كن أول من ينضم!':'No participants yet — be the first to join!'}</div>`;
         return;
@@ -4256,9 +4323,28 @@ async function refreshLeaderboard(){
     box.innerHTML = data.map((row, i) => `
         <div style="display:flex; align-items:center; gap:12px; padding:10px 6px; border-bottom:1px solid var(--border);">
             <b style="width:24px; color:${i<3?'var(--gold)':'var(--text-3)'};">#${i+1}</b>
-            <span style="flex:1; font-weight:600;">${escapeHtml(row.display_name)}</span>
+            <span style="flex:1; font-weight:600;">${getPrestigeFlair(row.xp)}${escapeHtml(row.display_name)}</span>
             <span style="font-family:var(--font-mono); color:var(--gold); font-weight:700;">${row.xp} XP</span>
+            ${isAdmin ? `<div class="icon-action" style="width:26px; height:26px; font-size:10px;" title="${currentLang==='ar'?'إزالة من لوحة الصدارة':'Remove from leaderboard'}" onclick="removeLeaderboardEntry('${row.id}')"><i class="fa-solid fa-ban"></i></div>` : ""}
         </div>`).join("");
+}
+
+/* رمز مكانة بسيط بجانب الاسم حسب مستوى XP — يمنح رقم XP قيمة اجتماعية
+   ظاهرة فعلياً في لوحة الصدارة، وليس مجرد رقم بلا أثر */
+function getPrestigeFlair(xp){
+    if(xp >= 1000) return '<i class="fa-solid fa-crown" style="color:var(--gold); margin-inline-end:4px;" title="خبير قدرات"></i>';
+    if(xp >= 600) return '<i class="fa-solid fa-star" style="color:var(--gold); margin-inline-end:4px;" title="محترف"></i>';
+    if(xp >= 300) return '<i class="fa-solid fa-bolt" style="color:var(--teal); margin-inline-end:4px;" title="متمرّس"></i>';
+    return '';
+}
+
+async function removeLeaderboardEntry(id){
+    if(!isAdmin || !sb) return;
+    if(!confirm(currentLang==='ar' ? "إزالة هذا الطالب نهائياً من لوحة الصدارة؟" : "Permanently remove this student from the leaderboard?")) return;
+    const { error } = await sb.from("leaderboard").delete().eq("id", id);
+    if(error){ showToast(currentLang==='ar'?'تعذّرت الإزالة':'Could not remove'); return; }
+    showToast(currentLang==='ar' ? "🚫 أُزيل من لوحة الصدارة" : "🚫 Removed from leaderboard");
+    refreshLeaderboard();
 }
 
 /* ---------- غرفة المذاكرة (حضور حي) ---------- */
@@ -4283,6 +4369,8 @@ async function startPresenceHeartbeat(){
                 const count = Object.keys(state).length || 1;
                 if(el) el.textContent = count;
                 if(dashEl) dashEl.textContent = count;
+                const liveEl = document.getElementById("live-users-count");
+                if(liveEl) liveEl.textContent = count;
             })
             .subscribe(async (status) => {
                 if(status === "SUBSCRIBED"){

@@ -254,6 +254,22 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
 .view-section.active{ display:block; animation:riseIn .5s var(--ease); }
 @keyframes riseIn{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
 
+/* انتقال أجمل بين الأقسام — للكمبيوتر فقط، تفادياً لأي تعقيد إضافي على الهاتف */
+@media (min-width:993px){
+    .view-section.active{ animation:riseInDesktop .45s cubic-bezier(.16,1,.3,1); }
+    @keyframes riseInDesktop{
+        from{ opacity:0; transform:translateY(18px) scale(0.985); filter:blur(2px); }
+        to{ opacity:1; transform:translateY(0) scale(1); filter:blur(0); }
+    }
+    /* تلاشٍ خفيف متتابع لبطاقات القسم — يعطي إحساساً أكثر احترافية عند التنقل */
+    .view-section.active > .card{ animation:cardFadeUp .45s cubic-bezier(.16,1,.3,1) backwards; }
+    .view-section.active > .card:nth-child(1){ animation-delay:.03s; }
+    .view-section.active > .card:nth-child(2){ animation-delay:.08s; }
+    .view-section.active > .card:nth-child(3){ animation-delay:.13s; }
+    .view-section.active > .card:nth-child(n+4){ animation-delay:.16s; }
+    @keyframes cardFadeUp{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+}
+
 .card{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-card);
     padding:28px; box-shadow:var(--shadow-md); margin-bottom:0;
@@ -303,6 +319,7 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
 }
 .onboarding-card b{ display:block; font-size:14.5px; margin-bottom:6px; color:var(--gold); }
 .onboarding-card p{ font-size:12.5px; color:var(--text-2); line-height:1.7; }
+.onboarding-step-count{ display:block; font-size:10.5px; color:var(--text-3); font-weight:700; margin-bottom:4px; }
 /* ============ عناصر زخرفية خفيفة في الخلفية — غير مشتتة عمداً ============ */
 .bg-decor{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
 .bg-decor svg{ position:absolute; opacity:0.16; color:var(--gold); transition:opacity 0.6s ease, filter 0.6s ease, color 0.6s ease; }
@@ -517,7 +534,7 @@ textarea{ resize:vertical; min-height:100px; }
 /* ============ الشاشات المنبثقة ============ */
 .overlay-screen{
     position:fixed; inset:0; z-index:3000; display:flex; align-items:flex-start; justify-content:center;
-    padding:20px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:20px; padding-top:calc(20px + env(safe-area-inset-top)); overflow-y:auto; -webkit-overflow-scrolling:touch;
     background: radial-gradient(1200px 700px at 50% -10%, rgba(201,150,46,0.12), transparent 60%), var(--bg);
 }
 .wizard-card{
@@ -1108,6 +1125,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <div class="divider"></div>
         <button type="button" class="btn btn-sm btn-outline btn-block" onclick="openErrorLogsPanel()"><i class="fa-solid fa-bug"></i> سجل الأخطاء البرمجية</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openAnalyticsPanel()"><i class="fa-solid fa-chart-line"></i> لوحة التحليلات</button>
+        <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openLiveUsersPanel()"><i class="fa-solid fa-signal"></i> المتصلون الآن بالتفصيل</button>
         <button type="button" class="btn btn-sm btn-outline" style="margin-top:10px;" onclick="document.getElementById('admin-overlay').style.display='none'">إغلاق</button>
     </div>
 </div>
@@ -1130,6 +1148,16 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <p class="card-sub" style="margin-bottom:14px;">نظرة سريعة على استخدام الموقع فعلياً.</p>
         <div id="analytics-content" style="display:flex; flex-direction:column; gap:12px;"></div>
         <button type="button" class="btn btn-sm" style="margin-top:14px;" onclick="document.getElementById('analytics-overlay').style.display='none'">إغلاق</button>
+    </div>
+</div>
+
+<div id="live-users-overlay" class="overlay-screen" style="display:none; z-index:5100;">
+    <div class="wizard-card" style="max-width:420px; text-align:center;">
+        <h2 style="margin-bottom:6px;"><i class="fa-solid fa-signal"></i> المتصلون الآن</h2>
+        <p class="card-sub" style="margin-bottom:14px;">عدد حي عبر Realtime Presence — يتحدّث تلقائياً كل ثانية.</p>
+        <div id="live-users-count" style="font-size:56px; font-weight:800; color:var(--gold); font-family:var(--font-mono);">—</div>
+        <p class="hint" style="margin-top:10px;">يشمل هذا العدد الحسابات المجهولة (زوّار لم يسجّلوا دخولاً) التي فتحت قسم المجتمع.</p>
+        <button type="button" class="btn btn-sm" style="margin-top:14px;" onclick="closeLiveUsersPanel()">إغلاق</button>
     </div>
 </div>
 
