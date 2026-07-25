@@ -4058,6 +4058,13 @@ function initOAuthListener(){
             document.getElementById("password-recovery-overlay").style.display = "flex";
             return;
         }
+        // ⚠️ إصلاح خلل حرج: sb.auth.signInWithPassword (تسجيل الدخول باسم مستخدم)
+        // يُطلق أيضاً حدث SIGNED_IN هذا بالضبط، وكان هذا المستمع يعالجه بشكل
+        // مستقل ومتزامن مع معالجة signInWithCreds الخاصة به لنفس الحدث —
+        // سباق حقيقي بين مسارين، وهو ما كان يُعيد الطالب لشاشة الدخول بعد
+        // نجاح الدخول بلحظة تقريباً. الآن نتجاهل هذا الحدث تماماً إن كان هناك
+        // مسار تسجيل دخول يدوي (signInWithCreds/signUpWithCreds) يُعالجه بالفعل.
+        if(manualAuthInProgress) return;
         if(event !== "SIGNED_IN" || !session || !session.user) return;
         const existing = getSession();
         if(existing && existing.uid === session.user.id) return; // جلسة معروفة أصلاً
@@ -4090,6 +4097,8 @@ function usernameToEmail(username){
 }
 
 function getSession(){ try{ return JSON.parse(localStorage.getItem("khuta_session")) || null; }catch(e){ return null; } }
+let manualAuthInProgress = false; // يمنع ازدواجية معالجة نفس حدث تسجيل الدخول بين signInWithCreds/signUpWithCreds والمستمع العام
+
 function setSession(s){
     localStorage.setItem("khuta_session", JSON.stringify(s));
     // شبكة أمان: تأكد أن khuta_name معبّأ دائماً أيضاً — إن اختفت الجلسة لأي
@@ -4160,9 +4169,11 @@ async function signUpWithCreds(userId, passId, pass2Id, fromLoginScreen){
     if(pass !== pass2){ showToast(currentLang==='ar' ? "كلمتا المرور غير متطابقتين" : "Passwords don't match"); return; }
 
     setAccountBusy(true);
+    manualAuthInProgress = true;
     const email = usernameToEmail(username);
     const { data, error } = await sb.auth.signUp({ email, password: pass });
     if(error){
+        manualAuthInProgress = false;
         setAccountBusy(false);
         console.error("[خُطى] خطأ Supabase الكامل عند التسجيل (أرسل هذا للمطوّر إن استمرت المشكلة):", error);
         const msg = /already|registered/i.test(error.message) ? (currentLang==='ar'?"اسم المستخدم مُستخدم بالفعل":"Username already taken")
@@ -4182,6 +4193,7 @@ async function signUpWithCreds(userId, passId, pass2Id, fromLoginScreen){
     if(!data.session){
         // Supabase لم يُرجع جلسة فورية — يعني "Confirm email" لا يزال مفعّلاً، وهذا الحساب
         // لن يعمل لتسجيل الدخول لاحقاً لأن بريد التأكيد يذهب لعنوان وهمي لا يملكه الطالب.
+        manualAuthInProgress = false;
         showToast(currentLang==='ar'
             ? "⚠️ تم إنشاء الحساب لكنه غير مفعّل — يتطلب Supabase تأكيد بريد لن يصل أبداً. اذهب لإعدادات Supabase وأطفئ 'Confirm email' ثم أعد المحاولة."
             : "⚠️ Account created but not activated — Supabase still requires email confirmation you'll never receive. Go to Supabase settings and turn off 'Confirm email', then try again.");
@@ -4192,6 +4204,7 @@ async function signUpWithCreds(userId, passId, pass2Id, fromLoginScreen){
     if(fromLoginScreen){ document.getElementById("login-overlay").style.display = "none"; }
     renderAccountUI();
     finishLoginBoot();
+    manualAuthInProgress = false;
 }
 
 /* ---------- تسجيل الدخول ---------- */
@@ -4210,11 +4223,13 @@ async function signInWithCreds(userId, passId, fromLoginScreen){
     }
 
     setAccountBusy(true);
+    manualAuthInProgress = true;
     const email = usernameToEmail(username);
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
     setAccountBusy(false);
 
     if(error){
+        manualAuthInProgress = false;
         console.error("[خُطى] خطأ Supabase الكامل عند تسجيل الدخول:", error);
         if(/confirm/i.test(error.message)){
             showToast(currentLang==='ar'
