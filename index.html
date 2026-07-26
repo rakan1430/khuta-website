@@ -375,6 +375,17 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
     0%,100%{ box-shadow: 0 0 0 1px rgba(201,150,46,0.25), 0 0 14px rgba(201,150,46,0.25); }
     50%{ box-shadow: 0 0 0 1px rgba(201,150,46,0.4), 0 0 24px rgba(201,150,46,0.55); }
 }
+
+/* توهج حسب شعبية القالب (عدد الإعجابات) — بدون الحاجة لدفع XP، يظهر تلقائياً */
+.trending-glow-warm{
+    border: 1.5px solid rgba(201,150,46,0.5) !important;
+    box-shadow: 0 0 12px rgba(201,150,46,0.2);
+}
+.trending-glow-hot{
+    border: 1.5px solid var(--gold) !important;
+    box-shadow: 0 0 0 1px rgba(201,150,46,0.3), 0 0 22px rgba(201,150,46,0.45);
+    animation: pinnedGlowPulse 2.8s ease-in-out infinite;
+}
 /* ============ عناصر زخرفية خفيفة في الخلفية — غير مشتتة عمداً ============ */
 .bg-decor{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
 .bg-decor svg{ position:absolute; opacity:0.16; color:var(--gold); transition:opacity 0.6s ease, filter 0.6s ease, color 0.6s ease; }
@@ -1217,6 +1228,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <button type="button" class="btn btn-sm btn-outline btn-block" onclick="openErrorLogsPanel()"><i class="fa-solid fa-bug"></i> سجل الأخطاء البرمجية</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openAnalyticsPanel()"><i class="fa-solid fa-chart-line"></i> لوحة التحليلات</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openLiveUsersPanel()"><i class="fa-solid fa-signal"></i> المتصلون الآن بالتفصيل</button>
+        <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openVisitStatsPanel()"><i class="fa-solid fa-eye"></i> زيارات الموقع اليوم</button>
         <button type="button" class="btn btn-sm btn-outline" style="margin-top:10px;" onclick="document.getElementById('admin-overlay').style.display='none'">إغلاق</button>
     </div>
 </div>
@@ -1249,6 +1261,19 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <div id="live-users-count" style="font-size:56px; font-weight:800; color:var(--gold); font-family:var(--font-mono);">—</div>
         <p class="hint" style="margin-top:10px;">يشمل هذا العدد الحسابات المجهولة (زوّار لم يسجّلوا دخولاً) التي فتحت قسم المجتمع.</p>
         <button type="button" class="btn btn-sm" style="margin-top:14px;" onclick="closeLiveUsersPanel()">إغلاق</button>
+    </div>
+</div>
+
+<div id="visit-stats-overlay" class="overlay-screen" style="display:none; z-index:5100;">
+    <div class="wizard-card" style="max-width:420px; text-align:center;">
+        <h2 style="margin-bottom:6px;"><i class="fa-solid fa-eye"></i> زيارات الموقع اليوم</h2>
+        <p class="card-sub" style="margin-bottom:14px;">تشمل كل الزيارات — بحساب أو كضيف — وتتحدّث كل 5 ثوانٍ تلقائياً.</p>
+        <div id="visit-today-count" style="font-size:56px; font-weight:800; color:var(--gold); font-family:var(--font-mono);">—</div>
+        <p class="card-sub" style="margin-top:4px;">زيارة اليوم</p>
+        <div style="margin-top:16px; padding:12px 14px; background:var(--bg-alt); border-radius:12px; font-size:13px;">
+            <span style="color:var(--text-3);">آخر زيارة: </span><b id="visit-last-time">—</b>
+        </div>
+        <button type="button" class="btn btn-sm" style="margin-top:16px;" onclick="closeVisitStatsPanel()">إغلاق</button>
     </div>
 </div>
 

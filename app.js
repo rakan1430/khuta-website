@@ -745,6 +745,7 @@ setInterval(() => {
    ============================================================ */
 window.onload = () => {
     captureReferralParam();
+    logSiteVisit();
     applyI18n();
     ensureTaskStatusFreshToday();
     tryLoadUniversitiesFromSupabase();
@@ -3241,13 +3242,21 @@ function captureReferralParam(){
     const ref = params.get("ref");
     if(ref && ref.length > 10){ // فحص بسيط أنه يشبه UID فعلي
         localStorage.setItem("khuta_pending_referral", ref);
+        localStorage.setItem("khuta_pending_referral_ts", Date.now().toString());
     }
 }
 
 async function recordPendingReferral(newUid){
     if(!sb) return;
     const referrerId = localStorage.getItem("khuta_pending_referral");
-    if(!referrerId || referrerId === newUid) return; // لا يمكن دعوة نفسك
+    const capturedAt = parseInt(localStorage.getItem("khuta_pending_referral_ts")) || 0;
+    const REFERRAL_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 ساعة — قيمة قديمة أكثر من هذا تُعتبر ملغاة تلقائياً
+    if(!referrerId || Date.now() - capturedAt > REFERRAL_EXPIRY_MS){
+        localStorage.removeItem("khuta_pending_referral");
+        localStorage.removeItem("khuta_pending_referral_ts");
+        return;
+    }
+    if(referrerId === newUid) return; // لا يمكن دعوة نفسك
     try{
         const { error } = await sb.from("referrals").insert({ referrer_id: referrerId, referred_id: newUid });
         if(!error){
@@ -3256,6 +3265,7 @@ async function recordPendingReferral(newUid){
         }
     }catch(e){ /* فشل تسجيل الدعوة ليس خطأً حرجاً — نتجاهله بصمت */ }
     localStorage.removeItem("khuta_pending_referral");
+    localStorage.removeItem("khuta_pending_referral_ts");
 }
 
 async function checkAndClaimReferralRewards(){
@@ -3711,6 +3721,87 @@ function renderAvatarDisplay(){
     }
 }
 
+function logSiteVisit(){
+    if(!sb) return;
+    const isGuest = !getSession();
+    sb.from("site_visits").insert({ is_guest: isGuest }).then(() => {}, () => {}); // فشل التسجيل ليس حرجاً، تجاهل بصمت
+}
+
+let visitStatsPollTimer = null;
+async function openVisitStatsPanel(){
+    if(!isAdmin || !sb) return;
+    document.getElementById("admin-overlay").style.display = "none";
+    document.getElementById("visit-stats-overlay").style.display = "flex";
+    await refreshVisitStats();
+    clearInterval(visitStatsPollTimer);
+    visitStatsPollTimer = setInterval(refreshVisitStats, 5000);
+}
+function closeVisitStatsPanel(){
+    document.getElementById("visit-stats-overlay").style.display = "none";
+    clearInterval(visitStatsPollTimer);
+}
+async function refreshVisitStats(){
+    const { data, error } = await sb.rpc("get_visit_stats");
+    if(error || !data) return;
+    document.getElementById("visit-today-count").textContent = data.today_count ?? 0;
+    document.getElementById("visit-last-time").textContent = data.last_visit
+        ? new Date(data.last_visit).toLocaleString("ar-SA")
+        : (currentLang==='ar' ? "لا توجد زيارات بعد" : "No visits yet");
+}
+
+/* ============================================================
+   35) حل تعارض البيانات بين تقدّم ضيف محلي وحساب له بيانات محفوظة —
+   يظهر فقط عند وجود تعارض حقيقي (كلاهما لديه تقدّم فعلي)، وليس أبداً
+   لزائر جديد بلا أي تقدّم.
+   ============================================================ */
+function hasMeaningfulLocalProgress(){
+    return !!localStorage.getItem("khuta_plan_days");
+}
+function snapshotHasMeaningfulProgress(snap){
+    return !!(snap && snap.khuta_plan_days);
+}
+
+function resolveAccountDataConflict(remoteSnapshot){
+    return new Promise((resolve) => {
+        const guestHasProgress = hasMeaningfulLocalProgress();
+        const accountHasProgress = snapshotHasMeaningfulProgress(remoteSnapshot);
+
+        if(!guestHasProgress || !accountHasProgress){
+            // لا تعارض حقيقياً — إن كان للحساب بيانات، طبّقها مباشرة؛ وإلا أبقِ تقدّم الضيف كما هو
+            if(accountHasProgress) applyRemoteSnapshot(remoteSnapshot);
+            resolve();
+            return;
+        }
+
+        const overlay = document.createElement("div");
+        overlay.className = "overlay-screen";
+        overlay.style.zIndex = "4900";
+        overlay.innerHTML = `
+            <div class="wizard-card" style="max-width:440px; text-align:center;">
+                <h2 style="margin-bottom:8px;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--gold);"></i> ${currentLang==='ar'?'لديك تقدّمان مختلفان':'You have two different progress records'}</h2>
+                <p class="card-sub" style="margin-bottom:20px; line-height:1.9;">${currentLang==='ar'
+                    ? "ذاكرت كضيف على هذا الجهاز، ولحسابك أيضاً بيانات محفوظة من قبل. أيهما تريد الاحتفاظ به؟ (الخيار الآخر سيُفقَد نهائياً)"
+                    : "You've been studying as a guest on this device, and your account also has previously saved data. Which do you want to keep? (The other will be lost permanently)"}</p>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button type="button" class="btn" id="keep-guest-btn">${currentLang==='ar'?'الاحتفاظ بتقدّمي الحالي (كضيف)':'Keep my current progress (as guest)'}</button>
+                    <button type="button" class="btn btn-outline" id="load-account-btn">${currentLang==='ar'?'تحميل بيانات حسابي المحفوظة':"Load my account's saved data"}</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+        overlay.querySelector("#keep-guest-btn").onclick = () => {
+            // نُبقي كل شيء محلياً كما هو، لكن نرفع نسخة الضيف الحالية لتصبح بيانات الحساب من الآن فصاعداً
+            overlay.remove();
+            debouncedSync();
+            resolve();
+        };
+        overlay.querySelector("#load-account-btn").onclick = () => {
+            applyRemoteSnapshot(remoteSnapshot);
+            overlay.remove();
+            resolve();
+        };
+    });
+}
+
 function loadProfileForm(){
     document.getElementById("prof-name").value = localStorage.getItem("khuta_name") || "";
     document.getElementById("prof-last").value = localStorage.getItem("khuta_last") || "";
@@ -4108,7 +4199,7 @@ function initOAuthListener(){
         const { data: row } = await sb.from("user_data").select("data, username").eq("id", uid).maybeSingle();
         if(row){
             setSession({ uid, username: row.username });
-            if(row.data) applyRemoteSnapshot(row.data);
+            if(row.data) await resolveAccountDataConflict(row.data);
         } else {
             const displayName = session.user.user_metadata && (session.user.user_metadata.full_name || session.user.user_metadata.name);
             const username = displayName || (currentLang==='ar' ? "طالب" : "Student") + "_" + uid.slice(0,5);
@@ -4281,7 +4372,7 @@ async function signInWithCreds(userId, passId, fromLoginScreen){
 
     const { data: row } = await sb.from("user_data").select("data, username").eq("id", uid).maybeSingle();
     if(row && row.data){
-        applyRemoteSnapshot(row.data);
+        await resolveAccountDataConflict(row.data);
     }
     // ⚠️ لم نعد نُعيد تحميل الصفحة إطلاقاً بعد الآن — كانت هذه المقامرة على
     // توقيت حفظ Supabase لجلسته الداخلية في التخزين هي السبب الجذري الحقيقي
@@ -4433,28 +4524,31 @@ async function updateAccountAuthButtonsVisibility(){
 /* استرجاع الجلسة تلقائياً عند فتح التطبيق (إن كان قد سجّل دخوله سابقاً) */
 async function restoreSession(){
     if(!sb) return;
-    let { data } = await sb.auth.getSession();
     const session = getSession();
 
-    // ⚠️ إصلاح خلل حرج: getSession() قد يُرجع لا-جلسة عابرة لحظة تحميل الصفحة
-    // (خاصة مباشرة بعد تسجيل الدخول وإعادة تحميل الصفحة)، قبل أن يُكمل عميل
-    // Supabase قراءة الجلسة المحفوظة فعلياً من التخزين المحلي. كنا نمسح جلسة
-    // الطالب المحفوظة فوراً عند أول فحص، دون أي فرصة ثانية — هذا كان يُخرج
-    // طلاباً مسجَّلين فعلياً لشاشة الدخول خطأً. الآن: إن كانت لدينا جلسة محلية
-    // (khuta_session) لكن Supabase يقول "لا جلسة"، نُعيد المحاولة مرة واحدة
-    // بعد مهلة قصيرة قبل أن نستنتج أن الجلسة فعلاً منتهية.
-    if(session && (!data || !data.session)){
-        await new Promise(r => setTimeout(r, 600));
-        const retry = await sb.auth.getSession();
-        data = retry.data;
+    // ⚠️ إعادة تصميم كاملة: khuta_session (تعرّفنا المحلي على الطالب) أصبح
+    // الآن مصدر الحقيقة الوحيد لقرار "هل يبقى الطالب مسجَّل الدخول من منظور
+    // الواجهة" — لم يعد فحص جلسة Supabase الداخلية قادراً على إجباره على
+    // الخروج تلقائياً بعد الآن. كنا نعتمد على أن جلسة Supabase "تُثبت" ذاتها
+    // دائماً عبر التخزين المحلي، لكن اتضح أن هذا لا يحدث بثبات لكل الحالات
+    // (خصوصاً بعد إغلاق المتصفح وإعادة فتحه) — فكان الطالب يُعاد لشاشة
+    // الدخول رغم بقاء تعرّفنا المحلي عليه سليماً تماماً. الآن: إن كان
+    // khuta_session موجوداً، يبقى الطالب مسجَّل الدخول من منظوره هو، بغض
+    // النظر عن حالة Supabase الداخلية، ونحاول فقط تجديد الجلسة بصمت في
+    // الخلفية دون أي تأثير مرئي على تجربته.
+    if(session){
+        renderAccountUI();
+        const { data } = await sb.auth.getSession();
+        if(!data || !data.session){
+            // نحاول تجديداً صامتاً؛ إن فشل، يبقى الطالب مسجَّلاً محلياً على أي حال،
+            // وستُستأنف المزامنة تلقائياً بمجرد نجاح أي محاولة تالية
+            try{ await sb.auth.refreshSession(); }catch(e){ /* فشل صامت — لا يؤثر على تجربة الطالب */ }
+        }
+        return;
     }
 
-    if(data && data.session && session){
-        renderAccountUI();
-    } else if(!data || !data.session){
-        clearSession();
-    }
-    // دخول مجهول تلقائي وصامت لكل زائر (لازم لميزات المجتمع)، لا يؤثر على الضيوف إطلاقاً
+    // لا جلسة محلية إطلاقاً (ضيف حقيقي) — دخول مجهول صامت لازم لميزات المجتمع
+    const { data } = await sb.auth.getSession();
     if(!data || !data.session){
         try{ await sb.auth.signInAnonymously(); }catch(e){ /* المزوّد غير مفعّل، تجاهل بصمت */ }
     }
@@ -4856,29 +4950,47 @@ async function publishTemplate(){
 async function refreshTemplates(){
     const box = document.getElementById("templates-list");
     if(!box || !sb) return;
-    const { data: templates, error } = await sb.from("plan_templates").select("*").order("created_at", { ascending:false }).limit(15);
+    const { data: templates, error } = await sb.from("plan_templates").select("*").order("created_at", { ascending:false }).limit(30);
     if(error || !templates || !templates.length){
         box.innerHTML = `<div class="empty-note">${currentLang==='ar'?'لا توجد قوالب بعد — كن أول من يشارك!':'No templates yet — be the first to share!'}</div>`;
         return;
     }
     const now = Date.now();
+    const { data: allRatings } = await sb.from("template_ratings").select("template_id, vote, comment, rater_id");
+    const likesMap = {};
+    templates.forEach(tpl => {
+        const ratings = (allRatings || []).filter(r => r.template_id === tpl.id);
+        likesMap[tpl.id] = ratings.filter(r => r.vote === "like").length;
+    });
+
+    // ترتيب القوالب: المثبَّت أولاً دائماً، ثم الأكثر إعجاباً، ثم الأحدث
     templates.sort((a,b) => {
         const aPinned = a.pinned_until && new Date(a.pinned_until).getTime() > now;
         const bPinned = b.pinned_until && new Date(b.pinned_until).getTime() > now;
         if(aPinned && !bPinned) return -1;
         if(!aPinned && bPinned) return 1;
+        const likeDiff = likesMap[b.id] - likesMap[a.id];
+        if(likeDiff !== 0) return likeDiff;
         return new Date(b.created_at) - new Date(a.created_at);
     });
-    const { data: allRatings } = await sb.from("template_ratings").select("template_id, vote, comment, rater_id");
-    box.innerHTML = templates.map(tpl => {
+    const topTemplates = templates.slice(0, 15); // نعرض أفضل 15 بعد الترتيب
+
+    function getPopularityGlowClass(likes){
+        if(likes >= 15) return "trending-glow-hot";
+        if(likes >= 6) return "trending-glow-warm";
+        return "";
+    }
+
+    box.innerHTML = topTemplates.map(tpl => {
         const ratings = (allRatings || []).filter(r => r.template_id === tpl.id);
-        const likes = ratings.filter(r => r.vote === "like").length;
+        const likes = likesMap[tpl.id];
         const dislikes = ratings.filter(r => r.vote === "dislike").length;
         const comments = ratings.filter(r => r.comment).slice(0, 2);
         const isPinned = tpl.pinned_until && new Date(tpl.pinned_until).getTime() > now;
+        const glowClass = isPinned ? "pinned-template-glow" : getPopularityGlowClass(likes);
         return `
-        <div class="${isPinned ? 'pinned-template-glow' : ''}" style="padding:16px; border-radius:16px; background:var(--bg-alt); border:1px solid var(--border); margin-bottom:12px;">
-            ${isPinned ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700; display:block; margin-bottom:6px;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span>` : ""}
+        <div class="${glowClass}" style="padding:16px; border-radius:16px; background:var(--bg-alt); border:1px solid var(--border); margin-bottom:12px;">
+            ${isPinned ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700; display:block; margin-bottom:6px;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span>` : (glowClass ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700; display:block; margin-bottom:6px;"><i class="fa-solid fa-fire"></i> ${currentLang==='ar'?'الأكثر إعجاباً':'Highly rated'}</span>` : "")}
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
                 <div>
                     <b style="font-size:14.5px;">${escapeHtml(tpl.title)}</b>
