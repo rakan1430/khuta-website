@@ -34,7 +34,7 @@ try{
    أحياناً ولا يعمل أحياناً أخرى حسب سرعة تحميل الصفحة أو الجهاز. */
 initOAuthListener();
 
-const APP_OWNER_NAME = "rakan/mashal"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
+const APP_OWNER_NAME = "Rakan/Mashal/Khalid"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
 const APP_OWNER_EMAIL = "sonyaloy9@gmail.com";
 
 /* نموذج الملاحظات — أرسل مباشرة دون فتح تطبيق بريد:
