@@ -383,6 +383,7 @@ ar:{
 "progress.dayOf":"اليوم الحالي","progress.totalDays":"إجمالي الأيام","progress.remaining":"أيام متبقية","progress.tasksDone":"مهام مكتملة",
 "table.title":"جدول مهامك المخصص","table.sub":"تُحسب الكميات تلقائياً بناءً على مدة خطتك","table.reset":"إعادة ضبط الخطة","table.editSources":"تعديل المصادر والخطة","table.freshStart":"بدء من جديد بالكامل",
 "dash.customize":"تخصيص لوحتك","dash.customizeTitle":"تخصيص لوحتك","dash.customizeDesc":"اختر البطاقات التي تريد رؤيتها، ورتّبها من صفحة اللوحة نفسها بأسهم أعلى/أسفل.","dash.resetDefault":"إعادة الضبط الافتراضي","dash.done":"تم",
+"overview.totalXp":"إجمالي نقاط الخبرة","overview.today":"اليوم","overview.streakDays":"يوم متتالي","overview.studyHours":"ساعة مذاكرة","overview.tasksToday":"إنجاز اليوم","overview.activityTitle":"نشاطك اليومي","overview.activitySub":"كل مربع يمثّل يوماً — كلما اغمّق اللون زادت دقائق مذاكرتك فيه","overview.less":"أقل","overview.more":"أكثر","overview.questsTitle":"مهام اليوم","overview.questsSub":"لمحة سريعة — عدّلها من جدولك الكامل أدناه","overview.leaderboardTitle":"لوحة الصدارة",
 "dash.communityDesc":"نظرة سريعة — تفاصيل أكثر في صفحة المجتمع الكاملة","dash.openCommunity":"فتح صفحة المجتمع",
 "table.path":"المسار","table.qty":"الكمية اليومية","table.status":"الحالة","table.progress":"نسبة الإنجاز","table.action":"إجراء",
 "table.addTask":"إضافة مهمة يدوية",
@@ -465,6 +466,7 @@ ar:{
 "referral.title":"ادعُ صديقاً","referral.desc":"كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.","referral.share":"مشاركة رابط الدعوة",
 "push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
 "focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.currentTask":"مهمتك الحالية","focus.xpPoints":"نقاط XP",
+"focus.idle":"جاهز للبدء","focus.paused":"متوقف مؤقتاً","focus.inSession":"في جلسة تركيز","focus.start":"ابدأ التركيز","focus.skip":"تخطّي",
 "account.noRecoveryNote":"⚠️ تذكير: حسابات اسم المستخدم لا تدعم استرجاع كلمة مرور منسية (لا نطلب بريدك الحقيقي أبداً) — احفظها في مكان آمن. بياناتك المحلية على جهازك تبقى آمنة دائماً بغض النظر.",
 "spec.title":"دليل التخصصات الذكي","spec.sub":"نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة","spec.search":"ابحث عن تخصص...",
 "room.title":"غرفة المذاكرة","room.sub":"لست وحدك — بدون شات، فقط إحساس بالرفقة","room.studying":"طالب يذاكر الآن معك",
@@ -531,6 +533,7 @@ en:{
 "progress.dayOf":"Current day","progress.totalDays":"Total days","progress.remaining":"Days left","progress.tasksDone":"Tasks done",
 "table.title":"Your custom task schedule","table.sub":"Quantities are calculated automatically from your plan length","table.reset":"Reset plan","table.editSources":"Edit sources & plan","table.freshStart":"Start completely fresh",
 "dash.customize":"Customize dashboard","dash.customizeTitle":"Customize Your Dashboard","dash.customizeDesc":"Choose which cards to show, and reorder them from the dashboard page using the up/down arrows.","dash.resetDefault":"Reset to default","dash.done":"Done",
+"overview.totalXp":"Total XP","overview.today":"today","overview.streakDays":"day streak","overview.studyHours":"study hours","overview.tasksToday":"today's progress","overview.activityTitle":"Your daily activity","overview.activitySub":"Each square is a day — darker means more study minutes that day","overview.less":"Less","overview.more":"More","overview.questsTitle":"Today's tasks","overview.questsSub":"Quick glance — edit from your full schedule below","overview.leaderboardTitle":"Leaderboard",
 "dash.communityDesc":"Quick glance — more detail on the full Community page","dash.openCommunity":"Open Community page",
 "table.path":"Track","table.qty":"Daily amount","table.status":"Status","table.progress":"Progress","table.action":"Action",
 "table.addTask":"Add manual task",
@@ -613,6 +616,7 @@ en:{
 "referral.title":"Invite a friend","referral.desc":"Every friend who joins via your link gives you both 50 XP.","referral.share":"Share invite link",
 "push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
 "focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.currentTask":"Your current task","focus.xpPoints":"XP Points",
+"focus.idle":"Ready to start","focus.paused":"Paused","focus.inSession":"In a focus session","focus.start":"Start focusing","focus.skip":"Skip",
 "account.noRecoveryNote":"⚠️ Reminder: username accounts don't support forgotten-password recovery (we never ask for your real email) — save it somewhere safe. Your local data on this device stays safe regardless.",
 "spec.title":"Smart Specialty Guide","spec.sub":"A general overview — check university sites for exact college details","spec.search":"Search a major...",
 "room.title":"Study Room","room.sub":"You're not alone — no chat, just a sense of company","room.studying":"student(s) studying with you now",
@@ -824,7 +828,7 @@ function performFreshStart(){
     ];
     keysToWipe.forEach(k => localStorage.removeItem(k));
     // نُبقي عمداً: khuta_xp, khuta_badges, khuta_lifetime_*_done, khuta_shields,
-    // khuta_total_minutes, khuta_daily_minutes_log, بيانات الملف الشخصي، تفضيلات اللغة/الثيم
+    // khuta_total_minutes, khuta_daily_minutes_log, khuta_daily_xp_log، بيانات الملف الشخصي، تفضيلات اللغة/الثيم
     showToast(currentLang==='ar' ? "🔄 بدأنا من جديد — لنبنِ خطتك من الصفر" : "🔄 Starting fresh — let's build your plan from scratch");
     debouncedSync();
     // ⚠️ نتجنّب location.reload() هنا عمداً: كان أحياناً يُظهر شاشة تسجيل الدخول
@@ -1485,8 +1489,19 @@ function awardXP(amount, taskId){
     const awarded = getAwardedTasks();
     if(taskId){ if(awarded[taskId]) return; awarded[taskId] = true; localStorage.setItem("khuta_xp_awarded", JSON.stringify(awarded)); }
     setXP(getXP() + amount);
+    // سجل XP اليومي — لعرض "+X اليوم" بصدق في بطاقة اللوحة، بنفس أسلوب سجل الدقائق اليومي
+    const today = new Date().toDateString();
+    let xpLog = {};
+    try{ xpLog = JSON.parse(localStorage.getItem("khuta_daily_xp_log")) || {}; }catch(e){}
+    xpLog[today] = (xpLog[today] || 0) + amount;
+    localStorage.setItem("khuta_daily_xp_log", JSON.stringify(xpLog));
     renderGamification();
     checkBadges();
+}
+function getTodayXP(){
+    let xpLog = {};
+    try{ xpLog = JSON.parse(localStorage.getItem("khuta_daily_xp_log")) || {}; }catch(e){}
+    return xpLog[new Date().toDateString()] || 0;
 }
 function revokeXP(taskId){
     const awarded = getAwardedTasks();
@@ -1668,6 +1683,133 @@ function renderGamification(){
     if(lvlEl) lvlEl.textContent = currentLang === "ar" ? lvl.ar : lvl.en;
     if(streakEl) animateNumberTo(streakEl, streak);
     renderShieldUI();
+    renderDashboardOverview();
+}
+
+/* ============================================================
+   37) لوحة التحكم — قسم "نظرة عامة" — بطاقة XP، إحصائيات سريعة،
+   خريطة النشاط الحرارية، لمحة المهام، ولوحة الصدارة المصغّرة.
+   كل رقم هنا مأخوذ من بيانات حقيقية موجودة أصلاً في التطبيق —
+   لا أرقام وهمية أو تجميلية.
+   ============================================================ */
+function renderDashboardOverview(){
+    if(!document.getElementById("ov-xp-total")) return; // القسم غير موجود بعد في DOM (تحميل مبكر جداً)
+
+    const xp = getXP();
+    const lvl = currentLevel(xp);
+    const todayXP = getTodayXP();
+
+    document.getElementById("ov-xp-total").textContent = xp;
+    const todayBadge = document.getElementById("ov-xp-today-badge");
+    if(todayXP > 0){
+        todayBadge.style.display = "";
+        document.getElementById("ov-xp-today").textContent = todayXP;
+    } else {
+        todayBadge.style.display = "none";
+    }
+
+    const lvlIdx = XP_LEVELS.indexOf(lvl);
+    const nextLvl = XP_LEVELS[lvlIdx + 1];
+    document.getElementById("ov-xp-level-name").textContent = currentLang==='ar' ? lvl.ar : lvl.en;
+    if(nextLvl){
+        const range = nextLvl.min - lvl.min;
+        const progress = range ? Math.min(100, Math.round(((xp - lvl.min) / range) * 100)) : 100;
+        document.getElementById("ov-xp-progress-fill").style.width = progress + "%";
+        document.getElementById("ov-xp-next-label").textContent = currentLang==='ar'
+            ? `التالي: ${nextLvl.min - xp} XP` : `Next: ${nextLvl.min - xp} XP`;
+    } else {
+        document.getElementById("ov-xp-progress-fill").style.width = "100%";
+        document.getElementById("ov-xp-next-label").textContent = currentLang==='ar' ? "أعلى مستوى! 🏆" : "Max level! 🏆";
+    }
+
+    document.getElementById("ov-stat-streak").textContent = parseInt(localStorage.getItem("khuta_streak")) || 0;
+    const totalMin = parseInt(localStorage.getItem("khuta_total_minutes")) || 0;
+    document.getElementById("ov-stat-hours").textContent = Math.round(totalMin / 60);
+    const statTasksEl = document.getElementById("stat-tasks");
+    document.getElementById("ov-stat-tasks").textContent = statTasksEl ? statTasksEl.textContent : "0%";
+
+    renderActivityHeatmap();
+    renderQuestsGlance();
+    renderMiniLeaderboard();
+}
+
+function renderActivityHeatmap(){
+    const grid = document.getElementById("ov-heatmap-grid");
+    const scroll = document.getElementById("ov-heatmap-grid") ? document.querySelector(".ov-heatmap-scroll") : null;
+    if(!grid) return;
+    let dailyLog = {};
+    try{ dailyLog = JSON.parse(localStorage.getItem("khuta_daily_minutes_log")) || {}; }catch(e){}
+
+    const daysToShow = 112; // 16 أسبوعاً كاملة
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - (daysToShow - 1));
+    const startDow = startDate.getDay();
+
+    const cells = [];
+    for(let i = 0; i < startDow; i++){
+        cells.push(`<div class="ov-heat-cell" style="visibility:hidden;"></div>`);
+    }
+    for(let i = 0; i < daysToShow; i++){
+        const d = new Date(startDate); d.setDate(d.getDate() + i);
+        const mins = dailyLog[d.toDateString()] || 0;
+        let level = 0;
+        if(mins > 0) level = 1;
+        if(mins >= 30) level = 2;
+        if(mins >= 60) level = 3;
+        if(mins >= 120) level = 4;
+        const dateLabel = d.toLocaleDateString(currentLang==='ar' ? 'ar-SA' : 'en-US', {month:'short', day:'numeric'});
+        const minLabel = currentLang==='ar' ? `${mins} دقيقة` : `${mins} min`;
+        cells.push(`<div class="ov-heat-cell" data-level="${level}" title="${dateLabel} — ${minLabel}"></div>`);
+    }
+    grid.innerHTML = cells.join("");
+    if(scroll) scroll.scrollLeft = scroll.scrollWidth; // إظهار اليوم الحالي فوراً بدل بداية السجل القديمة
+
+    const streak = parseInt(localStorage.getItem("khuta_streak")) || 0;
+    const noteEl = document.getElementById("ov-heatmap-streak-note");
+    if(noteEl) noteEl.textContent = streak > 0 ? (currentLang==='ar' ? `🔥 سلسلة ${streak} يوم` : `🔥 ${streak}-day streak`) : "";
+}
+
+/* لمحة سريعة عن مهام اليوم — تُقرأ مباشرة من جدول اليوم الحقيقي (نفس الصفوف
+   المعروضة في "جدول مهامك")، وليست قائمة موازية مصطنعة بمكافآت وهمية */
+function renderQuestsGlance(){
+    const box = document.getElementById("ov-quests-list");
+    if(!box) return;
+    const rows = document.querySelectorAll("#schedule-body tr[data-task-id]");
+    const statuses = getTaskStatuses();
+    if(!rows.length){
+        box.innerHTML = `<div class="empty-note" style="padding:10px 0;">${currentLang==='ar'?'لا توجد مهام اليوم بعد':'No tasks yet today'}</div>`;
+        return;
+    }
+    box.innerHTML = Array.from(rows).map(row => {
+        const id = row.dataset.taskId;
+        const status = statuses[id] || "notstarted";
+        const titleCell = row.querySelector("td[data-label]");
+        const title = titleCell ? titleCell.textContent.trim() : id;
+        return `<div class="ov-quest-row ${status==='done'?'done':status==='inprogress'?'inprogress':''}">
+            <div class="ov-quest-check"><i class="fa-solid fa-check"></i></div>
+            <div class="ov-quest-title">${escapeHtml(title)}</div>
+        </div>`;
+    }).join("");
+}
+
+/* أعلى 3 في لوحة الصدارة الحقيقية (Supabase) — نفس مصدر بيانات صفحة
+   المجتمع الكاملة، فقط عرض مختصر هنا */
+async function renderMiniLeaderboard(){
+    const box = document.getElementById("ov-leaderboard-mini");
+    if(!box) return;
+    if(!sb){ box.innerHTML = `<div class="empty-note" style="padding:6px 0;">${currentLang==='ar'?'غير متاح حالياً':'Unavailable right now'}</div>`; return; }
+    const { data, error } = await sb.from("leaderboard").select("display_name, xp").order("xp", { ascending:false }).limit(3);
+    if(error || !data || !data.length){
+        box.innerHTML = `<div class="empty-note" style="padding:6px 0;">${currentLang==='ar'?'كن أول من ينضم!':'Be the first to join!'}</div>`;
+        return;
+    }
+    box.innerHTML = data.map((row, i) => `
+        <div class="ov-lb-mini-row">
+            <span class="ov-lb-mini-rank ${i<3?'top':''}">#${i+1}</span>
+            <span class="ov-lb-mini-name">${escapeHtml(row.display_name)}</span>
+            <span class="ov-lb-mini-xp">${row.xp} XP</span>
+        </div>`).join("");
 }
 
 function renderBadges(){
@@ -1752,6 +1894,7 @@ function renderProgress(){
         taskPct = Math.round(sum / rows.length);
     }
     document.getElementById("stat-tasks").textContent = taskPct + "%";
+    renderDashboardOverview();
 
     // حلقة التقدم العلوية: متوسط تقدم الأيام وتقدم المهام
     const ringPct = totalDays ? Math.round((dayPct + taskPct) / 2) : taskPct;
@@ -2057,6 +2200,27 @@ function updateMainDisplay(){
         focusRing.style.strokeDasharray = TIMER_CIRC;
         focusRing.style.strokeDashoffset = TIMER_CIRC * (1 - progress);
         document.getElementById("focus-xp-value").textContent = getXP() + " XP";
+
+        // مزامنة الحبة والزر — نفس حالة زر لوحة التحكم بالضبط، دون أي منطق مستقل
+        const pauseBtn = document.getElementById("pause-btn");
+        const sessionActive = !pauseBtn.disabled;
+        const pill = document.getElementById("focus-session-pill");
+        const pillText = document.getElementById("focus-session-pill-text");
+        const startPauseBtn = document.getElementById("focus-start-pause-btn");
+        const startPauseLabel = document.getElementById("focus-start-pause-label");
+        pill.classList.toggle("active", sessionActive);
+        if(sessionActive){
+            const isPaused = pauseBtn.innerHTML.includes("fa-play");
+            pillText.textContent = isPaused ? t("focus.paused") : t("focus.inSession");
+            startPauseLabel.textContent = isPaused ? t("timer.resume") : t("timer.pause");
+            startPauseBtn.querySelector("i").className = isPaused ? "fa-solid fa-play" : "fa-solid fa-pause";
+        } else {
+            pillText.textContent = t("focus.idle");
+            startPauseLabel.textContent = t("focus.start");
+            startPauseBtn.querySelector("i").className = "fa-solid fa-play";
+        }
+        const skipTransitionBtn = document.getElementById("btn-skip-transition");
+        document.getElementById("focus-skip-btn").style.display = (skipTransitionBtn && skipTransitionBtn.style.display !== "none") ? "" : "none";
     }
 }
 
@@ -2248,7 +2412,7 @@ function completeMainSession(){
     // XP: +10 ثابتة لكل يوم يُكمَّل بالكامل (وليس لكل مهمة على حدة)، مرة واحدة فقط في اليوم
     const today = new Date().toDateString();
     if(localStorage.getItem("khuta_xp_awarded_today") !== today){
-        setXP(getXP() + 10);
+        awardXP(10);
         localStorage.setItem("khuta_xp_awarded_today", today);
     }
     if(mainTotal >= 3 * 3600) localStorage.setItem("khuta_addict_unlocked", "1");
@@ -4017,6 +4181,17 @@ const FOCUS_QUOTES = [
     { ar:"كل دقيقة تركيز الآن، خطوة أقرب لجامعتك.", en:"Every focused minute now is a step closer to your university.", authorAr:"خُطى", authorEn:"Khuta" },
     { ar:"الانضباط هو الجسر بين الأهداف والإنجاز.", en:"Discipline is the bridge between goals and accomplishment.", authorAr:"جيم رون", authorEn:"Jim Rohn" },
 ];
+
+/* يُعيد توجيه الزر داخل وضع التركيز لنفس أزرار لوحة التحكم تماماً —
+   لا تكرار لمنطق الجلسة، فقط "نقرة بالنيابة" لتفادي أي احتمال تعارض حالة */
+function focusModeStartOrPause(){
+    const pauseBtn = document.getElementById("pause-btn");
+    if(pauseBtn.disabled){
+        document.getElementById("btn-plan-session").click();
+    } else {
+        pauseBtn.click();
+    }
+}
 
 function openFocusMode(){
     const overlay = document.getElementById("focus-mode-overlay");
