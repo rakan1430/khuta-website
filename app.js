@@ -34,7 +34,7 @@ try{
    أحياناً ولا يعمل أحياناً أخرى حسب سرعة تحميل الصفحة أو الجهاز. */
 initOAuthListener();
 
-const APP_OWNER_NAME = "Rakan/Mashal/Khalid"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
+const APP_OWNER_NAME = "rakan/mashal"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
 const APP_OWNER_EMAIL = "sonyaloy9@gmail.com";
 
 /* نموذج الملاحظات — أرسل مباشرة دون فتح تطبيق بريد:
@@ -336,7 +336,7 @@ ar:{
 "login.next":"التالي: تخصيص خطتي",
 "setup.title":"تخصيص مسارات مذاكرة القدرات",
 "setup.subtitle":"اختر مصادرك المفضلة، وسنبني لك جدولاً محسوباً بدقة",
-"setup.verbalTitle":"القسم اللفظي",
+"setup.verbalTitle":"القسم اللفظي","setup.skipVerbal":"أذاكر الكمي فقط — تخطَّ اللفظي بالكامل من خطتي",
 "setup.verbalDesc":"دورة إيهاب (215 قسم) هي مسارك الوحيد والمعتمد للفظي.",
 "setup.foundTitle":"القسم الكمي — التأسيس",
 "setup.foundMoasser":"كتاب المعاصر 10","setup.foundMoasserDesc":"تحدي 30 يوماً، 8 صفحات يومياً تقريباً",
@@ -374,6 +374,7 @@ ar:{
 "nav.account":"الحساب والمزامنة","nav.specialties":"دليل التخصصات","nav.community":"المجتمع",
 "nav.examSim":"اختبارات محاكية","nav.examSimShort":"اختبارات","nav.tutors":"مدرّسون خصوصيون","nav.tutorsShort":"مدرّسون",
 "examsim.title":"اختبارات محاكية","examsim.sub":"تدرّب بنمط مطابق تماماً لاختبار قياس الفعلي — بوقت أو بدون وقت.","examsim.full":"اختبار قدرات كامل","examsim.verbalOnly":"لفظي فقط","examsim.quantOnly":"كمي فقط","examsim.timed":"بوقت (كالاختبار الحقيقي)","examsim.untimed":"بدون وقت","examsim.start":"ابدأ الاختبار",
+"examsim.exit":"خروج","examsim.questionsNav":"الأسئلة","examsim.answered":"مُجاب","examsim.current":"الحالي","examsim.unanswered":"غير مُجاب","examsim.submit":"إنهاء وتصحيح","examsim.prev":"السابق","examsim.next":"التالي","examsim.resultsTitle":"نتيجتك","examsim.review":"مراجعة الإجابات",
 "tutors.title":"مدرّسون خصوصيون","tutors.sub":"مُقيَّمون من طلاب حقيقيين — بالتواصل معنا فقط يُضاف أي مدرّس","tutors.add":"إضافة مدرّس",
 "nav.tahsili":"التحصيلي","nav.step":"ستيب (STEP)","nav.soon":"قريباً",
 "nav.dashboardShort":"الجدول","nav.calcShort":"الموزونة","nav.linksShort":"المصادر","nav.profileShort":"الملف",
@@ -463,6 +464,7 @@ ar:{
 "account.setNewPassTitle":"عيّن كلمة مرور جديدة","account.setNewPassDesc":"وصلت هنا عبر رابط إعادة تعيين كلمة المرور — اكتب كلمة مرورك الجديدة.",
 "referral.title":"ادعُ صديقاً","referral.desc":"كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.","referral.share":"مشاركة رابط الدعوة",
 "push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
+"focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.currentTask":"مهمتك الحالية","focus.xpPoints":"نقاط XP",
 "account.noRecoveryNote":"⚠️ تذكير: حسابات اسم المستخدم لا تدعم استرجاع كلمة مرور منسية (لا نطلب بريدك الحقيقي أبداً) — احفظها في مكان آمن. بياناتك المحلية على جهازك تبقى آمنة دائماً بغض النظر.",
 "spec.title":"دليل التخصصات الذكي","spec.sub":"نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة","spec.search":"ابحث عن تخصص...",
 "room.title":"غرفة المذاكرة","room.sub":"لست وحدك — بدون شات، فقط إحساس بالرفقة","room.studying":"طالب يذاكر الآن معك",
@@ -482,7 +484,7 @@ en:{
 "login.next":"Next: customize my plan",
 "setup.title":"Customize your Qudrat study tracks",
 "setup.subtitle":"Pick your preferred sources and we'll build a precisely calculated schedule",
-"setup.verbalTitle":"Verbal Section",
+"setup.verbalTitle":"Verbal Section","setup.skipVerbal":"I only study Quant — skip Verbal entirely from my plan",
 "setup.verbalDesc":"Ehab's course (215 sections) is your only track for Verbal.",
 "setup.foundTitle":"Quantitative — Foundation",
 "setup.foundMoasser":"Al-Moaasir Book 10","setup.foundMoasserDesc":"30-day challenge, ~8 pages a day",
@@ -520,6 +522,7 @@ en:{
 "nav.account":"Account & Sync","nav.specialties":"Specialty Guide","nav.community":"Community",
 "nav.examSim":"Exam Simulator","nav.examSimShort":"Exams","nav.tutors":"Private Tutors","nav.tutorsShort":"Tutors",
 "examsim.title":"Exam Simulator","examsim.sub":"Practice in a format that exactly matches the real Qiyas exam — timed or untimed.","examsim.full":"Full Qudrat exam","examsim.verbalOnly":"Verbal only","examsim.quantOnly":"Quant only","examsim.timed":"Timed (like the real exam)","examsim.untimed":"Untimed","examsim.start":"Start exam",
+"examsim.exit":"Exit","examsim.questionsNav":"Questions","examsim.answered":"Answered","examsim.current":"Current","examsim.unanswered":"Unanswered","examsim.submit":"Finish & grade","examsim.prev":"Previous","examsim.next":"Next","examsim.resultsTitle":"Your results","examsim.review":"Review answers",
 "tutors.title":"Private Tutors","tutors.sub":"Rated by real students — tutors are only added by contacting us","tutors.add":"Add tutor",
 "nav.tahsili":"Tahsili","nav.step":"STEP","nav.soon":"Soon",
 "nav.dashboardShort":"Schedule","nav.calcShort":"Score","nav.linksShort":"Sources","nav.profileShort":"Profile",
@@ -609,6 +612,7 @@ en:{
 "account.setNewPassTitle":"Set a new password","account.setNewPassDesc":"You arrived here via a password reset link — enter your new password.",
 "referral.title":"Invite a friend","referral.desc":"Every friend who joins via your link gives you both 50 XP.","referral.share":"Share invite link",
 "push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
+"focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.currentTask":"Your current task","focus.xpPoints":"XP Points",
 "account.noRecoveryNote":"⚠️ Reminder: username accounts don't support forgotten-password recovery (we never ask for your real email) — save it somewhere safe. Your local data on this device stays safe regardless.",
 "spec.title":"Smart Specialty Guide","spec.sub":"A general overview — check university sites for exact college details","spec.search":"Search a major...",
 "room.title":"Study Room","room.sub":"You're not alone — no chat, just a sense of company","room.studying":"student(s) studying with you now",
@@ -753,6 +757,7 @@ window.onload = () => {
     tryLoadRemoteContent();
     tryLoadRemoteCurriculum();
     tryLoadRemoteSpecialties();
+    tryLoadRemoteExamQuestions();
     checkDevPanel();
     initContactLinks();
     checkAbandonedSession();
@@ -901,6 +906,8 @@ function restoreSetupForm(){
         document.getElementById("einstein-warning").style.display = config.found === "einstein" ? "block" : "none";
     }
     document.getElementById("einstein_review_only").checked = !!config.einsteinReviewOnly;
+    document.getElementById("skip_verbal_entirely").checked = !!config.skipVerbal;
+    toggleSkipVerbalUI();
     const map = { train_monsif:"tMonsif", train_mufakkir_sec:"tMufSec", train_mufakkir_rep:"tMufRep", train_moasser:"tMoasser" };
     Object.keys(map).forEach(inputId => {
         const el = document.getElementById(inputId);
@@ -1094,6 +1101,11 @@ function setIntensity(days, el){
     daysInput.value = days;
 }
 
+function toggleSkipVerbalUI(){
+    const skip = document.getElementById("skip_verbal_entirely").checked;
+    document.getElementById("verbal-section-fields").style.display = skip ? "none" : "block";
+}
+
 function finalizeSetup(){
     const days = parseInt(document.getElementById("plan-days").value) || 45;
     const hours = parseInt(document.getElementById("plan-hours").value) || 0;
@@ -1110,11 +1122,13 @@ function finalizeSetup(){
 
     const found = document.querySelector('input[name="quant_found"]:checked').value;
     const einsteinReviewOnly = document.getElementById("einstein_review_only").checked;
+    const skipVerbal = document.getElementById("skip_verbal_entirely").checked;
     const customVerbal = readCustomSourceForm("cv");
     const customQuant = readCustomSourceForm("cq");
     const config = {
         found,
         einsteinReviewOnly,
+        skipVerbal,
         tMonsif: document.getElementById("train_monsif").checked,
         tMufSec: document.getElementById("train_mufakkir_sec").checked,
         tMufRep: document.getElementById("train_mufakkir_rep").checked,
@@ -1241,11 +1255,13 @@ function buildScheduleTable(){
 
     const tasks = [];
     const content = getContent();
-    const ehabTotal = content.ehab.totalSections;
-    const ehabDaily = dailyQty(ehabTotal);
-    tasks.push({ id:"verbal", icon:"fa-comments",
-        title: currentLang === "ar" ? "اللفظي (إيهاب)" : "Verbal (Ehab)",
-        qty: currentLang === "ar" ? `دراسة وحل ${ehabDaily} ${ehabDaily===1?"قسم":"أقسام"} كاملة يومياً (من أصل ${ehabTotal})` : `Study & solve ${ehabDaily} full section(s) daily (of ${ehabTotal})` });
+    if(!config.skipVerbal){
+        const ehabTotal = content.ehab.totalSections;
+        const ehabDaily = dailyQty(ehabTotal);
+        tasks.push({ id:"verbal", icon:"fa-comments",
+            title: currentLang === "ar" ? "اللفظي (إيهاب)" : "Verbal (Ehab)",
+            qty: currentLang === "ar" ? `دراسة وحل ${ehabDaily} ${ehabDaily===1?"قسم":"أقسام"} كاملة يومياً (من أصل ${ehabTotal})` : `Study & solve ${ehabDaily} full section(s) daily (of ${ehabTotal})` });
+    }
 
     if(config.found === "moasser"){
         const f = content.moasserFoundation;
@@ -2032,6 +2048,16 @@ function updateMainDisplay(){
     const progress = phaseTotal ? (phaseRemaining / phaseTotal) : 0;
     ring.style.strokeDasharray = TIMER_CIRC;
     ring.style.strokeDashoffset = TIMER_CIRC * (1 - progress);
+
+    // مزامنة وضع التركيز الكامل بنفس القيم بالضبط — مصدر واحد للحقيقة
+    if(document.getElementById("focus-mode-overlay").style.display !== "none"){
+        document.getElementById("focus-timer-display").textContent = String(minutesLeft).padStart(2, "0");
+        document.getElementById("focus-timer-sublabel").textContent = sectionLabel(currentSection);
+        const focusRing = document.getElementById("focus-timer-ring-fg");
+        focusRing.style.strokeDasharray = TIMER_CIRC;
+        focusRing.style.strokeDashoffset = TIMER_CIRC * (1 - progress);
+        document.getElementById("focus-xp-value").textContent = getXP() + " XP";
+    }
 }
 
 /* ---------- عدّاد استراحة عام (مقاوم لإبطاء التبويبات الخلفية) — يستخدمه كل من
@@ -3087,12 +3113,195 @@ function applyFeatureFlags(){
 
 /* ---------- الاختبارات المحاكية — أساس فقط، التفاصيل الكاملة (استخراج
    الأسئلة من PDF، التوزيع، التصحيح) ستُبنى لاحقاً كما اتُّفق ---------- */
+let examState = null;
+let examTimerInterval = null;
+
 function startExamSimulation(){
     const type = document.querySelector('input[name="examsim_type"]:checked').value;
-    const timed = document.querySelector('input[name="examsim_timed"]:checked').value;
-    showToast(currentLang==='ar'
-        ? `🚧 قاعدة الاختبارات المحاكية جاهزة (${type} / ${timed}) — بنك الأسئلة قيد الإعداد وسيُفعَّل قريباً`
-        : `🚧 Exam simulator foundation ready (${type} / ${timed}) — question bank coming soon`);
+    const timed = document.querySelector('input[name="examsim_timed"]:checked').value === "timed" && type === "full";
+
+    const built = buildExamQuestionSet(type);
+    const questions = [];
+    built.sections.forEach((sec, sIdx) => {
+        sec.quant.forEach(q => questions.push({ ...q, type:"quant", sectionIndex:sIdx }));
+        sec.verbal.forEach(q => questions.push({ ...q, type:"verbal", sectionIndex:sIdx }));
+    });
+
+    if(questions.length === 0){
+        showToast(currentLang==='ar' ? "لا توجد أسئلة متاحة بعد في هذا القسم" : "No questions available in this section yet");
+        return;
+    }
+
+    examState = {
+        type,
+        timed,
+        questions,
+        answers: {},
+        currentIndex: 0,
+        totalSeconds: 120 * 60,
+        remainingSeconds: 120 * 60,
+        multiSection: type === "full",
+    };
+
+    if(built.scaledDown){
+        showToast(currentLang==='ar'
+            ? `⚠️ بنك الأسئلة الحالي صغير (تجريبي) — هذا اختبار مصغّر من ${questions.length} سؤال بدل 120`
+            : `⚠️ Current question bank is small (sample) — this is a scaled-down exam of ${questions.length} questions instead of 120`);
+    }
+
+    document.getElementById("exam-mode-overlay").style.display = "flex";
+    document.body.style.overflow = "hidden";
+    document.getElementById("exam-timer-pill").style.display = timed ? "flex" : "none";
+    if(timed) startExamTimer();
+
+    renderExamPalette();
+    goToExamQuestion(0);
+}
+
+function startExamTimer(){
+    clearInterval(examTimerInterval);
+    examTimerInterval = setInterval(() => {
+        examState.remainingSeconds--;
+        if(examState.remainingSeconds <= 0){
+            clearInterval(examTimerInterval);
+            examState.remainingSeconds = 0;
+            showToast(currentLang==='ar' ? "⏰ انتهى الوقت — سيتم تصحيح إجاباتك الآن" : "⏰ Time's up — grading your answers now");
+            submitExam();
+            return;
+        }
+        updateExamTimerDisplay();
+    }, 1000);
+    updateExamTimerDisplay();
+}
+
+function updateExamTimerDisplay(){
+    const m = Math.floor(examState.remainingSeconds / 60);
+    const s = examState.remainingSeconds % 60;
+    document.getElementById("exam-timer-display").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+    document.getElementById("exam-timer-pill").classList.toggle("low-time", examState.remainingSeconds < 300);
+}
+
+function goToExamQuestion(index){
+    if(!examState) return;
+    if(index < 0 || index >= examState.questions.length) return;
+    examState.currentIndex = index;
+    renderExamQuestion();
+    renderExamPalette();
+}
+
+function renderExamQuestion(){
+    const q = examState.questions[examState.currentIndex];
+    document.getElementById("exam-question-number").textContent = currentLang==='ar'
+        ? `السؤال ${examState.currentIndex + 1} من ${examState.questions.length}`
+        : `Question ${examState.currentIndex + 1} of ${examState.questions.length}`;
+    document.getElementById("exam-section-label").textContent = examState.multiSection
+        ? (currentLang==='ar' ? `القسم ${q.sectionIndex + 1} من 5` : `Section ${q.sectionIndex + 1} of 5`)
+        : (q.type === "quant" ? (currentLang==='ar'?"كمي فقط":"Quant only") : (currentLang==='ar'?"لفظي فقط":"Verbal only"));
+    document.getElementById("exam-question-text").textContent = q.text;
+    document.getElementById("exam-source-footer").textContent = currentLang==='ar' ? `المصدر: ${q.source}` : `Source: ${q.source}`;
+
+    const selected = examState.answers[q.id];
+    const letters = ["أ","ب","ج","د"];
+    document.getElementById("exam-choices").innerHTML = q.choices.map((choice, i) => `
+        <div class="exam-choice ${selected===i?'selected':''}" onclick="selectExamAnswer(${i})">
+            <span class="choice-letter">${letters[i]}</span>
+            <span>${escapeHtml(choice)}</span>
+        </div>`).join("");
+
+    if(examState.reviewMode) renderExamReviewChoices();
+}
+
+function selectExamAnswer(choiceIndex){
+    const q = examState.questions[examState.currentIndex];
+    examState.answers[q.id] = choiceIndex;
+    renderExamQuestion();
+    renderExamPalette();
+}
+
+function renderExamPalette(){
+    const grid = document.getElementById("exam-palette-grid");
+    grid.innerHTML = examState.questions.map((q, i) => {
+        const answered = examState.answers[q.id] !== undefined;
+        const isCurrent = i === examState.currentIndex;
+        return `<div class="exam-palette-item ${answered?'answered':''} ${isCurrent?'current':''}" onclick="goToExamQuestion(${i})">${i+1}</div>`;
+    }).join("");
+}
+
+function confirmExitExam(){
+    if(!confirm(currentLang==='ar' ? "الخروج الآن سيُفقد كل إجاباتك في هذه المحاولة. متأكد؟" : "Exiting now will lose all your answers in this attempt. Are you sure?")) return;
+    clearInterval(examTimerInterval);
+    document.getElementById("exam-mode-overlay").style.display = "none";
+    document.body.style.overflow = "";
+    examState = null;
+}
+
+function confirmSubmitExam(){
+    if(examState.reviewMode){
+        document.getElementById("exam-mode-overlay").style.display = "none";
+        document.getElementById("exam-results-overlay").style.display = "flex";
+        return;
+    }
+    const unanswered = examState.questions.length - Object.keys(examState.answers).length;
+    const msg = unanswered > 0
+        ? (currentLang==='ar' ? `لديك ${unanswered} سؤال بلا إجابة. إنهاء الاختبار الآن؟` : `You have ${unanswered} unanswered question(s). Finish the exam now?`)
+        : (currentLang==='ar' ? "إنهاء الاختبار وعرض النتيجة؟" : "Finish the exam and see your results?");
+    if(!confirm(msg)) return;
+    submitExam();
+}
+
+function submitExam(){
+    clearInterval(examTimerInterval);
+    let correctCount = 0, quantCorrect = 0, quantTotal = 0, verbalCorrect = 0, verbalTotal = 0;
+    examState.questions.forEach(q => {
+        const isCorrect = examState.answers[q.id] === q.correct;
+        if(isCorrect) correctCount++;
+        if(q.type === "quant"){ quantTotal++; if(isCorrect) quantCorrect++; }
+        else { verbalTotal++; if(isCorrect) verbalCorrect++; }
+    });
+    const total = examState.questions.length;
+    const pct = total ? Math.round((correctCount / total) * 100) : 0;
+
+    examState.finished = true;
+    examState.score = { correctCount, total, pct, quantCorrect, quantTotal, verbalCorrect, verbalTotal };
+
+    document.getElementById("exam-mode-overlay").style.display = "none";
+    const box = document.getElementById("exam-results-content");
+    box.innerHTML = `
+        <div style="font-size:52px; font-weight:800; color:var(--gold); font-family:var(--font-mono); margin:10px 0;">${pct}%</div>
+        <p class="card-sub" style="margin-bottom:18px;">${correctCount} / ${total} ${currentLang==='ar'?'إجابة صحيحة':'correct answers'}</p>
+        <div style="display:flex; gap:12px;">
+            ${quantTotal>0 ? `<div style="flex:1; background:var(--bg-alt); border-radius:12px; padding:14px;"><b style="font-size:18px; color:var(--teal);">${quantCorrect}/${quantTotal}</b><div class="card-sub" style="font-size:11.5px;">${currentLang==='ar'?'كمي':'Quant'}</div></div>` : ""}
+            ${verbalTotal>0 ? `<div style="flex:1; background:var(--bg-alt); border-radius:12px; padding:14px;"><b style="font-size:18px; color:var(--gold);">${verbalCorrect}/${verbalTotal}</b><div class="card-sub" style="font-size:11.5px;">${currentLang==='ar'?'لفظي':'Verbal'}</div></div>` : ""}
+        </div>`;
+    document.getElementById("exam-results-overlay").style.display = "flex";
+    document.body.style.overflow = "hidden";
+
+    const xpEarned = Math.round(pct / 5); // مكافأة بسيطة تحفيزية، لا تُبالغ في القيمة
+    awardXP(xpEarned);
+}
+
+function closeExamResults(){
+    document.getElementById("exam-results-overlay").style.display = "none";
+    document.body.style.overflow = "";
+}
+
+function reviewExamAnswers(){
+    document.getElementById("exam-results-overlay").style.display = "none";
+    document.getElementById("exam-mode-overlay").style.display = "flex";
+    document.getElementById("exam-timer-pill").style.display = "none";
+    examState.reviewMode = true;
+    goToExamQuestion(0);
+}
+
+function renderExamReviewChoices(){
+    const q = examState.questions[examState.currentIndex];
+    const selected = examState.answers[q.id];
+    document.querySelectorAll("#exam-choices .exam-choice").forEach((el, i) => {
+        el.classList.remove("selected");
+        el.onclick = null;
+        if(i === q.correct) el.classList.add("correct");
+        else if(i === selected) el.classList.add("incorrect");
+    });
 }
 
 /* ---------- المدرّسون الخصوصيون — قائمة حقيقية مدعومة بـSupabase.
@@ -3800,6 +4009,91 @@ function resolveAccountDataConflict(remoteSnapshot){
             resolve();
         };
     });
+}
+
+const FOCUS_QUOTES = [
+    { ar:"النجاح هو محصلة تحضير، واجتهاد، وتعلّم من الفشل.", en:"Success is where preparation and opportunity meet.", authorAr:"كوفي عنان", authorEn:"Colin Powell" },
+    { ar:"لا تنتظر اللحظة المثالية، خذ اللحظة واجعلها مثالية.", en:"Don't wait for the perfect moment, take the moment and make it perfect.", authorAr:"مجهول", authorEn:"Unknown" },
+    { ar:"كل دقيقة تركيز الآن، خطوة أقرب لجامعتك.", en:"Every focused minute now is a step closer to your university.", authorAr:"خُطى", authorEn:"Khuta" },
+    { ar:"الانضباط هو الجسر بين الأهداف والإنجاز.", en:"Discipline is the bridge between goals and accomplishment.", authorAr:"جيم رون", authorEn:"Jim Rohn" },
+];
+
+function openFocusMode(){
+    const overlay = document.getElementById("focus-mode-overlay");
+    overlay.style.display = "flex";
+    document.body.style.overflow = "hidden";
+
+    const quote = FOCUS_QUOTES[Math.floor(Math.random() * FOCUS_QUOTES.length)];
+    document.getElementById("focus-quote-text").textContent = `"${currentLang==='ar' ? quote.ar : quote.en}"`;
+    document.getElementById("focus-quote-author").textContent = "— " + (currentLang==='ar' ? quote.authorAr : quote.authorEn);
+
+    const taskCard = document.getElementById("focus-task-card");
+    const currentTaskRow = document.querySelector("#schedule-body tr[data-task-id]");
+    if(currentTaskRow){
+        const titleCell = currentTaskRow.querySelector("td[data-label]");
+        taskCard.style.display = "block";
+        document.getElementById("focus-task-info").textContent = titleCell ? titleCell.textContent.trim() : "—";
+    } else {
+        taskCard.style.display = "none";
+    }
+    updateMainDisplay(); // مزامنة فورية عند الفتح، دون انتظار التحديث التالي كل ثانية
+}
+
+function closeFocusMode(){
+    document.getElementById("focus-mode-overlay").style.display = "none";
+    document.body.style.overflow = "";
+}
+
+function shuffleArray(arr){
+    const a = [...arr];
+    for(let i = a.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+/* يبني مجموعة أسئلة الاختبار — يتكيّف تلقائياً مع حجم بنك الأسئلة الفعلي
+   المتاح (حالياً أمثلة قليلة فقط)، فلا يُكرر نفس السؤال أبداً داخل اختبار واحد */
+function buildExamQuestionSet(examType){
+    const pool = getExamQuestions();
+    const quantPool = shuffleArray(pool.quant || []);
+    const verbalPool = shuffleArray(pool.verbal || []);
+
+    if(examType === "verbal"){
+        return { sections:[{ quant:[], verbal:verbalPool }], scaledDown: false };
+    }
+    if(examType === "quant"){
+        return { sections:[{ quant:quantPool, verbal:[] }], scaledDown: false };
+    }
+
+    // "full": توزيع عشوائي 65/55 أو 55/65 — يتحدَّد مرة واحدة لكل محاولة اختبار
+    const quantFirst = Math.random() < 0.5;
+    let targetQuant = quantFirst ? 65 : 55;
+    let targetVerbal = quantFirst ? 55 : 65;
+
+    // تكيّف مع حجم البنك الفعلي المتاح حالياً — لا تكرار لنفس السؤال إطلاقاً
+    const availableQuant = Math.min(targetQuant, quantPool.length);
+    const availableVerbal = Math.min(targetVerbal, verbalPool.length);
+    const scaledDown = (availableQuant < targetQuant) || (availableVerbal < targetVerbal);
+
+    const sections = [];
+    const qPerSection = Math.floor(availableQuant / 5);
+    const vPerSection = Math.floor(availableVerbal / 5);
+    let qRemainder = availableQuant - qPerSection * 5;
+    let vRemainder = availableVerbal - vPerSection * 5;
+    let qIdx = 0, vIdx = 0;
+
+    for(let s = 0; s < 5; s++){
+        const qCount = qPerSection + (qRemainder > 0 ? 1 : 0); if(qRemainder > 0) qRemainder--;
+        const vCount = vPerSection + (vRemainder > 0 ? 1 : 0); if(vRemainder > 0) vRemainder--;
+        sections.push({
+            quant: quantPool.slice(qIdx, qIdx + qCount),
+            verbal: verbalPool.slice(vIdx, vIdx + vCount),
+        });
+        qIdx += qCount; vIdx += vCount;
+    }
+    return { sections, scaledDown, quantFirst };
 }
 
 function loadProfileForm(){
@@ -4560,17 +4854,23 @@ async function restoreSession(){
 const SPECIALTIES = [
     { id:"medicine", icon:"fa-user-doctor", track:"science",
       ar:{name:"الطب البشري", desc:"دراسة تشخيص وعلاج الأمراض، 6 سنوات + امتياز.", career:"طبيب عام أو أخصائي بعد التدريب.", note:"من أعلى التخصصات تنافسية؛ يتطلب STEP في أغلب الجامعات.",
+          outlook:"حاجة دائمة لا تنقطع، مع نمو ملحوظ في تخصصات الجراحة الدقيقة والأورام والطب الجيني.",
           branches:["الطب الباطني","الجراحة","طب الأطفال","النساء والولادة","الطب النفسي","طب الطوارئ"],
           universities:["جامعة الملك سعود","جامعة الملك عبدالعزيز","جامعة الملك سعود بن عبدالعزيز للعلوم الصحية","جامعة الملك فيصل"]},
       en:{name:"Medicine", desc:"Diagnosing and treating illness, 6 years + internship.", career:"General practitioner or specialist after training.", note:"One of the most competitive majors; STEP is required at most universities.",
+          outlook:"Demand never stops, with notable growth in precision surgery, oncology, and genetic medicine.",
           branches:["Internal Medicine","Surgery","Pediatrics","OB/GYN","Psychiatry","Emergency Medicine"],
           universities:["King Saud University","King Abdulaziz University","KSAU-HS","King Faisal University"]} },
     { id:"dentistry", icon:"fa-tooth", track:"science",
-      ar:{name:"طب الأسنان", desc:"دراسة صحة الفم والأسنان وعلاجها جراحياً وتحفظياً.", career:"طبيب أسنان عام أو أخصائي.", note:"تنافسية عالية، غالباً تتطلب STEP."},
-      en:{name:"Dentistry", desc:"Oral and dental health, surgical and conservative treatment.", career:"General or specialist dentist.", note:"Highly competitive, usually requires STEP."} },
+      ar:{name:"طب الأسنان", desc:"دراسة صحة الفم والأسنان وعلاجها جراحياً وتحفظياً.", career:"طبيب أسنان عام أو أخصائي.", note:"تنافسية عالية، غالباً تتطلب STEP.",
+          outlook:"مستقر مع توسع القطاع الخاص والتقنيات الحديثة لتقويم وزراعة الأسنان."},
+      en:{name:"Dentistry", desc:"Oral and dental health, surgical and conservative treatment.", career:"General or specialist dentist.", note:"Highly competitive, usually requires STEP.",
+          outlook:"Stable field, growing with private-sector expansion and modern orthodontic/implant technology."} },
     { id:"pharmacy", icon:"fa-pills", track:"science",
-      ar:{name:"الصيدلة", desc:"دراسة الأدوية وتركيبها وتأثيرها العلاجي.", career:"صيدلي في مستشفى، صيدلية، أو صناعة دوائية.", note:"تنافسية عالية جداً."},
-      en:{name:"Pharmacy", desc:"Study of drugs, formulation, and therapeutic effects.", career:"Pharmacist in hospitals, pharmacies, or the pharma industry.", note:"Very competitive."} },
+      ar:{name:"الصيدلة", desc:"دراسة الأدوية وتركيبها وتأثيرها العلاجي.", career:"صيدلي في مستشفى، صيدلية، أو صناعة دوائية.", note:"تنافسية عالية جداً.",
+          outlook:"نمو في أبحاث الدواء والتصنيع المحلي للقاحات والأدوية."},
+      en:{name:"Pharmacy", desc:"Study of drugs, formulation, and therapeutic effects.", career:"Pharmacist in hospitals, pharmacies, or the pharma industry.", note:"Very competitive.",
+          outlook:"Growth in drug research and local manufacturing of vaccines and medicines."} },
     { id:"engineering_cs", icon:"fa-microchip", track:"science",
       ar:{name:"هندسة/علوم الحاسب", desc:"برمجة، خوارزميات، أنظمة، وذكاء اصطناعي.", career:"مطوّر برمجيات، مهندس بيانات، أمن سيبراني.", note:"طلب سوقي مرتفع جداً حالياً.",
           branches:["الذكاء الاصطناعي وتعلم الآلة","أمن المعلومات","هندسة البرمجيات","علم البيانات","الشبكات وأنظمة التشغيل"],
@@ -4589,16 +4889,22 @@ const SPECIALTIES = [
           branches:["Marketing","HR","Project Management","Entrepreneurship","International Business"],
           universities:["King Saud University","KFUPM","Imam Mohammad Ibn Saud University"]} },
     { id:"accounting", icon:"fa-calculator", track:"admin",
-      ar:{name:"المحاسبة", desc:"القياس والتقارير المالية والمراجعة.", career:"محاسب قانوني، مراجع داخلي، محلل مالي.", note:"طلب ثابت في كل القطاعات تقريباً."},
-      en:{name:"Accounting", desc:"Financial measurement, reporting, and auditing.", career:"Certified accountant, internal auditor, financial analyst.", note:"Steady demand across nearly all sectors."} },
+      ar:{name:"المحاسبة", desc:"القياس والتقارير المالية والمراجعة.", career:"محاسب قانوني، مراجع داخلي، محلل مالي.", note:"طلب ثابت في كل القطاعات تقريباً.",
+          outlook:"تخصص جوهري لا تخلو منه أي شركة، مع ضرورة متزايدة للإلمام بالأنظمة المحاسبية الرقمية."},
+      en:{name:"Accounting", desc:"Financial measurement, reporting, and auditing.", career:"Certified accountant, internal auditor, financial analyst.", note:"Steady demand across nearly all sectors.",
+          outlook:"A core function every company needs, with growing importance placed on digital accounting systems."} },
     { id:"finance", icon:"fa-chart-line", track:"admin",
-      ar:{name:"التمويل والاستثمار", desc:"الأسواق المالية، إدارة المحافظ، والتحليل المالي.", career:"محلل مالي، مستشار استثمار.", note:"مرتبط بقطاع البنوك والأسواق المالية المتنامي."},
-      en:{name:"Finance & Investment", desc:"Financial markets, portfolio management, analysis.", career:"Financial analyst, investment advisor.", note:"Tied to the growing banking and capital-markets sector."} },
+      ar:{name:"التمويل والاستثمار", desc:"الأسواق المالية، إدارة المحافظ، والتحليل المالي.", career:"محلل مالي، مستشار استثمار.", note:"مرتبط بقطاع البنوك والأسواق المالية المتنامي.",
+          outlook:"نمو قوي في التقنية المالية (FinTech)، التحليل المالي، وإدارة المخاطر."},
+      en:{name:"Finance & Investment", desc:"Financial markets, portfolio management, analysis.", career:"Financial analyst, investment advisor.", note:"Tied to the growing banking and capital-markets sector.",
+          outlook:"Strong growth in FinTech, financial analysis, and risk management."} },
     { id:"law", icon:"fa-scale-balanced", track:"humanities",
       ar:{name:"القانون", desc:"دراسة الأنظمة القانونية والتشريعات.", career:"محامٍ، مستشار قانوني، قاضٍ (بعد مسار مختص).", note:"يتطلب اجتياز اختبار الرخصة القانونية للممارسة.",
+          outlook:"واعد جداً في القوانين التجارية، الأمن السيبراني، حماية البيانات، والملكية الفكرية.",
           branches:["القانون التجاري","القانون الجنائي","القانون الدولي","التحكيم التجاري"],
           universities:["جامعة الملك سعود","جامعة الإمام محمد بن سعود","جامعة الملك عبدالعزيز"]},
       en:{name:"Law", desc:"Study of legal systems and legislation.", career:"Lawyer, legal consultant, judge (via a specialized path).", note:"Requires passing the legal licensing exam to practice.",
+          outlook:"Very promising in commercial law, cybersecurity, data protection, and intellectual property.",
           branches:["Commercial Law","Criminal Law","International Law","Commercial Arbitration"],
           universities:["King Saud University","Imam Mohammad Ibn Saud University","King Abdulaziz University"]} },
     { id:"sharia", icon:"fa-mosque", track:"humanities",
@@ -4611,8 +4917,10 @@ const SPECIALTIES = [
       ar:{name:"اللغة العربية وآدابها", desc:"النحو، الأدب، البلاغة، واللسانيات.", career:"تدريس، تحرير، إعلام، ترجمة.", note:"عادة لا تتطلب STEP."},
       en:{name:"Arabic Language & Literature", desc:"Grammar, literature, rhetoric, and linguistics.", career:"Teaching, editing, media, translation.", note:"Usually no STEP requirement."} },
     { id:"english_translation", icon:"fa-language", track:"humanities",
-      ar:{name:"اللغة الإنجليزية والترجمة", desc:"إتقان اللغة الإنجليزية وأصول الترجمة.", career:"مترجم، تدريس، إعلام، علاقات دولية.", note:"غالباً تتطلب درجة STEP مرتفعة نسبياً."},
-      en:{name:"English & Translation", desc:"English fluency and translation principles.", career:"Translator, teaching, media, international relations.", note:"Usually requires a relatively high STEP score."} },
+      ar:{name:"اللغة الإنجليزية والترجمة", desc:"إتقان اللغة الإنجليزية وأصول الترجمة.", career:"مترجم، تدريس، إعلام، علاقات دولية.", note:"غالباً تتطلب درجة STEP مرتفعة نسبياً.",
+          outlook:"تركيز متزايد على الترجمة الفورية، الترجمة القانونية والطبية، وحتى تدريب نماذج الذكاء الاصطناعي اللغوية."},
+      en:{name:"English & Translation", desc:"English fluency and translation principles.", career:"Translator, teaching, media, international relations.", note:"Usually requires a relatively high STEP score.",
+          outlook:"Growing focus on simultaneous interpretation, legal/medical translation, and even training AI language models."} },
     { id:"nursing", icon:"fa-user-nurse", track:"science",
       ar:{name:"التمريض", desc:"الرعاية الصحية للمرضى في مختلف الأقسام الطبية.", career:"ممرض/ة في مستشفيات حكومية وخاصة.", note:"طلب سوقي مرتفع ومستقر."},
       en:{name:"Nursing", desc:"Patient care across medical departments.", career:"Nurse in public and private hospitals.", note:"High and steady market demand."} },
@@ -4620,20 +4928,117 @@ const SPECIALTIES = [
       ar:{name:"العمارة", desc:"تصميم المباني من الناحية الجمالية والوظيفية.", career:"مهندس معماري، مصمم داخلي، مخطط عمراني.", note:"يتطلب موهبة تصميمية إلى جانب الأساس الهندسي."},
       en:{name:"Architecture", desc:"Designing buildings aesthetically and functionally.", career:"Architect, interior designer, urban planner.", note:"Requires design talent alongside engineering fundamentals."} },
     { id:"psychology", icon:"fa-brain", track:"humanities",
-      ar:{name:"علم النفس", desc:"دراسة السلوك الإنساني والعمليات النفسية.", career:"أخصائي نفسي (بعد ترخيص)، موارد بشرية، بحث علمي.", note:"يحتاج غالباً دراسات عليا للممارسة الإكلينيكية."},
-      en:{name:"Psychology", desc:"Study of human behavior and mental processes.", career:"Licensed psychologist, HR, research.", note:"Clinical practice usually requires graduate studies."} },
+      ar:{name:"علم النفس", desc:"دراسة السلوك الإنساني والعمليات النفسية.", career:"أخصائي نفسي (بعد ترخيص)، موارد بشرية، بحث علمي.", note:"يحتاج غالباً دراسات عليا للممارسة الإكلينيكية.",
+          outlook:"ارتفاع ملحوظ في الوعي بالصحة النفسية وجودة الحياة وبيئة العمل، وطلب متزايد على علم النفس التنظيمي في الشركات."},
+      en:{name:"Psychology", desc:"Study of human behavior and mental processes.", career:"Licensed psychologist, HR, research.", note:"Clinical practice usually requires graduate studies.",
+          outlook:"Rising awareness of mental health and workplace well-being, with growing demand for organizational psychology in companies."} },
     { id:"industrial_eng", icon:"fa-industry", track:"science",
-      ar:{name:"الهندسة الصناعية", desc:"تحسين العمليات الإنتاجية وسلاسل الإمداد وإدارة الجودة.", career:"مهندس عمليات، مستشار سلاسل إمداد.", note:"مطلوبة في القطاع الصناعي واللوجستي المتنامي."},
-      en:{name:"Industrial Engineering", desc:"Optimizing production processes, supply chains, and quality.", career:"Process engineer, supply-chain consultant.", note:"In demand across the growing industrial and logistics sector."} },
+      ar:{name:"الهندسة الصناعية", desc:"تحسين العمليات الإنتاجية وسلاسل الإمداد وإدارة الجودة.", career:"مهندس عمليات، مستشار سلاسل إمداد.", note:"مطلوبة في القطاع الصناعي واللوجستي المتنامي.",
+          outlook:"طلب كبير في إدارة العمليات، اللوجستيات، وتوجيه المشاريع مع التحول نحو المصانع الذكية."},
+      en:{name:"Industrial Engineering", desc:"Optimizing production processes, supply chains, and quality.", career:"Process engineer, supply-chain consultant.", note:"In demand across the growing industrial and logistics sector.",
+          outlook:"High demand in operations management, logistics, and project leadership amid the shift toward smart factories."} },
     { id:"petroleum_eng", icon:"fa-oil-well", track:"science",
       ar:{name:"هندسة البترول", desc:"استكشاف واستخراج النفط والغاز.", career:"مهندس حفر، مهندس مكامن.", note:"مرتبطة تاريخياً بأرامكو وقطاع الطاقة."},
       en:{name:"Petroleum Engineering", desc:"Oil and gas exploration and extraction.", career:"Drilling engineer, reservoir engineer.", note:"Historically tied to Aramco and the energy sector."} },
     { id:"media", icon:"fa-video", track:"humanities",
-      ar:{name:"الإعلام والاتصال", desc:"الصحافة، الإعلام الرقمي، والعلاقات العامة.", career:"صحفي، منتج محتوى، مسؤول علاقات عامة.", note:"تطوّر كثيراً مع نمو الإعلام الرقمي ووسائل التواصل."},
-      en:{name:"Media & Communication", desc:"Journalism, digital media, and public relations.", career:"Journalist, content producer, PR officer.", note:"Growing rapidly alongside digital media and social platforms."} },
+      ar:{name:"الإعلام والاتصال", desc:"الصحافة، الإعلام الرقمي، والعلاقات العامة.", career:"صحفي، منتج محتوى، مسؤول علاقات عامة.", note:"تطوّر كثيراً مع نمو الإعلام الرقمي ووسائل التواصل.",
+          outlook:"الاعتماد المتزايد على المهارات الفردية والإنتاج الرقمي والمنصات الحديثة بدل الإعلام التقليدي وحده."},
+      en:{name:"Media & Communication", desc:"Journalism, digital media, and public relations.", career:"Journalist, content producer, PR officer.", note:"Growing rapidly alongside digital media and social platforms.",
+          outlook:"Increasing reliance on individual skills, digital production, and modern platforms rather than traditional media alone."} },
     { id:"veterinary", icon:"fa-paw", track:"science",
       ar:{name:"الطب البيطري", desc:"تشخيص وعلاج أمراض الحيوانات.", career:"طبيب بيطري في عيادات أو قطاع الثروة الحيوانية.", note:"تخصص متوسط التنافسية نسبياً."},
       en:{name:"Veterinary Medicine", desc:"Diagnosing and treating animal illnesses.", career:"Veterinarian in clinics or the livestock sector.", note:"Moderately competitive."} },
+
+    { id:"ai_ml", icon:"fa-robot", track:"science",
+      ar:{name:"الذكاء الاصطناعي وتعلم الآلة", desc:"بناء الأنظمة الذكية، تحليل البيانات الضخمة، والتعلم الآلي.", career:"مهندس ذكاء اصطناعي، مطوّر نماذج تعلم آلي، باحث.", note:"من أسرع التخصصات نمواً عالمياً ومحلياً.",
+          outlook:"المحرك الأساسي لكافة التكنولوجيا القادمة — روبوتات، تحليل تنبؤي، وأتمتة."},
+      en:{name:"AI & Machine Learning", desc:"Building intelligent systems, big-data analysis, and machine learning.", career:"AI engineer, ML model developer, researcher.", note:"One of the fastest-growing fields globally and locally.",
+          outlook:"The core driver of all upcoming technology — robotics, predictive analytics, and automation."} },
+    { id:"cybersecurity", icon:"fa-shield-halved", track:"science",
+      ar:{name:"الأمن السيبراني", desc:"حماية الأنظمة، الشبكات، والبيانات من الهجمات الرقمية.", career:"محلل أمن معلومات، مختبر اختراق، مستشار أمني.", note:"طلب سوقي مرتفع جداً حالياً.",
+          outlook:"طلب حاد ومستمر لا يستغني عنه أي قطاع حكومي أو خاص."},
+      en:{name:"Cybersecurity", desc:"Protecting systems, networks, and data from digital attacks.", career:"Security analyst, penetration tester, security consultant.", note:"Very high current market demand.",
+          outlook:"Sharp, continuous demand that no government or private sector can do without."} },
+    { id:"data_science", icon:"fa-database", track:"science",
+      ar:{name:"علوم البيانات وتحليلها", desc:"استخراج المعرفة والأنماط من الكميات الهائلة من البيانات.", career:"محلل بيانات، عالم بيانات، مستشار تحليلات.", note:"طلب متنامٍ بسرعة مع تحول الشركات للقرارات المبنية على بيانات.",
+          outlook:"عصب اتخاذ القرار في الشركات، التسويق، والتخطيط الاستراتيجي."},
+      en:{name:"Data Science & Analytics", desc:"Extracting knowledge and patterns from massive amounts of data.", career:"Data analyst, data scientist, analytics consultant.", note:"Rapidly growing demand as companies shift to data-driven decisions.",
+          outlook:"The backbone of decision-making in companies, marketing, and strategic planning."} },
+    { id:"cloud_computing", icon:"fa-cloud", track:"science",
+      ar:{name:"الحوسبة السحابية وشبكات الحاسب", desc:"إدارة السيرفرات والبنية التحتية الرقمية.", career:"مهندس سحابة، مدير شبكات، مهندس DevOps.", note:"نمو متزايد مع تحوّل الشركات للسحابة.",
+          outlook:"نمو متزايد مع تحول معظم الشركات من السيرفرات المحلية إلى السحابة."},
+      en:{name:"Cloud Computing & Networking", desc:"Managing servers and digital infrastructure.", career:"Cloud engineer, network administrator, DevOps engineer.", note:"Growing demand as companies migrate to the cloud.",
+          outlook:"Increasing growth as most companies shift from local servers to the cloud."} },
+    { id:"electrical_eng", icon:"fa-bolt", track:"science",
+      ar:{name:"الهندسة الكهربائية والإلكترونية", desc:"الطاقة، الدوائر الإلكترونية، والأنظمة المدمجة.", career:"مهندس كهرباء، مهندس أنظمة مدمجة.", note:"تخصص هندسي أساسي وواسع التطبيقات.",
+          outlook:"واعد جداً مع التوجه نحو الطاقة المتجددة، السيارات الكهربائية، وإنترنت الأشياء."},
+      en:{name:"Electrical & Electronics Engineering", desc:"Power, electronic circuits, and embedded systems.", career:"Electrical engineer, embedded systems engineer.", note:"A core, broadly-applicable engineering field.",
+          outlook:"Very promising with the shift toward renewable energy, electric vehicles, and IoT."} },
+    { id:"mechanical_eng", icon:"fa-gears", track:"science",
+      ar:{name:"الهندسة الميكانيكية والأتمتة", desc:"المحركات، التصنيع، التكييف، والروبوتات.", career:"مهندس ميكانيكي، مهندس تصنيع، مهندس روبوتات.", note:"تخصص تقليدي يتجدّد مع الأتمتة.",
+          outlook:"التحول نحو المصانع الذكية والتصنيع الرقمي المتقدم."},
+      en:{name:"Mechanical Engineering & Automation", desc:"Engines, manufacturing, HVAC, and robotics.", career:"Mechanical engineer, manufacturing engineer, robotics engineer.", note:"A traditional field being renewed by automation.",
+          outlook:"Shift toward smart factories and advanced digital manufacturing."} },
+    { id:"chemical_eng", icon:"fa-flask", track:"science",
+      ar:{name:"الهندسة الكيميائية وهندسة المواد", desc:"تكرير الموارد، المواد المتقدمة، والبتروكيماويات.", career:"مهندس كيميائي، مهندس مواد، باحث بتروكيماويات.", note:"مرتبط بقطاع الطاقة والصناعة الثقيلة في السعودية.",
+          outlook:"التركيز على أبحاث البطاريات، الهيدروجين الأخضر، والمواد المتقدمة."},
+      en:{name:"Chemical & Materials Engineering", desc:"Resource refining, advanced materials, and petrochemicals.", career:"Chemical engineer, materials engineer, petrochemical researcher.", note:"Tied to Saudi Arabia's energy and heavy-industry sector.",
+          outlook:"Focus on battery research, green hydrogen, and advanced materials."} },
+    { id:"applied_medical", icon:"fa-stethoscope", track:"science",
+      ar:{name:"العلوم الطبية التطبيقية", desc:"الأشعة، المختبرات، العلاج الطبيعي، والتخدير.", career:"أخصائي أشعة، فني مختبر، أخصائي علاج طبيعي.", note:"طلب مستقر في المستشفيات والمراكز الطبية.",
+          outlook:"طلب مرتقب لزيادة الاستثمار في المستشفيات والمراكز التأهيلية."},
+      en:{name:"Applied Medical Sciences", desc:"Radiology, lab sciences, physical therapy, and anesthesia technology.", career:"Radiology tech, lab technician, physical therapist.", note:"Steady demand across hospitals and medical centers.",
+          outlook:"Anticipated demand growth as investment in hospitals and rehab centers increases."} },
+    { id:"health_informatics", icon:"fa-hospital-user", track:"science",
+      ar:{name:"الإدارة والمعلوماتية الصحية", desc:"إدارة المستشفيات والسجلات الطبية والذكاء الاصطناعي الطبي.", career:"مدير معلومات صحية، محلل نظم طبية.", note:"تخصص يجمع بين الصحة والتقنية.",
+          outlook:"من أكثر التخصصات نمواً لربط القطاع الصحي بالتحول الرقمي."},
+      en:{name:"Health Informatics & Management", desc:"Hospital administration, medical records, and medical AI.", career:"Health information manager, medical systems analyst.", note:"Combines healthcare with technology.",
+          outlook:"One of the fastest-growing fields, connecting healthcare to digital transformation."} },
+    { id:"supply_chain", icon:"fa-truck-fast", track:"admin",
+      ar:{name:"سلاسل الإمداد والخدمات اللوجستية", desc:"إدارة حركة البضائع والتخزين والتوزيع.", career:"مدير لوجستيات، مخطط سلسلة إمداد.", note:"مرتبط بنمو التجارة الإلكترونية في السعودية.",
+          outlook:"طلب مرتفع جداً بسبب التوسع في التجارة الإلكترونية والمراكز اللوجستية العالمية."},
+      en:{name:"Supply Chain & Logistics", desc:"Managing the movement, storage, and distribution of goods.", career:"Logistics manager, supply-chain planner.", note:"Tied to the growth of e-commerce in Saudi Arabia.",
+          outlook:"Very high demand due to e-commerce expansion and global logistics hubs."} },
+    { id:"digital_marketing", icon:"fa-bullhorn", track:"admin",
+      ar:{name:"التسويق الرقمي والتجارة الإلكترونية", desc:"الاستراتيجيات التسويقية وتحليل سلوك المستهلك الرقمي.", career:"أخصائي تسويق رقمي، مدير تجارة إلكترونية.", note:"من أكثر المهارات المطلوبة حالياً في سوق العمل.",
+          outlook:"التحول الكامل نحو التسويق المبني على البيانات والمحتوى الرقمي."},
+      en:{name:"Digital Marketing & E-commerce", desc:"Marketing strategy and digital consumer-behavior analysis.", career:"Digital marketing specialist, e-commerce manager.", note:"One of the most in-demand skill sets in today's job market.",
+          outlook:"A full shift toward data-driven marketing and digital content."} },
+    { id:"mis", icon:"fa-diagram-project", track:"admin",
+      ar:{name:"نظم المعلومات الإدارية", desc:"الجسر الفاصل بين الإدارة وحلول تقنية المعلومات.", career:"محلل أعمال، مستشار نظم معلومات.", note:"مزيج بين الإدارة والتقنية.",
+          outlook:"طلب ممتاز لمساعدة الشركات على اختيار وتطبيق التكنولوجيا المناسبة."},
+      en:{name:"Management Information Systems", desc:"The bridge between management and IT solutions.", career:"Business analyst, IT systems consultant.", note:"A blend of management and technology.",
+          outlook:"Excellent demand helping companies choose and implement the right technology."} },
+    { id:"ui_ux_design", icon:"fa-pen-ruler", track:"humanities",
+      ar:{name:"تصميم تجربة وواجهة المستخدم (UI/UX)", desc:"تصميم كيفية تفاعل المستخدم مع التطبيقات والمواقع.", career:"مصمم UI/UX، باحث تجربة مستخدم.", note:"يحتاج غالباً معرض أعمال (Portfolio) قوياً.",
+          outlook:"طلب استثنائي في جميع شركات التقنية والشركات الناشئة."},
+      en:{name:"UI/UX Design", desc:"Designing how users interact with apps and websites.", career:"UI/UX designer, user researcher.", note:"Usually requires a strong portfolio.",
+          outlook:"Exceptional demand across all tech companies and startups."} },
+    { id:"graphic_design", icon:"fa-palette", track:"humanities",
+      ar:{name:"التصميم الجرافيكي والوسائط المتعددة", desc:"الهويات البصرية والرسوم المتحركة (Motion Graphics).", career:"مصمم جرافيك، فنان موشن جرافيك.", note:"يحتاج معرض أعمال قوياً ومهارة فنية مستمرة التطوير.",
+          outlook:"مستمر ومطلوب في صناعة الإعلانات والترفيه والألعاب."},
+      en:{name:"Graphic Design & Motion Graphics", desc:"Visual identities and motion graphics.", career:"Graphic designer, motion graphics artist.", note:"Requires a strong portfolio and continuously developing artistic skill.",
+          outlook:"Ongoing demand in advertising, entertainment, and gaming."} },
+    { id:"interior_design", icon:"fa-couch", track:"humanities",
+      ar:{name:"التصميم الداخلي", desc:"استغلال المساحات الداخلية والتنسيق الجمالي.", career:"مصمم داخلي، مستشار ديكور.", note:"مختلف عن الهندسة المعمارية — يركّز على المساحات الداخلية تحديداً.",
+          outlook:"مرتبط بالنمو العقاري وتطوير قطاعات الضيافة والسياحة."},
+      en:{name:"Interior Design", desc:"Utilizing interior spaces and aesthetic coordination.", career:"Interior designer, decor consultant.", note:"Distinct from architecture — focuses specifically on interior spaces.",
+          outlook:"Tied to real-estate growth and the development of hospitality and tourism."} },
+    { id:"physics", icon:"fa-atom", track:"science",
+      ar:{name:"الفيزياء والفيزياء الطبية والتطبيقية", desc:"دراسة المادة والطاقة والتطبيقات الطبية.", career:"باحث فيزياء، فيزيائي طبي، مهندس تطبيقي.", note:"أساس علمي قوي يفتح أبواباً بحثية وصناعية متعددة.",
+          outlook:"مجالات الطاقة، الأبحاث النووية، والتصوير الطبي."},
+      en:{name:"Physics & Applied/Medical Physics", desc:"Study of matter, energy, and medical applications.", career:"Physics researcher, medical physicist, applied engineer.", note:"A strong scientific foundation opening many research and industrial doors.",
+          outlook:"Energy fields, nuclear research, and medical imaging."} },
+    { id:"chemistry", icon:"fa-vial", track:"science",
+      ar:{name:"الكيمياء والكيمياء الصناعية", desc:"تحليل المواد والتصنيع الكيميائي.", career:"كيميائي صناعي، باحث مختبرات، مراقب جودة.", note:"مرتبط بالقطاعات الصناعية والدوائية في السعودية.",
+          outlook:"القطاعات الصناعية، الدوائية، والبتروكيميائية."},
+      en:{name:"Chemistry & Industrial Chemistry", desc:"Material analysis and chemical manufacturing.", career:"Industrial chemist, lab researcher, quality controller.", note:"Tied to Saudi Arabia's industrial and pharmaceutical sectors.",
+          outlook:"Industrial, pharmaceutical, and petrochemical sectors."} },
+    { id:"biotechnology", icon:"fa-dna", track:"science",
+      ar:{name:"التكنولوجيا الحيوية والأحياء الدقيقة", desc:"تعديل الجينات واللقاحات والأبحاث الحيوية.", career:"باحث تقنية حيوية، أخصائي مختبرات وراثية.", note:"مجال بحثي متنامٍ بقوة عالمياً.",
+          outlook:"نمو هائل في الطب الحديث والتصنيع الغذائي والزراعي."},
+      en:{name:"Biotechnology & Microbiology", desc:"Gene editing, vaccines, and biological research.", career:"Biotech researcher, genetics lab specialist.", note:"A rapidly-growing research field worldwide.",
+          outlook:"Huge growth in modern medicine and food/agricultural manufacturing."} },
 ];
 
 function renderSpecialties(){
@@ -4680,6 +5085,7 @@ function openSpecialtyDetail(id){
             </div>
             <p style="font-size:13.5px; color:var(--text-2); line-height:1.9; margin-bottom:14px;">${d.desc}</p>
             <div class="uni-note" style="margin-bottom:10px;"><b style="color:var(--teal);">${currentLang==='ar'?'المسار الوظيفي: ':'Career path: '}</b>${d.career}</div>
+            ${d.outlook ? `<div style="margin-bottom:14px; padding:12px 14px; background:var(--gold-soft); border-radius:12px; border:1px solid rgba(201,150,46,0.2);"><b style="font-size:12.5px; color:var(--gold);"><i class="fa-solid fa-arrow-trend-up"></i> ${currentLang==='ar'?'مستقبل التخصص:':'Career outlook:'}</b><p style="font-size:12.5px; color:var(--text-2); line-height:1.8; margin-top:6px;">${d.outlook}</p></div>` : ""}
             ${branches.length ? `<div style="margin-bottom:14px;"><b style="font-size:13px; color:var(--gold);">${currentLang==='ar'?'يتفرّع منه:':'Branches into:'}</b>
                 <ul style="margin:8px 0 0; padding-inline-start:20px; font-size:13px; line-height:2;">${branches.map(b=>`<li>${b}</li>`).join("")}</ul></div>` : ""}
             ${unis.length ? `<div style="margin-bottom:14px;"><b style="font-size:13px; color:var(--gold);">${currentLang==='ar'?'متوفر في جامعات مثل:':'Offered at universities such as:'}</b>
@@ -5108,6 +5514,53 @@ async function tryLoadRemoteCurriculum(){
      "en":{...}}, ...]
    يمكنك إما استبدال القائمة كاملة أو (الأفضل) نسخ التنسيق وإضافة تخصصات جديدة. */
 const REMOTE_SPECIALTIES_URL = "";
+
+/* ============================================================
+   36) بنك أسئلة الاختبار المحاكي
+   ------------------------------------------------------------
+   ⚠️ الأسئلة أدناه أمثلة توضيحية فقط لاختبار عمل النظام — وليست الأسئلة
+   الحقيقية. لإضافة البنك الحقيقي: ارفع ملفاً بنفس اسم/بنية exam-questions.json
+   (المرفق كمرجع) على نفس مستودع GitHub الذي تستخدمه للجامعات والدورات،
+   وضع رابطه الخام في REMOTE_EXAM_QUESTIONS_URL أدناه — سيحل محل هذه
+   الأمثلة تلقائياً دون أي تعديل آخر على الكود.
+   ============================================================ */
+const REMOTE_EXAM_QUESTIONS_URL = "";
+
+const EXAM_QUESTIONS_LOCAL = {
+    quant: [
+        { id:"q001", text:"إذا كان س + 5 = 12، فما قيمة س؟", choices:["5","6","7","8"], correct:2, source:"دورة إيهاب — الوحدة 3 (المعادلات)" },
+        { id:"q002", text:"ما ناتج 15% من 200؟", choices:["20","25","30","35"], correct:2, source:"دورة المعاصر — التأسيس، النسبة المئوية" },
+        { id:"q003", text:"متوالية حسابية حدها الأول 3 وأساسها 4، فما الحد السادس؟", choices:["19","21","23","27"], correct:2, source:"دورة أينشتاين — المتتاليات" },
+        { id:"q004", text:"مستطيل طوله 12 وعرضه 5، فما محيطه؟", choices:["17","34","60","68"], correct:1, source:"دورة المنصف — الهندسة" },
+        { id:"q005", text:"إذا كانت سرعة سيارة 80 كم/س، فكم تقطع خلال 45 دقيقة؟", choices:["40 كم","50 كم","60 كم","70 كم"], correct:2, source:"دورة إيهاب — الوحدة 5 (السرعة والزمن)" },
+        { id:"q006", text:"ما هو ناتج (2)^5؟", choices:["16","32","64","10"], correct:1, source:"دورة المعاصر — الأسس" },
+    ],
+    verbal: [
+        { id:"v001", text:"اختر الكلمة الأقرب معنى لكلمة (السَّخِيّ):", choices:["البخيل","الكريم","الشجاع","الحكيم"], correct:1, source:"دورة إيهاب — المفردات، الوحدة 2" },
+        { id:"v002", text:"أكمل التناظر: (طبيب : مستشفى) كـ (معلم : ــــــ)", choices:["كتاب","مدرسة","طالب","سبورة"], correct:1, source:"دورة أينشتاين — التناظر اللفظي" },
+        { id:"v003", text:"اختر الكلمة الشاذة التي لا تنتمي لبقية الكلمات:", choices:["تفاح","برتقال","خيار","عنب"], correct:2, source:"دورة المنصف — إكمال المتشابهات" },
+        { id:"v004", text:"ما مضاد كلمة (اليقظة)؟", choices:["النشاط","الغفلة","الحذر","الفطنة"], correct:1, source:"دورة إيهاب — المفردات، الوحدة 4" },
+        { id:"v005", text:"أكمل الجملة بالكلمة المناسبة: \"سعى الطالب إلى ــــــ أهدافه رغم الصعوبات.\"", choices:["إهمال","تحقيق","نسيان","تأجيل"], correct:1, source:"دورة المعاصر — استيعاب المقروء" },
+        { id:"v006", text:"اختر الكلمة الأقرب لمعنى (المُثابرة):", choices:["الكسل","الإصرار","التردد","الاستسلام"], correct:1, source:"دورة أينشتاين — المفردات" },
+        { id:"v007", text:"أكمل التناظر: (قلم : كتابة) كـ (مفتاح : ــــــ)", choices:["باب","فتح","قفل","بيت"], correct:1, source:"دورة إيهاب — التناظر اللفظي، الوحدة 6" },
+    ],
+};
+
+function getExamQuestions(){
+    return window.__REMOTE_EXAM_QUESTIONS__ || EXAM_QUESTIONS_LOCAL;
+}
+
+async function tryLoadRemoteExamQuestions(){
+    if(!REMOTE_EXAM_QUESTIONS_URL) return;
+    try{
+        const res = await fetch(REMOTE_EXAM_QUESTIONS_URL, {cache:"no-store"});
+        if(!res.ok) return;
+        const json = await res.json();
+        if(json && (json.quant || json.verbal)){
+            window.__REMOTE_EXAM_QUESTIONS__ = json;
+        }
+    }catch(e){ /* تجاهل بصمت — نستمر بالأمثلة المدمجة محلياً */ }
+}
 
 async function tryLoadRemoteSpecialties(){
     if(!REMOTE_SPECIALTIES_URL) return;

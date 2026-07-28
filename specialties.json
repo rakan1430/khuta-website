@@ -8,6 +8,7 @@
       "desc": "دراسة تشخيص وعلاج الأمراض، 6 سنوات + امتياز.",
       "career": "طبيب عام أو أخصائي بعد التدريب.",
       "note": "من أعلى التخصصات تنافسية؛ يتطلب STEP في أغلب الجامعات.",
+      "outlook": "حاجة دائمة لا تنقطع، مع نمو ملحوظ في تخصصات الجراحة الدقيقة والأورام والطب الجيني.",
       "branches": [
         "الطب الباطني",
         "الجراحة",
@@ -28,6 +29,7 @@
       "desc": "Diagnosing and treating illness, 6 years + internship.",
       "career": "General practitioner or specialist after training.",
       "note": "One of the most competitive majors; STEP is required at most universities.",
+      "outlook": "Demand never stops, with notable growth in precision surgery, oncology, and genetic medicine.",
       "branches": [
         "Internal Medicine",
         "Surgery",
@@ -52,13 +54,15 @@
       "name": "طب الأسنان",
       "desc": "دراسة صحة الفم والأسنان وعلاجها جراحياً وتحفظياً.",
       "career": "طبيب أسنان عام أو أخصائي.",
-      "note": "تنافسية عالية، غالباً تتطلب STEP."
+      "note": "تنافسية عالية، غالباً تتطلب STEP.",
+      "outlook": "مستقر مع توسع القطاع الخاص والتقنيات الحديثة لتقويم وزراعة الأسنان."
     },
     "en": {
       "name": "Dentistry",
       "desc": "Oral and dental health, surgical and conservative treatment.",
       "career": "General or specialist dentist.",
-      "note": "Highly competitive, usually requires STEP."
+      "note": "Highly competitive, usually requires STEP.",
+      "outlook": "Stable field, growing with private-sector expansion and modern orthodontic/implant technology."
     }
   },
   {
@@ -69,13 +73,15 @@
       "name": "الصيدلة",
       "desc": "دراسة الأدوية وتركيبها وتأثيرها العلاجي.",
       "career": "صيدلي في مستشفى، صيدلية، أو صناعة دوائية.",
-      "note": "تنافسية عالية جداً."
+      "note": "تنافسية عالية جداً.",
+      "outlook": "نمو في أبحاث الدواء والتصنيع المحلي للقاحات والأدوية."
     },
     "en": {
       "name": "Pharmacy",
       "desc": "Study of drugs, formulation, and therapeutic effects.",
       "career": "Pharmacist in hospitals, pharmacies, or the pharma industry.",
-      "note": "Very competitive."
+      "note": "Very competitive.",
+      "outlook": "Growth in drug research and local manufacturing of vaccines and medicines."
     }
   },
   {
@@ -187,13 +193,15 @@
       "name": "المحاسبة",
       "desc": "القياس والتقارير المالية والمراجعة.",
       "career": "محاسب قانوني، مراجع داخلي، محلل مالي.",
-      "note": "طلب ثابت في كل القطاعات تقريباً."
+      "note": "طلب ثابت في كل القطاعات تقريباً.",
+      "outlook": "تخصص جوهري لا تخلو منه أي شركة، مع ضرورة متزايدة للإلمام بالأنظمة المحاسبية الرقمية."
     },
     "en": {
       "name": "Accounting",
       "desc": "Financial measurement, reporting, and auditing.",
       "career": "Certified accountant, internal auditor, financial analyst.",
-      "note": "Steady demand across nearly all sectors."
+      "note": "Steady demand across nearly all sectors.",
+      "outlook": "A core function every company needs, with growing importance placed on digital accounting systems."
     }
   },
   {
@@ -204,13 +212,15 @@
       "name": "التمويل والاستثمار",
       "desc": "الأسواق المالية، إدارة المحافظ، والتحليل المالي.",
       "career": "محلل مالي، مستشار استثمار.",
-      "note": "مرتبط بقطاع البنوك والأسواق المالية المتنامي."
+      "note": "مرتبط بقطاع البنوك والأسواق المالية المتنامي.",
+      "outlook": "نمو قوي في التقنية المالية (FinTech)، التحليل المالي، وإدارة المخاطر."
     },
     "en": {
       "name": "Finance & Investment",
       "desc": "Financial markets, portfolio management, analysis.",
       "career": "Financial analyst, investment advisor.",
-      "note": "Tied to the growing banking and capital-markets sector."
+      "note": "Tied to the growing banking and capital-markets sector.",
+      "outlook": "Strong growth in FinTech, financial analysis, and risk management."
     }
   },
   {
@@ -222,6 +232,7 @@
       "desc": "دراسة الأنظمة القانونية والتشريعات.",
       "career": "محامٍ، مستشار قانوني، قاضٍ (بعد مسار مختص).",
       "note": "يتطلب اجتياز اختبار الرخصة القانونية للممارسة.",
+      "outlook": "واعد جداً في القوانين التجارية، الأمن السيبراني، حماية البيانات، والملكية الفكرية.",
       "branches": [
         "القانون التجاري",
         "القانون الجنائي",
@@ -239,6 +250,7 @@
       "desc": "Study of legal systems and legislation.",
       "career": "Lawyer, legal consultant, judge (via a specialized path).",
       "note": "Requires passing the legal licensing exam to practice.",
+      "outlook": "Very promising in commercial law, cybersecurity, data protection, and intellectual property.",
       "branches": [
         "Commercial Law",
         "Criminal Law",
@@ -311,13 +323,15 @@
       "name": "اللغة الإنجليزية والترجمة",
       "desc": "إتقان اللغة الإنجليزية وأصول الترجمة.",
       "career": "مترجم، تدريس، إعلام، علاقات دولية.",
-      "note": "غالباً تتطلب درجة STEP مرتفعة نسبياً."
+      "note": "غالباً تتطلب درجة STEP مرتفعة نسبياً.",
+      "outlook": "تركيز متزايد على الترجمة الفورية، الترجمة القانونية والطبية، وحتى تدريب نماذج الذكاء الاصطناعي اللغوية."
     },
     "en": {
       "name": "English & Translation",
       "desc": "English fluency and translation principles.",
       "career": "Translator, teaching, media, international relations.",
-      "note": "Usually requires a relatively high STEP score."
+      "note": "Usually requires a relatively high STEP score.",
+      "outlook": "Growing focus on simultaneous interpretation, legal/medical translation, and even training AI language models."
     }
   },
   {
@@ -362,13 +376,15 @@
       "name": "علم النفس",
       "desc": "دراسة السلوك الإنساني والعمليات النفسية.",
       "career": "أخصائي نفسي (بعد ترخيص)، موارد بشرية، بحث علمي.",
-      "note": "يحتاج غالباً دراسات عليا للممارسة الإكلينيكية."
+      "note": "يحتاج غالباً دراسات عليا للممارسة الإكلينيكية.",
+      "outlook": "ارتفاع ملحوظ في الوعي بالصحة النفسية وجودة الحياة وبيئة العمل، وطلب متزايد على علم النفس التنظيمي في الشركات."
     },
     "en": {
       "name": "Psychology",
       "desc": "Study of human behavior and mental processes.",
       "career": "Licensed psychologist, HR, research.",
-      "note": "Clinical practice usually requires graduate studies."
+      "note": "Clinical practice usually requires graduate studies.",
+      "outlook": "Rising awareness of mental health and workplace well-being, with growing demand for organizational psychology in companies."
     }
   },
   {
@@ -379,13 +395,15 @@
       "name": "الهندسة الصناعية",
       "desc": "تحسين العمليات الإنتاجية وسلاسل الإمداد وإدارة الجودة.",
       "career": "مهندس عمليات، مستشار سلاسل إمداد.",
-      "note": "مطلوبة في القطاع الصناعي واللوجستي المتنامي."
+      "note": "مطلوبة في القطاع الصناعي واللوجستي المتنامي.",
+      "outlook": "طلب كبير في إدارة العمليات، اللوجستيات، وتوجيه المشاريع مع التحول نحو المصانع الذكية."
     },
     "en": {
       "name": "Industrial Engineering",
       "desc": "Optimizing production processes, supply chains, and quality.",
       "career": "Process engineer, supply-chain consultant.",
-      "note": "In demand across the growing industrial and logistics sector."
+      "note": "In demand across the growing industrial and logistics sector.",
+      "outlook": "High demand in operations management, logistics, and project leadership amid the shift toward smart factories."
     }
   },
   {
@@ -413,13 +431,15 @@
       "name": "الإعلام والاتصال",
       "desc": "الصحافة، الإعلام الرقمي، والعلاقات العامة.",
       "career": "صحفي، منتج محتوى، مسؤول علاقات عامة.",
-      "note": "تطوّر كثيراً مع نمو الإعلام الرقمي ووسائل التواصل."
+      "note": "تطوّر كثيراً مع نمو الإعلام الرقمي ووسائل التواصل.",
+      "outlook": "الاعتماد المتزايد على المهارات الفردية والإنتاج الرقمي والمنصات الحديثة بدل الإعلام التقليدي وحده."
     },
     "en": {
       "name": "Media & Communication",
       "desc": "Journalism, digital media, and public relations.",
       "career": "Journalist, content producer, PR officer.",
-      "note": "Growing rapidly alongside digital media and social platforms."
+      "note": "Growing rapidly alongside digital media and social platforms.",
+      "outlook": "Increasing reliance on individual skills, digital production, and modern platforms rather than traditional media alone."
     }
   },
   {
@@ -437,6 +457,348 @@
       "desc": "Diagnosing and treating animal illnesses.",
       "career": "Veterinarian in clinics or the livestock sector.",
       "note": "Moderately competitive."
+    }
+  },
+  {
+    "id": "ai_ml",
+    "icon": "fa-robot",
+    "track": "science",
+    "ar": {
+      "name": "الذكاء الاصطناعي وتعلم الآلة",
+      "desc": "بناء الأنظمة الذكية، تحليل البيانات الضخمة، والتعلم الآلي.",
+      "career": "مهندس ذكاء اصطناعي، مطوّر نماذج تعلم آلي، باحث.",
+      "note": "من أسرع التخصصات نمواً عالمياً ومحلياً.",
+      "outlook": "المحرك الأساسي لكافة التكنولوجيا القادمة — روبوتات، تحليل تنبؤي، وأتمتة."
+    },
+    "en": {
+      "name": "AI & Machine Learning",
+      "desc": "Building intelligent systems, big-data analysis, and machine learning.",
+      "career": "AI engineer, ML model developer, researcher.",
+      "note": "One of the fastest-growing fields globally and locally.",
+      "outlook": "The core driver of all upcoming technology — robotics, predictive analytics, and automation."
+    }
+  },
+  {
+    "id": "cybersecurity",
+    "icon": "fa-shield-halved",
+    "track": "science",
+    "ar": {
+      "name": "الأمن السيبراني",
+      "desc": "حماية الأنظمة، الشبكات، والبيانات من الهجمات الرقمية.",
+      "career": "محلل أمن معلومات، مختبر اختراق، مستشار أمني.",
+      "note": "طلب سوقي مرتفع جداً حالياً.",
+      "outlook": "طلب حاد ومستمر لا يستغني عنه أي قطاع حكومي أو خاص."
+    },
+    "en": {
+      "name": "Cybersecurity",
+      "desc": "Protecting systems, networks, and data from digital attacks.",
+      "career": "Security analyst, penetration tester, security consultant.",
+      "note": "Very high current market demand.",
+      "outlook": "Sharp, continuous demand that no government or private sector can do without."
+    }
+  },
+  {
+    "id": "data_science",
+    "icon": "fa-database",
+    "track": "science",
+    "ar": {
+      "name": "علوم البيانات وتحليلها",
+      "desc": "استخراج المعرفة والأنماط من الكميات الهائلة من البيانات.",
+      "career": "محلل بيانات، عالم بيانات، مستشار تحليلات.",
+      "note": "طلب متنامٍ بسرعة مع تحول الشركات للقرارات المبنية على بيانات.",
+      "outlook": "عصب اتخاذ القرار في الشركات، التسويق، والتخطيط الاستراتيجي."
+    },
+    "en": {
+      "name": "Data Science & Analytics",
+      "desc": "Extracting knowledge and patterns from massive amounts of data.",
+      "career": "Data analyst, data scientist, analytics consultant.",
+      "note": "Rapidly growing demand as companies shift to data-driven decisions.",
+      "outlook": "The backbone of decision-making in companies, marketing, and strategic planning."
+    }
+  },
+  {
+    "id": "cloud_computing",
+    "icon": "fa-cloud",
+    "track": "science",
+    "ar": {
+      "name": "الحوسبة السحابية وشبكات الحاسب",
+      "desc": "إدارة السيرفرات والبنية التحتية الرقمية.",
+      "career": "مهندس سحابة، مدير شبكات، مهندس DevOps.",
+      "note": "نمو متزايد مع تحوّل الشركات للسحابة.",
+      "outlook": "نمو متزايد مع تحول معظم الشركات من السيرفرات المحلية إلى السحابة."
+    },
+    "en": {
+      "name": "Cloud Computing & Networking",
+      "desc": "Managing servers and digital infrastructure.",
+      "career": "Cloud engineer, network administrator, DevOps engineer.",
+      "note": "Growing demand as companies migrate to the cloud.",
+      "outlook": "Increasing growth as most companies shift from local servers to the cloud."
+    }
+  },
+  {
+    "id": "electrical_eng",
+    "icon": "fa-bolt",
+    "track": "science",
+    "ar": {
+      "name": "الهندسة الكهربائية والإلكترونية",
+      "desc": "الطاقة، الدوائر الإلكترونية، والأنظمة المدمجة.",
+      "career": "مهندس كهرباء، مهندس أنظمة مدمجة.",
+      "note": "تخصص هندسي أساسي وواسع التطبيقات.",
+      "outlook": "واعد جداً مع التوجه نحو الطاقة المتجددة، السيارات الكهربائية، وإنترنت الأشياء."
+    },
+    "en": {
+      "name": "Electrical & Electronics Engineering",
+      "desc": "Power, electronic circuits, and embedded systems.",
+      "career": "Electrical engineer, embedded systems engineer.",
+      "note": "A core, broadly-applicable engineering field.",
+      "outlook": "Very promising with the shift toward renewable energy, electric vehicles, and IoT."
+    }
+  },
+  {
+    "id": "mechanical_eng",
+    "icon": "fa-gears",
+    "track": "science",
+    "ar": {
+      "name": "الهندسة الميكانيكية والأتمتة",
+      "desc": "المحركات، التصنيع، التكييف، والروبوتات.",
+      "career": "مهندس ميكانيكي، مهندس تصنيع، مهندس روبوتات.",
+      "note": "تخصص تقليدي يتجدّد مع الأتمتة.",
+      "outlook": "التحول نحو المصانع الذكية والتصنيع الرقمي المتقدم."
+    },
+    "en": {
+      "name": "Mechanical Engineering & Automation",
+      "desc": "Engines, manufacturing, HVAC, and robotics.",
+      "career": "Mechanical engineer, manufacturing engineer, robotics engineer.",
+      "note": "A traditional field being renewed by automation.",
+      "outlook": "Shift toward smart factories and advanced digital manufacturing."
+    }
+  },
+  {
+    "id": "chemical_eng",
+    "icon": "fa-flask",
+    "track": "science",
+    "ar": {
+      "name": "الهندسة الكيميائية وهندسة المواد",
+      "desc": "تكرير الموارد، المواد المتقدمة، والبتروكيماويات.",
+      "career": "مهندس كيميائي، مهندس مواد، باحث بتروكيماويات.",
+      "note": "مرتبط بقطاع الطاقة والصناعة الثقيلة في السعودية.",
+      "outlook": "التركيز على أبحاث البطاريات، الهيدروجين الأخضر، والمواد المتقدمة."
+    },
+    "en": {
+      "name": "Chemical & Materials Engineering",
+      "desc": "Resource refining, advanced materials, and petrochemicals.",
+      "career": "Chemical engineer, materials engineer, petrochemical researcher.",
+      "note": "Tied to Saudi Arabia's energy and heavy-industry sector.",
+      "outlook": "Focus on battery research, green hydrogen, and advanced materials."
+    }
+  },
+  {
+    "id": "applied_medical",
+    "icon": "fa-stethoscope",
+    "track": "science",
+    "ar": {
+      "name": "العلوم الطبية التطبيقية",
+      "desc": "الأشعة، المختبرات، العلاج الطبيعي، والتخدير.",
+      "career": "أخصائي أشعة، فني مختبر، أخصائي علاج طبيعي.",
+      "note": "طلب مستقر في المستشفيات والمراكز الطبية.",
+      "outlook": "طلب مرتقب لزيادة الاستثمار في المستشفيات والمراكز التأهيلية."
+    },
+    "en": {
+      "name": "Applied Medical Sciences",
+      "desc": "Radiology, lab sciences, physical therapy, and anesthesia technology.",
+      "career": "Radiology tech, lab technician, physical therapist.",
+      "note": "Steady demand across hospitals and medical centers.",
+      "outlook": "Anticipated demand growth as investment in hospitals and rehab centers increases."
+    }
+  },
+  {
+    "id": "health_informatics",
+    "icon": "fa-hospital-user",
+    "track": "science",
+    "ar": {
+      "name": "الإدارة والمعلوماتية الصحية",
+      "desc": "إدارة المستشفيات والسجلات الطبية والذكاء الاصطناعي الطبي.",
+      "career": "مدير معلومات صحية، محلل نظم طبية.",
+      "note": "تخصص يجمع بين الصحة والتقنية.",
+      "outlook": "من أكثر التخصصات نمواً لربط القطاع الصحي بالتحول الرقمي."
+    },
+    "en": {
+      "name": "Health Informatics & Management",
+      "desc": "Hospital administration, medical records, and medical AI.",
+      "career": "Health information manager, medical systems analyst.",
+      "note": "Combines healthcare with technology.",
+      "outlook": "One of the fastest-growing fields, connecting healthcare to digital transformation."
+    }
+  },
+  {
+    "id": "supply_chain",
+    "icon": "fa-truck-fast",
+    "track": "admin",
+    "ar": {
+      "name": "سلاسل الإمداد والخدمات اللوجستية",
+      "desc": "إدارة حركة البضائع والتخزين والتوزيع.",
+      "career": "مدير لوجستيات، مخطط سلسلة إمداد.",
+      "note": "مرتبط بنمو التجارة الإلكترونية في السعودية.",
+      "outlook": "طلب مرتفع جداً بسبب التوسع في التجارة الإلكترونية والمراكز اللوجستية العالمية."
+    },
+    "en": {
+      "name": "Supply Chain & Logistics",
+      "desc": "Managing the movement, storage, and distribution of goods.",
+      "career": "Logistics manager, supply-chain planner.",
+      "note": "Tied to the growth of e-commerce in Saudi Arabia.",
+      "outlook": "Very high demand due to e-commerce expansion and global logistics hubs."
+    }
+  },
+  {
+    "id": "digital_marketing",
+    "icon": "fa-bullhorn",
+    "track": "admin",
+    "ar": {
+      "name": "التسويق الرقمي والتجارة الإلكترونية",
+      "desc": "الاستراتيجيات التسويقية وتحليل سلوك المستهلك الرقمي.",
+      "career": "أخصائي تسويق رقمي، مدير تجارة إلكترونية.",
+      "note": "من أكثر المهارات المطلوبة حالياً في سوق العمل.",
+      "outlook": "التحول الكامل نحو التسويق المبني على البيانات والمحتوى الرقمي."
+    },
+    "en": {
+      "name": "Digital Marketing & E-commerce",
+      "desc": "Marketing strategy and digital consumer-behavior analysis.",
+      "career": "Digital marketing specialist, e-commerce manager.",
+      "note": "One of the most in-demand skill sets in today's job market.",
+      "outlook": "A full shift toward data-driven marketing and digital content."
+    }
+  },
+  {
+    "id": "mis",
+    "icon": "fa-diagram-project",
+    "track": "admin",
+    "ar": {
+      "name": "نظم المعلومات الإدارية",
+      "desc": "الجسر الفاصل بين الإدارة وحلول تقنية المعلومات.",
+      "career": "محلل أعمال، مستشار نظم معلومات.",
+      "note": "مزيج بين الإدارة والتقنية.",
+      "outlook": "طلب ممتاز لمساعدة الشركات على اختيار وتطبيق التكنولوجيا المناسبة."
+    },
+    "en": {
+      "name": "Management Information Systems",
+      "desc": "The bridge between management and IT solutions.",
+      "career": "Business analyst, IT systems consultant.",
+      "note": "A blend of management and technology.",
+      "outlook": "Excellent demand helping companies choose and implement the right technology."
+    }
+  },
+  {
+    "id": "ui_ux_design",
+    "icon": "fa-pen-ruler",
+    "track": "humanities",
+    "ar": {
+      "name": "تصميم تجربة وواجهة المستخدم (UI/UX)",
+      "desc": "تصميم كيفية تفاعل المستخدم مع التطبيقات والمواقع.",
+      "career": "مصمم UI/UX، باحث تجربة مستخدم.",
+      "note": "يحتاج غالباً معرض أعمال (Portfolio) قوياً.",
+      "outlook": "طلب استثنائي في جميع شركات التقنية والشركات الناشئة."
+    },
+    "en": {
+      "name": "UI/UX Design",
+      "desc": "Designing how users interact with apps and websites.",
+      "career": "UI/UX designer, user researcher.",
+      "note": "Usually requires a strong portfolio.",
+      "outlook": "Exceptional demand across all tech companies and startups."
+    }
+  },
+  {
+    "id": "graphic_design",
+    "icon": "fa-palette",
+    "track": "humanities",
+    "ar": {
+      "name": "التصميم الجرافيكي والوسائط المتعددة",
+      "desc": "الهويات البصرية والرسوم المتحركة (Motion Graphics).",
+      "career": "مصمم جرافيك، فنان موشن جرافيك.",
+      "note": "يحتاج معرض أعمال قوياً ومهارة فنية مستمرة التطوير.",
+      "outlook": "مستمر ومطلوب في صناعة الإعلانات والترفيه والألعاب."
+    },
+    "en": {
+      "name": "Graphic Design & Motion Graphics",
+      "desc": "Visual identities and motion graphics.",
+      "career": "Graphic designer, motion graphics artist.",
+      "note": "Requires a strong portfolio and continuously developing artistic skill.",
+      "outlook": "Ongoing demand in advertising, entertainment, and gaming."
+    }
+  },
+  {
+    "id": "interior_design",
+    "icon": "fa-couch",
+    "track": "humanities",
+    "ar": {
+      "name": "التصميم الداخلي",
+      "desc": "استغلال المساحات الداخلية والتنسيق الجمالي.",
+      "career": "مصمم داخلي، مستشار ديكور.",
+      "note": "مختلف عن الهندسة المعمارية — يركّز على المساحات الداخلية تحديداً.",
+      "outlook": "مرتبط بالنمو العقاري وتطوير قطاعات الضيافة والسياحة."
+    },
+    "en": {
+      "name": "Interior Design",
+      "desc": "Utilizing interior spaces and aesthetic coordination.",
+      "career": "Interior designer, decor consultant.",
+      "note": "Distinct from architecture — focuses specifically on interior spaces.",
+      "outlook": "Tied to real-estate growth and the development of hospitality and tourism."
+    }
+  },
+  {
+    "id": "physics",
+    "icon": "fa-atom",
+    "track": "science",
+    "ar": {
+      "name": "الفيزياء والفيزياء الطبية والتطبيقية",
+      "desc": "دراسة المادة والطاقة والتطبيقات الطبية.",
+      "career": "باحث فيزياء، فيزيائي طبي، مهندس تطبيقي.",
+      "note": "أساس علمي قوي يفتح أبواباً بحثية وصناعية متعددة.",
+      "outlook": "مجالات الطاقة، الأبحاث النووية، والتصوير الطبي."
+    },
+    "en": {
+      "name": "Physics & Applied/Medical Physics",
+      "desc": "Study of matter, energy, and medical applications.",
+      "career": "Physics researcher, medical physicist, applied engineer.",
+      "note": "A strong scientific foundation opening many research and industrial doors.",
+      "outlook": "Energy fields, nuclear research, and medical imaging."
+    }
+  },
+  {
+    "id": "chemistry",
+    "icon": "fa-vial",
+    "track": "science",
+    "ar": {
+      "name": "الكيمياء والكيمياء الصناعية",
+      "desc": "تحليل المواد والتصنيع الكيميائي.",
+      "career": "كيميائي صناعي، باحث مختبرات، مراقب جودة.",
+      "note": "مرتبط بالقطاعات الصناعية والدوائية في السعودية.",
+      "outlook": "القطاعات الصناعية، الدوائية، والبتروكيميائية."
+    },
+    "en": {
+      "name": "Chemistry & Industrial Chemistry",
+      "desc": "Material analysis and chemical manufacturing.",
+      "career": "Industrial chemist, lab researcher, quality controller.",
+      "note": "Tied to Saudi Arabia's industrial and pharmaceutical sectors.",
+      "outlook": "Industrial, pharmaceutical, and petrochemical sectors."
+    }
+  },
+  {
+    "id": "biotechnology",
+    "icon": "fa-dna",
+    "track": "science",
+    "ar": {
+      "name": "التكنولوجيا الحيوية والأحياء الدقيقة",
+      "desc": "تعديل الجينات واللقاحات والأبحاث الحيوية.",
+      "career": "باحث تقنية حيوية، أخصائي مختبرات وراثية.",
+      "note": "مجال بحثي متنامٍ بقوة عالمياً.",
+      "outlook": "نمو هائل في الطب الحديث والتصنيع الغذائي والزراعي."
+    },
+    "en": {
+      "name": "Biotechnology & Microbiology",
+      "desc": "Gene editing, vaccines, and biological research.",
+      "career": "Biotech researcher, genetics lab specialist.",
+      "note": "A rapidly-growing research field worldwide.",
+      "outlook": "Huge growth in modern medicine and food/agricultural manufacturing."
     }
   }
 ]
