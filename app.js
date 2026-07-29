@@ -877,6 +877,7 @@ window.onload = () => {
     if(!session && !name){
         document.getElementById("login-overlay").style.display = "flex";
     } else {
+        document.getElementById("login-overlay").style.display = "none";
         updateWelcomeText();
         loadProfileForm();
         finishLoginBoot();

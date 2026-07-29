@@ -158,9 +158,12 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar{ transform:translateX(
     }
     .sidebar-hover-zone{ display:none; }
     .app-container.sidebar-collapsed .sidebar-hover-zone{
-        display:block; position:fixed; top:0; inset-inline-start:0; width:24px; height:100vh; z-index:55;
+        /* منطقة صغيرة حول زر السهم نفسه فقط — وليست شريطاً بطول الشاشة كاملة،
+           لتفادي أي ظهور غير مقصود أثناء التمرير أو التفاعل مع حافة الصفحة */
+        display:block; position:fixed; top:14px; inset-inline-start:0; width:76px; height:100px; z-index:55;
     }
     .app-container.sidebar-collapsed .sidebar-hover-zone:hover ~ .sidebar,
+    .app-container.sidebar-collapsed .sidebar-toggle:hover ~ .sidebar,
     .app-container.sidebar-collapsed .sidebar:hover{
         width:264px !important; opacity:1 !important; transform:translateX(0) !important; pointer-events:auto !important;
         padding:28px 18px !important; border:1.5px solid rgba(255,255,255,0.4) !important; box-shadow:var(--shadow-lg);
