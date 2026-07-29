@@ -158,9 +158,11 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar{ transform:translateX(
     }
     .sidebar-hover-zone{ display:none; }
     .app-container.sidebar-collapsed .sidebar-hover-zone{
-        /* منطقة صغيرة حول زر السهم نفسه فقط — وليست شريطاً بطول الشاشة كاملة،
-           لتفادي أي ظهور غير مقصود أثناء التمرير أو التفاعل مع حافة الصفحة */
-        display:block; position:fixed; top:14px; inset-inline-start:0; width:76px; height:100px; z-index:55;
+        /* منطقة "ممر آمن" بارتفاع القائمة الجانبية بالكامل (وليست صغيرة حول
+           السهم فقط) — وإلا فأي مسار مائل أو منحنٍ للماوس نحو عنصر بعيد في
+           القائمة يخرج من نطاق التفعيل فتنغلق القائمة قبل الوصول إليها.
+           العرض يبقى معتدلاً (لا يغطي الشاشة كاملة) لتفادي الظهور العرضي. */
+        display:block; position:fixed; top:22px; inset-inline-start:0; width:90px; height:calc(100vh - 44px); z-index:55;
     }
     .app-container.sidebar-collapsed .sidebar-hover-zone:hover ~ .sidebar,
     .app-container.sidebar-collapsed .sidebar-toggle:hover ~ .sidebar,

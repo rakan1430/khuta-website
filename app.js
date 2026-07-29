@@ -5203,8 +5203,13 @@ async function changePassword(){
 function signOutAccount(){
     if(sb) sb.auth.signOut();
     clearSession();
+    // لا نكتفي بمسح الجلسة فقط — يجب مسح الاسم المحلي أيضاً، وإلا فحص "هل يوجد
+    // اسم؟" عند الإقلاع التالي سيظنّ خطأً أن هناك مستخدماً "ضيفاً" شرعياً ويتخطى
+    // شاشة الدخول رغم أن الشخص خرج من حسابه فعلياً للتو
+    localStorage.removeItem("khuta_name");
     showToast(currentLang==='ar' ? "تم تسجيل الخروج — بياناتك المحلية باقية على هذا الجهاز" : "Signed out — your local data stays on this device");
     renderAccountUI();
+    document.getElementById("login-overlay").style.display = "flex";
 }
 
 /* ---------- المزامنة ---------- */
