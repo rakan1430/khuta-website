@@ -3323,11 +3323,19 @@ function adminStartFreeTimer(){
    الموجود مسبقاً في initDashboardReorder/moveDashCard
    ============================================================ */
 const DASHBOARD_CARDS = [
-    { id: "dash-card-progress", labelAr: "مسار التقدم", labelEn: "Progress Path", defaultVisible: true },
-    { id: "dash-card-table", labelAr: "جدول المهام", labelEn: "Task Table", defaultVisible: true },
-    { id: "dash-card-timer", labelAr: "وضع التركيز (المؤقت)", labelEn: "Focus Mode (Timer)", defaultVisible: true },
-    { id: "dash-card-badges", labelAr: "الأوسمة والتروفيات", labelEn: "Badges & Trophies", defaultVisible: false },
-    { id: "dash-card-community", labelAr: "المجتمع", labelEn: "Community", defaultVisible: false },
+    // ملاحظة: بطاقات "نظرة عامة" (overview-*) موجودة في قسم ثابت التخطيط أعلى
+    // اللوحة (#dash-overview)، وليست جزءاً من كومة #dashboard-cards القابلة
+    // لإعادة الترتيب بالأسهم — لذا reorderable:false لها تحديداً، حتى لا تُنتزع
+    // من مكانها الأصلي عند "إعادة الضبط الافتراضي"
+    { id: "dash-card-overview-hero", labelAr: "نظرة سريعة (XP والإحصائيات)", labelEn: "Quick overview (XP & stats)", defaultVisible: true, reorderable: false },
+    { id: "dash-card-overview-heatmap", labelAr: "خريطة النشاط اليومي", labelEn: "Daily activity heatmap", defaultVisible: true, reorderable: false },
+    { id: "dash-card-overview-quests", labelAr: "لمحة مهام اليوم", labelEn: "Today's tasks glance", defaultVisible: true, reorderable: false },
+    { id: "dash-card-overview-leaderboard", labelAr: "لوحة الصدارة المصغّرة", labelEn: "Mini leaderboard", defaultVisible: true, reorderable: false },
+    { id: "dash-card-progress", labelAr: "مسار التقدم", labelEn: "Progress Path", defaultVisible: true, reorderable: true },
+    { id: "dash-card-table", labelAr: "جدول المهام", labelEn: "Task Table", defaultVisible: true, reorderable: true },
+    { id: "dash-card-timer", labelAr: "وضع التركيز (المؤقت)", labelEn: "Focus Mode (Timer)", defaultVisible: true, reorderable: true },
+    { id: "dash-card-badges", labelAr: "الأوسمة والتروفيات", labelEn: "Badges & Trophies", defaultVisible: false, reorderable: true },
+    { id: "dash-card-community", labelAr: "المجتمع", labelEn: "Community", defaultVisible: false, reorderable: true },
 ];
 
 function getDashboardCardVisibility(){
@@ -3383,7 +3391,7 @@ function resetDashboardCustomization(){
     localStorage.removeItem("khuta_dashboard_visible");
     localStorage.removeItem("khuta_dashboard_order");
     const container = document.getElementById("dashboard-cards");
-    DASHBOARD_CARDS.forEach(c => {
+    DASHBOARD_CARDS.filter(c => c.reorderable).forEach(c => {
         const el = document.getElementById(c.id);
         if(el) container.appendChild(el); // يعيد الترتيب الافتراضي (ترتيب ظهورها في HTML)
     });

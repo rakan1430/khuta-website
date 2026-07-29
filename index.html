@@ -439,9 +439,10 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
     transition:.3s var(--ease); pointer-events:none; border:2px solid var(--gold);
 }
 .onboarding-card{
-    position:fixed; max-width:280px; background:var(--surface); border:1px solid var(--border);
+    position:fixed; max-width:280px; background:rgba(255,255,255,0.75); backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4); border:1px solid rgba(255,255,255,0.5);
     border-radius:16px; padding:16px; box-shadow:var(--shadow-lg); pointer-events:auto; z-index:5501;
 }
+.dark-mode .onboarding-card{ background:rgba(20,29,49,0.8); border-color:rgba(255,255,255,0.08); }
 .onboarding-card b{ display:block; font-size:14.5px; margin-bottom:6px; color:var(--gold); }
 .onboarding-card p{ font-size:12.5px; color:var(--text-2); line-height:1.7; }
 .onboarding-step-count{ display:block; font-size:10.5px; color:var(--text-3); font-weight:700; margin-bottom:4px; }
@@ -453,10 +454,11 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
 }
 @keyframes celebrateFadeIn{ from{ opacity:0; } to{ opacity:1; } }
 .badge-celebrate-card{
-    position:relative; background:var(--surface); border:1.5px solid var(--gold); border-radius:24px;
+    position:relative; background:rgba(255,255,255,0.78); backdrop-filter:blur(24px) saturate(1.5); -webkit-backdrop-filter:blur(24px) saturate(1.5); border:1.5px solid var(--gold); border-radius:24px;
     padding:36px 40px; text-align:center; box-shadow:0 20px 60px rgba(201,150,46,0.35);
     animation:celebratePopIn .5s cubic-bezier(.34,1.56,.64,1); max-width:280px;
 }
+.dark-mode .badge-celebrate-card{ background:rgba(20,29,49,0.82); }
 @keyframes celebratePopIn{
     0%{ transform:scale(0.5); opacity:0; }
     60%{ transform:scale(1.08); opacity:1; }
@@ -630,7 +632,9 @@ body.dark-mode .dn-star{ opacity:1; animation:khuta-twinkle 1.8s ease-in-out inf
 .overview-stat-card b{ font-family:var(--font-mono); font-size:24px; font-weight:800; line-height:1.2; }
 .overview-stat-card span{ font-size:11px; color:var(--text-3); font-weight:700; margin-top:2px; }
 
-.overview-lower-row{ display:grid; grid-template-columns:1.7fr 1fr; gap:16px; align-items:start; }
+.overview-lower-row{ display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; }
+.overview-lower-row .ov-heatmap-card{ flex:1.7 1 420px; min-width:0; }
+.overview-lower-row .ov-sidebar-col{ flex:1 1 300px; min-width:0; }
 .ov-sidebar-col{ display:flex; flex-direction:column; gap:16px; }
 .ov-heatmap-scroll{ overflow-x:auto; padding-bottom:4px; direction:ltr; }
 .ov-heatmap-grid{ display:grid; grid-auto-flow:column; grid-template-rows:repeat(7,1fr); gap:3px; width:max-content; direction:ltr; }
@@ -695,11 +699,14 @@ body.dark-mode .dn-star{ opacity:1; animation:khuta-twinkle 1.8s ease-in-out inf
 @media (max-width:992px){ .chatbot-fab{ bottom:104px; inset-inline-end:16px; width:46px; height:46px; font-size:18px; } }
 .chatbot-panel{
     position:fixed; bottom:92px; inset-inline-end:26px; width:340px; max-width:calc(100vw - 40px);
-    max-height:70vh; background:var(--surface); border:1px solid var(--border); border-radius:22px;
+    max-height:70vh; background:rgba(255,255,255,0.72); backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4);
+    border:1px solid rgba(255,255,255,0.5); border-radius:22px;
     box-shadow:var(--shadow-lg); z-index:2500; display:flex; flex-direction:column; overflow:hidden;
 }
+.dark-mode .chatbot-panel{ background:rgba(20,29,49,0.78); border-color:rgba(255,255,255,0.08); }
 @media (max-width:992px){ .chatbot-panel{ bottom:150px; } }
-.chatbot-head{ display:flex; justify-content:space-between; align-items:flex-start; padding:14px 16px; border-bottom:1px solid var(--border); background:var(--bg-alt); }
+.chatbot-head{ display:flex; justify-content:space-between; align-items:flex-start; padding:14px 16px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.15); }
+.dark-mode .chatbot-head{ background:rgba(255,255,255,0.03); }
 .chatbot-messages{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; max-height:280px; }
 .chatbot-msg{ padding:10px 14px; border-radius:14px; font-size:13px; line-height:1.7; max-width:88%; }
 .chatbot-msg.bot{ background:var(--bg-alt); align-self:flex-start; border-bottom-left-radius:4px; }
@@ -1106,10 +1113,40 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 .focus-task-row.done span{ color:rgba(255,255,255,0.4); text-decoration:line-through; }
 #focus-xp-value{ font-size:20px; color:var(--gold); font-family:var(--font-mono); }
 @media (max-width:700px){
-    .focus-timer-ring-wrap{ width:270px; height:270px; }
-    #focus-timer-display{ font-size:56px !important; }
-    .focus-mode-task-card, .focus-mode-xp-card{ position:static; margin:8px auto; width:90%; }
-    .focus-mode-center{ padding-bottom:20px; }
+    .focus-mode-topbar{ padding:16px 16px; }
+    .focus-mode-topbar button{ padding:10px 12px; font-size:12px; }
+    .focus-exit-label{ display:none; } /* الأيقونة وحدها كافية على الهاتف — توفّر مساحة أفقية ثمينة */
+    .focus-mode-icon{ font-size:20px; margin-bottom:6px; }
+    .focus-mode-center h1{ font-size:22px; }
+    .focus-mode-sub{ font-size:12.5px; margin-bottom:12px; }
+    .focus-session-pill{ padding:6px 14px; font-size:11px; margin-bottom:18px; }
+    .focus-timer-ring-wrap{ width:230px; height:230px; margin-bottom:18px; }
+    #focus-timer-display{ font-size:44px !important; letter-spacing:1px; }
+    #focus-timer-sublabel{ font-size:11px; }
+    .focus-controls-row{ margin:16px 0 14px; gap:8px; }
+    .focus-controls-row .btn-start-session{ padding:12px 22px; font-size:13px; }
+    .focus-controls-row button{ font-size:12px; }
+    .focus-mode-quote{ max-width:88vw; }
+    .focus-mode-quote p{ font-size:12.5px; }
+
+    /* بطاقتا المهمة و XP: بدل تكديسهما بعرض كامل أسفل الشاشة (يطيل التمرير
+       كثيراً على الهاتف)، تتحوّلان لشريط أفقي مضغوط قابل للتمرير الجانبي،
+       يبقي وضع التركيز "شاشة واحدة" قدر الإمكان */
+    .focus-mode-task-card, .focus-mode-xp-card{
+        position:static; margin:0; width:auto; flex-shrink:0; min-width:180px; padding:12px 16px;
+    }
+    .focus-mode-bottom-row{
+        display:flex; gap:10px; overflow-x:auto; padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+        -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    }
+    .focus-mode-bottom-row::-webkit-scrollbar{ display:none; }
+    #focus-task-list{ max-height:110px; }
+    .focus-task-row{ font-size:11.5px; padding:5px 0; }
+    #focus-xp-value{ font-size:17px; }
+}
+@media (max-width:380px){
+    .focus-timer-ring-wrap{ width:200px; height:200px; }
+    #focus-timer-display{ font-size:38px !important; }
 }
 
 /* ============ واجهة الاختبار المحاكي ============ */
@@ -1170,7 +1207,8 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 .uni-detail.show{ display:block; animation:riseIn .4s var(--ease); }
 .uni-detail-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
 .uni-weights-row{ display:flex; gap:10px; flex-wrap:wrap; margin:14px 0; }
-.weight-chip{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:10px 16px; text-align:center; min-width:90px; }
+.weight-chip{ background:rgba(255,255,255,0.5); backdrop-filter:blur(14px) saturate(1.3); -webkit-backdrop-filter:blur(14px) saturate(1.3); border:1px solid rgba(255,255,255,0.4); border-radius:14px; padding:10px 16px; text-align:center; min-width:90px; }
+.dark-mode .weight-chip{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.1); }
 .weight-chip b{ display:block; font-family:var(--font-mono); font-size:18px; color:var(--gold); }
 .weight-chip span{ font-size:11px; color:var(--text-3); }
 .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:99px; font-size:12px; font-weight:700; }
@@ -1185,10 +1223,12 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 .links-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; margin-top:6px; }
 .link-card{
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-decoration:none;
-    padding:26px 16px; border-radius:22px; border:1.5px solid var(--border); background:var(--bg-alt); color:var(--text-1);
+    padding:26px 16px; border-radius:22px; border:1.5px solid rgba(255,255,255,0.4); background:rgba(255,255,255,0.4);
+    backdrop-filter:blur(16px) saturate(1.3); -webkit-backdrop-filter:blur(16px) saturate(1.3); color:var(--text-1);
     transition:.25s var(--ease); text-align:center;
 }
-.link-card:hover{ border-color:var(--gold); transform:translateY(-4px); box-shadow:var(--shadow-md); background:var(--surface); }
+.dark-mode .link-card{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.1); }
+.link-card:hover{ border-color:var(--gold); transform:translateY(-4px); box-shadow:var(--shadow-md); background:rgba(201,150,46,0.1); }
 .link-card .ic{ width:52px; height:52px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:22px; background:linear-gradient(135deg,var(--gold),#B0812A); color:#fff; }
 .link-card b{ font-size:15px; }
 .link-card small{ color:var(--text-3); font-size:11.5px; }
@@ -1861,7 +1901,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                 <button type="button" class="focus-theme-swatch" data-theme="dawn" onclick="setFocusBgTheme('dawn')"><span class="swatch-dot" style="background:linear-gradient(135deg,#E093AB,#7C5CBF);"></span> <span data-i18n="focus.themeDawn">فجر دافئ</span></button>
             </div>
         </div>
-        <button type="button" class="btn btn-sm" onclick="closeFocusMode()"><i class="fa-solid fa-compress"></i> <span data-i18n="focus.exit">خروج من وضع التركيز</span></button>
+        <button type="button" class="btn btn-sm" onclick="closeFocusMode()"><i class="fa-solid fa-compress"></i> <span data-i18n="focus.exit" class="focus-exit-label">خروج من وضع التركيز</span></button>
     </div>
     <div class="focus-mode-center">
         <div class="focus-mode-icon"><i class="fa-solid fa-spa"></i></div>
@@ -1892,14 +1932,16 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         </div>
     </div>
 
-    <div class="focus-mode-task-card" id="focus-task-card" style="display:none;">
-        <div class="focus-task-label"><i class="fa-solid fa-list-check"></i> <span data-i18n="focus.todayTasks">مهام اليوم</span> <span id="focus-task-count" class="focus-task-count-pill">0</span></div>
-        <div id="focus-task-list"></div>
-    </div>
+    <div class="focus-mode-bottom-row">
+        <div class="focus-mode-task-card" id="focus-task-card" style="display:none;">
+            <div class="focus-task-label"><i class="fa-solid fa-list-check"></i> <span data-i18n="focus.todayTasks">مهام اليوم</span> <span id="focus-task-count" class="focus-task-count-pill">0</span></div>
+            <div id="focus-task-list"></div>
+        </div>
 
-    <div class="focus-mode-xp-card">
-        <div class="focus-task-label"><i class="fa-solid fa-star"></i> <span data-i18n="focus.xpPoints">نقاط XP</span></div>
-        <b id="focus-xp-value">0 XP</b>
+        <div class="focus-mode-xp-card">
+            <div class="focus-task-label"><i class="fa-solid fa-star"></i> <span data-i18n="focus.xpPoints">نقاط XP</span></div>
+            <b id="focus-xp-value">0 XP</b>
+        </div>
     </div>
 </div>
 
@@ -2025,7 +2067,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <section id="view-dashboard" class="view-section active">
 
             <div id="dash-overview">
-                <div class="overview-hero-row">
+                <div class="overview-hero-row" id="dash-card-overview-hero">
                     <div class="xp-hero-card">
                         <div class="xp-hexagon">
                             <svg viewBox="0 0 100 115" class="xp-hexagon-svg">
@@ -2069,8 +2111,8 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                     </div>
                 </div>
 
-                <div class="overview-lower-row">
-                    <div class="card ov-heatmap-card">
+                <div class="overview-lower-row" id="dash-overview-lower-row">
+                    <div class="card ov-heatmap-card" id="dash-card-overview-heatmap">
                         <h2 style="margin-bottom:2px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold);"></i> <span data-i18n="overview.activityTitle">نشاطك اليومي</span></h2>
                         <p class="card-sub" style="margin-bottom:14px;" data-i18n="overview.activitySub">كل مربع يمثّل يوماً — كلما اغمّق اللون زادت دقائق مذاكرتك فيه</p>
                         <div class="ov-heatmap-scroll">
@@ -2089,12 +2131,12 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                     </div>
 
                     <div class="ov-sidebar-col">
-                        <div class="card ov-quests-card">
+                        <div class="card ov-quests-card" id="dash-card-overview-quests">
                             <h2 style="margin-bottom:2px; font-size:15.5px;"><i class="fa-solid fa-list-check" style="color:var(--gold);"></i> <span data-i18n="overview.questsTitle">مهام اليوم</span></h2>
                             <p class="card-sub" style="margin-bottom:12px;" data-i18n="overview.questsSub">لمحة سريعة — عدّلها من جدولك الكامل أدناه</p>
                             <div id="ov-quests-list"></div>
                         </div>
-                        <div class="card ov-leaderboard-card">
+                        <div class="card ov-leaderboard-card" id="dash-card-overview-leaderboard">
                             <h2 style="margin-bottom:12px; font-size:15.5px;"><i class="fa-solid fa-ranking-star" style="color:var(--gold);"></i> <span data-i18n="overview.leaderboardTitle">لوحة الصدارة</span></h2>
                             <div id="ov-leaderboard-mini"></div>
                         </div>
