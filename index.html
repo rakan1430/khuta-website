@@ -1135,6 +1135,15 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
     .focus-mode-quote{ max-width:88vw; }
     .focus-mode-quote p{ font-size:12.5px; }
 
+    /* منتقي الخلفية على الهاتف: بدل معلَّقة بزاوية زر صغير (عرضة لمشاكل
+       محاذاة على شاشات ضيقة)، يتحوّل لورقة سفلية ثابتة تتوسّط الشاشة أفقياً
+       بالكامل — نمط قياسي وأوضح على الهاتف */
+    .focus-theme-picker{
+        position:fixed !important; top:auto !important; bottom:0; inset-inline:14px;
+        border-radius:20px 20px 0 0 !important; padding:16px !important; z-index:5600;
+        padding-bottom:calc(16px + env(safe-area-inset-bottom)) !important;
+    }
+
     /* بطاقتا المهمة و XP: بدل تكديسهما بعرض كامل أسفل الشاشة (يطيل التمرير
        كثيراً على الهاتف)، تتحوّلان لشريط أفقي مضغوط قابل للتمرير الجانبي،
        يبقي وضع التركيز "شاشة واحدة" قدر الإمكان */
@@ -1786,7 +1795,14 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <!-- فلتر ضبابي مشترك لإضاءة "bokeh" الناعمة في كل المشاهد — يعطي عمقاً
              فوتوغرافياً شبيهاً بالمرجع الذي أرفقه الطالب -->
         <svg width="0" height="0" style="position:absolute;">
-            <defs><filter id="bokehBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="16"></feGaussianBlur></filter></defs>
+            <defs>
+                <filter id="bokehBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="16"></feGaussianBlur></filter>
+                <radialGradient id="sceneVignette" cx="50%" cy="42%" r="75%">
+                    <stop offset="55%" stop-color="#000" stop-opacity="0"></stop>
+                    <stop offset="100%" stop-color="#000" stop-opacity="0.45"></stop>
+                </radialGradient>
+            </defs>
+            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
         </svg>
 
         <!-- غروب الشمس: جبال متدرجة + قرص شمس متوهج + طيور — كل العناصر الآن
@@ -1817,6 +1833,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                 <path d="M700,470 q14,-16 28,0 q14,-14 26,0"></path>
                 <path d="M900,430 q12,-14 24,0 q12,-12 22,0"></path>
             </g>
+            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
         </svg>
 
         <!-- مكتب هادئ: توهج مصباح + كوب قهوة + كتب — أُعيد ترتيب العناصر
@@ -1845,6 +1862,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
             <path d="M940,780 q6,-16 -4,-30 M965,780 q6,-20 -6,-34 M988,780 q6,-16 -4,-30" stroke="#8a7050" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.5"></path>
             <g><rect x="530" y="840" width="150" height="26" rx="3" fill="#5a3a2a"></rect><rect x="545" y="812" width="130" height="26" rx="3" fill="#3a5a4a"></rect></g>
             <g opacity="0.5"><circle cx="800" cy="250" r="30" fill="#FFE9B0" filter="url(#bokehBlur)"></circle><circle cx="950" cy="180" r="22" fill="#FFD9A0" filter="url(#bokehBlur)"></circle></g>
+            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
         </svg>
 
         <!-- محيط هادئ: أفق البحر + قمر + خطوط أمواج -->
@@ -1875,6 +1893,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                 <path d="M0,830 Q400,800 800,830 T1600,830"></path>
             </g>
             <g opacity="0.4"><circle cx="680" cy="400" r="28" fill="#7FA6F2" filter="url(#bokehBlur)"></circle><circle cx="920" cy="480" r="36" fill="#DCE8FF" filter="url(#bokehBlur)"></circle></g>
+            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
         </svg>
 
         <!-- فجر دافئ: سماء وردية-بنفسجية ناعمة + شمس صاعدة + سحب -->
@@ -1899,6 +1918,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                 <ellipse cx="950" cy="340" rx="150" ry="30"></ellipse>
             </g>
             <g opacity="0.4"><circle cx="700" cy="450" r="26" fill="#FFD9C2" filter="url(#bokehBlur)"></circle><circle cx="900" cy="500" r="34" fill="#E093AB" filter="url(#bokehBlur)"></circle></g>
+            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
         </svg>
 
         <!-- مطر هادئ: نافذة ليلية وقطرات مطر منسدلة + توهج مدينة خافت خلف الزجاج -->
@@ -1934,6 +1954,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                 <line x1="880" y1="300" x2="840" y2="430"></line><line x1="750" y1="400" x2="710" y2="530"></line>
             </g>
             <g opacity="0.4"><circle cx="700" cy="350" r="24" fill="#8FB8E8" filter="url(#bokehBlur)"></circle><circle cx="900" cy="420" r="30" fill="#F2D98A" filter="url(#bokehBlur)"></circle></g>
+            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
         </svg>
 
         <!-- طبيعة هادئة: غابة عند الغسق + أشعة ضوء بين الأشجار + يراعات متوهجة -->
@@ -1963,6 +1984,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
             </g>
             <g fill="#D9F27A" opacity="0.7"><circle cx="700" cy="620" r="4"></circle><circle cx="850" cy="560" r="3"></circle><circle cx="780" cy="700" r="3.5"></circle><circle cx="920" cy="650" r="3"></circle></g>
             <g opacity="0.35"><circle cx="750" cy="300" r="40" fill="#BFE6A8" filter="url(#bokehBlur)"></circle><circle cx="880" cy="380" r="28" fill="#D9F27A" filter="url(#bokehBlur)"></circle></g>
+            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
         </svg>
 
         <!-- مدينة ليلية: أفق ناطحات سحاب + أضواء نوافذ + توهج دافئ -->
