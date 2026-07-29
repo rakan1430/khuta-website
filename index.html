@@ -991,31 +991,9 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 @keyframes focusFadeIn{ from{ opacity:0; } to{ opacity:1; } }
 .focus-mode-bg{
     position:absolute; inset:0; z-index:-1; overflow:hidden;
-    background:
-        radial-gradient(900px 500px at 15% 10%, rgba(201,150,46,0.14), transparent 60%),
-        radial-gradient(700px 500px at 85% 90%, rgba(28,138,114,0.12), transparent 60%),
-        linear-gradient(160deg, #0d0f16 0%, #14161f 50%, #0a0b10 100%);
-    transition: background 0.8s ease;
+    background:#0d0620; /* لون احتياطي فقط قبل رسم الكانفس أول مرة */
 }
-.scene-svg{ position:absolute; inset:0; width:100%; height:100%; display:none; }
-[data-bg-theme="sunset"] .scene-sunset,
-[data-bg-theme="desk"] .scene-desk,
-[data-bg-theme="ocean"] .scene-ocean,
-[data-bg-theme="dawn"] .scene-dawn{ display:block; animation:focusFadeIn .8s var(--ease); }
-.focus-mode-bg::before{
-    content:""; position:absolute; inset:0; opacity:.5;
-    background-image: radial-gradient(1.5px 1.5px at 20% 30%, rgba(255,255,255,0.25) 50%, transparent 51%),
-                       radial-gradient(1.5px 1.5px at 70% 65%, rgba(255,255,255,0.18) 50%, transparent 51%),
-                       radial-gradient(1px 1px at 45% 80%, rgba(255,255,255,0.22) 50%, transparent 51%),
-                       radial-gradient(1px 1px at 85% 20%, rgba(255,255,255,0.15) 50%, transparent 51%);
-    animation:focusTwinkle 6s ease-in-out infinite;
-    transition: opacity 0.8s ease;
-}
-[data-bg-theme="sunset"] .focus-mode-bg::before,
-[data-bg-theme="desk"] .focus-mode-bg::before,
-[data-bg-theme="ocean"] .focus-mode-bg::before,
-[data-bg-theme="dawn"] .focus-mode-bg::before{ display:none; }
-@keyframes focusTwinkle{ 0%,100%{ opacity:.35; } 50%{ opacity:.7; } }
+#focus-canvas-bg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
 .focus-mode-topbar{ display:flex; justify-content:space-between; align-items:center; padding:24px 30px; }
 .focus-mode-center{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 20px; }
 .focus-mode-icon{ font-size:26px; color:var(--gold); margin-bottom:10px; opacity:.9; }
@@ -1067,23 +1045,41 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 .focus-timer-ring-wrap::before{
     content:""; position:absolute; inset:8px; border-radius:50%;
     background:
-        radial-gradient(circle at 32% 24%, rgba(255,255,255,0.22), rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.07) 75%);
+        radial-gradient(circle at 32% 24%, rgba(255,255,255,0.25), rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.08) 75%);
     backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6);
-    border:1.5px solid rgba(255,255,255,0.28);
+    border:1.5px solid rgba(255,255,255,0.3);
     box-shadow:
-        inset 0 3px 24px rgba(255,255,255,0.14),
+        inset 0 3px 24px rgba(255,255,255,0.16),
         inset 0 -16px 36px rgba(0,0,0,0.25),
         0 24px 64px rgba(0,0,0,0.4);
+    animation: orbBreathe 5s ease-in-out infinite;
+}
+@keyframes orbBreathe{
+    0%,100%{ box-shadow: inset 0 3px 24px rgba(255,255,255,0.16), inset 0 -16px 36px rgba(0,0,0,0.25), 0 24px 64px rgba(0,0,0,0.4); }
+    50%{ box-shadow: inset 0 3px 30px rgba(255,255,255,0.22), inset 0 -16px 36px rgba(0,0,0,0.25), 0 30px 80px rgba(0,0,0,0.45); }
 }
 .focus-timer-ring-wrap::after{
-    /* بريق زجاجي — انعكاس ضوء خفيف في الربع العلوي الأيسر، كما يظهر فعلياً على أي سطح زجاجي مقوّس */
+    /* بريق زجاجي يدور ببطء شديد — انعكاس ضوء حي كما يحدث فعلياً على سطح كرة زجاجية */
     content:""; position:absolute; top:14%; inset-inline-start:20%; width:34%; height:20%; border-radius:50%;
-    background:linear-gradient(135deg, rgba(255,255,255,0.35), rgba(255,255,255,0) 70%);
+    background:linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0) 70%);
     filter:blur(2px); transform:rotate(-25deg); pointer-events:none;
+    animation: orbHighlightDrift 9s ease-in-out infinite;
+}
+@keyframes orbHighlightDrift{
+    0%,100%{ transform:rotate(-25deg) translate(0,0); opacity:1; }
+    50%{ transform:rotate(-20deg) translate(6px,-4px); opacity:.85; }
 }
 .focus-timer-ring-wrap svg{ position:relative; transform:rotate(-90deg); width:100%; height:100%; filter:drop-shadow(0 0 22px rgba(201,150,46,0.35)); }
 .focus-timer-ring-wrap .timer-ring-bg{ stroke:rgba(255,255,255,0.14); stroke-width:4; }
 .focus-timer-ring-wrap .timer-ring-fg{ stroke-width:4; }
+/* حلقات مدارية زخرفية — تعطي طابع "نظام كوكبي" هادئ حول المؤقّت، بدوران بطيء جداً ومستمر */
+.focus-orbit-ring{
+    position:absolute; left:50%; top:50%; border-radius:50%; pointer-events:none; z-index:-1;
+    border:1px solid rgba(255,255,255,0.1);
+}
+.focus-orbit-ring-1{ width:118%; height:52%; transform:translate(-50%,-50%) rotate(0deg); animation:orbitSpin 55s linear infinite; }
+.focus-orbit-ring-2{ width:135%; height:44%; border-color:rgba(232,199,126,0.14); transform:translate(-50%,-50%) rotate(12deg); animation:orbitSpin 80s linear infinite reverse; }
+@keyframes orbitSpin{ from{ transform:translate(-50%,-50%) rotate(0deg); } to{ transform:translate(-50%,-50%) rotate(360deg); } }
 #focus-timer-display{ font-family:var(--font-mono); font-weight:300; letter-spacing:2px; text-shadow:0 2px 12px rgba(0,0,0,0.3); }
 #focus-timer-sublabel{ color:rgba(255,255,255,0.55) !important; letter-spacing:.5px; }
 .focus-mode-quote{ max-width:420px; margin:0 auto; opacity:.7; }
@@ -1782,139 +1778,18 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
 
 <div id="focus-mode-overlay" class="focus-mode-overlay" style="display:none;">
     <div class="focus-mode-bg">
-        <!-- ليل نجمي: سماء داكنة + نجوم متلألئة (الخلفية الافتراضية، تُبنى بالـCSS) -->
-
-        <svg width="0" height="0" style="position:absolute;">
-            <defs>
-                <filter id="bokehBlur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="16"></feGaussianBlur></filter>
-                <radialGradient id="sceneVignette" cx="50%" cy="42%" r="75%">
-                    <stop offset="55%" stop-color="#000" stop-opacity="0"></stop>
-                    <stop offset="100%" stop-color="#000" stop-opacity="0.45"></stop>
-                </radialGradient>
-            </defs>
-        </svg>
-
-        <!-- غروب الشمس -->
-        <svg class="scene-svg scene-sunset" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="sunsetSky" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#1b0f2e"></stop>
-                    <stop offset="35%" stop-color="#4a1942"></stop>
-                    <stop offset="60%" stop-color="#a13a4a"></stop>
-                    <stop offset="80%" stop-color="#d9713f"></stop>
-                    <stop offset="100%" stop-color="#f2a154"></stop>
-                </linearGradient>
-                <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#FFE9B0"></stop>
-                    <stop offset="45%" stop-color="#FDBB6E"></stop>
-                    <stop offset="100%" stop-color="#FDBB6E" stop-opacity="0"></stop>
-                </radialGradient>
-            </defs>
-            <rect width="1600" height="900" fill="url(#sunsetSky)"></rect>
-            <circle cx="800" cy="580" r="260" fill="url(#sunGlow)"></circle>
-            <circle cx="800" cy="580" r="95" fill="#FFE7B3"></circle>
-            <path d="M0,900 L0,660 Q220,590 420,650 T900,610 T1300,660 T1600,630 L1600,900 Z" fill="#150a20" opacity="0.55"></path>
-            <path d="M0,900 L0,740 Q300,680 620,730 T1150,720 T1600,750 L1600,900 Z" fill="#0e0617" opacity="0.85"></path>
-            <g opacity="0.4"><circle cx="680" cy="280" r="34" fill="#FDBB6E" filter="url(#bokehBlur)"></circle><circle cx="920" cy="230" r="46" fill="#FFD9A0" filter="url(#bokehBlur)"></circle><circle cx="780" cy="400" r="26" fill="#FFF3D6" filter="url(#bokehBlur)"></circle></g>
-            <g stroke="#150a20" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.6">
-                <path d="M700,470 q14,-16 28,0 q14,-14 26,0"></path>
-                <path d="M900,430 q12,-14 24,0 q12,-12 22,0"></path>
-            </g>
-            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
-        </svg>
-
-        <!-- مكتب هادئ -->
-        <svg class="scene-svg scene-desk" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="deskSky" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#160f08"></stop>
-                    <stop offset="55%" stop-color="#221808"></stop>
-                    <stop offset="100%" stop-color="#2c1c0a"></stop>
-                </linearGradient>
-                <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#FFE9B0" stop-opacity="0.55"></stop>
-                    <stop offset="100%" stop-color="#FFE9B0" stop-opacity="0"></stop>
-                </radialGradient>
-            </defs>
-            <rect width="1600" height="900" fill="url(#deskSky)"></rect>
-            <ellipse cx="800" cy="520" rx="380" ry="380" fill="url(#lampGlow)"></ellipse>
-            <rect x="0" y="760" width="1600" height="140" fill="#0d0904" opacity="0.7"></rect>
-            <line x1="700" y1="900" x2="700" y2="430" stroke="#3a2a15" stroke-width="10"></line>
-            <path d="M620,430 L780,430 L740,320 L660,320 Z" fill="#4a3620"></path>
-            <ellipse cx="700" cy="430" rx="12" ry="6" fill="#FFE9B0" opacity="0.8"></ellipse>
-            <path d="M900,900 L915,800 L1005,800 L1020,900 Z" fill="#3a2a1a"></path>
-            <path d="M1005,815 q40,0 40,30 q0,30 -40,30" fill="none" stroke="#3a2a1a" stroke-width="8"></path>
-            <path d="M940,780 q6,-16 -4,-30 M965,780 q6,-20 -6,-34 M988,780 q6,-16 -4,-30" stroke="#8a7050" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.5"></path>
-            <g><rect x="530" y="840" width="150" height="26" rx="3" fill="#5a3a2a"></rect><rect x="545" y="812" width="130" height="26" rx="3" fill="#3a5a4a"></rect></g>
-            <g opacity="0.5"><circle cx="800" cy="250" r="30" fill="#FFE9B0" filter="url(#bokehBlur)"></circle><circle cx="950" cy="180" r="22" fill="#FFD9A0" filter="url(#bokehBlur)"></circle></g>
-            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
-        </svg>
-
-        <!-- محيط هادئ -->
-        <svg class="scene-svg scene-ocean" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="oceanSky" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#050a1a"></stop>
-                    <stop offset="55%" stop-color="#0a1a33"></stop>
-                    <stop offset="100%" stop-color="#123152"></stop>
-                </linearGradient>
-                <linearGradient id="oceanWater" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#0d2540"></stop>
-                    <stop offset="100%" stop-color="#04101f"></stop>
-                </linearGradient>
-                <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#DCE8FF" stop-opacity="0.5"></stop>
-                    <stop offset="100%" stop-color="#DCE8FF" stop-opacity="0"></stop>
-                </radialGradient>
-            </defs>
-            <rect width="1600" height="900" fill="url(#oceanSky)"></rect>
-            <circle cx="800" cy="230" r="170" fill="url(#moonGlow)"></circle>
-            <circle cx="800" cy="230" r="64" fill="#EAF1FF"></circle>
-            <rect y="560" width="1600" height="340" fill="url(#oceanWater)"></rect>
-            <g stroke="#7FA6F2" stroke-width="3" opacity="0.25" fill="none">
-                <path d="M0,620 Q400,600 800,620 T1600,620"></path>
-                <path d="M0,680 Q400,655 800,680 T1600,680"></path>
-                <path d="M0,750 Q400,720 800,750 T1600,750"></path>
-                <path d="M0,830 Q400,800 800,830 T1600,830"></path>
-            </g>
-            <g opacity="0.4"><circle cx="680" cy="400" r="28" fill="#7FA6F2" filter="url(#bokehBlur)"></circle><circle cx="920" cy="480" r="36" fill="#DCE8FF" filter="url(#bokehBlur)"></circle></g>
-            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
-        </svg>
-
-        <!-- فجر دافئ -->
-        <svg class="scene-svg scene-dawn" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="dawnSky" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stop-color="#150d1f"></stop>
-                    <stop offset="45%" stop-color="#3a2050"></stop>
-                    <stop offset="75%" stop-color="#8a4a6a"></stop>
-                    <stop offset="100%" stop-color="#e0937f"></stop>
-                </linearGradient>
-                <radialGradient id="dawnSunGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stop-color="#FFD9C2"></stop>
-                    <stop offset="100%" stop-color="#FFD9C2" stop-opacity="0"></stop>
-                </radialGradient>
-            </defs>
-            <rect width="1600" height="900" fill="url(#dawnSky)"></rect>
-            <circle cx="800" cy="820" r="300" fill="url(#dawnSunGlow)"></circle>
-            <circle cx="800" cy="820" r="110" fill="#FFE3CC"></circle>
-            <g fill="#2a1735" opacity="0.5">
-                <ellipse cx="650" cy="280" rx="130" ry="28"></ellipse>
-                <ellipse cx="950" cy="340" rx="150" ry="30"></ellipse>
-            </g>
-            <g opacity="0.4"><circle cx="700" cy="450" r="26" fill="#FFD9C2" filter="url(#bokehBlur)"></circle><circle cx="900" cy="500" r="34" fill="#E093AB" filter="url(#bokehBlur)"></circle></g>
-            <rect width="1600" height="900" fill="url(#sceneVignette)"></rect>
-        </svg>
+        <canvas id="focus-canvas-bg"></canvas>
     </div>
     <div class="focus-mode-topbar">
         <div class="focus-theme-picker-wrap">
             <button type="button" class="btn btn-sm" onclick="toggleFocusThemePicker()" title="خلفية وضع التركيز"><i class="fa-solid fa-palette"></i></button>
             <div id="focus-theme-picker" class="focus-theme-picker" style="display:none;">
-                <button type="button" class="focus-theme-swatch" data-theme="night" onclick="setFocusBgTheme('night')"><span class="swatch-dot" style="background:linear-gradient(135deg,#C9962E,#1C8A72);"></span> <span data-i18n="focus.themeNight">ليل نجمي</span></button>
+                <button type="button" class="focus-theme-swatch" data-theme="night" onclick="setFocusBgTheme('night')"><span class="swatch-dot" style="background:linear-gradient(135deg,#7C5CBF,#2E1A5C);"></span> <span data-i18n="focus.themeNight">ليل هادئ</span></button>
+                <button type="button" class="focus-theme-swatch" data-theme="forest" onclick="setFocusBgTheme('forest')"><span class="swatch-dot" style="background:linear-gradient(135deg,#5ED6B7,#0D3D2C);"></span> <span data-i18n="focus.themeForest">غابة هادئة</span></button>
                 <button type="button" class="focus-theme-swatch" data-theme="sunset" onclick="setFocusBgTheme('sunset')"><span class="swatch-dot" style="background:linear-gradient(135deg,#f2a154,#a13a4a);"></span> <span data-i18n="focus.themeSunset">غروب الشمس</span></button>
-                <button type="button" class="focus-theme-swatch" data-theme="desk" onclick="setFocusBgTheme('desk')"><span class="swatch-dot" style="background:linear-gradient(135deg,#E8C77E,#C9962E);"></span> <span data-i18n="focus.themeDesk">مكتب وقهوة</span></button>
+                <button type="button" class="focus-theme-swatch" data-theme="desk" onclick="setFocusBgTheme('desk')"><span class="swatch-dot" style="background:linear-gradient(135deg,#E8C77E,#C9962E);"></span> <span data-i18n="focus.themeDesk">مكتب هادئ</span></button>
                 <button type="button" class="focus-theme-swatch" data-theme="ocean" onclick="setFocusBgTheme('ocean')"><span class="swatch-dot" style="background:linear-gradient(135deg,#7FA6F2,#2E6BE0);"></span> <span data-i18n="focus.themeOcean">محيط هادئ</span></button>
-                <button type="button" class="focus-theme-swatch" data-theme="dawn" onclick="setFocusBgTheme('dawn')"><span class="swatch-dot" style="background:linear-gradient(135deg,#E093AB,#7C5CBF);"></span> <span data-i18n="focus.themeDawn">فجر دافئ</span></button>
+                <button type="button" class="focus-theme-swatch" data-theme="dawn" onclick="setFocusBgTheme('dawn')"><span class="swatch-dot" style="background:linear-gradient(135deg,#E093AB,#7C5CBF);"></span> <span data-i18n="focus.themeDawn">فجر نقي</span></button>
             </div>
         </div>
         <button type="button" class="btn btn-sm" onclick="closeFocusMode()"><i class="fa-solid fa-compress"></i> <span data-i18n="focus.exit" class="focus-exit-label">خروج من وضع التركيز</span></button>
@@ -1926,6 +1801,8 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <div class="focus-session-pill" id="focus-session-pill"><span class="dot"></span><span id="focus-session-pill-text" data-i18n="focus.idle">جاهز للبدء</span></div>
 
         <div class="focus-timer-ring-wrap">
+            <div class="focus-orbit-ring focus-orbit-ring-1"></div>
+            <div class="focus-orbit-ring focus-orbit-ring-2"></div>
             <svg viewBox="0 0 250 250">
                 <circle class="timer-ring-bg" cx="125" cy="125" r="110"></circle>
                 <circle class="timer-ring-fg" id="focus-timer-ring-fg" cx="125" cy="125" r="110" stroke="url(#timerGrad)" stroke-dasharray="691" stroke-dashoffset="691"></circle>

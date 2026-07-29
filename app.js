@@ -4461,6 +4461,130 @@ function toggleFocusThemePicker(){
     const picker = document.getElementById("focus-theme-picker");
     picker.style.display = picker.style.display === "none" ? "flex" : "none";
 }
+
+/* ============================================================
+   39) خلفية وضع التركيز الحية — كانفس متحرك ذاتياً باستمرار
+   (كتل ضوئية متوهجة تنجرف ببطء + نجوم متلألئة لثيمات مختارة)،
+   وتتفاعل بخفة مع موضع الماوس (parallax) دون أن تتوقف الحركة
+   الذاتية أبداً حتى مع سكون الماوس تماماً.
+   ============================================================ */
+const FOCUS_THEME_PRESETS = {
+    night:  { base:["#0d0620","#1a0f35","#120a28"], stars:true, blobs:[
+        {x:0.3,y:0.3,r:260,color:"124,92,191",drift:22,speed:0.00018,phase:0},
+        {x:0.7,y:0.25,r:220,color:"201,150,46",drift:18,speed:0.00022,phase:2},
+        {x:0.5,y:0.72,r:300,color:"70,40,130",drift:26,speed:0.00015,phase:4},
+        {x:0.18,y:0.7,r:180,color:"94,92,191",drift:20,speed:0.0002,phase:1},
+    ]},
+    forest: { base:["#0a1f16","#0d2a1c","#081810"], stars:false, blobs:[
+        {x:0.3,y:0.28,r:260,color:"94,214,183",drift:20,speed:0.0002,phase:0},
+        {x:0.72,y:0.6,r:240,color:"46,120,80",drift:24,speed:0.00017,phase:3},
+        {x:0.5,y:0.2,r:200,color:"150,214,120",drift:18,speed:0.00023,phase:1},
+    ]},
+    sunset: { base:["#2a1030","#5a1f35","#7a3020"], stars:false, blobs:[
+        {x:0.5,y:0.55,r:300,color:"253,187,110",drift:16,speed:0.0002,phase:0},
+        {x:0.25,y:0.3,r:220,color:"161,58,74",drift:22,speed:0.00018,phase:2},
+        {x:0.75,y:0.35,r:200,color:"217,113,63",drift:18,speed:0.00021,phase:4},
+    ]},
+    desk:   { base:["#1a1408","#241a0a","#0d0904"], stars:false, blobs:[
+        {x:0.5,y:0.35,r:280,color:"255,233,176",drift:14,speed:0.00019,phase:0},
+        {x:0.7,y:0.6,r:200,color:"201,150,46",drift:18,speed:0.00022,phase:2},
+    ]},
+    ocean:  { base:["#050a1a","#0a1a33","#123152"], stars:true, blobs:[
+        {x:0.5,y:0.25,r:260,color:"220,232,255",drift:16,speed:0.0002,phase:0},
+        {x:0.3,y:0.62,r:240,color:"127,166,242",drift:22,speed:0.00017,phase:3},
+        {x:0.72,y:0.72,r:220,color:"46,107,224",drift:20,speed:0.00019,phase:1},
+    ]},
+    dawn:   { base:["#2a1735","#4a2050","#8a4a6a"], stars:false, blobs:[
+        {x:0.5,y:0.7,r:300,color:"255,217,194",drift:16,speed:0.0002,phase:0},
+        {x:0.25,y:0.35,r:220,color:"224,147,171",drift:20,speed:0.00021,phase:2},
+        {x:0.75,y:0.3,r:200,color:"180,155,224",drift:18,speed:0.00023,phase:4},
+    ]},
+};
+
+let focusCanvasCtx = null;
+let focusCanvasAnimId = null;
+let focusMouseX = 0.5, focusMouseY = 0.5;
+let focusMouseXSmooth = 0.5, focusMouseYSmooth = 0.5;
+let focusStars = [];
+
+function resizeFocusCanvas(){
+    const canvas = document.getElementById("focus-canvas-bg");
+    if(!canvas) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+function handleFocusMouseMove(e){
+    focusMouseX = e.clientX / window.innerWidth;
+    focusMouseY = e.clientY / window.innerHeight;
+}
+function generateFocusStars(){
+    focusStars = [];
+    for(let i = 0; i < 55; i++){
+        focusStars.push({ x:Math.random(), y:Math.random(), r:Math.random()*1.3+0.4, phase:Math.random()*Math.PI*2, speed:Math.random()*0.001+0.0006 });
+    }
+}
+function renderFocusCanvasFrame(time){
+    const canvas = document.getElementById("focus-canvas-bg");
+    const overlay = document.getElementById("focus-mode-overlay");
+    if(!canvas || !focusCanvasCtx || !overlay || overlay.style.display === "none"){
+        focusCanvasAnimId = null;
+        return; // نوقف الحلقة تماماً عند إغلاق وضع التركيز، توفيراً للطاقة والمعالجة
+    }
+    const ctx = focusCanvasCtx;
+    const w = canvas.width, h = canvas.height;
+    const theme = FOCUS_THEME_PRESETS[overlay.dataset.bgTheme] || FOCUS_THEME_PRESETS.night;
+
+    focusMouseXSmooth += (focusMouseX - focusMouseXSmooth) * 0.03;
+    focusMouseYSmooth += (focusMouseY - focusMouseYSmooth) * 0.03;
+    const parallaxX = (focusMouseXSmooth - 0.5) * 60;
+    const parallaxY = (focusMouseYSmooth - 0.5) * 40;
+
+    const baseGrad = ctx.createLinearGradient(0, 0, 0, h);
+    baseGrad.addColorStop(0, theme.base[0]);
+    baseGrad.addColorStop(0.5, theme.base[1]);
+    baseGrad.addColorStop(1, theme.base[2]);
+    ctx.fillStyle = baseGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    if(theme.stars){
+        focusStars.forEach(s => {
+            const twinkle = Math.max(0, 0.4 + Math.sin(time * s.speed + s.phase) * 0.35);
+            ctx.beginPath();
+            ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${twinkle})`;
+            ctx.fill();
+        });
+    }
+
+    theme.blobs.forEach((b, i) => {
+        const driftX = Math.sin(time * b.speed + b.phase) * b.drift;
+        const driftY = Math.cos(time * b.speed * 0.8 + b.phase) * b.drift * 0.6;
+        const depthFactor = 0.5 + (i % 3) * 0.3;
+        const x = b.x * w + driftX + parallaxX * depthFactor;
+        const y = b.y * h + driftY + parallaxY * depthFactor;
+        const grad = ctx.createRadialGradient(x, y, 0, x, y, b.r);
+        grad.addColorStop(0, `rgba(${b.color},0.32)`);
+        grad.addColorStop(1, `rgba(${b.color},0)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(x - b.r, y - b.r, b.r * 2, b.r * 2);
+    });
+
+    focusCanvasAnimId = requestAnimationFrame(renderFocusCanvasFrame);
+}
+function startFocusCanvasBg(){
+    const canvas = document.getElementById("focus-canvas-bg");
+    if(!canvas) return;
+    focusCanvasCtx = canvas.getContext("2d");
+    resizeFocusCanvas();
+    generateFocusStars();
+    document.getElementById("focus-mode-overlay").addEventListener("mousemove", handleFocusMouseMove);
+    if(!focusCanvasAnimId) focusCanvasAnimId = requestAnimationFrame(renderFocusCanvasFrame);
+}
+function stopFocusCanvasBg(){
+    if(focusCanvasAnimId){ cancelAnimationFrame(focusCanvasAnimId); focusCanvasAnimId = null; }
+    document.getElementById("focus-mode-overlay").removeEventListener("mousemove", handleFocusMouseMove);
+}
+window.addEventListener("resize", resizeFocusCanvas);
 document.addEventListener("click", (e) => {
     const wrap = document.querySelector(".focus-theme-picker-wrap");
     const picker = document.getElementById("focus-theme-picker");
@@ -4485,6 +4609,7 @@ function openFocusMode(){
     const savedTheme = localStorage.getItem("khuta_focus_bg_theme") || "night";
     overlay.dataset.bgTheme = savedTheme;
     document.querySelectorAll(".focus-theme-swatch").forEach(el => el.classList.toggle("active", el.dataset.theme === savedTheme));
+    startFocusCanvasBg();
 
     // نصيحة ثابتة طوال الجلسة الحالية — تُختار مرة واحدة عند بدء الجلسة (startMainSession)،
     // وهنا فقط نعرضها؛ إن فُتح وضع التركيز دون جلسة نشطة بعد، نختار واحدة بشكل استثنائي
@@ -4518,6 +4643,7 @@ function closeFocusMode(){
     document.getElementById("focus-mode-overlay").style.display = "none";
     document.body.style.overflow = "";
     document.documentElement.style.overflow = "";
+    stopFocusCanvasBg();
 }
 
 function shuffleArray(arr){
