@@ -865,10 +865,7 @@ window.onload = () => {
     }
     setAccent(localStorage.getItem("khuta_accent") || "");
     setFontSize(localStorage.getItem("khuta_fontsize") || "medium");
-    if(localStorage.getItem("khuta_sidebar_collapsed") === null){
-        // مستخدم جديد لم يختر بعد — الافتراضي على الكمبيوتر: مطوية (تظهر بالتمرير أو الضغط)
-        if(window.innerWidth >= 993) document.getElementById("app-container").classList.add("sidebar-collapsed");
-    } else if(localStorage.getItem("khuta_sidebar_collapsed") === "1"){
+    if(localStorage.getItem("khuta_sidebar_collapsed") === "1"){
         document.getElementById("app-container").classList.add("sidebar-collapsed");
     }
 
