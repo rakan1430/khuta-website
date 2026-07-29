@@ -337,6 +337,7 @@ ar:{
 "setup.title":"تخصيص مسارات مذاكرة القدرات",
 "setup.subtitle":"اختر مصادرك المفضلة، وسنبني لك جدولاً محسوباً بدقة",
 "setup.verbalTitle":"القسم اللفظي","setup.skipVerbal":"أذاكر الكمي فقط — تخطَّ اللفظي بالكامل من خطتي",
+"setup.restDay":"يوم راحة أسبوعي (اختياري)","setup.restDayNone":"بدون يوم راحة — أذاكر يومياً","setup.restFri":"الجمعة","setup.restSat":"السبت","setup.restSun":"الأحد","setup.restMon":"الاثنين","setup.restTue":"الثلاثاء","setup.restWed":"الأربعاء","setup.restThu":"الخميس",
 "setup.verbalDesc":"دورة إيهاب (215 قسم) هي مسارك الوحيد والمعتمد للفظي.",
 "setup.foundTitle":"القسم الكمي — التأسيس",
 "setup.foundMoasser":"كتاب المعاصر 10","setup.foundMoasserDesc":"تحدي 30 يوماً، 8 صفحات يومياً تقريباً",
@@ -384,6 +385,7 @@ ar:{
 "table.title":"جدول مهامك المخصص","table.sub":"تُحسب الكميات تلقائياً بناءً على مدة خطتك","table.reset":"إعادة ضبط الخطة","table.editSources":"تعديل المصادر والخطة","table.freshStart":"بدء من جديد بالكامل",
 "dash.customize":"تخصيص لوحتك","dash.customizeTitle":"تخصيص لوحتك","dash.customizeDesc":"اختر البطاقات التي تريد رؤيتها، ورتّبها من صفحة اللوحة نفسها بأسهم أعلى/أسفل.","dash.resetDefault":"إعادة الضبط الافتراضي","dash.done":"تم",
 "overview.totalXp":"إجمالي نقاط الخبرة","overview.today":"اليوم","overview.streakDays":"يوم متتالي","overview.studyHours":"ساعة مذاكرة","overview.tasksToday":"إنجاز اليوم","overview.activityTitle":"نشاطك اليومي","overview.activitySub":"كل مربع يمثّل يوماً — كلما اغمّق اللون زادت دقائق مذاكرتك فيه","overview.less":"أقل","overview.more":"أكثر","overview.questsTitle":"مهام اليوم","overview.questsSub":"لمحة سريعة — عدّلها من جدولك الكامل أدناه","overview.leaderboardTitle":"لوحة الصدارة",
+"notif.title":"الإشعارات","notif.clearAll":"مسح الكل",
 "dash.communityDesc":"نظرة سريعة — تفاصيل أكثر في صفحة المجتمع الكاملة","dash.openCommunity":"فتح صفحة المجتمع",
 "table.path":"المسار","table.qty":"الكمية اليومية","table.status":"الحالة","table.progress":"نسبة الإنجاز","table.action":"إجراء",
 "table.addTask":"إضافة مهمة يدوية",
@@ -465,8 +467,9 @@ ar:{
 "account.setNewPassTitle":"عيّن كلمة مرور جديدة","account.setNewPassDesc":"وصلت هنا عبر رابط إعادة تعيين كلمة المرور — اكتب كلمة مرورك الجديدة.",
 "referral.title":"ادعُ صديقاً","referral.desc":"كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.","referral.share":"مشاركة رابط الدعوة",
 "push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
-"focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.currentTask":"مهمتك الحالية","focus.xpPoints":"نقاط XP",
+"focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.todayTasks":"مهام اليوم","focus.xpPoints":"نقاط XP",
 "focus.idle":"جاهز للبدء","focus.paused":"متوقف مؤقتاً","focus.inSession":"في جلسة تركيز","focus.start":"ابدأ التركيز","focus.skip":"تخطّي",
+"focus.themeNight":"ليل نجمي","focus.themeNature":"طبيعة هادئة","focus.themeDesk":"مكتب وقهوة","focus.themeOcean":"محيط هادئ","focus.themeDawn":"فجر دافئ",
 "account.noRecoveryNote":"⚠️ تذكير: حسابات اسم المستخدم لا تدعم استرجاع كلمة مرور منسية (لا نطلب بريدك الحقيقي أبداً) — احفظها في مكان آمن. بياناتك المحلية على جهازك تبقى آمنة دائماً بغض النظر.",
 "spec.title":"دليل التخصصات الذكي","spec.sub":"نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة","spec.search":"ابحث عن تخصص...",
 "room.title":"غرفة المذاكرة","room.sub":"لست وحدك — بدون شات، فقط إحساس بالرفقة","room.studying":"طالب يذاكر الآن معك",
@@ -487,6 +490,7 @@ en:{
 "setup.title":"Customize your Qudrat study tracks",
 "setup.subtitle":"Pick your preferred sources and we'll build a precisely calculated schedule",
 "setup.verbalTitle":"Verbal Section","setup.skipVerbal":"I only study Quant — skip Verbal entirely from my plan",
+"setup.restDay":"Weekly rest day (optional)","setup.restDayNone":"No rest day — study every day","setup.restFri":"Friday","setup.restSat":"Saturday","setup.restSun":"Sunday","setup.restMon":"Monday","setup.restTue":"Tuesday","setup.restWed":"Wednesday","setup.restThu":"Thursday",
 "setup.verbalDesc":"Ehab's course (215 sections) is your only track for Verbal.",
 "setup.foundTitle":"Quantitative — Foundation",
 "setup.foundMoasser":"Al-Moaasir Book 10","setup.foundMoasserDesc":"30-day challenge, ~8 pages a day",
@@ -534,6 +538,7 @@ en:{
 "table.title":"Your custom task schedule","table.sub":"Quantities are calculated automatically from your plan length","table.reset":"Reset plan","table.editSources":"Edit sources & plan","table.freshStart":"Start completely fresh",
 "dash.customize":"Customize dashboard","dash.customizeTitle":"Customize Your Dashboard","dash.customizeDesc":"Choose which cards to show, and reorder them from the dashboard page using the up/down arrows.","dash.resetDefault":"Reset to default","dash.done":"Done",
 "overview.totalXp":"Total XP","overview.today":"today","overview.streakDays":"day streak","overview.studyHours":"study hours","overview.tasksToday":"today's progress","overview.activityTitle":"Your daily activity","overview.activitySub":"Each square is a day — darker means more study minutes that day","overview.less":"Less","overview.more":"More","overview.questsTitle":"Today's tasks","overview.questsSub":"Quick glance — edit from your full schedule below","overview.leaderboardTitle":"Leaderboard",
+"notif.title":"Notifications","notif.clearAll":"Clear all",
 "dash.communityDesc":"Quick glance — more detail on the full Community page","dash.openCommunity":"Open Community page",
 "table.path":"Track","table.qty":"Daily amount","table.status":"Status","table.progress":"Progress","table.action":"Action",
 "table.addTask":"Add manual task",
@@ -615,8 +620,9 @@ en:{
 "account.setNewPassTitle":"Set a new password","account.setNewPassDesc":"You arrived here via a password reset link — enter your new password.",
 "referral.title":"Invite a friend","referral.desc":"Every friend who joins via your link gives you both 50 XP.","referral.share":"Share invite link",
 "push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
-"focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.currentTask":"Your current task","focus.xpPoints":"XP Points",
+"focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.todayTasks":"Today's tasks","focus.xpPoints":"XP Points",
 "focus.idle":"Ready to start","focus.paused":"Paused","focus.inSession":"In a focus session","focus.start":"Start focusing","focus.skip":"Skip",
+"focus.themeNight":"Starry night","focus.themeNature":"Calm nature","focus.themeDesk":"Desk & coffee","focus.themeOcean":"Calm ocean","focus.themeDawn":"Warm dawn",
 "account.noRecoveryNote":"⚠️ Reminder: username accounts don't support forgotten-password recovery (we never ask for your real email) — save it somewhere safe. Your local data on this device stays safe regardless.",
 "spec.title":"Smart Specialty Guide","spec.sub":"A general overview — check university sites for exact college details","spec.search":"Search a major...",
 "room.title":"Study Room","room.sub":"You're not alone — no chat, just a sense of company","room.studying":"student(s) studying with you now",
@@ -660,6 +666,8 @@ function applyI18n(){
     applyContentNumbers();
     renderGamification();
     renderBadges();
+    renderHeaderMiniAvatar();
+    renderNotificationBell();
     updateShortBreakLabel();
 }
 
@@ -697,6 +705,85 @@ function showToast(msg){
     const duration = Math.max(5000, Math.min(9000, msg.length * 80));
     showToast._t = setTimeout(() => toast.classList.remove("show"), duration);
 }
+
+/* ============================================================
+   38) مركز الإشعارات — سجلّ دائم (30 إشعاراً كحد أقصى) يظهر عبر
+   جرس أعلى الصفحة، بالإضافة لعرض الإشعار فوراً كـ toast من الأسفل
+   ============================================================ */
+const NOTIFICATIONS_MAX = 30;
+function getNotifications(){
+    try{ return JSON.parse(localStorage.getItem("khuta_notifications")) || []; }catch(e){ return []; }
+}
+function pushNotification(titleAr, titleEn, bodyAr, bodyEn, icon){
+    const list = getNotifications();
+    list.unshift({
+        id: Date.now() + "-" + Math.random().toString(36).slice(2,7),
+        titleAr, titleEn, bodyAr, bodyEn,
+        icon: icon || "fa-bell",
+        ts: Date.now(),
+        read: false,
+    });
+    localStorage.setItem("khuta_notifications", JSON.stringify(list.slice(0, NOTIFICATIONS_MAX)));
+    renderNotificationBell();
+    showToast(currentLang==='ar' ? titleAr : titleEn);
+}
+function markAllNotificationsRead(){
+    const list = getNotifications();
+    list.forEach(n => n.read = true);
+    localStorage.setItem("khuta_notifications", JSON.stringify(list));
+    renderNotificationBell();
+}
+function clearAllNotifications(){
+    localStorage.setItem("khuta_notifications", "[]");
+    renderNotificationBell();
+    toggleNotificationPanel(false);
+}
+function timeAgoLabel(ts){
+    const diffMin = Math.round((Date.now() - ts) / 60000);
+    if(diffMin < 1) return currentLang==='ar' ? "الآن" : "now";
+    if(diffMin < 60) return currentLang==='ar' ? `قبل ${diffMin} د` : `${diffMin}m ago`;
+    const diffH = Math.round(diffMin / 60);
+    if(diffH < 24) return currentLang==='ar' ? `قبل ${diffH} س` : `${diffH}h ago`;
+    const diffD = Math.round(diffH / 24);
+    return currentLang==='ar' ? `قبل ${diffD} يوم` : `${diffD}d ago`;
+}
+function renderNotificationBell(){
+    const badge = document.getElementById("notif-bell-badge");
+    const list = getNotifications();
+    const unread = list.filter(n => !n.read).length;
+    if(badge){
+        badge.style.display = unread > 0 ? "flex" : "none";
+        badge.textContent = unread > 9 ? "9+" : unread;
+    }
+    const panelList = document.getElementById("notif-panel-list");
+    if(!panelList) return;
+    if(!list.length){
+        panelList.innerHTML = `<div class="empty-note" style="padding:24px 10px;">${currentLang==='ar'?'لا توجد إشعارات بعد':'No notifications yet'}</div>`;
+        return;
+    }
+    panelList.innerHTML = list.map(n => `
+        <div class="notif-row ${n.read?'':'unread'}">
+            <div class="notif-row-icon"><i class="fa-solid ${n.icon}"></i></div>
+            <div class="notif-row-body">
+                <b>${escapeHtml(currentLang==='ar'?n.titleAr:n.titleEn)}</b>
+                <p>${escapeHtml(currentLang==='ar'?n.bodyAr:n.bodyEn)}</p>
+                <span>${timeAgoLabel(n.ts)}</span>
+            </div>
+        </div>`).join("");
+}
+function toggleNotificationPanel(forceState){
+    const panel = document.getElementById("notif-panel");
+    const show = forceState !== undefined ? forceState : panel.style.display === "none";
+    panel.style.display = show ? "flex" : "none";
+    if(show) markAllNotificationsRead();
+}
+document.addEventListener("click", (e) => {
+    const wrap = document.querySelector(".notif-bell-wrap");
+    const panel = document.getElementById("notif-panel");
+    if(wrap && panel && panel.style.display !== "none" && !wrap.contains(e.target)){
+        panel.style.display = "none";
+    }
+});
 
 function uniName(u){ return currentLang === "ar" ? u.name : u.nameEn; }
 function uniNote(u){ return currentLang === "ar" ? u.note : u.noteEn; }
@@ -778,7 +865,10 @@ window.onload = () => {
     }
     setAccent(localStorage.getItem("khuta_accent") || "");
     setFontSize(localStorage.getItem("khuta_fontsize") || "medium");
-    if(localStorage.getItem("khuta_sidebar_collapsed") === "1"){
+    if(localStorage.getItem("khuta_sidebar_collapsed") === null){
+        // مستخدم جديد لم يختر بعد — الافتراضي على الكمبيوتر: مطوية (تظهر بالتمرير أو الضغط)
+        if(window.innerWidth >= 993) document.getElementById("app-container").classList.add("sidebar-collapsed");
+    } else if(localStorage.getItem("khuta_sidebar_collapsed") === "1"){
         document.getElementById("app-container").classList.add("sidebar-collapsed");
     }
 
@@ -912,6 +1002,7 @@ function restoreSetupForm(){
     document.getElementById("einstein_review_only").checked = !!config.einsteinReviewOnly;
     document.getElementById("skip_verbal_entirely").checked = !!config.skipVerbal;
     toggleSkipVerbalUI();
+    document.getElementById("rest-day-select").value = (config.restDay === null || config.restDay === undefined) ? "" : String(config.restDay);
     const map = { train_monsif:"tMonsif", train_mufakkir_sec:"tMufSec", train_mufakkir_rep:"tMufRep", train_moasser:"tMoasser" };
     Object.keys(map).forEach(inputId => {
         const el = document.getElementById(inputId);
@@ -1063,6 +1154,7 @@ function checkExamReminder(){
 }
 
 function showExamReminderModal(title, message, offerIntensify){
+    pushNotification(title, title, message, message, "fa-hourglass-half");
     const overlay = document.createElement("div");
     overlay.className = "overlay-screen";
     overlay.style.zIndex = "4800";
@@ -1127,12 +1219,14 @@ function finalizeSetup(){
     const found = document.querySelector('input[name="quant_found"]:checked').value;
     const einsteinReviewOnly = document.getElementById("einstein_review_only").checked;
     const skipVerbal = document.getElementById("skip_verbal_entirely").checked;
+    const restDayVal = document.getElementById("rest-day-select").value;
     const customVerbal = readCustomSourceForm("cv");
     const customQuant = readCustomSourceForm("cq");
     const config = {
         found,
         einsteinReviewOnly,
         skipVerbal,
+        restDay: restDayVal === "" ? null : parseInt(restDayVal),
         tMonsif: document.getElementById("train_monsif").checked,
         tMufSec: document.getElementById("train_mufakkir_sec").checked,
         tMufRep: document.getElementById("train_mufakkir_rep").checked,
@@ -1218,7 +1312,11 @@ function ensureTaskStatusFreshToday(){
     if(lastDate !== today){
         // إن كان هناك يوم "سابق" مسجَّل ولم يُكتمل، يُحتسب يوماً فائتاً — يُستخدم
         // لاحقاً لتوزيع محتواه على الأيام القادمة تلقائياً (بدل أن يبقى الطالب متأخراً للأبد)
-        if(lastDate && localStorage.getItem("khuta_plan_start") && !getCompletedDates().includes(lastDate)){
+        // — باستثناء إن كان ذلك اليوم بالذات هو يوم راحته الأسبوعي المُختار
+        let config = {};
+        try{ config = JSON.parse(localStorage.getItem("khuta_config")) || {}; }catch(e){}
+        const lastDateWasRestDay = lastDate && config.restDay !== null && config.restDay !== undefined && new Date(lastDate).getDay() === config.restDay;
+        if(lastDate && localStorage.getItem("khuta_plan_start") && !getCompletedDates().includes(lastDate) && !lastDateWasRestDay){
             localStorage.setItem("khuta_missed_days_count", getMissedDaysCount() + 1);
         }
         localStorage.setItem("khuta_task_status", JSON.stringify({}));
@@ -1243,6 +1341,16 @@ function buildScheduleTable(){
     if(!tbody) return;
     tbody.innerHTML = "";
 
+    if(isTodayRestDay()){
+        const restMsg = currentLang==='ar'
+            ? "اليوم يوم راحتك الأسبوعي 🌙 — استمتع بيومك، وسيستأنف جدولك غداً تلقائياً"
+            : "Today is your weekly rest day 🌙 — enjoy it, your schedule resumes automatically tomorrow";
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-note"><i class="fa-solid fa-mug-hot" style="font-size:26px; margin-bottom:8px; display:block; color:var(--gold);"></i>${restMsg}</div></td></tr>`;
+        const mobileListEl = document.getElementById("schedule-body-mobile");
+        if(mobileListEl) mobileListEl.innerHTML = `<div class="empty-note"><i class="fa-solid fa-mug-hot" style="font-size:22px; margin-bottom:6px; display:block; color:var(--gold);"></i>${restMsg}</div>`;
+        return;
+    }
+
     const days = parseInt(localStorage.getItem("khuta_plan_days")) || 45;
     let config = {};
     try{ config = JSON.parse(localStorage.getItem("khuta_config")) || {}; }catch(e){}
@@ -1254,7 +1362,9 @@ function buildScheduleTable(){
         if(saved && saved.date === new Date().toDateString()) todayScale = saved.scale;
     }catch(e){}
     // الأيام التي فاتت الطالب توزَّع محتواها تلقائياً على الأيام المتبقية بدل أن يتراكم عليه
-    const effectiveDays = Math.max(1, days - getMissedDaysCount());
+    // + إن اختار الطالب يوم راحة أسبوعياً، تُستبعد أيامه من حساب "أيام المذاكرة الفعلية"
+    // منذ البداية (وليس فقط عند تفويتها) — فتزداد كمية اليوم الفعلي تناسبياً تلقائياً
+    const effectiveDays = Math.max(1, days - getMissedDaysCount() - getRestDaysInPlanCount(config.restDay, days));
     function dailyQty(total){ return Math.max(1, Math.ceil((total / effectiveDays) * todayScale)); }
 
     const tasks = [];
@@ -1547,7 +1657,15 @@ function updateStreak(){
     if(last === today) return; // already counted today
     if(last){
         const diffDays = Math.round((new Date(today) - new Date(last)) / 86400000);
-        if(diffDays === 1){
+        // إن كان الفرق يومين بالضبط، وكان اليوم الذي بينهما هو يوم راحته الأسبوعي
+        // المُختار، فلا تنكسر السلسلة — يوم الراحة لا يُحسب فجوة إطلاقاً
+        let restDayConfig = null;
+        try{ const c = JSON.parse(localStorage.getItem("khuta_config")) || {}; restDayConfig = (c.restDay === null || c.restDay === undefined) ? null : c.restDay; }catch(e){}
+        const skippedDayWasRest = diffDays === 2 && restDayConfig !== null && (() => {
+            const between = new Date(last); between.setDate(between.getDate() + 1);
+            return between.getDay() === restDayConfig;
+        })();
+        if(diffDays === 1 || skippedDayWasRest){
             streak = streak + 1;
         } else if(diffDays === 2 && getShieldCount() > 0){
             // فوّت يوماً واحداً بالضبط ولديه درع — يُستهلك تلقائياً لحماية السلسلة
@@ -1562,6 +1680,13 @@ function updateStreak(){
     }
     localStorage.setItem("khuta_streak", streak);
     localStorage.setItem("khuta_streak_last", today);
+    if(streak > 0 && streak % 7 === 0){
+        pushNotification(
+            "🔥 سلسلة رائعة!", "🔥 Great streak!",
+            `حافظت على مذاكرتك ${streak} يوماً متتالياً — استمر!`, `You've kept a ${streak}-day streak — keep going!`,
+            "fa-fire"
+        );
+    }
 }
 
 const BADGES = [
@@ -1636,7 +1761,14 @@ function checkBadges(){
         }
     });
     if(changed) localStorage.setItem("khuta_badges", JSON.stringify(earned));
-    newlyEarned.forEach((b, i) => setTimeout(() => celebrateBadgeUnlock(b), i * 1600));
+    newlyEarned.forEach((b, i) => {
+        setTimeout(() => celebrateBadgeUnlock(b), i * 1600);
+        pushNotification(
+            "🏅 وسام جديد!", "🏅 New badge!",
+            `فتحت وسام "${currentLang==='ar'?b.ar:b.en}"`, `You unlocked the "${b.en}" badge`,
+            "fa-award"
+        );
+    });
     renderBadges();
 }
 
@@ -1914,6 +2046,8 @@ function renderProgress(){
     const completedDates = getCompletedDates();
     const trackingStart = getRedDayTrackingStart();
     const planStart = startStr ? new Date(startStr) : null;
+    let restDayConfig = null;
+    try{ const c = JSON.parse(localStorage.getItem("khuta_config")) || {}; restDayConfig = (c.restDay === null || c.restDay === undefined) ? null : c.restDay; }catch(e){}
     const maxShow = 60; // لتفادي رسم مئات النقاط في الخطط الطويلة جداً
     const step = totalDays > maxShow ? Math.ceil(totalDays / maxShow) : 1;
     for(let d = 1; d <= totalDays; d += step){
@@ -1922,7 +2056,8 @@ function renderProgress(){
         if(d < currentDay && planStart){
             const dayDate = new Date(planStart);
             dayDate.setDate(planStart.getDate() + (d - 1));
-            if(dayDate >= trackingStart){
+            const isRestDay = restDayConfig !== null && dayDate.getDay() === restDayConfig;
+            if(dayDate >= trackingStart && !isRestDay){
                 missed = !completedDates.includes(dayDate.toDateString());
             }
         }
@@ -2051,8 +2186,15 @@ function updateShortBreakLabel(){
     const el = document.getElementById("short-break-label");
     if(!el) return;
     const left = Math.max(0, getShortBreakLimit() - getShortBreakUsedToday());
-    el.textContent = (currentLang==='ar' ? "استراحة 5د" : "5-min break") + ` (${left})`;
-    document.getElementById("btn-short-break").disabled = left <= 0 || inAutoBreak || shortBreakActive || Date.now() < shortBreakCooldownUntil;
+    const labelText = (currentLang==='ar' ? "استراحة 5د" : "5-min break") + ` (${left})`;
+    el.textContent = labelText;
+    const disabled = left <= 0 || inAutoBreak || shortBreakActive || Date.now() < shortBreakCooldownUntil;
+    document.getElementById("btn-short-break").disabled = disabled;
+    // مزامنة زر الاستراحة داخل وضع التركيز الكامل بنفس الحالة تماماً
+    const focusLabel = document.getElementById("focus-short-break-label");
+    const focusBtn = document.getElementById("focus-short-break-btn");
+    if(focusLabel) focusLabel.textContent = labelText;
+    if(focusBtn) focusBtn.disabled = disabled;
 }
 
 /* الحد الأدنى للمدة المخصصة = جلستك الأساسية بالضبط، ولا يمكن النزول عنه */
@@ -2121,6 +2263,11 @@ function startMainSession(minutes){
     updateShortBreakLabel();
     requestFocusFullscreen();
     requestNotificationPermission();
+
+    // نختار نصيحة جديدة عشوائياً مرة واحدة لكل جلسة (لا تتغير مع كل فتح/إغلاق لوضع التركيز
+    // خلال نفس الجلسة، بل فقط عند بدء جلسة جديدة فعلياً)
+    currentFocusQuote = FOCUS_QUOTES[Math.floor(Math.random() * FOCUS_QUOTES.length)];
+    openFocusMode(); // افتراضياً، بدء أي جلسة يفتح وضع التركيز الكامل مباشرة
 
     updateMainDisplay();
     mainInterval = setInterval(mainTick, 1000);
@@ -2385,6 +2532,31 @@ function getRedDayTrackingStart(){
 }
 function getMissedDaysCount(){ return parseInt(localStorage.getItem("khuta_missed_days_count")) || 0; }
 
+/* يحسب كم مرة سيقع يوم الراحة الأسبوعي المختار ضمن مدة الخطة كاملة، بدءاً من
+   تاريخ بدء الخطة — يُستخدم لتوسيع كمية الأيام الفعلية للمذاكرة تلقائياً منذ
+   البداية، لا فقط عند تفويت يوم راحة بالفعل */
+function getRestDaysInPlanCount(restDay, totalDays){
+    if(restDay === null || restDay === undefined || restDay === "") return 0;
+    const startStr = localStorage.getItem("khuta_plan_start");
+    if(!startStr) return 0;
+    const start = new Date(startStr);
+    let count = 0;
+    for(let i = 0; i < totalDays; i++){
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
+        if(d.getDay() === restDay) count++;
+    }
+    return count;
+}
+
+/* هل اليوم الحالي هو يوم الراحة الأسبوعي المُفعَّل في خطة الطالب؟ */
+function isTodayRestDay(){
+    let config = {};
+    try{ config = JSON.parse(localStorage.getItem("khuta_config")) || {}; }catch(e){}
+    if(config.restDay === null || config.restDay === undefined) return false;
+    return new Date().getDay() === config.restDay;
+}
+
 function recordSessionCompletion(minutesStudied){
     const today = new Date().toDateString();
     // إجمالي الدقائق مدى الحياة
@@ -2403,6 +2575,7 @@ function recordSessionCompletion(minutesStudied){
 
 function completeMainSession(){
     clearInterval(mainInterval); mainInterval = null;
+    currentFocusQuote = null;
     localStorage.removeItem("khuta_session_active");
     localStorage.removeItem("khuta_today_scale");
     setAllTodayTasksStatus("done");
@@ -2432,6 +2605,7 @@ function completeMainSession(){
 
 function failMainSession(){
     clearInterval(mainInterval); mainInterval = null;
+    currentFocusQuote = null;
     localStorage.removeItem("khuta_session_active");
     localStorage.removeItem("khuta_today_scale");
     setAllTodayTasksStatus("notstarted");
@@ -2558,9 +2732,13 @@ function checkAbandonedSession(){
         Object.keys(statuses).forEach(id => { if(statuses[id] === "inprogress"){ statuses[id] = "notstarted"; hadInProgress = true; } });
         if(hadInProgress){
             localStorage.setItem("khuta_task_status", JSON.stringify(statuses));
-            showToast(currentLang==='ar'
-                ? "⚠️ انقطعت جلستك السابقة (تحديث/إغلاق الصفحة) — ابدأ جلسة جديدة لإكمال يومك."
-                : "⚠️ Your previous session was interrupted (page refresh/close) — start a new session to complete today.");
+            pushNotification(
+                "⚠️ انقطعت جلستك",
+                "⚠️ Your session was interrupted",
+                "انقطعت جلستك السابقة (تحديث/إغلاق الصفحة) — ابدأ جلسة جديدة لإكمال يومك.",
+                "Your previous session was interrupted (page refresh/close) — start a new session to complete today.",
+                "fa-triangle-exclamation"
+            );
         }
     }
 }
@@ -4092,6 +4270,23 @@ function renderAvatarDisplay(){
         placeholder.innerHTML = '<i class="fa-solid fa-user"></i>';
         deleteBtn.style.display = "none";
     }
+    renderHeaderMiniAvatar();
+}
+
+/* نسخة مصغّرة من نفس منطق الأفاتار، للعرض في رأس الصفحة القابل للنقر للانتقال للملف الشخصي */
+function renderHeaderMiniAvatar(){
+    const el = document.getElementById("header-mini-avatar");
+    if(!el) return;
+    const uploaded = localStorage.getItem("khuta_avatar");
+    const presetId = localStorage.getItem("khuta_avatar_preset");
+    const preset = PRESET_AVATARS.find(p => p.id === presetId);
+    if(uploaded){
+        el.innerHTML = `<img src="${uploaded}" style="width:100%;height:100%;object-fit:cover;">`;
+    } else if(preset){
+        el.innerHTML = `<div style="width:100%;height:100%;background:${preset.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;"><i class="fa-solid ${preset.icon}"></i></div>`;
+    } else {
+        el.innerHTML = `<div style="width:100%;height:100%;background:var(--bg-alt);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-size:18px;"><i class="fa-solid fa-user"></i></div>`;
+    }
 }
 
 function logSiteVisit(){
@@ -4176,10 +4371,38 @@ function resolveAccountDataConflict(remoteSnapshot){
 }
 
 const FOCUS_QUOTES = [
-    { ar:"النجاح هو محصلة تحضير، واجتهاد، وتعلّم من الفشل.", en:"Success is where preparation and opportunity meet.", authorAr:"كوفي عنان", authorEn:"Colin Powell" },
+    { ar:"النجاح هو محصلة تحضير، واجتهاد، وتعلّم من الفشل.", en:"Success is where preparation and opportunity meet.", authorAr:"كولن باول", authorEn:"Colin Powell" },
     { ar:"لا تنتظر اللحظة المثالية، خذ اللحظة واجعلها مثالية.", en:"Don't wait for the perfect moment, take the moment and make it perfect.", authorAr:"مجهول", authorEn:"Unknown" },
     { ar:"كل دقيقة تركيز الآن، خطوة أقرب لجامعتك.", en:"Every focused minute now is a step closer to your university.", authorAr:"خُطى", authorEn:"Khuta" },
-    { ar:"الانضباط هو الجسر بين الأهداف والإنجاز.", en:"Discipline is the bridge between goals and accomplishment.", authorAr:"جيم رون", authorEn:"Jim Rohn" },
+    { ar:"من جدّ وجد، ومن زرع حصد.", en:"Whoever strives, finds; whoever sows, reaps.", authorAr:"مثل عربي", authorEn:"Arabic proverb" },
+    { ar:"العلم في الصغر كالنقش على الحجر.", en:"Learning in youth is like carving into stone — it lasts.", authorAr:"مثل عربي", authorEn:"Arabic proverb" },
+    { ar:"لست بحاجة لأن تكون رائعاً لتبدأ، لكن عليك أن تبدأ لتصبح رائعاً.", en:"You don't have to be great to start, but you have to start to be great.", authorAr:"زيغ زيغلر", authorEn:"Zig Ziglar" },
+    { ar:"الفرق بين المستحيل والممكن يكمن في إصرار الإنسان.", en:"The difference between impossible and possible lies in a person's determination.", authorAr:"توماس أديسون", authorEn:"Thomas Edison" },
+    { ar:"لا يهم مدى بطء تقدّمك، طالما أنك لا تتوقف.", en:"It does not matter how slowly you go, as long as you do not stop.", authorAr:"كونفوشيوس", authorEn:"Confucius" },
+    { ar:"العقل الذي ينفتح على فكرة جديدة لن يعود لحجمه القديم أبداً.", en:"A mind stretched by a new idea never returns to its original size.", authorAr:"أوليفر هولمز", authorEn:"Oliver Wendell Holmes" },
+    { ar:"لا تقس يومك بالمحصول الذي تجنيه، بل بالبذور التي تزرعها.", en:"Don't judge each day by the harvest you reap, but by the seeds you plant.", authorAr:"روبرت لويس ستيفنسون", authorEn:"Robert Louis Stevenson" },
+    { ar:"التميّز ليس فعلاً، بل عادة.", en:"Excellence is not an act, but a habit.", authorAr:"أرسطو", authorEn:"Aristotle" },
+    { ar:"ابدأ من حيث أنت، استخدم ما لديك، وافعل ما تستطيع.", en:"Start where you are, use what you have, do what you can.", authorAr:"آرثر آش", authorEn:"Arthur Ashe" },
+    { ar:"الطريق إلى النجاح دائماً قيد الإنشاء.", en:"The road to success is always under construction.", authorAr:"ليلي توملين", authorEn:"Lily Tomlin" },
+    { ar:"لا يوجد مصعد للنجاح، عليك أخذ السلالم.", en:"There's no elevator to success — you have to take the stairs.", authorAr:"مجهول", authorEn:"Unknown" },
+    { ar:"ثق بنفسك، وستعرف كيف تعيش.", en:"Trust yourself, and you will know how to live.", authorAr:"غوته", authorEn:"Goethe" },
+    { ar:"من سار على الدرب وصل.", en:"Whoever walks the path arrives.", authorAr:"مثل عربي", authorEn:"Arabic proverb" },
+    { ar:"النجاح هو أن تنتقل من فشل إلى فشل دون أن تفقد الحماس.", en:"Success is walking from failure to failure with no loss of enthusiasm.", authorAr:"ونستون تشرشل", authorEn:"Winston Churchill" },
+    { ar:"لن تكسب المعركة إن لم تخض القتال.", en:"You can't win the battle if you don't fight it.", authorAr:"مجهول", authorEn:"Unknown" },
+    { ar:"الإصرار هو الطريق السحري للنجاح.", en:"Persistence is the magic word for success.", authorAr:"مجهول", authorEn:"Unknown" },
+    { ar:"ركّز على الرحلة، لا الوجهة فقط — كل جلسة اليوم تبني غدك.", en:"Focus on the journey, not just the destination — every session today builds your tomorrow.", authorAr:"خُطى", authorEn:"Khuta" },
+    { ar:"العمل الجاد يتغلّب على الموهبة حين لا تعمل الموهبة بجد.", en:"Hard work beats talent when talent doesn't work hard.", authorAr:"تيم نوتك", authorEn:"Tim Notke" },
+    { ar:"كل خبير كان يوماً مبتدئاً.", en:"Every expert was once a beginner.", authorAr:"مجهول", authorEn:"Unknown" },
+    { ar:"الصبر مفتاح الفرج.", en:"Patience is the key to relief.", authorAr:"مثل عربي", authorEn:"Arabic proverb" },
+    { ar:"لا تقارن بدايتك بمنتصف رحلة غيرك.", en:"Don't compare your beginning to someone else's middle.", authorAr:"مجهول", authorEn:"Unknown" },
+    { ar:"الوقت الذي تستمتع فيه بإضاعته ليس وقتاً ضائعاً — لكن وقت المذاكرة استثمار لا يضيع أبداً.", en:"Time you enjoy wasting isn't wasted time — but study time is an investment that never is.", authorAr:"خُطى", authorEn:"Khuta" },
+    { ar:"من يرد الحياة يستجب لها.", en:"Whoever wants life must answer its call.", authorAr:"أبو القاسم الشابي", authorEn:"Abu al-Qasim al-Shabbi" },
+    { ar:"النجاح رحلة، لا وجهة.", en:"Success is a journey, not a destination.", authorAr:"آرثر آش", authorEn:"Arthur Ashe" },
+    { ar:"من يخطط لهدفه يقترب منه كل يوم، ومن لا يخطط يبقى في مكانه.", en:"Those who plan for their goal move closer daily; those who don't stay in place.", authorAr:"مجهول", authorEn:"Unknown" },
+    { ar:"القراءة اليوم، القيادة غداً.", en:"Reading today, leading tomorrow.", authorAr:"مجهول", authorEn:"Unknown" },
+    { ar:"أعظم إنجاز هو ألا تفشل أبداً، بل أن تنهض في كل مرة تسقط فيها.", en:"Our greatest glory is not in never failing, but in rising every time we fall.", authorAr:"كونفوشيوس", authorEn:"Confucius" },
+    { ar:"العقول العظيمة تناقش الأفكار، والعقول المتوسطة تناقش الأحداث.", en:"Great minds discuss ideas; average minds discuss events.", authorAr:"مجهول", authorEn:"Unknown" },
+    { ar:"من طلب العلا سهر الليالي.", en:"Whoever seeks greatness stays up through the nights.", authorAr:"المتنبي", authorEn:"Al-Mutanabbi" },
 ];
 
 /* يُعيد توجيه الزر داخل وضع التركيز لنفس أزرار لوحة التحكم تماماً —
@@ -4193,21 +4416,57 @@ function focusModeStartOrPause(){
     }
 }
 
+function toggleFocusThemePicker(){
+    const picker = document.getElementById("focus-theme-picker");
+    picker.style.display = picker.style.display === "none" ? "flex" : "none";
+}
+document.addEventListener("click", (e) => {
+    const wrap = document.querySelector(".focus-theme-picker-wrap");
+    const picker = document.getElementById("focus-theme-picker");
+    if(wrap && picker && picker.style.display !== "none" && !wrap.contains(e.target)){
+        picker.style.display = "none";
+    }
+});
+function setFocusBgTheme(theme){
+    document.getElementById("focus-mode-overlay").dataset.bgTheme = theme;
+    localStorage.setItem("khuta_focus_bg_theme", theme);
+    document.querySelectorAll(".focus-theme-swatch").forEach(el => el.classList.toggle("active", el.dataset.theme === theme));
+    document.getElementById("focus-theme-picker").style.display = "none";
+}
+
+let currentFocusQuote = null;
+
 function openFocusMode(){
     const overlay = document.getElementById("focus-mode-overlay");
     overlay.style.display = "flex";
     document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    const savedTheme = localStorage.getItem("khuta_focus_bg_theme") || "night";
+    overlay.dataset.bgTheme = savedTheme;
+    document.querySelectorAll(".focus-theme-swatch").forEach(el => el.classList.toggle("active", el.dataset.theme === savedTheme));
 
-    const quote = FOCUS_QUOTES[Math.floor(Math.random() * FOCUS_QUOTES.length)];
-    document.getElementById("focus-quote-text").textContent = `"${currentLang==='ar' ? quote.ar : quote.en}"`;
-    document.getElementById("focus-quote-author").textContent = "— " + (currentLang==='ar' ? quote.authorAr : quote.authorEn);
+    // نصيحة ثابتة طوال الجلسة الحالية — تُختار مرة واحدة عند بدء الجلسة (startMainSession)،
+    // وهنا فقط نعرضها؛ إن فُتح وضع التركيز دون جلسة نشطة بعد، نختار واحدة بشكل استثنائي
+    if(!currentFocusQuote) currentFocusQuote = FOCUS_QUOTES[Math.floor(Math.random() * FOCUS_QUOTES.length)];
+    document.getElementById("focus-quote-text").textContent = `"${currentLang==='ar' ? currentFocusQuote.ar : currentFocusQuote.en}"`;
+    document.getElementById("focus-quote-author").textContent = "— " + (currentLang==='ar' ? currentFocusQuote.authorAr : currentFocusQuote.authorEn);
 
     const taskCard = document.getElementById("focus-task-card");
-    const currentTaskRow = document.querySelector("#schedule-body tr[data-task-id]");
-    if(currentTaskRow){
-        const titleCell = currentTaskRow.querySelector("td[data-label]");
+    const rows = document.querySelectorAll("#schedule-body tr[data-task-id]");
+    if(rows.length){
+        const statuses = getTaskStatuses();
         taskCard.style.display = "block";
-        document.getElementById("focus-task-info").textContent = titleCell ? titleCell.textContent.trim() : "—";
+        document.getElementById("focus-task-count").textContent = rows.length;
+        document.getElementById("focus-task-list").innerHTML = Array.from(rows).map(row => {
+            const id = row.dataset.taskId;
+            const status = statuses[id] || "notstarted";
+            const titleCell = row.querySelector("td[data-label]");
+            const title = titleCell ? titleCell.textContent.trim() : id;
+            return `<div class="focus-task-row ${status==='done'?'done':status==='inprogress'?'inprogress':''}">
+                <div class="ftr-check"><i class="fa-solid fa-check"></i></div>
+                <span>${escapeHtml(title)}</span>
+            </div>`;
+        }).join("");
     } else {
         taskCard.style.display = "none";
     }
@@ -4217,6 +4476,7 @@ function openFocusMode(){
 function closeFocusMode(){
     document.getElementById("focus-mode-overlay").style.display = "none";
     document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
 }
 
 function shuffleArray(arr){
@@ -5260,7 +5520,7 @@ function openSpecialtyDetail(id){
             </div>
             <p style="font-size:13.5px; color:var(--text-2); line-height:1.9; margin-bottom:14px;">${d.desc}</p>
             <div class="uni-note" style="margin-bottom:10px;"><b style="color:var(--teal);">${currentLang==='ar'?'المسار الوظيفي: ':'Career path: '}</b>${d.career}</div>
-            ${d.outlook ? `<div style="margin-bottom:14px; padding:12px 14px; background:var(--gold-soft); border-radius:12px; border:1px solid rgba(201,150,46,0.2);"><b style="font-size:12.5px; color:var(--gold);"><i class="fa-solid fa-arrow-trend-up"></i> ${currentLang==='ar'?'مستقبل التخصص:':'Career outlook:'}</b><p style="font-size:12.5px; color:var(--text-2); line-height:1.8; margin-top:6px;">${d.outlook}</p></div>` : ""}
+            ${d.outlook ? `<div style="margin-bottom:14px; padding:12px 14px; background:var(--bg-alt); border-radius:12px; border-inline-start:3px solid var(--gold);"><b style="font-size:12.5px; color:var(--text-1);"><i class="fa-solid fa-arrow-trend-up" style="color:var(--gold);"></i> ${currentLang==='ar'?'مستقبل التخصص:':'Career outlook:'}</b><p style="font-size:12.5px; color:var(--text-2); line-height:1.8; margin-top:6px;">${d.outlook}</p></div>` : ""}
             ${branches.length ? `<div style="margin-bottom:14px;"><b style="font-size:13px; color:var(--gold);">${currentLang==='ar'?'يتفرّع منه:':'Branches into:'}</b>
                 <ul style="margin:8px 0 0; padding-inline-start:20px; font-size:13px; line-height:2;">${branches.map(b=>`<li>${b}</li>`).join("")}</ul></div>` : ""}
             ${unis.length ? `<div style="margin-bottom:14px;"><b style="font-size:13px; color:var(--gold);">${currentLang==='ar'?'متوفر في جامعات مثل:':'Offered at universities such as:'}</b>

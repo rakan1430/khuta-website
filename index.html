@@ -135,12 +135,25 @@ h1,h2,h3,h4{ font-family: var(--font-display); font-weight:700; letter-spacing:0
 
 /* ============ الحاوية العامة ============ */
 .app-container{
-    width:100%; max-width:1560px; margin:0 auto; padding:22px;
+    width:100%; max-width:1880px; margin:0 auto; padding:22px;
     flex:1; display:grid; grid-template-columns: 264px 1fr; gap:26px;
     position:relative; transition: grid-template-columns 0.35s ease;
 }
 @media (min-width:993px){
     .app-container.sidebar-collapsed{ grid-template-columns: 0px 1fr; }
+    /* عند الطي: تصبح القائمة الجانبية طبقة عائمة فوق المحتوى (لا تُزيح شيئاً)،
+       تظهر عند التمرير فوق زر الفتح أو منطقة رفيعة قرب الحافة، وتُثبَّت دائماً بالنقر */
+    .app-container.sidebar-collapsed .sidebar{
+        position:absolute; top:0; inset-inline-start:0; width:264px; height:100%; z-index:60;
+    }
+    .app-container.sidebar-collapsed .sidebar-hover-zone{
+        position:absolute; top:0; inset-inline-start:0; width:22px; height:100%; z-index:55;
+    }
+    .app-container.sidebar-collapsed .sidebar-hover-zone:hover ~ .sidebar,
+    .app-container.sidebar-collapsed .sidebar:hover{
+        opacity:1 !important; transform:translateX(0) !important; pointer-events:auto !important;
+        padding:28px 18px !important; border:1px solid var(--border) !important; box-shadow:var(--shadow-lg);
+    }
 }
 .sidebar{ transition: opacity 0.3s ease, transform 0.35s ease; overflow:hidden; }
 .app-container.sidebar-collapsed .sidebar{ opacity:0; transform:translateX(-16px); pointer-events:none; padding:0; border:none; }
@@ -196,14 +209,17 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
 
 /* ============ الشريط الجانبي ============ */
 .sidebar{
-    background: var(--surface);
-    border:1px solid var(--border);
+    background: rgba(255,255,255,0.55);
+    backdrop-filter: blur(22px) saturate(1.5);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+    border:1px solid rgba(255,255,255,0.5);
     border-radius: var(--radius-card);
     padding:28px 18px;
     box-shadow: var(--shadow-md);
     display:flex; flex-direction:column; gap:10px;
     height:calc(100vh - 44px); position:sticky; top:22px;
 }
+.dark-mode .sidebar{ background: rgba(20,29,49,0.55); border-color: rgba(255,255,255,0.08); }
 .brand{ font-family:var(--font-display); font-size:30px; font-weight:800; text-align:center; margin-bottom:18px; color:var(--text-1); display:flex; align-items:center; justify-content:center; gap:8px; }
 .brand .dot{ color:var(--gold); }
 .brand small{ display:block; font-family:var(--font-body); font-size:11px; font-weight:500; color:var(--text-3); letter-spacing:2px; margin-top:2px; }
@@ -304,12 +320,47 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
     display:flex; justify-content:space-between; align-items:center;
 }
 .header-right{ display:flex; align-items:center; gap:16px; }
+.notif-bell-wrap{ position:relative; }
+.notif-bell-btn{
+    position:relative; width:44px; height:44px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.45);
+    background:rgba(255,255,255,0.5); backdrop-filter:blur(16px) saturate(1.4); -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-2); font-size:16px; transition:.2s var(--ease);
+}
+.notif-bell-btn:hover{ color:var(--gold); border-color:var(--gold-soft); }
+.dark-mode .notif-bell-btn{ background:rgba(20,29,49,0.45); border-color:rgba(255,255,255,0.08); }
+.notif-bell-badge{
+    position:absolute; top:-2px; inset-inline-end:-2px; min-width:18px; height:18px; padding:0 4px; border-radius:99px;
+    background:var(--rose); color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;
+    border:2px solid var(--bg);
+}
+.notif-panel{
+    position:absolute; top:calc(100% + 12px); inset-inline-end:0; width:340px; max-width:88vw; z-index:200;
+    background:rgba(255,255,255,0.7); backdrop-filter:blur(24px) saturate(1.5); -webkit-backdrop-filter:blur(24px) saturate(1.5);
+    border:1px solid rgba(255,255,255,0.5); border-radius:20px; box-shadow:var(--shadow-lg);
+    display:flex; flex-direction:column; max-height:420px; animation:focusThemePickerIn .2s var(--ease);
+}
+.dark-mode .notif-panel{ background:rgba(20,29,49,0.75); border-color:rgba(255,255,255,0.08); }
+.notif-panel-head{ display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-bottom:1px solid var(--border); font-size:14px; }
+.notif-panel-list{ overflow-y:auto; padding:6px; }
+.notif-row{ display:flex; gap:12px; padding:12px 10px; border-radius:12px; }
+.notif-row.unread{ background:rgba(201,150,46,0.08); }
+.notif-row-icon{
+    width:36px; height:36px; border-radius:50%; background:var(--bg-alt); color:var(--gold); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:14px;
+}
+.notif-row-body b{ font-size:13px; display:block; margin-bottom:2px; }
+.notif-row-body p{ font-size:12px; color:var(--text-2); line-height:1.6; margin-bottom:4px; }
+.notif-row-body span{ font-size:10.5px; color:var(--text-3); }
+@media (max-width:640px){ .notif-panel{ position:fixed; top:auto; bottom:0; inset-inline:10px; width:auto; max-width:none; border-radius:20px 20px 0 0; max-height:70vh; } }
+.header-profile-link{ display:flex; align-items:center; gap:14px; cursor:pointer; border-radius:16px; padding:6px 10px 6px 6px; margin:-6px -10px -6px -6px; transition:.2s var(--ease); }
+.header-profile-link:hover{ background:rgba(201,150,46,0.08); }
+.header-mini-avatar{ width:46px; height:46px; border-radius:50%; flex-shrink:0; overflow:hidden; border:2px solid var(--gold-soft); box-shadow:0 2px 8px rgba(201,150,46,0.2); }
 #welcome-text{ font-size:19px; margin-bottom:3px; }
 .live-date{ font-size:13px; color:var(--text-3); }
 .live-clock{ font-family:var(--font-mono); font-size:22px; font-weight:600; color:var(--text-1); direction:ltr; }
 .exam-countdown-widget{
     display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:99px;
-    background:linear-gradient(135deg, rgba(201,150,46,0.12), rgba(201,150,46,0.04)); border:1px solid rgba(201,150,46,0.3);
+    background:rgba(201,150,46,0.14); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgba(201,150,46,0.3);
     color:var(--gold); font-weight:700; font-size:12.5px; white-space:nowrap;
 }
 .exam-countdown-widget i{ font-size:13px; }
@@ -474,9 +525,11 @@ body.dark-mode .dn-star{ opacity:1; animation:khuta-twinkle 1.8s ease-in-out inf
 
 .gamify-widget{
     display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:16px;
-    background:var(--bg-alt); border:1.5px solid var(--border); font-size:15px;
+    background:rgba(255,255,255,0.5); backdrop-filter:blur(16px) saturate(1.4); -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    border:1.5px solid rgba(255,255,255,0.45); font-size:15px;
     box-shadow:0 2px 8px rgba(0,0,0,0.04);
 }
+.dark-mode .gamify-widget{ background:rgba(20,29,49,0.45); border-color:rgba(255,255,255,0.08); }
 .gamify-widget i{ font-size:20px; }
 .gamify-widget b{ display:block; font-size:17px; line-height:1.2; font-weight:800; }
 .gamify-widget span{ font-size:11.5px; color:var(--text-3); font-weight:600; }
@@ -858,6 +911,7 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
         radial-gradient(900px 500px at 15% 10%, rgba(201,150,46,0.14), transparent 60%),
         radial-gradient(700px 500px at 85% 90%, rgba(28,138,114,0.12), transparent 60%),
         linear-gradient(160deg, #0d0f16 0%, #14161f 50%, #0a0b10 100%);
+    transition: background 0.8s ease;
 }
 .focus-mode-bg::before{
     content:""; position:absolute; inset:0; opacity:.5;
@@ -866,6 +920,63 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
                        radial-gradient(1px 1px at 45% 80%, rgba(255,255,255,0.22) 50%, transparent 51%),
                        radial-gradient(1px 1px at 85% 20%, rgba(255,255,255,0.15) 50%, transparent 51%);
     animation:focusTwinkle 6s ease-in-out infinite;
+    transition: opacity 0.8s ease;
+}
+/* ثيم "الطبيعة" — غابة هادئة عند الغسق */
+[data-bg-theme="nature"] .focus-mode-bg{
+    background:
+        radial-gradient(1000px 600px at 20% 0%, rgba(94,214,183,0.16), transparent 55%),
+        radial-gradient(800px 550px at 85% 100%, rgba(28,138,114,0.22), transparent 60%),
+        linear-gradient(170deg, #0a1f1a 0%, #0d2820 45%, #081410 100%);
+}
+[data-bg-theme="nature"] .focus-mode-bg::before{
+    opacity:.35;
+    background-image: radial-gradient(3px 3px at 25% 20%, rgba(148,214,183,0.18) 50%, transparent 51%),
+                       radial-gradient(4px 4px at 70% 55%, rgba(148,214,183,0.12) 50%, transparent 51%),
+                       radial-gradient(3px 3px at 50% 80%, rgba(148,214,183,0.15) 50%, transparent 51%);
+    animation:focusTwinkle 9s ease-in-out infinite;
+}
+/* ثيم "مكتب هادئ" — دفء المصباح وكوب القهوة */
+[data-bg-theme="desk"] .focus-mode-bg{
+    background:
+        radial-gradient(750px 550px at 22% 15%, rgba(232,199,126,0.22), transparent 55%),
+        radial-gradient(650px 450px at 78% 90%, rgba(201,150,46,0.14), transparent 60%),
+        linear-gradient(170deg, #1a140a 0%, #221808 50%, #120d05 100%);
+}
+[data-bg-theme="desk"] .focus-mode-bg::before{
+    opacity:.4;
+    background-image: radial-gradient(2px 2px at 30% 25%, rgba(232,199,126,0.2) 50%, transparent 51%),
+                       radial-gradient(2px 2px at 65% 50%, rgba(232,199,126,0.14) 50%, transparent 51%),
+                       radial-gradient(1.5px 1.5px at 45% 75%, rgba(232,199,126,0.16) 50%, transparent 51%);
+    animation:focusTwinkle 7s ease-in-out infinite;
+}
+/* ثيم "المحيط" — هدوء زرقة الماء العميقة */
+[data-bg-theme="ocean"] .focus-mode-bg{
+    background:
+        radial-gradient(950px 600px at 25% 100%, rgba(46,107,224,0.18), transparent 55%),
+        radial-gradient(700px 500px at 80% 0%, rgba(28,138,114,0.14), transparent 60%),
+        linear-gradient(170deg, #08111f 0%, #0c1c32 50%, #060d18 100%);
+}
+[data-bg-theme="ocean"] .focus-mode-bg::before{
+    opacity:.4;
+    background-image: radial-gradient(2px 2px at 20% 40%, rgba(127,166,242,0.18) 50%, transparent 51%),
+                       radial-gradient(2px 2px at 75% 65%, rgba(127,166,242,0.14) 50%, transparent 51%),
+                       radial-gradient(1.5px 1.5px at 50% 20%, rgba(127,166,242,0.16) 50%, transparent 51%);
+    animation:focusTwinkle 8s ease-in-out infinite;
+}
+/* ثيم "الفجر" — دفء الشروق الهادئ */
+[data-bg-theme="dawn"] .focus-mode-bg{
+    background:
+        radial-gradient(900px 550px at 50% 105%, rgba(214,69,90,0.18), transparent 55%),
+        radial-gradient(700px 450px at 15% 0%, rgba(124,92,191,0.16), transparent 60%),
+        linear-gradient(170deg, #150d1f 0%, #201227 50%, #0d0812 100%);
+}
+[data-bg-theme="dawn"] .focus-mode-bg::before{
+    opacity:.35;
+    background-image: radial-gradient(2px 2px at 30% 30%, rgba(224,147,171,0.18) 50%, transparent 51%),
+                       radial-gradient(2px 2px at 70% 60%, rgba(180,155,224,0.14) 50%, transparent 51%),
+                       radial-gradient(1.5px 1.5px at 50% 85%, rgba(224,147,171,0.16) 50%, transparent 51%);
+    animation:focusTwinkle 7.5s ease-in-out infinite;
 }
 @keyframes focusTwinkle{ 0%,100%{ opacity:.35; } 50%{ opacity:.7; } }
 .focus-mode-topbar{ display:flex; justify-content:space-between; align-items:center; padding:24px 30px; }
@@ -874,16 +985,57 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 .focus-mode-center h1{ font-family:var(--font-display); font-size:30px; font-weight:800; margin-bottom:6px; }
 .focus-mode-sub{ color:rgba(255,255,255,0.55); font-size:14px; margin-bottom:18px; }
 .focus-session-pill{
-    display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
-    padding:8px 18px; border-radius:99px; font-size:12.5px; font-weight:700; color:rgba(255,255,255,0.8); margin-bottom:28px;
+    display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,0.15); padding:8px 18px; border-radius:99px; font-size:12.5px; font-weight:700; color:rgba(255,255,255,0.85); margin-bottom:28px;
 }
+.focus-mode-topbar button{
+    background:rgba(255,255,255,0.08); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgba(255,255,255,0.15); color:#fff;
+}
+.focus-mode-topbar button:hover{ background:rgba(255,255,255,0.16); }
+.focus-theme-picker-wrap{ position:relative; }
+.focus-theme-picker{
+    position:absolute; top:calc(100% + 10px); inset-inline-start:0; z-index:10;
+    background:rgba(20,22,31,0.85); backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4);
+    border:1px solid rgba(255,255,255,0.15); border-radius:16px; padding:10px; min-width:180px;
+    display:flex; flex-direction:column; gap:4px; box-shadow:0 16px 40px rgba(0,0,0,0.4);
+    animation:focusThemePickerIn .2s var(--ease);
+}
+@keyframes focusThemePickerIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:translateY(0); } }
+.focus-theme-swatch{
+    display:flex; align-items:center; gap:10px; background:transparent; border:none; color:rgba(255,255,255,0.8);
+    padding:9px 10px; border-radius:10px; cursor:pointer; font-size:12.5px; font-weight:600; font-family:var(--font-body); text-align:start;
+}
+.focus-theme-swatch:hover{ background:rgba(255,255,255,0.08); }
+.focus-theme-swatch.active{ background:rgba(201,150,46,0.18); color:#fff; }
+.swatch-dot{ width:18px; height:18px; border-radius:50%; flex-shrink:0; border:1.5px solid rgba(255,255,255,0.3); }
 .focus-session-pill .dot{ width:7px; height:7px; border-radius:50%; background:var(--text-3); }
 .focus-session-pill.active .dot{ background:var(--gold-soft); box-shadow:0 0 8px var(--gold-soft); animation:pinnedGlowPulse 1.8s infinite; }
-.focus-controls-row{ display:flex; align-items:center; gap:12px; margin:26px 0 22px; }
-.focus-controls-row .btn-start-session{ padding:14px 34px; }
-.focus-timer-ring-wrap{ position:relative; width:320px; height:320px; margin:0 auto 30px; }
-.focus-timer-ring-wrap svg{ transform:rotate(-90deg); width:100%; height:100%; filter:drop-shadow(0 0 20px rgba(201,150,46,0.25)); }
-#focus-timer-sublabel{ color:rgba(255,255,255,0.5) !important; }
+.focus-controls-row{ display:flex; align-items:center; gap:12px; margin:26px 0 22px; flex-wrap:wrap; justify-content:center; }
+.focus-controls-row button{
+    backdrop-filter:blur(16px) saturate(1.4); -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    transition:.2s var(--ease); color:#fff;
+}
+.focus-controls-row .btn-start-session{
+    padding:14px 34px; background:rgba(28,138,114,0.28); border:1px solid rgba(94,214,183,0.4);
+    box-shadow:0 8px 24px rgba(28,138,114,0.18);
+}
+.focus-controls-row .btn-start-session:hover{ background:rgba(28,138,114,0.4); }
+#focus-short-break-btn{ background:rgba(201,150,46,0.22); border:1px solid rgba(232,199,126,0.4) !important; }
+#focus-short-break-btn:hover{ background:rgba(201,150,46,0.32); }
+#focus-skip-btn{ background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2) !important; }
+#focus-skip-btn:hover{ background:rgba(255,255,255,0.15); }
+.focus-controls-row button:disabled{ opacity:.4; cursor:not-allowed; }
+.focus-timer-ring-wrap{ position:relative; width:380px; height:380px; margin:0 auto 30px; }
+.focus-timer-ring-wrap::before{
+    content:""; position:absolute; inset:14px; border-radius:50%;
+    background:rgba(255,255,255,0.04); backdrop-filter:blur(20px) saturate(1.3); -webkit-backdrop-filter:blur(20px) saturate(1.3);
+    border:1px solid rgba(255,255,255,0.08); box-shadow: inset 0 0 60px rgba(255,255,255,0.03);
+}
+.focus-timer-ring-wrap svg{ position:relative; transform:rotate(-90deg); width:100%; height:100%; filter:drop-shadow(0 0 26px rgba(201,150,46,0.3)); }
+.focus-timer-ring-wrap .timer-ring-bg{ stroke:rgba(255,255,255,0.1); stroke-width:6; }
+.focus-timer-ring-wrap .timer-ring-fg{ stroke-width:6; }
+#focus-timer-display{ font-family:var(--font-mono); font-weight:300; letter-spacing:2px; }
+#focus-timer-sublabel{ color:rgba(255,255,255,0.5) !important; letter-spacing:.5px; }
 .focus-mode-quote{ max-width:420px; margin:0 auto; opacity:.7; }
 .focus-mode-quote p{ font-size:14px; font-style:italic; line-height:1.8; margin-bottom:6px; }
 .focus-mode-quote span{ font-size:12px; color:rgba(255,255,255,0.5); }
@@ -893,11 +1045,21 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 }
 .focus-mode-task-card{ inset-inline-end:26px; }
 .focus-mode-xp-card{ inset-inline-start:26px; }
-.focus-task-label{ font-size:11px; color:rgba(255,255,255,0.5); font-weight:700; margin-bottom:6px; }
+.focus-task-label{ font-size:11px; color:rgba(255,255,255,0.5); font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.focus-task-count-pill{ background:var(--gold); color:#1a1200; font-size:10px; font-weight:800; padding:1px 7px; border-radius:99px; }
 #focus-task-info{ font-size:13.5px; font-weight:600; }
+#focus-task-list{ max-height:180px; overflow-y:auto; }
+.focus-task-row{ display:flex; align-items:center; gap:9px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.08); font-size:12.5px; }
+.focus-task-row:last-child{ border-bottom:none; }
+.focus-task-row .ftr-check{ width:17px; height:17px; border-radius:6px; flex-shrink:0; border:1.5px solid rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center; font-size:9px; color:transparent; }
+.focus-task-row.done .ftr-check{ background:var(--teal); border-color:var(--teal); color:#fff; }
+.focus-task-row.inprogress .ftr-check{ border-color:var(--gold); background:rgba(201,150,46,0.2); }
+.focus-task-row span{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.focus-task-row.done span{ color:rgba(255,255,255,0.4); text-decoration:line-through; }
 #focus-xp-value{ font-size:20px; color:var(--gold); font-family:var(--font-mono); }
 @media (max-width:700px){
-    .focus-timer-ring-wrap{ width:250px; height:250px; }
+    .focus-timer-ring-wrap{ width:270px; height:270px; }
+    #focus-timer-display{ font-size:56px !important; }
     .focus-mode-task-card, .focus-mode-xp-card{ position:static; margin:8px auto; width:90%; }
     .focus-mode-center{ padding-bottom:20px; }
 }
@@ -1308,6 +1470,19 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                     <span class="hint" data-i18n="setup.minutes">دقيقة</span>
                 </div>
             </div>
+            <div class="form-group">
+                <label data-i18n="setup.restDay">يوم راحة أسبوعي (اختياري)</label>
+                <select id="rest-day-select">
+                    <option value="" data-i18n="setup.restDayNone">بدون يوم راحة — أذاكر يومياً</option>
+                    <option value="5" data-i18n="setup.restFri">الجمعة</option>
+                    <option value="6" data-i18n="setup.restSat">السبت</option>
+                    <option value="0" data-i18n="setup.restSun">الأحد</option>
+                    <option value="1" data-i18n="setup.restMon">الاثنين</option>
+                    <option value="2" data-i18n="setup.restTue">الثلاثاء</option>
+                    <option value="3" data-i18n="setup.restWed">الأربعاء</option>
+                    <option value="4" data-i18n="setup.restThu">الخميس</option>
+                </select>
+            </div>
         </div>
 
         <div class="divider"></div>
@@ -1513,7 +1688,16 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
 <div id="focus-mode-overlay" class="focus-mode-overlay" style="display:none;">
     <div class="focus-mode-bg"></div>
     <div class="focus-mode-topbar">
-        <span></span>
+        <div class="focus-theme-picker-wrap">
+            <button type="button" class="btn btn-sm" onclick="toggleFocusThemePicker()" title="خلفية وضع التركيز"><i class="fa-solid fa-palette"></i></button>
+            <div id="focus-theme-picker" class="focus-theme-picker" style="display:none;">
+                <button type="button" class="focus-theme-swatch" data-theme="night" onclick="setFocusBgTheme('night')"><span class="swatch-dot" style="background:linear-gradient(135deg,#C9962E,#1C8A72);"></span> <span data-i18n="focus.themeNight">ليل نجمي</span></button>
+                <button type="button" class="focus-theme-swatch" data-theme="nature" onclick="setFocusBgTheme('nature')"><span class="swatch-dot" style="background:linear-gradient(135deg,#5ED6B7,#1C8A72);"></span> <span data-i18n="focus.themeNature">طبيعة هادئة</span></button>
+                <button type="button" class="focus-theme-swatch" data-theme="desk" onclick="setFocusBgTheme('desk')"><span class="swatch-dot" style="background:linear-gradient(135deg,#E8C77E,#C9962E);"></span> <span data-i18n="focus.themeDesk">مكتب وقهوة</span></button>
+                <button type="button" class="focus-theme-swatch" data-theme="ocean" onclick="setFocusBgTheme('ocean')"><span class="swatch-dot" style="background:linear-gradient(135deg,#7FA6F2,#2E6BE0);"></span> <span data-i18n="focus.themeOcean">محيط هادئ</span></button>
+                <button type="button" class="focus-theme-swatch" data-theme="dawn" onclick="setFocusBgTheme('dawn')"><span class="swatch-dot" style="background:linear-gradient(135deg,#E093AB,#7C5CBF);"></span> <span data-i18n="focus.themeDawn">فجر دافئ</span></button>
+            </div>
+        </div>
         <button type="button" class="btn btn-sm" onclick="closeFocusMode()"><i class="fa-solid fa-compress"></i> <span data-i18n="focus.exit">خروج من وضع التركيز</span></button>
     </div>
     <div class="focus-mode-center">
@@ -1528,13 +1712,14 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
                 <circle class="timer-ring-fg" id="focus-timer-ring-fg" cx="125" cy="125" r="110" stroke="url(#timerGrad)" stroke-dasharray="691" stroke-dashoffset="691"></circle>
             </svg>
             <div class="timer-center">
-                <div class="timer-minutes" id="focus-timer-display" style="font-size:64px;">00</div>
+                <div class="timer-minutes" id="focus-timer-display" style="font-size:80px;">00</div>
                 <div class="timer-label" id="focus-timer-sublabel">—</div>
             </div>
         </div>
 
         <div class="focus-controls-row">
             <button type="button" class="btn-start-session" id="focus-start-pause-btn" onclick="focusModeStartOrPause()"><i class="fa-solid fa-play"></i> <span id="focus-start-pause-label" data-i18n="focus.start">ابدأ التركيز</span></button>
+            <button type="button" class="btn btn-sm btn-outline" id="focus-short-break-btn" onclick="useShortBreak()"><i class="fa-solid fa-mug-hot"></i> <span id="focus-short-break-label">استراحة 5د</span></button>
             <button type="button" class="btn btn-sm btn-outline" id="focus-skip-btn" style="display:none;" onclick="skipPhaseTransitionBreak()"><i class="fa-solid fa-forward"></i> <span data-i18n="focus.skip">تخطّي</span></button>
         </div>
 
@@ -1545,8 +1730,8 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
     </div>
 
     <div class="focus-mode-task-card" id="focus-task-card" style="display:none;">
-        <div class="focus-task-label"><i class="fa-solid fa-list-check"></i> <span data-i18n="focus.currentTask">مهمتك الحالية</span></div>
-        <div id="focus-task-info">—</div>
+        <div class="focus-task-label"><i class="fa-solid fa-list-check"></i> <span data-i18n="focus.todayTasks">مهام اليوم</span> <span id="focus-task-count" class="focus-task-count-pill">0</span></div>
+        <div id="focus-task-list"></div>
     </div>
 
     <div class="focus-mode-xp-card">
@@ -1589,6 +1774,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
     <button type="button" class="sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="طي/عرض القائمة الجانبية" aria-label="طي/عرض القائمة الجانبية">
         <i class="fa-solid fa-angles-left" id="sidebar-toggle-icon"></i>
     </button>
+    <div class="sidebar-hover-zone"></div>
     <aside class="sidebar" id="main-sidebar">
         <div class="brand">خُطى<span class="dot">.</span><small data-i18n="brand.tag">QUDRAT COMPANION</small></div>
         <nav style="display:flex; flex-direction:column; gap:8px;">
@@ -1619,11 +1805,27 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
     <main class="main-content">
 
         <header class="header-panel">
-            <div>
-                <h3 id="welcome-text">مرحباً</h3>
-                <div id="live-date" class="live-date">--</div>
+            <div class="header-profile-link" onclick="switchTab('profile')" title="فتح الملف الشخصي">
+                <div class="header-mini-avatar" id="header-mini-avatar"></div>
+                <div>
+                    <h3 id="welcome-text">مرحباً</h3>
+                    <div id="live-date" class="live-date">--</div>
+                </div>
             </div>
             <div class="header-right">
+                <div class="notif-bell-wrap">
+                    <button type="button" class="notif-bell-btn" onclick="toggleNotificationPanel()" title="الإشعارات" aria-label="الإشعارات">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="notif-bell-badge" class="notif-bell-badge" style="display:none;">0</span>
+                    </button>
+                    <div id="notif-panel" class="notif-panel" style="display:none;">
+                        <div class="notif-panel-head">
+                            <b data-i18n="notif.title">الإشعارات</b>
+                            <button type="button" class="btn-ghost" style="font-size:11px;" onclick="clearAllNotifications()"><span data-i18n="notif.clearAll">مسح الكل</span></button>
+                        </div>
+                        <div id="notif-panel-list" class="notif-panel-list"></div>
+                    </div>
+                </div>
                 <div class="gamify-widget" title="نقاط الخبرة">
                     <i class="fa-solid fa-star" style="color:var(--gold);"></i>
                     <div><b id="xp-widget-value">0 XP</b><span id="xp-widget-level">مستكشف</span></div>
