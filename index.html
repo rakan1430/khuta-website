@@ -137,12 +137,12 @@ h1,h2,h3,h4{ font-family: var(--font-display); font-weight:700; letter-spacing:0
 .app-container{
     width:100%; max-width:1560px; margin:0 auto; padding:22px;
     flex:1; display:grid; grid-template-columns: 264px 1fr; gap:26px;
-    position:relative; transition: grid-template-columns 0.35s ease;
+    position:relative;
 }
 @media (min-width:993px){
     .app-container.sidebar-collapsed{ grid-template-columns: 0px 1fr; }
 }
-.sidebar{ transition: opacity 0.3s ease, transform 0.35s ease; overflow:hidden; }
+.sidebar{ transition: opacity 0.3s ease, transform 0.35s ease; overflow:hidden; grid-column:1; }
 .app-container.sidebar-collapsed .sidebar{ opacity:0; transform:translateX(-16px); pointer-events:none; padding:0; border:none; }
 html[dir="rtl"] .app-container.sidebar-collapsed .sidebar{ transform:translateX(16px); }
 @media (min-width:993px){
@@ -286,7 +286,7 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
 .mobile-nav-item.active i{ color:var(--gold); }
 
 /* ============ المحتوى ============ */
-.main-content{ display:flex; flex-direction:column; gap:22px; min-width:0; }
+.main-content{ display:flex; flex-direction:column; gap:22px; min-width:0; grid-column:2; }
 .view-section{ display:none; }
 .view-section.active{ display:block; animation:riseIn .5s var(--ease); }
 @keyframes riseIn{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);} }
