@@ -145,6 +145,23 @@ h1,h2,h3,h4{ font-family: var(--font-display); font-weight:700; letter-spacing:0
 .sidebar{ transition: opacity 0.3s ease, transform 0.35s ease; overflow:hidden; }
 .app-container.sidebar-collapsed .sidebar{ opacity:0; transform:translateX(-16px); pointer-events:none; padding:0; border:none; }
 html[dir="rtl"] .app-container.sidebar-collapsed .sidebar{ transform:translateX(16px); }
+@media (min-width:993px){
+    /* عند الطي: تصبح القائمة الجانبية عائمة فوق المحتوى (مثبَّتة بالنسبة للشاشة
+       نفسها لا للحاوية، تفادياً لأي التباس بشأن ارتفاع الحاوية الأصلية)، تظهر
+       عند التمرير فوق منطقة رفيعة قرب الحافة أو فوقها هي نفسها بعد ظهورها */
+    .app-container.sidebar-collapsed .sidebar{
+        position:fixed; top:22px; inset-inline-start:22px; width:264px; height:calc(100vh - 44px); z-index:60;
+    }
+    .sidebar-hover-zone{ display:none; }
+    .app-container.sidebar-collapsed .sidebar-hover-zone{
+        display:block; position:fixed; top:0; inset-inline-start:0; width:24px; height:100vh; z-index:55;
+    }
+    .app-container.sidebar-collapsed .sidebar-hover-zone:hover ~ .sidebar,
+    .app-container.sidebar-collapsed .sidebar:hover{
+        opacity:1 !important; transform:translateX(0) !important; pointer-events:auto !important;
+        padding:28px 18px !important; border:1.5px solid rgba(255,255,255,0.4) !important; box-shadow:var(--shadow-lg);
+    }
+}
 
 .sidebar-toggle{
     position:absolute; top:36px; left:264px; transform:translateX(-50%);
@@ -568,9 +585,12 @@ body.dark-mode .dn-star{ opacity:1; animation:khuta-twinkle 1.8s ease-in-out inf
 /* ============ لوحة التحكم — قسم النظرة العامة الجديد ============ */
 .overview-hero-row{ display:grid; grid-template-columns:1.6fr 1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
 .xp-hero-card{
-    background:linear-gradient(135deg, var(--surface) 60%, rgba(201,150,46,0.06)); border:1px solid var(--border);
+    background:linear-gradient(135deg, rgba(255,255,255,0.55) 60%, rgba(201,150,46,0.12));
+    backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4);
+    border:1px solid rgba(255,255,255,0.5);
     border-radius:var(--radius-card); padding:22px 24px; display:flex; align-items:center; gap:20px; box-shadow:var(--shadow-md);
 }
+.dark-mode .xp-hero-card{ background:linear-gradient(135deg, rgba(24,34,56,0.5) 60%, rgba(201,150,46,0.1)); border-color:rgba(255,255,255,0.08); }
 .xp-hexagon{ position:relative; width:76px; height:88px; flex-shrink:0; }
 .xp-hexagon-svg{ width:100%; height:100%; filter:drop-shadow(0 6px 14px rgba(201,150,46,0.35)); }
 .xp-hexagon-label{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:26px; text-shadow:0 2px 6px rgba(0,0,0,0.3); }
@@ -584,10 +604,12 @@ body.dark-mode .dn-star{ opacity:1; animation:khuta-twinkle 1.8s ease-in-out inf
 .xp-level-progress-label #ov-xp-level-name{ color:var(--gold); }
 
 .overview-stat-card{
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-card);
+    background:rgba(255,255,255,0.55); backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4);
+    border:1px solid rgba(255,255,255,0.5); border-radius:var(--radius-card);
     padding:18px 16px; text-align:center; box-shadow:var(--shadow-md); display:flex; flex-direction:column; align-items:center; justify-content:center;
 }
-.ov-stat-icon{ width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:16px; margin-bottom:8px; }
+.dark-mode .overview-stat-card{ background:rgba(24,34,56,0.5); border-color:rgba(255,255,255,0.08); }
+.ov-stat-icon{ width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:16px; margin-bottom:8px; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
 .overview-stat-card b{ font-family:var(--font-mono); font-size:24px; font-weight:800; line-height:1.2; }
 .overview-stat-card span{ font-size:11px; color:var(--text-3); font-weight:700; margin-top:2px; }
 
@@ -717,9 +739,13 @@ html.fontsize-large body{ zoom:1.15; }
     transform:skewX(-20deg); transition:left 0.65s ease; pointer-events:none;
 }
 .btn:hover::after{ left:130%; }
-.btn-outline{ background:transparent; border:2px solid var(--border); color:var(--text-1); box-shadow:none; }
+.btn-outline{
+    background:rgba(255,255,255,0.35); backdrop-filter:blur(12px) saturate(1.3); -webkit-backdrop-filter:blur(12px) saturate(1.3);
+    border:1.5px solid rgba(255,255,255,0.5); color:var(--text-1); box-shadow:none;
+}
+.dark-mode .btn-outline{ background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.12); }
 .btn-outline::after{ background:linear-gradient(120deg, transparent, rgba(201,150,46,0.3), transparent); }
-.btn-outline:hover{ border-color:var(--gold); color:var(--gold); background:rgba(201,150,46,0.06); }
+.btn-outline:hover{ border-color:var(--gold); color:var(--gold); background:rgba(201,150,46,0.1); }
 .btn-teal{ background:var(--teal); box-shadow:0 10px 24px rgba(28,138,114,.28); }
 .btn-danger{ background:var(--rose); box-shadow:0 10px 24px rgba(214,69,90,.28); }
 .btn-ghost{ background:transparent; color:var(--text-2); box-shadow:none; padding:10px 14px; }
@@ -733,10 +759,13 @@ html.fontsize-large body{ zoom:1.15; }
 label{ font-weight:700; font-size:13.5px; color:var(--text-1); }
 .hint{ font-size:11.5px; color:var(--text-3); font-weight:500; }
 input, select, textarea{
-    padding:13px 15px; border:1.5px solid var(--border); background:var(--bg-alt); color:var(--text-1);
+    padding:13px 15px; border:1.5px solid rgba(255,255,255,0.4); background:rgba(255,255,255,0.35);
+    backdrop-filter:blur(10px) saturate(1.2); -webkit-backdrop-filter:blur(10px) saturate(1.2); color:var(--text-1);
     border-radius:var(--radius-input); font-size:14.5px; font-family:var(--font-body); transition:.2s var(--ease); width:100%;
 }
-input:focus, select:focus, textarea:focus{ border-color:var(--gold); outline:none; background:var(--surface); box-shadow:0 0 0 4px rgba(201,150,46,0.12); transition:box-shadow .25s var(--ease), border-color .2s var(--ease); }
+.dark-mode input, .dark-mode select, .dark-mode textarea{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.1); }
+input:focus, select:focus, textarea:focus{ border-color:var(--gold); outline:none; background:rgba(255,255,255,0.55); box-shadow:0 0 0 4px rgba(201,150,46,0.12); transition:box-shadow .25s var(--ease), border-color .2s var(--ease); }
+.dark-mode input:focus, .dark-mode select:focus, .dark-mode textarea:focus{ background:rgba(255,255,255,0.08); }
 textarea{ resize:vertical; min-height:100px; }
 .input-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
 @media(max-width:520px){ .input-row{ grid-template-columns:1fr; } }
@@ -784,9 +813,10 @@ textarea{ resize:vertical; min-height:100px; }
 
 .intensity-row{ display:flex; gap:10px; flex-wrap:wrap; }
 .intensity-chip{
-    border:2px solid var(--border); border-radius:99px; padding:10px 18px; cursor:pointer; font-weight:700; font-size:13px;
-    background:var(--bg-alt); color:var(--text-2); transition:.2s var(--ease);
+    border:1.5px solid rgba(255,255,255,0.4); border-radius:99px; padding:10px 18px; cursor:pointer; font-weight:700; font-size:13px;
+    background:rgba(255,255,255,0.35); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); color:var(--text-2); transition:.2s var(--ease);
 }
+.dark-mode .intensity-chip{ background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.1); }
 .intensity-chip.selected{ background:var(--ink); color:#fff; border-color:var(--ink); }
 .dark-mode .intensity-chip.selected{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
 
@@ -1890,6 +1920,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
     <button type="button" class="sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="طي/عرض القائمة الجانبية" aria-label="طي/عرض القائمة الجانبية">
         <i class="fa-solid fa-angles-left" id="sidebar-toggle-icon"></i>
     </button>
+    <div class="sidebar-hover-zone"></div>
     <aside class="sidebar" id="main-sidebar">
         <div class="brand">خُطى<span class="dot">.</span><small data-i18n="brand.tag">QUDRAT COMPANION</small></div>
         <nav style="display:flex; flex-direction:column; gap:8px;">
