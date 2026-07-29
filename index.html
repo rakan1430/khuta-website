@@ -240,11 +240,13 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
 /* ============ التنقل للجوال ============ */
 .mobile-nav{
     display:none; position:fixed; bottom:0; left:0; right:0; z-index:1000;
-    background: var(--surface); border-top:1px solid var(--border);
+    background:rgba(255,255,255,0.75); backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4);
+    border-top:1px solid rgba(255,255,255,0.4);
     box-shadow: 0 -8px 24px rgba(0,0,0,0.08);
     justify-content:flex-start; padding:10px 4px calc(10px + env(safe-area-inset-bottom));
     overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
 }
+.dark-mode .mobile-nav{ background:rgba(20,29,49,0.8); border-color:rgba(255,255,255,0.08); }
 .mobile-nav::-webkit-scrollbar{ display:none; }
 .mobile-nav-item{ flex-direction:column; padding:6px 12px; gap:4px; font-size:11px; border-radius:12px; flex-shrink:0; }
 .mobile-nav-item i{ font-size:17px; }
@@ -274,9 +276,11 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
 }
 
 .card{
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-card);
+    background:rgba(255,255,255,0.6); backdrop-filter:blur(20px) saturate(1.4); -webkit-backdrop-filter:blur(20px) saturate(1.4);
+    border:1px solid rgba(255,255,255,0.5); border-radius:var(--radius-card);
     padding:28px; box-shadow:var(--shadow-md); margin-bottom:0; transition:transform .25s var(--ease), box-shadow .25s var(--ease), border-color .25s var(--ease);
 }
+.dark-mode .card{ background:rgba(24,34,56,0.55); border-color:rgba(255,255,255,0.08); }
 @media (min-width:993px){
     .card:hover{ transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,0.14); border-color:rgba(201,150,46,0.25); }
 }
@@ -318,8 +322,9 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
 .notif-bell-badge{
     position:absolute; top:-2px; inset-inline-end:-2px; min-width:18px; height:18px; padding:0 4px; border-radius:99px;
     background:var(--rose); color:#fff; font-size:10px; font-weight:800; display:flex; align-items:center; justify-content:center;
-    border:2px solid var(--bg);
+    border:2px solid var(--bg); animation:notifBadgePulse 2s ease-in-out infinite;
 }
+@keyframes notifBadgePulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(214,69,90,0.5); } 50%{ box-shadow:0 0 0 5px rgba(214,69,90,0); } }
 .notif-panel{
     position:absolute; top:calc(100% + 12px); inset-inline-end:0; width:340px; max-width:88vw; z-index:200;
     background:rgba(255,255,255,0.7); backdrop-filter:blur(24px) saturate(1.5); -webkit-backdrop-filter:blur(24px) saturate(1.5);
@@ -327,22 +332,47 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transfor
     display:flex; flex-direction:column; max-height:420px; animation:focusThemePickerIn .2s var(--ease);
 }
 .dark-mode .notif-panel{ background:rgba(20,29,49,0.75); border-color:rgba(255,255,255,0.08); }
-.notif-panel-head{ display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-bottom:1px solid var(--border); font-size:14px; }
-.notif-panel-list{ overflow-y:auto; padding:6px; }
-.notif-row{ display:flex; gap:12px; padding:12px 10px; border-radius:12px; }
-.notif-row.unread{ background:rgba(201,150,46,0.08); }
-.notif-row-icon{
-    width:36px; height:36px; border-radius:50%; background:var(--bg-alt); color:var(--gold); flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-size:14px;
+.notif-panel-head{ display:flex; justify-content:space-between; align-items:center; padding:18px 20px; border-bottom:1px solid var(--border); font-size:14.5px; }
+.notif-panel-head b{ display:flex; align-items:center; gap:8px; }
+.notif-panel-head b::before{ content:"\f0f3"; font-family:"Font Awesome 6 Free"; font-weight:900; color:var(--gold); font-size:13px; }
+.notif-panel-list{ overflow-y:auto; padding:8px; }
+.notif-row{ position:relative; display:flex; gap:13px; padding:13px 12px; border-radius:14px; transition:.15s var(--ease); margin-bottom:2px; }
+.notif-row:hover{ background:var(--bg-alt); }
+.notif-row.unread{ background:rgba(201,150,46,0.07); }
+.notif-row.unread:hover{ background:rgba(201,150,46,0.12); }
+.notif-row.unread::after{
+    content:""; position:absolute; top:16px; inset-inline-start:4px; width:7px; height:7px; border-radius:50%;
+    background:var(--gold); box-shadow:0 0 6px rgba(201,150,46,0.6);
 }
-.notif-row-body b{ font-size:13px; display:block; margin-bottom:2px; }
-.notif-row-body p{ font-size:12px; color:var(--text-2); line-height:1.6; margin-bottom:4px; }
-.notif-row-body span{ font-size:10.5px; color:var(--text-3); }
+.notif-row-icon{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0; margin-top:1px;
+    background:linear-gradient(135deg, rgba(201,150,46,0.18), rgba(201,150,46,0.06)); color:var(--gold);
+    display:flex; align-items:center; justify-content:center; font-size:14.5px; border:1px solid rgba(201,150,46,0.15);
+}
+.notif-row-body{ min-width:0; flex:1; }
+.notif-row-body b{ font-size:13.5px; display:block; margin-bottom:3px; font-weight:700; }
+.notif-row-body p{ font-size:12px; color:var(--text-2); line-height:1.6; margin-bottom:5px; }
+.notif-row-body span{ font-size:10.5px; color:var(--text-3); font-weight:600; }
+.notif-panel-list .empty-note{ display:flex; flex-direction:column; align-items:center; gap:8px; }
+.notif-panel-list .empty-note::before{
+    content:"\f0f3"; font-family:"Font Awesome 6 Free"; font-weight:900; font-size:26px; color:var(--border); display:block;
+}
 @media (max-width:640px){ .notif-panel{ position:fixed; top:auto; bottom:0; inset-inline:10px; width:auto; max-width:none; border-radius:20px 20px 0 0; max-height:70vh; } }
-.header-profile-link{ display:flex; align-items:center; gap:14px; cursor:pointer; border-radius:16px; padding:6px 10px 6px 6px; margin:-6px -10px -6px -6px; transition:.2s var(--ease); }
+.header-profile-link{ display:flex; align-items:center; gap:16px; cursor:pointer; border-radius:20px; padding:8px 18px 8px 8px; margin:-8px -18px -8px -8px; transition:.2s var(--ease); }
 .header-profile-link:hover{ background:rgba(201,150,46,0.08); }
-.header-mini-avatar{ width:46px; height:46px; border-radius:50%; flex-shrink:0; overflow:hidden; border:2px solid var(--gold-soft); box-shadow:0 2px 8px rgba(201,150,46,0.2); }
-#welcome-text{ font-size:19px; margin-bottom:3px; }
+.header-mini-avatar-wrap{ position:relative; flex-shrink:0; }
+.header-mini-avatar{
+    width:58px; height:58px; border-radius:50%; overflow:hidden;
+    background:linear-gradient(135deg, var(--gold), var(--gold-soft));
+    padding:2.5px; box-shadow:0 4px 14px rgba(201,150,46,0.3);
+}
+.header-mini-avatar > div, .header-mini-avatar img{ border-radius:50%; border:2.5px solid var(--surface); }
+.header-mini-level-badge{
+    position:absolute; bottom:-2px; inset-inline-end:-2px; width:22px; height:22px; border-radius:50%;
+    background:var(--ink); border:2.5px solid var(--surface); display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:var(--gold-soft);
+}
+#welcome-text{ font-size:20px; margin-bottom:2px; font-weight:800; }
 .live-date{ font-size:13px; color:var(--text-3); }
 .live-clock{ font-family:var(--font-mono); font-size:22px; font-weight:600; color:var(--text-1); direction:ltr; }
 .exam-countdown-widget{
@@ -709,10 +739,12 @@ textarea{ resize:vertical; min-height:100px; }
     background: radial-gradient(1200px 700px at 50% -10%, rgba(201,150,46,0.12), transparent 60%), var(--bg);
 }
 .wizard-card{
-    background:var(--surface); padding:42px; border-radius:30px; box-shadow:var(--shadow-lg);
-    width:100%; max-width:720px; border:1px solid var(--border); position:relative;
+    background:rgba(255,255,255,0.72); backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4);
+    padding:42px; border-radius:30px; box-shadow:var(--shadow-lg);
+    width:100%; max-width:720px; border:1px solid rgba(255,255,255,0.5); position:relative;
     margin:32px auto;
 }
+.dark-mode .wizard-card{ background:rgba(24,34,56,0.78); border-color:rgba(255,255,255,0.08); }
 @media (max-width:700px){
     .wizard-card{ padding:20px; border-radius:20px; margin:14px auto; }
 }
@@ -893,13 +925,18 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 }
 @keyframes focusFadeIn{ from{ opacity:0; } to{ opacity:1; } }
 .focus-mode-bg{
-    position:absolute; inset:0; z-index:-1;
+    position:absolute; inset:0; z-index:-1; overflow:hidden;
     background:
         radial-gradient(900px 500px at 15% 10%, rgba(201,150,46,0.14), transparent 60%),
         radial-gradient(700px 500px at 85% 90%, rgba(28,138,114,0.12), transparent 60%),
         linear-gradient(160deg, #0d0f16 0%, #14161f 50%, #0a0b10 100%);
     transition: background 0.8s ease;
 }
+.scene-svg{ position:absolute; inset:0; width:100%; height:100%; display:none; }
+[data-bg-theme="sunset"] .scene-sunset,
+[data-bg-theme="desk"] .scene-desk,
+[data-bg-theme="ocean"] .scene-ocean,
+[data-bg-theme="dawn"] .scene-dawn{ display:block; animation:focusFadeIn .8s var(--ease); }
 .focus-mode-bg::before{
     content:""; position:absolute; inset:0; opacity:.5;
     background-image: radial-gradient(1.5px 1.5px at 20% 30%, rgba(255,255,255,0.25) 50%, transparent 51%),
@@ -909,62 +946,12 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
     animation:focusTwinkle 6s ease-in-out infinite;
     transition: opacity 0.8s ease;
 }
-/* ثيم "الطبيعة" — غابة هادئة عند الغسق */
-[data-bg-theme="nature"] .focus-mode-bg{
-    background:
-        radial-gradient(1000px 600px at 20% 0%, rgba(94,214,183,0.16), transparent 55%),
-        radial-gradient(800px 550px at 85% 100%, rgba(28,138,114,0.22), transparent 60%),
-        linear-gradient(170deg, #0a1f1a 0%, #0d2820 45%, #081410 100%);
-}
-[data-bg-theme="nature"] .focus-mode-bg::before{
-    opacity:.35;
-    background-image: radial-gradient(3px 3px at 25% 20%, rgba(148,214,183,0.18) 50%, transparent 51%),
-                       radial-gradient(4px 4px at 70% 55%, rgba(148,214,183,0.12) 50%, transparent 51%),
-                       radial-gradient(3px 3px at 50% 80%, rgba(148,214,183,0.15) 50%, transparent 51%);
-    animation:focusTwinkle 9s ease-in-out infinite;
-}
-/* ثيم "مكتب هادئ" — دفء المصباح وكوب القهوة */
-[data-bg-theme="desk"] .focus-mode-bg{
-    background:
-        radial-gradient(750px 550px at 22% 15%, rgba(232,199,126,0.22), transparent 55%),
-        radial-gradient(650px 450px at 78% 90%, rgba(201,150,46,0.14), transparent 60%),
-        linear-gradient(170deg, #1a140a 0%, #221808 50%, #120d05 100%);
-}
-[data-bg-theme="desk"] .focus-mode-bg::before{
-    opacity:.4;
-    background-image: radial-gradient(2px 2px at 30% 25%, rgba(232,199,126,0.2) 50%, transparent 51%),
-                       radial-gradient(2px 2px at 65% 50%, rgba(232,199,126,0.14) 50%, transparent 51%),
-                       radial-gradient(1.5px 1.5px at 45% 75%, rgba(232,199,126,0.16) 50%, transparent 51%);
-    animation:focusTwinkle 7s ease-in-out infinite;
-}
-/* ثيم "المحيط" — هدوء زرقة الماء العميقة */
-[data-bg-theme="ocean"] .focus-mode-bg{
-    background:
-        radial-gradient(950px 600px at 25% 100%, rgba(46,107,224,0.18), transparent 55%),
-        radial-gradient(700px 500px at 80% 0%, rgba(28,138,114,0.14), transparent 60%),
-        linear-gradient(170deg, #08111f 0%, #0c1c32 50%, #060d18 100%);
-}
-[data-bg-theme="ocean"] .focus-mode-bg::before{
-    opacity:.4;
-    background-image: radial-gradient(2px 2px at 20% 40%, rgba(127,166,242,0.18) 50%, transparent 51%),
-                       radial-gradient(2px 2px at 75% 65%, rgba(127,166,242,0.14) 50%, transparent 51%),
-                       radial-gradient(1.5px 1.5px at 50% 20%, rgba(127,166,242,0.16) 50%, transparent 51%);
-    animation:focusTwinkle 8s ease-in-out infinite;
-}
-/* ثيم "الفجر" — دفء الشروق الهادئ */
-[data-bg-theme="dawn"] .focus-mode-bg{
-    background:
-        radial-gradient(900px 550px at 50% 105%, rgba(214,69,90,0.18), transparent 55%),
-        radial-gradient(700px 450px at 15% 0%, rgba(124,92,191,0.16), transparent 60%),
-        linear-gradient(170deg, #150d1f 0%, #201227 50%, #0d0812 100%);
-}
-[data-bg-theme="dawn"] .focus-mode-bg::before{
-    opacity:.35;
-    background-image: radial-gradient(2px 2px at 30% 30%, rgba(224,147,171,0.18) 50%, transparent 51%),
-                       radial-gradient(2px 2px at 70% 60%, rgba(180,155,224,0.14) 50%, transparent 51%),
-                       radial-gradient(1.5px 1.5px at 50% 85%, rgba(224,147,171,0.16) 50%, transparent 51%);
-    animation:focusTwinkle 7.5s ease-in-out infinite;
-}
+/* المشاهد المصوَّرة (غروب/مكتب/محيط/فجر) تُغطي الخلفية بالكامل بنفسها، فتُخفى
+   جزيئات التلألؤ الخاصة بثيم الليل الافتراضي حتى لا تتراكب فوقها بلا داعٍ */
+[data-bg-theme="sunset"] .focus-mode-bg::before,
+[data-bg-theme="desk"] .focus-mode-bg::before,
+[data-bg-theme="ocean"] .focus-mode-bg::before,
+[data-bg-theme="dawn"] .focus-mode-bg::before{ display:none; }
 @keyframes focusTwinkle{ 0%,100%{ opacity:.35; } 50%{ opacity:.7; } }
 .focus-mode-topbar{ display:flex; justify-content:space-between; align-items:center; padding:24px 30px; }
 .focus-mode-center{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 20px; }
@@ -1673,13 +1660,128 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
 </div>
 
 <div id="focus-mode-overlay" class="focus-mode-overlay" style="display:none;">
-    <div class="focus-mode-bg"></div>
+    <div class="focus-mode-bg">
+        <!-- ليل نجمي: سماء داكنة + نجوم متلألئة (الخلفية الافتراضية، تُبنى بالـCSS كما هي) -->
+
+        <!-- غروب الشمس: جبال متدرجة + قرص شمس متوهج + طيور -->
+        <svg class="scene-svg scene-sunset" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="sunsetSky" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#1b0f2e"></stop>
+                    <stop offset="35%" stop-color="#4a1942"></stop>
+                    <stop offset="60%" stop-color="#a13a4a"></stop>
+                    <stop offset="80%" stop-color="#d9713f"></stop>
+                    <stop offset="100%" stop-color="#f2a154"></stop>
+                </linearGradient>
+                <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFE9B0"></stop>
+                    <stop offset="45%" stop-color="#FDBB6E"></stop>
+                    <stop offset="100%" stop-color="#FDBB6E" stop-opacity="0"></stop>
+                </radialGradient>
+            </defs>
+            <rect width="1600" height="900" fill="url(#sunsetSky)"></rect>
+            <circle cx="900" cy="620" r="260" fill="url(#sunGlow)"></circle>
+            <circle cx="900" cy="620" r="95" fill="#FFE7B3"></circle>
+            <path d="M0,900 L0,660 Q220,590 420,650 T900,610 T1300,660 T1600,630 L1600,900 Z" fill="#150a20" opacity="0.55"></path>
+            <path d="M0,900 L0,740 Q300,680 620,730 T1150,720 T1600,750 L1600,900 Z" fill="#0e0617" opacity="0.85"></path>
+            <g fill="#150a20" opacity="0.6">
+                <path d="M240,520 q14,-16 28,0 q14,-14 26,0" stroke="#150a20" stroke-width="4" fill="none" stroke-linecap="round"></path>
+                <path d="M340,470 q12,-14 24,0 q12,-12 22,0" stroke="#150a20" stroke-width="4" fill="none" stroke-linecap="round"></path>
+                <path d="M1200,500 q12,-14 24,0 q12,-12 22,0" stroke="#150a20" stroke-width="4" fill="none" stroke-linecap="round"></path>
+            </g>
+        </svg>
+
+        <!-- مكتب هادئ: توهج مصباح + كوب قهوة + كتب على سطح مكتب -->
+        <svg class="scene-svg scene-desk" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="deskSky" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#160f08"></stop>
+                    <stop offset="55%" stop-color="#221808"></stop>
+                    <stop offset="100%" stop-color="#2c1c0a"></stop>
+                </linearGradient>
+                <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFE9B0" stop-opacity="0.55"></stop>
+                    <stop offset="100%" stop-color="#FFE9B0" stop-opacity="0"></stop>
+                </radialGradient>
+            </defs>
+            <rect width="1600" height="900" fill="url(#deskSky)"></rect>
+            <ellipse cx="330" cy="560" rx="380" ry="380" fill="url(#lampGlow)"></ellipse>
+            <rect x="0" y="760" width="1600" height="140" fill="#0d0904" opacity="0.7"></rect>
+            <!-- عمود ورأس المصباح -->
+            <line x1="230" y1="900" x2="230" y2="470" stroke="#3a2a15" stroke-width="10"></line>
+            <path d="M150,470 L310,470 L270,360 L190,360 Z" fill="#4a3620"></path>
+            <ellipse cx="230" cy="470" rx="12" ry="6" fill="#FFE9B0" opacity="0.8"></ellipse>
+            <!-- كوب قهوة -->
+            <path d="M440,900 L455,800 L545,800 L560,900 Z" fill="#3a2a1a"></path>
+            <path d="M545,815 q40,0 40,30 q0,30 -40,30" fill="none" stroke="#3a2a1a" stroke-width="8"></path>
+            <path d="M480,780 q6,-16 -4,-30 M505,780 q6,-20 -6,-34 M528,780 q6,-16 -4,-30" stroke="#8a7050" stroke-width="4" fill="none" stroke-linecap="round" opacity="0.5"></path>
+            <!-- كومة كتب -->
+            <g>
+                <rect x="1120" y="840" width="220" height="26" rx="3" fill="#5a3a2a"></rect>
+                <rect x="1140" y="812" width="190" height="26" rx="3" fill="#3a5a4a"></rect>
+                <rect x="1125" y="784" width="200" height="26" rx="3" fill="#4a3a5a"></rect>
+            </g>
+        </svg>
+
+        <!-- محيط هادئ: أفق البحر + قمر + خطوط أمواج -->
+        <svg class="scene-svg scene-ocean" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="oceanSky" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#050a1a"></stop>
+                    <stop offset="55%" stop-color="#0a1a33"></stop>
+                    <stop offset="100%" stop-color="#123152"></stop>
+                </linearGradient>
+                <linearGradient id="oceanWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#0d2540"></stop>
+                    <stop offset="100%" stop-color="#04101f"></stop>
+                </linearGradient>
+                <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#DCE8FF" stop-opacity="0.5"></stop>
+                    <stop offset="100%" stop-color="#DCE8FF" stop-opacity="0"></stop>
+                </radialGradient>
+            </defs>
+            <rect width="1600" height="900" fill="url(#oceanSky)"></rect>
+            <circle cx="1180" cy="230" r="170" fill="url(#moonGlow)"></circle>
+            <circle cx="1180" cy="230" r="64" fill="#EAF1FF"></circle>
+            <rect y="560" width="1600" height="340" fill="url(#oceanWater)"></rect>
+            <g stroke="#7FA6F2" stroke-width="3" opacity="0.25" fill="none">
+                <path d="M0,620 Q400,600 800,620 T1600,620"></path>
+                <path d="M0,680 Q400,655 800,680 T1600,680"></path>
+                <path d="M0,750 Q400,720 800,750 T1600,750"></path>
+                <path d="M0,830 Q400,800 800,830 T1600,830"></path>
+            </g>
+        </svg>
+
+        <!-- فجر دافئ: سماء وردية-بنفسجية ناعمة + شمس صاعدة + سحب -->
+        <svg class="scene-svg scene-dawn" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="dawnSky" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#150d1f"></stop>
+                    <stop offset="45%" stop-color="#3a2050"></stop>
+                    <stop offset="75%" stop-color="#8a4a6a"></stop>
+                    <stop offset="100%" stop-color="#e0937f"></stop>
+                </linearGradient>
+                <radialGradient id="dawnSunGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFD9C2"></stop>
+                    <stop offset="100%" stop-color="#FFD9C2" stop-opacity="0"></stop>
+                </radialGradient>
+            </defs>
+            <rect width="1600" height="900" fill="url(#dawnSky)"></rect>
+            <circle cx="800" cy="820" r="300" fill="url(#dawnSunGlow)"></circle>
+            <circle cx="800" cy="820" r="110" fill="#FFE3CC"></circle>
+            <g fill="#2a1735" opacity="0.5">
+                <ellipse cx="300" cy="300" rx="140" ry="30"></ellipse>
+                <ellipse cx="1300" cy="380" rx="180" ry="34"></ellipse>
+                <ellipse cx="700" cy="220" rx="110" ry="24"></ellipse>
+            </g>
+        </svg>
+    </div>
     <div class="focus-mode-topbar">
         <div class="focus-theme-picker-wrap">
             <button type="button" class="btn btn-sm" onclick="toggleFocusThemePicker()" title="خلفية وضع التركيز"><i class="fa-solid fa-palette"></i></button>
             <div id="focus-theme-picker" class="focus-theme-picker" style="display:none;">
                 <button type="button" class="focus-theme-swatch" data-theme="night" onclick="setFocusBgTheme('night')"><span class="swatch-dot" style="background:linear-gradient(135deg,#C9962E,#1C8A72);"></span> <span data-i18n="focus.themeNight">ليل نجمي</span></button>
-                <button type="button" class="focus-theme-swatch" data-theme="nature" onclick="setFocusBgTheme('nature')"><span class="swatch-dot" style="background:linear-gradient(135deg,#5ED6B7,#1C8A72);"></span> <span data-i18n="focus.themeNature">طبيعة هادئة</span></button>
+                <button type="button" class="focus-theme-swatch" data-theme="sunset" onclick="setFocusBgTheme('sunset')"><span class="swatch-dot" style="background:linear-gradient(135deg,#f2a154,#a13a4a);"></span> <span data-i18n="focus.themeSunset">غروب الشمس</span></button>
                 <button type="button" class="focus-theme-swatch" data-theme="desk" onclick="setFocusBgTheme('desk')"><span class="swatch-dot" style="background:linear-gradient(135deg,#E8C77E,#C9962E);"></span> <span data-i18n="focus.themeDesk">مكتب وقهوة</span></button>
                 <button type="button" class="focus-theme-swatch" data-theme="ocean" onclick="setFocusBgTheme('ocean')"><span class="swatch-dot" style="background:linear-gradient(135deg,#7FA6F2,#2E6BE0);"></span> <span data-i18n="focus.themeOcean">محيط هادئ</span></button>
                 <button type="button" class="focus-theme-swatch" data-theme="dawn" onclick="setFocusBgTheme('dawn')"><span class="swatch-dot" style="background:linear-gradient(135deg,#E093AB,#7C5CBF);"></span> <span data-i18n="focus.themeDawn">فجر دافئ</span></button>
@@ -1792,7 +1894,10 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
 
         <header class="header-panel">
             <div class="header-profile-link" onclick="switchTab('profile')" title="فتح الملف الشخصي">
-                <div class="header-mini-avatar" id="header-mini-avatar"></div>
+                <div class="header-mini-avatar-wrap">
+                    <div class="header-mini-avatar" id="header-mini-avatar"></div>
+                    <div class="header-mini-level-badge" id="header-mini-level-badge" title="مستواك الحالي"><i class="fa-solid fa-star"></i></div>
+                </div>
                 <div>
                     <h3 id="welcome-text">مرحباً</h3>
                     <div id="live-date" class="live-date">--</div>

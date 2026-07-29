@@ -468,8 +468,8 @@ ar:{
 "referral.title":"ادعُ صديقاً","referral.desc":"كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.","referral.share":"مشاركة رابط الدعوة",
 "push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
 "focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.todayTasks":"مهام اليوم","focus.xpPoints":"نقاط XP",
-"focus.idle":"جاهز للبدء","focus.paused":"متوقف مؤقتاً","focus.inSession":"في جلسة تركيز","focus.start":"ابدأ التركيز","focus.skip":"تخطّي",
-"focus.themeNight":"ليل نجمي","focus.themeNature":"طبيعة هادئة","focus.themeDesk":"مكتب وقهوة","focus.themeOcean":"محيط هادئ","focus.themeDawn":"فجر دافئ",
+"focus.idle":"جاهز للبدء","focus.paused":"متوقف مؤقتاً","focus.inSession":"في جلسة تركيز","focus.onBreak":"في استراحة","focus.start":"ابدأ التركيز","focus.skip":"تخطّي",
+"focus.themeNight":"ليل نجمي","focus.themeSunset":"غروب الشمس","focus.themeDesk":"مكتب وقهوة","focus.themeOcean":"محيط هادئ","focus.themeDawn":"فجر دافئ",
 "account.noRecoveryNote":"⚠️ تذكير: حسابات اسم المستخدم لا تدعم استرجاع كلمة مرور منسية (لا نطلب بريدك الحقيقي أبداً) — احفظها في مكان آمن. بياناتك المحلية على جهازك تبقى آمنة دائماً بغض النظر.",
 "spec.title":"دليل التخصصات الذكي","spec.sub":"نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة","spec.search":"ابحث عن تخصص...",
 "room.title":"غرفة المذاكرة","room.sub":"لست وحدك — بدون شات، فقط إحساس بالرفقة","room.studying":"طالب يذاكر الآن معك",
@@ -621,8 +621,8 @@ en:{
 "referral.title":"Invite a friend","referral.desc":"Every friend who joins via your link gives you both 50 XP.","referral.share":"Share invite link",
 "push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
 "focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.todayTasks":"Today's tasks","focus.xpPoints":"XP Points",
-"focus.idle":"Ready to start","focus.paused":"Paused","focus.inSession":"In a focus session","focus.start":"Start focusing","focus.skip":"Skip",
-"focus.themeNight":"Starry night","focus.themeNature":"Calm nature","focus.themeDesk":"Desk & coffee","focus.themeOcean":"Calm ocean","focus.themeDawn":"Warm dawn",
+"focus.idle":"Ready to start","focus.paused":"Paused","focus.inSession":"In a focus session","focus.onBreak":"On a break","focus.start":"Start focusing","focus.skip":"Skip",
+"focus.themeNight":"Starry night","focus.themeSunset":"Sunset","focus.themeDesk":"Desk & coffee","focus.themeOcean":"Calm ocean","focus.themeDawn":"Warm dawn",
 "account.noRecoveryNote":"⚠️ Reminder: username accounts don't support forgotten-password recovery (we never ask for your real email) — save it somewhere safe. Your local data on this device stays safe regardless.",
 "spec.title":"Smart Specialty Guide","spec.sub":"A general overview — check university sites for exact college details","spec.search":"Search a major...",
 "room.title":"Study Room","room.sub":"You're not alone — no chat, just a sense of company","room.studying":"student(s) studying with you now",
@@ -1811,6 +1811,12 @@ function renderGamification(){
     if(xpEl) animateNumberTo(xpEl, xp, " XP");
     if(lvlEl) lvlEl.textContent = currentLang === "ar" ? lvl.ar : lvl.en;
     if(streakEl) animateNumberTo(streakEl, streak);
+    const levelBadge = document.getElementById("header-mini-level-badge");
+    if(levelBadge){
+        const icon = xp >= 1000 ? "fa-crown" : xp >= 600 ? "fa-medal" : xp >= 300 ? "fa-bolt" : "fa-star";
+        levelBadge.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+        levelBadge.title = currentLang === "ar" ? lvl.ar : lvl.en;
+    }
     renderShieldUI();
     renderDashboardOverview();
 }
@@ -1913,8 +1919,8 @@ function renderQuestsGlance(){
     box.innerHTML = Array.from(rows).map(row => {
         const id = row.dataset.taskId;
         const status = statuses[id] || "notstarted";
-        const titleCell = row.querySelector("td[data-label]");
-        const title = titleCell ? titleCell.textContent.trim() : id;
+        const titleInput = row.querySelector(".task-path-cell .task-input");
+        const title = titleInput ? titleInput.value : id;
         return `<div class="ov-quest-row ${status==='done'?'done':status==='inprogress'?'inprogress':''}">
             <div class="ov-quest-check"><i class="fa-solid fa-check"></i></div>
             <div class="ov-quest-title">${escapeHtml(title)}</div>
@@ -2352,6 +2358,7 @@ function updateMainDisplay(){
         const pillText = document.getElementById("focus-session-pill-text");
         const startPauseBtn = document.getElementById("focus-start-pause-btn");
         const startPauseLabel = document.getElementById("focus-start-pause-label");
+        startPauseBtn.style.display = "";
         pill.classList.toggle("active", sessionActive);
         if(sessionActive){
             const isPaused = pauseBtn.innerHTML.includes("fa-play");
@@ -2444,6 +2451,22 @@ function updateBreakDisplay(){
     const progress = breakTotal ? (breakRemaining / breakTotal) : 0;
     ring.style.strokeDasharray = TIMER_CIRC;
     ring.style.strokeDashoffset = TIMER_CIRC * (1 - progress);
+
+    // مزامنة استراحة الـ5 دقائق مع وضع التركيز الكامل أيضاً — نفس أسلوب مزامنة
+    // الجلسة الرئيسية بالضبط، وإلا يبقى عداد وضع التركيز عالقاً على آخر رقم للجلسة
+    if(document.getElementById("focus-mode-overlay").style.display !== "none"){
+        document.getElementById("focus-timer-display").textContent = String(minutesLeft).padStart(2, "0");
+        const focusRing = document.getElementById("focus-timer-ring-fg");
+        focusRing.style.strokeDasharray = TIMER_CIRC;
+        focusRing.style.strokeDashoffset = TIMER_CIRC * (1 - progress);
+        const pill = document.getElementById("focus-session-pill");
+        const pillText = document.getElementById("focus-session-pill-text");
+        if(pill && pillText){
+            pill.classList.add("active");
+            pillText.textContent = t("focus.onBreak");
+        }
+        document.getElementById("focus-start-pause-btn").style.display = "none";
+    }
 }
 
 /* ---------- استراحة الـ5 دقائق المحدودة العدد ---------- */
@@ -2475,6 +2498,8 @@ function useShortBreak(){
     // ملاحظة: هذه استراحة اختيارية يفعّلها الطالب بنفسه، وليست "تلقائية" —
     // لذا تحمل تسمية مختلفة عن استراحة الساعة التلقائية
     document.getElementById("timer-sublabel").textContent = t("timer.shortBreakLabel");
+    const focusSublabel = document.getElementById("focus-timer-sublabel");
+    if(focusSublabel) focusSublabel.textContent = t("timer.shortBreakLabel");
     updateShortBreakLabel();
 
     startBreakCountdown(5 * 60, () => {
@@ -2627,6 +2652,13 @@ function resetTimerDisplay(){
     document.getElementById("pause-btn").innerHTML = '<i class="fa-solid fa-pause"></i> <span>' + t("timer.pause") + "</span>";
     updateShortBreakLabel();
     sessionPaused = false; inAutoBreak = false;
+    // مزامنة وضع التركيز الكامل بنفس القيم — نفس المصدر الواحد للحقيقة
+    if(document.getElementById("focus-mode-overlay").style.display !== "none"){
+        document.getElementById("focus-timer-display").textContent = "00";
+        document.getElementById("focus-timer-sublabel").textContent = t("timer.minutesLeft");
+        document.getElementById("focus-timer-ring-fg").style.strokeDashoffset = TIMER_CIRC;
+        document.getElementById("focus-start-pause-btn").style.display = "";
+    }
 }
 
 const QUANT_TASK_IDS = ["found","foundEinstein","monsif","mufsec","mufrep","moassertrain","customQuant"];
@@ -4457,8 +4489,8 @@ function openFocusMode(){
         document.getElementById("focus-task-list").innerHTML = Array.from(rows).map(row => {
             const id = row.dataset.taskId;
             const status = statuses[id] || "notstarted";
-            const titleCell = row.querySelector("td[data-label]");
-            const title = titleCell ? titleCell.textContent.trim() : id;
+            const titleInput = row.querySelector(".task-path-cell .task-input");
+            const title = titleInput ? titleInput.value : id;
             return `<div class="focus-task-row ${status==='done'?'done':status==='inprogress'?'inprogress':''}">
                 <div class="ftr-check"><i class="fa-solid fa-check"></i></div>
                 <span>${escapeHtml(title)}</span>
