@@ -148,9 +148,13 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar{ transform:translateX(
 @media (min-width:993px){
     /* عند الطي: تصبح القائمة الجانبية عائمة فوق المحتوى (مثبَّتة بالنسبة للشاشة
        نفسها لا للحاوية، تفادياً لأي التباس بشأن ارتفاع الحاوية الأصلية)، تظهر
-       عند التمرير فوق منطقة رفيعة قرب الحافة أو فوقها هي نفسها بعد ظهورها */
+       عند التمرير فوق منطقة رفيعة قرب الحافة أو فوقها هي نفسها بعد ظهورها.
+       min-width:0 هنا ضروري وليس تجميلاً: عناصر الشبكة (grid items) تحمل
+       افتراضياً min-width:auto الذي يتجاهل عرض العمود الصريح (0px) ويحسب
+       عرضاً أدنى حسب محتواها الداخلي — هذا بالضبط ما كان يكسر تخطيط الصفحة
+       بالكامل عند الطي. تصفيره صراحة يفرض الالتزام بعرض العمود الفعلي. */
     .app-container.sidebar-collapsed .sidebar{
-        position:fixed; top:22px; inset-inline-start:22px; width:264px; height:calc(100vh - 44px); z-index:60;
+        position:fixed; top:22px; inset-inline-start:22px; width:0; min-width:0; height:calc(100vh - 44px); z-index:60;
     }
     .sidebar-hover-zone{ display:none; }
     .app-container.sidebar-collapsed .sidebar-hover-zone{
@@ -158,7 +162,7 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar{ transform:translateX(
     }
     .app-container.sidebar-collapsed .sidebar-hover-zone:hover ~ .sidebar,
     .app-container.sidebar-collapsed .sidebar:hover{
-        opacity:1 !important; transform:translateX(0) !important; pointer-events:auto !important;
+        width:264px !important; opacity:1 !important; transform:translateX(0) !important; pointer-events:auto !important;
         padding:28px 18px !important; border:1.5px solid rgba(255,255,255,0.4) !important; box-shadow:var(--shadow-lg);
     }
 }
