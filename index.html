@@ -158,14 +158,22 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar{ transform:translateX(
     }
     .sidebar-hover-zone{ display:none; }
     .app-container.sidebar-collapsed .sidebar-hover-zone{
-        /* منطقة "ممر آمن" بارتفاع القائمة الجانبية بالكامل (وليست صغيرة حول
-           السهم فقط) — وإلا فأي مسار مائل أو منحنٍ للماوس نحو عنصر بعيد في
-           القائمة يخرج من نطاق التفعيل فتنغلق القائمة قبل الوصول إليها.
-           العرض يبقى معتدلاً (لا يغطي الشاشة كاملة) لتفادي الظهور العرضي. */
-        display:block; position:fixed; top:22px; inset-inline-start:0; width:90px; height:calc(100vh - 44px); z-index:55;
+        /* شريط جانبي واضح ومرئي (وليس منطقة خفية) — يمتد بارتفاع القائمة
+           الجانبية بالكامل كي لا يخرج مسار الماوس من نطاقه أثناء التوجّه نحو
+           عنصر بعيد في القائمة، فتُغلق قبل الوصول إليه */
+        display:flex; align-items:center; justify-content:center;
+        position:fixed; top:22px; inset-inline-start:0; width:14px; height:calc(100vh - 44px); z-index:55;
+        background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(201,150,46,0.12), rgba(255,255,255,0.02));
+        border-inline-end:1.5px solid rgba(201,150,46,0.3);
+        cursor:pointer; transition:background .2s var(--ease);
+    }
+    .app-container.sidebar-collapsed .sidebar-hover-zone::after{
+        content:"⋮"; color:var(--gold); font-size:14px; opacity:.6; writing-mode:vertical-rl;
+    }
+    .app-container.sidebar-collapsed .sidebar-hover-zone:hover{
+        background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(201,150,46,0.22), rgba(255,255,255,0.03));
     }
     .app-container.sidebar-collapsed .sidebar-hover-zone:hover ~ .sidebar,
-    .app-container.sidebar-collapsed .sidebar-toggle:hover ~ .sidebar,
     .app-container.sidebar-collapsed .sidebar:hover{
         width:264px !important; opacity:1 !important; transform:translateX(0) !important; pointer-events:auto !important;
         padding:28px 18px !important; border:1.5px solid rgba(255,255,255,0.4) !important; box-shadow:var(--shadow-lg);
