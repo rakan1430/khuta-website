@@ -2068,6 +2068,182 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
     .routine-mode{ flex:1; text-align:center; }
 }
 
+
+/* ============================================================
+   41) المعالج التدريجي الجديد لتخصيص الخطة (خطوات متتالية بأنيميشن)
+   ============================================================ */
+.wiz-overlay{ align-items:center; }
+.wiz-shell{
+    width:100%; max-width:760px; margin:24px auto; display:flex; flex-direction:column;
+    max-height:calc(100vh - 48px); overflow:hidden; position:relative;
+    background:rgba(255,255,255,0.72); backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4);
+    border-radius:30px; box-shadow:var(--shadow-lg); border:1px solid rgba(255,255,255,0.5);
+}
+body.dark-mode .wiz-shell{
+    background: linear-gradient(165deg, rgba(132,112,240,0.20), rgba(26,20,58,0.92));
+    border:1.5px solid rgba(210,195,255,0.28);
+    box-shadow: inset 0 1px 14px rgba(255,255,255,0.10), 0 30px 80px rgba(0,0,0,0.55), 0 0 60px rgba(140,100,255,0.14);
+}
+.wiz-topbar{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; padding:24px 26px 8px; flex-shrink:0; }
+.wiz-topbar-title h2{ font-size:19px; margin-bottom:4px; }
+.wiz-topbar-title p{ font-size:12.5px; color:var(--text-3); }
+.wiz-close-btn{
+    width:36px; height:36px; border-radius:50%; border:1px solid var(--border); background:var(--bg-alt);
+    color:var(--text-2); cursor:pointer; font-size:14px; flex-shrink:0; transition:.2s var(--ease);
+    display:flex; align-items:center; justify-content:center;
+}
+.wiz-close-btn:hover{ background:var(--rose-soft); color:var(--rose); transform:rotate(90deg); }
+
+.wiz-progress-row{ padding:12px 26px 6px; flex-shrink:0; }
+.wiz-progress-track{ height:6px; border-radius:99px; background:var(--bg-alt); overflow:hidden; margin-bottom:12px; }
+.wiz-progress-fill{ height:100%; border-radius:99px; background:linear-gradient(90deg,var(--gold),#E2527E); transition:width .45s var(--ease); }
+.wiz-dots{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+.wiz-dot{
+    width:9px; height:9px; border-radius:50%; border:none; padding:0; cursor:pointer;
+    background:var(--border); transition: background .25s var(--ease), transform .25s var(--ease), width .25s var(--ease);
+}
+.wiz-dot:hover{ transform:scale(1.3); }
+.wiz-dot.done{ background:var(--teal); }
+.wiz-dot.current{ background:var(--gold); width:22px; border-radius:99px; }
+
+.wiz-viewport{ flex:1; min-height:0; overflow-y:auto; padding:6px 26px 26px; }
+.wiz-step{ display:none; }
+.wiz-step.active{ display:block; animation:wizStepIn .4s var(--ease); }
+@keyframes wizStepIn{ from{ opacity:0; transform:translateY(14px) scale(.985); } to{ opacity:1; transform:translateY(0) scale(1); } }
+.wiz-step-inner{ text-align:start; }
+.wiz-step-head{ display:flex; align-items:flex-start; gap:14px; margin-bottom:20px; }
+.wiz-step-emoji{ font-size:30px; line-height:1; flex-shrink:0; margin-top:2px; }
+.wiz-step-head h3{ font-family:var(--font-display); font-size:19px; margin-bottom:4px; }
+.wiz-step-head p{ font-size:12.5px; color:var(--text-3); line-height:1.7; }
+
+.wiz-welcome{ text-align:center; padding:26px 10px 10px; }
+.wiz-welcome-icon{ font-size:52px; margin-bottom:14px; animation:wizFloatIcon 3s ease-in-out infinite; }
+@keyframes wizFloatIcon{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
+.wiz-welcome h3{ font-family:var(--font-display); font-size:24px; margin-bottom:12px; }
+.wiz-welcome p{ font-size:14px; color:var(--text-2); line-height:2; max-width:480px; margin:0 auto; }
+.wiz-confirm{ text-align:center; }
+.wiz-confirm .wiz-step-head{ justify-content:center; text-align:center; flex-direction:column; align-items:center; }
+.wiz-confirm .plans-save-row{ max-width:420px; margin:0 auto 16px; }
+.wiz-finish-btn{ max-width:420px; margin:0 auto; background:var(--ink); }
+
+.wiz-footer{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:16px 22px; border-top:1px solid var(--border); flex-shrink:0;
+}
+body.dark-mode .wiz-footer{ border-color:rgba(210,195,255,0.16); }
+.wiz-nav-btn{ min-width:110px; justify-content:center; }
+.wiz-footer-mid{ display:flex; flex-direction:column; align-items:center; gap:2px; }
+.wiz-step-counter{ font-size:11px; font-weight:700; color:var(--text-3); font-family:var(--font-mono); }
+.wiz-skip-btn{ font-size:11px; padding:4px 8px; }
+#wiz-prev-btn:disabled, #wiz-prev-btn.wiz-hidden{ visibility:hidden; }
+#wiz-skip-btn.wiz-hidden{ visibility:hidden; }
+
+@media (max-width:700px){
+    .wiz-shell{ max-height:100vh; height:100vh; border-radius:0; margin:0; max-width:none; }
+    .wiz-topbar{ padding:20px 18px 6px; }
+    .wiz-progress-row{ padding:10px 18px 4px; }
+    .wiz-viewport{ padding:4px 18px 22px; }
+    .wiz-footer{ padding:14px 16px; padding-bottom:calc(14px + env(safe-area-inset-bottom)); }
+    .wiz-nav-btn{ min-width:84px; font-size:13px; padding:10px 14px; }
+    .wiz-welcome-icon{ font-size:42px; }
+    .wiz-welcome h3{ font-size:20px; }
+}
+
+/* ============================================================
+   42) زر الشات العائم — أكبر وأوضح ولافت للنظر
+   ============================================================ */
+.chatbot-fab{
+    position:fixed; bottom:26px; inset-inline-end:26px; z-index:2500;
+    display:flex; align-items:center; gap:10px; height:60px; padding:0 22px 0 10px;
+    border-radius:99px; border:none; cursor:pointer;
+    background:linear-gradient(120deg,var(--gold) 0%,#E2527E 100%); color:#fff;
+    box-shadow:0 14px 34px rgba(201,150,46,0.38), 0 0 0 0 rgba(226,82,126,0.5);
+    transition: transform .25s var(--ease), box-shadow .25s var(--ease);
+    animation: fabPulse 2.6s ease-in-out infinite;
+}
+.chatbot-fab:hover{ transform:scale(1.05) translateY(-2px); }
+.chatbot-fab .fab-icon-wrap{
+    width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.22);
+    display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0;
+}
+.chatbot-fab .fab-label{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.25; }
+.chatbot-fab .fab-label b{ font-size:13.5px; font-weight:800; }
+.chatbot-fab .fab-label span{ font-size:9.5px; opacity:.85; font-weight:600; }
+.chatbot-fab .fab-sparkle{ position:absolute; top:-4px; inset-inline-end:-4px; font-size:15px; animation:fabSparkle 1.8s ease-in-out infinite; }
+@keyframes fabPulse{
+    0%,100%{ box-shadow:0 14px 34px rgba(201,150,46,0.38), 0 0 0 0 rgba(226,82,126,0.45); }
+    50%{ box-shadow:0 14px 34px rgba(201,150,46,0.38), 0 0 0 10px rgba(226,82,126,0); }
+}
+@keyframes fabSparkle{ 0%,100%{ transform:scale(1) rotate(0deg); opacity:1;} 50%{ transform:scale(1.25) rotate(15deg); opacity:.7;} }
+@media (prefers-reduced-motion: reduce){ .chatbot-fab{ animation:none; } .fab-sparkle{ animation:none; } }
+@media (max-width:992px){
+    .chatbot-fab{ bottom:96px; inset-inline-end:16px; height:52px; padding:0 16px 0 8px; gap:8px; }
+    .chatbot-fab .fab-icon-wrap{ width:34px; height:34px; font-size:16px; }
+    .chatbot-fab .fab-label b{ font-size:12px; }
+    .chatbot-fab .fab-label span{ font-size:8.5px; }
+}
+@media (max-width:420px){
+    .chatbot-fab .fab-label{ display:none; }
+    .chatbot-fab{ padding:0; width:58px; justify-content:center; }
+}
+
+/* ============================================================
+   43) رأس شات المساعد — زر السبورة كصف مستقل بارز (لا تداخل نص)
+   ============================================================ */
+.chatbot-head{ flex-direction:column; align-items:stretch; gap:10px; padding:16px 16px 12px; }
+.chatbot-head-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+.chatbot-head-titles b{ display:block; }
+.chatbot-head-sub{ font-size:10.5px; opacity:.75; margin-top:2px; display:flex; align-items:center; gap:5px; }
+.chatbot-head-sub i{ color:var(--gold); font-size:9px; }
+.chatbot-board-btn{
+    width:100%; justify-content:center; padding:10px 14px; border-radius:14px; cursor:pointer;
+    background:linear-gradient(120deg, rgba(201,150,46,0.16), rgba(226,82,126,0.10));
+    border:1.5px solid rgba(201,150,46,0.35); color:var(--text-1); font-family:var(--font-body);
+    font-size:12.5px; font-weight:800; display:flex; align-items:center; gap:8px;
+    transition:.25s var(--ease);
+}
+body.dark-mode .chatbot-board-btn{
+    background:linear-gradient(120deg, rgba(232,199,126,0.20), rgba(226,82,126,0.14));
+    border-color:rgba(255,210,130,0.4); color:#fff;
+}
+.chatbot-board-btn i{ font-size:15px; color:var(--gold); }
+.chatbot-board-btn:hover{ box-shadow:0 6px 18px rgba(201,150,46,0.22); transform:translateY(-1px); }
+.chatbot-board-btn .board-btn-arrow{ margin-inline-start:auto; opacity:.6; font-size:11px; }
+
+/* ============================================================
+   44) السبورة الذكية — نمط "كامل" من القائمة الجانبية (أكبر وأغنى)
+   ============================================================ */
+.board-window.full-mode{ max-width:1280px; height:90vh; }
+.board-window.full-mode .board-tabs{ display:none; }
+.board-full-hint{
+    display:none; font-size:12px; color:rgba(255,255,255,0.6); text-align:center;
+    padding:6px 0 2px; flex-shrink:0;
+}
+.board-window.full-mode .board-full-hint{ display:block; }
+@media (min-width:901px){
+    .board-window.full-mode .board-content-split{ display:flex; flex:1; min-height:0; gap:0; }
+    .board-window.full-mode .board-content-split .board-pane{
+        display:flex !important; flex:1; min-width:0; opacity:1; transform:none; animation:none;
+    }
+    .board-window.full-mode #board-tab-ai{ border-inline-end:1px solid rgba(210,195,255,0.16); padding-inline-end:20px; }
+    .board-window.full-mode #board-tab-pad{ padding-inline-start:20px; }
+}
+@media (max-width:900px){
+    /* على الشاشات الأضيق حتى في النمط الكامل، تبقى التبويبات ضرورية للمساحة */
+    .board-window.full-mode .board-tabs{ display:flex; }
+}
+
+/* ============================================================
+   45) دليل الموقع بالذكاء الاصطناعي — يعيد استخدام نمط الجولة التعريفية
+   الحالي (spotlight + card) لتظليل قائمة واحدة يطلبها الطالب من الشات
+   ============================================================ */
+.ai-guide-card{ animation:wizStepIn .4s var(--ease); }
+.ai-guide-card .onboarding-step-count{ display:none; }
+.ai-guide-badge{
+    display:inline-flex; align-items:center; gap:5px; font-size:9.5px; font-weight:800;
+    color:var(--gold); background:rgba(201,150,46,0.12); padding:3px 9px; border-radius:99px; margin-bottom:8px;
+}
+
 </style>
 </head>
 <body>
@@ -2153,13 +2329,59 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
 </div>
 
 <!-- ===================== شاشة تخصيص الخطة ===================== -->
-<div id="setup-overlay" class="overlay-screen" style="display:none;">
-    <div class="wizard-card" style="max-width:840px; text-align:start;">
-        <h2 style="text-align:center; margin-bottom:6px;" data-i18n="setup.title">تخصيص مسارات مذاكرة القدرات</h2>
-        <p style="text-align:center; color:var(--text-3); margin-bottom:6px; font-size:13.5px;" data-i18n="setup.subtitle">اختر مصادرك المفضلة، وسنبني لك جدولاً محسوباً بدقة</p>
-        <p id="content-updated-label" style="text-align:center; color:var(--text-3); margin-bottom:24px; font-size:11px; opacity:.75;">آخر تحديث للتجميعات: —</p>
+<div id="setup-overlay" class="overlay-screen wiz-overlay" style="display:none;">
+    <div class="wiz-shell">
+        <div class="wiz-topbar">
+            <div class="wiz-topbar-title">
+                <h2 data-i18n="setup.title">تخصيص مسارات مذاكرة القدرات</h2>
+                <p data-i18n="setup.subtitle">اختر مصادرك المفضلة، وسنبني لك جدولاً محسوباً بدقة</p>
+            </div>
+            <button type="button" class="wiz-close-btn" onclick="closeSetupOverlayIfAllowed()" aria-label="إغلاق" title="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+        </div>
 
-        <div style="background:var(--teal-soft); padding:16px 18px; border-radius:16px; margin-bottom:14px; border:1px solid rgba(28,138,114,.2);">
+        <div class="wiz-progress-row">
+            <div class="wiz-progress-track"><div id="wiz-progress-fill" class="wiz-progress-fill"></div></div>
+            <div id="wiz-dots" class="wiz-dots"></div>
+        </div>
+
+        <div id="wiz-viewport" class="wiz-viewport">
+
+            <!-- الخطوة 0: الترحيب -->
+            <div class="wiz-step" data-key="welcome">
+                <div class="wiz-step-inner wiz-welcome">
+                    <div class="wiz-welcome-icon">🎯</div>
+                    <h3 data-i18n="wiz.welcomeTitle">أهلاً بك يا بطل في خُطى!</h3>
+                    <p data-i18n="wiz.welcomeDesc">بخطوات بسيطة ومتتالية، بنينلك خطة مذاكرة كاملة مخصصة لك تماماً — مصادرك، وقتك، وحتى روتين أسبوعك. تقدر تتنقل بين الخطوات بحرية، وتترك أي شي على الوضع الافتراضي إذا ما كنت متأكداً.</p>
+                </div>
+            </div>
+
+            <!-- الخطوة 1: خططي المحفوظة -->
+            <div class="wiz-step" data-key="plans">
+                <div class="wiz-step-inner">
+                    <div class="wiz-step-head">
+                        <span class="wiz-step-emoji">📚</span>
+                        <div><h3 data-i18n="wiz.plansTitle">خططك المحفوظة</h3><p data-i18n="wiz.plansDesc">إذا عندك خطة محفوظة تبي ترجع لها، فعّلها من هنا مباشرة. أو أكمل الخطوات التالية لبناء/تعديل خطتك الحالية.</p></div>
+                    </div>
+                    <div class="plans-section">
+                <h3>📚 خططي المحفوظة</h3>
+                <p class="card-sub">احفظ خطتك الحالية باسم (مصادرك، جدولك، تقدمك) وأنشئ غيرها وبدّل بينها متى شئت</p>
+                <div class="plans-save-row">
+                    <input type="text" id="plan-name-input" placeholder="اسم الخطة… (مثال: خطة الشهرين المكثفة)">
+                    <button type="button" class="btn btn-sm" onclick="saveCurrentPlanAs()"><i class="fa-solid fa-floppy-disk"></i> حفظ الحالية</button>
+                </div>
+                <div id="plans-saved-list" class="plans-saved-list"></div>
+            </div>
+                </div>
+            </div>
+
+            <!-- الخطوة 2: اللفظي -->
+            <div class="wiz-step" data-key="verbal">
+                <div class="wiz-step-inner">
+                    <div class="wiz-step-head">
+                        <span class="wiz-step-emoji">📖</span>
+                        <div><h3 data-i18n="wiz.verbalTitle">مصدرك للفظي</h3><p data-i18n="wiz.verbalDesc">هذا مسارك المعتمد للقسم اللفظي</p></div>
+                    </div>
+                    <div style="background:var(--teal-soft); padding:16px 18px; border-radius:16px; margin-bottom:14px; border:1px solid rgba(28,138,114,.2);">
             <h4 style="color:var(--teal); display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-circle-check"></i> <span data-i18n="setup.verbalTitle">القسم اللفظي</span></h4>
             <p style="font-size:13.5px; margin-top:6px; color:var(--text-2);"><span id="setup-verbal-desc">دورة إيهاب (215 قسم) هي مسارك الوحيد والمعتمد للفظي.</span></p>
         </div>
@@ -2196,8 +2418,17 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
             <p class="hint" data-i18n="setup.customReportNote">سيصل اسم هذا المصدر تلقائياً للمطوّر (دون أي بيانات شخصية أخرى) ليقيّم إضافته للتطبيق مستقبلاً إن كتبه عدة طلاب.</p>
         </div>
         </div>
+                </div>
+            </div>
 
-        <h4 style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-layer-group" style="color:var(--gold);"></i> <span data-i18n="setup.foundTitle">القسم الكمي — التأسيس</span></h4>
+            <!-- الخطوة 3: الكمي - التأسيس -->
+            <div class="wiz-step" data-key="found">
+                <div class="wiz-step-inner">
+                    <div class="wiz-step-head">
+                        <span class="wiz-step-emoji">🧱</span>
+                        <div><h3 data-i18n="wiz.foundTitle">مصدرك لتأسيس الكمي</h3><p data-i18n="wiz.foundDesc">اختر من أين تبدأ أساسياتك في القسم الكمي</p></div>
+                    </div>
+                    <h4 style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-layer-group" style="color:var(--gold);"></i> <span data-i18n="setup.foundTitle">القسم الكمي — التأسيس</span></h4>
         <div class="path-options" id="found-options">
             <label class="path-card selected" onclick="toggleSelection(this,'radio')">
                 <input type="radio" name="quant_found" value="moasser" checked>
@@ -2223,8 +2454,17 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
                 <span style="font-weight:700; font-size:12.5px;" data-i18n="setup.einsteinReviewOnly">أريد مقاطع مراجعة التأسيس فقط (9 مقاطع) بدل الدورة الكاملة</span>
             </label>
         </div>
+                </div>
+            </div>
 
-        <h4 style="margin:22px 0 10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-dumbbell" style="color:var(--gold);"></i> <span data-i18n="setup.trainTitle">القسم الكمي — التدريب (اختر ما يناسبك)</span></h4>
+            <!-- الخطوة 4: الكمي - التدريب -->
+            <div class="wiz-step" data-key="train">
+                <div class="wiz-step-inner">
+                    <div class="wiz-step-head">
+                        <span class="wiz-step-emoji">💪</span>
+                        <div><h3 data-i18n="wiz.trainTitle">مصادر تدريبك الكمي</h3><p data-i18n="wiz.trainDesc">اختر بنكاً واحداً أو أكثر — يمكنك الجمع بينها</p></div>
+                    </div>
+                    <h4 style="margin:22px 0 10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-dumbbell" style="color:var(--gold);"></i> <span data-i18n="setup.trainTitle">القسم الكمي — التدريب (اختر ما يناسبك)</span></h4>
         <div class="path-options">
             <label class="path-card">
                 <input type="checkbox" id="train_monsif" value="monsif" onchange="syncCheckboxCard(this)">
@@ -2272,14 +2512,44 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
             <div class="form-group"><label data-i18n="setup.customQper">عدد الأسئلة لكل وحدة (اختياري، للتوضيح فقط)</label><input type="text" id="cq-qper" placeholder="مثال: 40-45 سؤال" data-i18n-ph="setup.customQperPh"></div>
             <p class="hint" data-i18n="setup.customReportNote">سيصل اسم هذا المصدر تلقائياً للمطوّر (دون أي بيانات شخصية أخرى) ليقيّم إضافته للتطبيق مستقبلاً إن كتبه عدة طلاب.</p>
         </div>
+                </div>
+            </div>
 
-        <div class="divider"></div>
-        <label style="display:flex; align-items:center; gap:12px; cursor:pointer; margin-bottom:20px;">
+            <!-- الخطوة 5: إعدادات إضافية -->
+            <div class="wiz-step" data-key="extra">
+                <div class="wiz-step-inner">
+                    <div class="wiz-step-head">
+                        <span class="wiz-step-emoji">⚙️</span>
+                        <div><h3 data-i18n="wiz.extraTitle">إعدادات إضافية</h3><p data-i18n="wiz.extraDesc">مراجعة ليلة الامتحان، وترتيب جلستك اليومية</p></div>
+                    </div>
+                    <label style="display:flex; align-items:center; gap:12px; cursor:pointer; margin-bottom:20px;">
             <input type="checkbox" id="night_review" style="width:22px; height:22px; flex-shrink:0;">
             <span style="font-weight:700; color:var(--rose);" data-i18n="setup.nightReview">إضافة كتيّب «مراجعة ليلة الامتحان» من المعاصر إلى الجدول</span>
         </label>
+                    <div class="divider"></div>
+                    <h4 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-arrow-right-arrow-left" style="color:var(--gold);"></i> <span data-i18n="setup.sectionOrderTitle">ترتيب الجلسة</span></h4>
+        <p class="hint" style="margin-bottom:12px;" data-i18n="setup.sectionOrderDesc">يُقسَّم وقتك اليومي بين الكمي واللفظي تلقائياً — اختر أيهما تبدأ به دائماً، وسينتقل المؤقت للآخر تلقائياً عند انتهاء وقت الأول.</p>
+        <div class="path-options" id="section-order-options">
+            <label class="path-card selected" onclick="toggleSelection(this,'radio')">
+                <input type="radio" name="start_section" value="verbal" checked>
+                <div class="path-title"><span data-i18n="setup.startVerbal">أبدأ باللفظي</span> <i class="fa-solid fa-circle-check check"></i></div>
+            </label>
+            <label class="path-card" onclick="toggleSelection(this,'radio')">
+                <input type="radio" name="start_section" value="quant">
+                <div class="path-title"><span data-i18n="setup.startQuant">أبدأ بالكمي</span> <i class="fa-solid fa-circle-check check"></i></div>
+            </label>
+        </div>
+                </div>
+            </div>
 
-        <h4 style="margin-bottom:10px;" data-i18n="setup.intensity">إيقاع الخطة</h4>
+            <!-- الخطوة 6: إيقاع الخطة -->
+            <div class="wiz-step" data-key="pace">
+                <div class="wiz-step-inner">
+                    <div class="wiz-step-head">
+                        <span class="wiz-step-emoji">⏱️</span>
+                        <div><h3 data-i18n="wiz.paceTitle">إيقاع خطتك</h3><p data-i18n="wiz.paceDesc">مدة الخطة، وقتك اليومي، ويوم راحتك الأسبوعي إن أردت</p></div>
+                    </div>
+                    <h4 style="margin-bottom:10px;" data-i18n="setup.intensity">إيقاع الخطة</h4>
         <div class="intensity-row" id="intensity-row" style="margin-bottom:18px;">
             <div class="intensity-chip" data-days="30" onclick="setIntensity(30,this)"><span data-i18n="setup.compact">مضغوطة</span> · 30 <span data-i18n="setup.day">يوم</span></div>
             <div class="intensity-chip selected" data-days="45" onclick="setIntensity(45,this)"><span data-i18n="setup.balanced">متوازنة</span> · 45 <span data-i18n="setup.day">يوم</span></div>
@@ -2321,23 +2591,40 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
                 </select>
             </div>
         </div>
+                </div>
+            </div>
 
-        <div class="divider"></div>
-        <h4 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-arrow-right-arrow-left" style="color:var(--gold);"></i> <span data-i18n="setup.sectionOrderTitle">ترتيب الجلسة</span></h4>
-        <p class="hint" style="margin-bottom:12px;" data-i18n="setup.sectionOrderDesc">يُقسَّم وقتك اليومي بين الكمي واللفظي تلقائياً — اختر أيهما تبدأ به دائماً، وسينتقل المؤقت للآخر تلقائياً عند انتهاء وقت الأول.</p>
-        <div class="path-options" id="section-order-options">
-            <label class="path-card selected" onclick="toggleSelection(this,'radio')">
-                <input type="radio" name="start_section" value="verbal" checked>
-                <div class="path-title"><span data-i18n="setup.startVerbal">أبدأ باللفظي</span> <i class="fa-solid fa-circle-check check"></i></div>
-            </label>
-            <label class="path-card" onclick="toggleSelection(this,'radio')">
-                <input type="radio" name="start_section" value="quant">
-                <div class="path-title"><span data-i18n="setup.startQuant">أبدأ بالكمي</span> <i class="fa-solid fa-circle-check check"></i></div>
-            </label>
-        </div>
+            <!-- الخطوة 7: الروتين الأسبوعي -->
+            <div class="wiz-step" data-key="routine">
+                <div class="wiz-step-inner">
+                    <div class="wiz-step-head">
+                        <span class="wiz-step-emoji">🗓️</span>
+                        <div><h3 data-i18n="wiz.routineTitle">روتينك الأسبوعي</h3><p data-i18n="wiz.routineDesc">حدّد إيقاع كل يوم، وأضف أي تواريخ سفر أو ظروف مستثناة</p></div>
+                    </div>
+                    <div class="plans-section">
+                <h3>🗓️ روتينك الأسبوعي</h3>
+                <p class="card-sub">حدّد إيقاع كل يوم من أسبوعك: عادي، أخف، أو إجازة — والمؤشر بالأعلى يخبرك فوراً إن كان جدولك مضغوطاً أو مرتاحاً</p>
+                <div id="routine-pressure" class="routine-pressure"></div>
+                <div id="routine-days-grid" class="routine-days-grid"></div>
+                <h3 style="margin-top:18px;">✈️ تواريخ مستثناة (سفر/ظرف)</h3>
+                <p class="card-sub">أي تاريخ تضيفه هنا يُحسب إجازة كاملة في مؤشر الضغط ولن يُنتظر منك مذاكرة فيه</p>
+                <div class="excluded-add-row">
+                    <input type="date" id="excluded-date-input">
+                    <button type="button" class="btn btn-sm btn-outline" onclick="addExcludedDate()"><i class="fa-solid fa-plus"></i> إضافة</button>
+                </div>
+                <div id="excluded-dates-list" class="excluded-dates-list"></div>
+            </div>
+                </div>
+            </div>
 
-        <div class="divider"></div>
-        <h4 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-mug-hot" style="color:var(--gold);"></i> <span data-i18n="setup.breaksTitle">إعدادات الاستراحة الذكية</span></h4>
+            <!-- الخطوة 8: الاستراحة -->
+            <div class="wiz-step" data-key="breaks">
+                <div class="wiz-step-inner">
+                    <div class="wiz-step-head">
+                        <span class="wiz-step-emoji">☕</span>
+                        <div><h3 data-i18n="wiz.breaksTitle">استراحتك الذكية</h3><p data-i18n="wiz.breaksDesc">كل ساعة مذاكرة متواصلة، تبدأ استراحة تلقائية بالمدة التي تحددها</p></div>
+                    </div>
+                    <h4 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-mug-hot" style="color:var(--gold);"></i> <span data-i18n="setup.breaksTitle">إعدادات الاستراحة الذكية</span></h4>
         <p class="hint" style="margin-bottom:12px;" data-i18n="setup.breaksDesc">كل ساعة مذاكرة متواصلة، تبدأ استراحة تلقائية بالمدة التي تحددها هنا (ثابتة طوال جلساتك).</p>
         <div class="input-row">
             <div class="form-group">
@@ -2349,11 +2636,37 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
                 <input type="number" id="short-break-limit" value="2" min="0" max="3">
             </div>
         </div>
+                </div>
+            </div>
 
-        <button type="button" class="btn btn-block" style="margin-top:14px; background:var(--ink);" onclick="finalizeSetup()">
-            <span data-i18n="setup.build">إنشاء الجدول ودخول التطبيق</span> <i class="fa-solid fa-wand-magic-sparkles"></i>
-        </button>
+            <!-- الخطوة 9: التأكيد النهائي -->
+            <div class="wiz-step" data-key="confirm">
+                <div class="wiz-step-inner wiz-confirm">
+                    <div class="wiz-step-head">
+                        <span class="wiz-step-emoji">🚀</span>
+                        <div><h3 data-i18n="wiz.confirmTitle">خطتك جاهزة!</h3><p data-i18n="wiz.confirmDesc">راجع اسماً لحفظ هذه الخطة (اختياري)، ثم ابدأ رحلتك</p></div>
+                    </div>
+                    <div class="plans-save-row">
+                        <input type="text" id="wiz-final-plan-name" placeholder="اسم الخطة للحفظ… (اختياري)">
+                    </div>
+                    <button type="button" class="btn btn-block wiz-finish-btn" onclick="finalizeSetupFromWizard()">
+                        <span data-i18n="setup.build">إنشاء الجدول ودخول التطبيق</span> <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="wiz-footer">
+            <button type="button" id="wiz-prev-btn" class="btn-ghost wiz-nav-btn" onclick="wizPrev()"><i class="fa-solid fa-arrow-right rtl-flip"></i> <span data-i18n="wiz.prev">السابق</span></button>
+            <div class="wiz-footer-mid">
+                <span id="wiz-step-counter" class="wiz-step-counter"></span>
+                <button type="button" id="wiz-skip-btn" class="btn-ghost wiz-skip-btn" onclick="wizSkip()"><span data-i18n="wiz.skip">تخطّي</span></button>
+            </div>
+            <button type="button" id="wiz-next-btn" class="btn wiz-nav-btn" onclick="wizNext()"><span data-i18n="wiz.next">التالي</span> <i class="fa-solid fa-arrow-left rtl-flip"></i></button>
+        </div>
     </div>
+    <p id="content-updated-label" style="display:none;">آخر تحديث للتجميعات: —</p>
 </div>
 
 <!-- ===================== تنبيه انتهاء الوقت ===================== -->
@@ -2632,7 +2945,9 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
             <button type="button" class="lab-close-btn" onclick="closeKhutaBoard()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <div id="board-tab-ai" class="board-pane active">
+        <div class="board-full-hint">🧑‍🏫 اسأل عن أي سؤال قدرات وشاهد شرحه على السبورة، أو دوّن أفكارك في دفترك — وكلاهما متاح لك الآن معاً</div>
+        <div class="board-content-split">
+            <div id="board-tab-ai" class="board-pane active">
             <div class="board-ask-row">
                 <input type="text" id="board-ai-input" placeholder="اكتب سؤال قدرات (كمي أو لفظي) أو مفهوماً ليشرحه المعلّم على السبورة…" onkeydown="if(event.key==='Enter') boardExplain()">
                 <button type="button" class="btn btn-sm" onclick="boardExplain()"><i class="fa-solid fa-chalkboard"></i> اشرح</button>
@@ -2675,57 +2990,29 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
                 </div>
             </div>
         </div>
+        </div>
     </div>
 </div>
 
 <!-- ===================== خططي والروتين الأسبوعي ===================== -->
-<div id="plans-overlay" class="lab-overlay" style="display:none;">
-    <div class="lab-window plans-window">
-        <div class="lab-window-head">
-            <b class="lab-window-title"><i class="fa-solid fa-layer-group" style="color:var(--gold);"></i> خططي والروتين الأسبوعي</b>
-            <button type="button" class="lab-close-btn" onclick="closePlansOverlay()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="plans-body">
-            <div class="plans-section">
-                <h3>📚 خططي المحفوظة</h3>
-                <p class="card-sub">احفظ خطتك الحالية باسم (مصادرك، جدولك، تقدمك) وأنشئ غيرها وبدّل بينها متى شئت</p>
-                <div class="plans-save-row">
-                    <input type="text" id="plan-name-input" placeholder="اسم الخطة… (مثال: خطة الشهرين المكثفة)">
-                    <button type="button" class="btn btn-sm" onclick="saveCurrentPlanAs()"><i class="fa-solid fa-floppy-disk"></i> حفظ الحالية</button>
-                </div>
-                <div id="plans-saved-list" class="plans-saved-list"></div>
-            </div>
-            <div class="plans-section">
-                <h3>🗓️ روتينك الأسبوعي</h3>
-                <p class="card-sub">حدّد إيقاع كل يوم من أسبوعك: عادي، أخف، أو إجازة — والمؤشر بالأعلى يخبرك فوراً إن كان جدولك مضغوطاً أو مرتاحاً</p>
-                <div id="routine-pressure" class="routine-pressure"></div>
-                <div id="routine-days-grid" class="routine-days-grid"></div>
-                <h3 style="margin-top:18px;">✈️ تواريخ مستثناة (سفر/ظرف)</h3>
-                <p class="card-sub">أي تاريخ تضيفه هنا يُحسب إجازة كاملة في مؤشر الضغط ولن يُنتظر منك مذاكرة فيه</p>
-                <div class="excluded-add-row">
-                    <input type="date" id="excluded-date-input">
-                    <button type="button" class="btn btn-sm btn-outline" onclick="addExcludedDate()"><i class="fa-solid fa-plus"></i> إضافة</button>
-                </div>
-                <div id="excluded-dates-list" class="excluded-dates-list"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- ===================== مساعد الأسئلة الشائعة ===================== -->
-<button type="button" id="chatbot-fab" class="chatbot-fab" onclick="toggleChatbot()" title="مساعد الأسئلة الشائعة">
-    <i class="fa-solid fa-comment-dots"></i>
+<button type="button" id="chatbot-fab" class="chatbot-fab" onclick="toggleChatbot()" title="مساعد خُطى الذكي">
+    <span class="fab-icon-wrap"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+    <span class="fab-label"><b data-i18n="fab.title">اسأل مساعدك</b><span data-i18n="fab.subtitle">ذكاء اصطناعي حقيقي</span></span>
+    <span class="fab-sparkle">✨</span>
 </button>
 <div id="chatbot-panel" class="chatbot-panel" style="display:none;">
     <div class="chatbot-head">
-        <div>
-            <b data-i18n="bot.title">مساعد خُطى للأسئلة الشائعة</b>
-            <button type="button" class="chatbot-board-btn" onclick="openKhutaBoard('ai')" title="افتح السبورة — يشرح عليها المعلّم الذكي خطوة بخطوة">
-                <i class="fa-solid fa-chalkboard-user"></i> السبورة
-            </button>
-            <div style="font-size:10.5px; opacity:.75;" data-i18n="bot.disclaimer">إجابات جاهزة مبرمجة مسبقاً وليست ذكاءً اصطناعياً حقيقياً</div>
+        <div class="chatbot-head-top">
+            <div class="chatbot-head-titles">
+                <b data-i18n="bot.title">مساعدك الذكي</b>
+                <div class="chatbot-head-sub"><i class="fa-solid fa-sparkles"></i> <span data-i18n="bot.disclaimer">مدعوم بالذكاء الاصطناعي 🤖</span></div>
+            </div>
+            <button type="button" class="btn-ghost" style="padding:6px;" onclick="toggleChatbot()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <button type="button" class="btn-ghost" style="padding:6px;" onclick="toggleChatbot()"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" class="chatbot-board-btn" onclick="openKhutaBoard('ai')" title="افتح السبورة — يشرح عليها المعلّم الذكي خطوة بخطوة">
+            <i class="fa-solid fa-chalkboard-user"></i> افتح السبورة الذكية <span class="board-btn-arrow"><i class="fa-solid fa-arrow-left rtl-flip"></i></span>
+        </button>
     </div>
     <div id="chatbot-messages" class="chatbot-messages"></div>
     <div class="chatbot-suggestions" id="chatbot-suggestions"></div>
@@ -2750,6 +3037,7 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
             <div class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
             <div class="nav-item" data-tab="specialties" onclick="switchTab('specialties',this)"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
             <div class="nav-item" data-tab="community" onclick="switchTab('community',this)"><i class="fa-solid fa-users"></i> <span data-i18n="nav.community">المجتمع</span></div>
+            <div class="nav-item nav-item-board" onclick="openKhutaBoard('ai', true)"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.board">السبورة الذكية</span></div>
             <div class="nav-item" id="nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;"><i class="fa-solid fa-clipboard-question"></i> <span data-i18n="nav.examSim">اختبارات محاكية</span></div>
             <div class="nav-item" id="nav-tutors" data-tab="tutors" onclick="switchTab('tutors',this)" style="display:none;"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.tutors">مدرّسون خصوصيون</span></div>
             <div class="nav-item disabled"><i class="fa-solid fa-graduation-cap"></i> <span data-i18n="nav.tahsili">التحصيلي</span> <span class="badge-soon" data-i18n="nav.soon">قريباً</span></div>
@@ -2763,6 +3051,7 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
         <div class="mobile-nav-item" data-tab="links" onclick="switchTab('links',this)"><i class="fa-solid fa-link"></i><span data-i18n="nav.linksShort">المصادر</span></div>
         <div class="mobile-nav-item" data-tab="specialties" onclick="switchTab('specialties',this)"><i class="fa-solid fa-book-open-reader"></i><span data-i18n="nav.specialtiesShort">التخصصات</span></div>
         <div class="mobile-nav-item" data-tab="community" onclick="switchTab('community',this)"><i class="fa-solid fa-users"></i><span data-i18n="nav.communityShort">المجتمع</span></div>
+        <div class="mobile-nav-item nav-item-board" onclick="openKhutaBoard('ai', true)"><i class="fa-solid fa-chalkboard-user"></i><span data-i18n="nav.boardShort">السبورة</span></div>
         <div class="mobile-nav-item" id="mobile-nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;"><i class="fa-solid fa-clipboard-question"></i><span data-i18n="nav.examSimShort">اختبارات</span></div>
         <div class="mobile-nav-item" id="mobile-nav-tutors" data-tab="tutors" onclick="switchTab('tutors',this)" style="display:none;"><i class="fa-solid fa-chalkboard-user"></i><span data-i18n="nav.tutorsShort">مدرّسون</span></div>
         <div class="mobile-nav-item" data-tab="profile" onclick="switchTab('profile',this)"><i class="fa-solid fa-user"></i><span data-i18n="nav.profileShort">الملف</span></div>
@@ -2827,8 +3116,8 @@ html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
         <!-- ===================== لوحة الجدول ===================== -->
         <section id="view-dashboard" class="view-section active">
             <div class="dash-toolbar">
-                <button type="button" class="btn btn-outline btn-sm" onclick="openPlansOverlay()">
-                    <i class="fa-solid fa-layer-group"></i> <span>خططي والروتين</span>
+                <button type="button" class="btn btn-outline btn-sm" onclick="openSetupOverlay('routine')">
+                    <i class="fa-solid fa-layer-group"></i> <span>خططي وروتيني</span>
                 </button>
                 <button type="button" id="btn-customize-dashboard" class="btn btn-outline btn-sm btn-shimmer" onclick="toggleDashboardCustomizer()">
                     <i class="fa-solid fa-sliders"></i> <span data-i18n="dash.customize">تخصيص لوحتك</span>
