@@ -964,10 +964,28 @@ tbody tr:last-child td{ border-bottom:none; }
 .btn-start-session:disabled{ opacity:.5; transform:none; box-shadow:none; }
 .btn-start-session i{ font-size:22px; }
 .timer-ring-wrap{ position:relative; width:250px; height:250px; margin:10px auto 26px; }
-.timer-ring-wrap svg{ transform:rotate(-90deg); width:100%; height:100%; }
-.timer-ring-bg{ fill:none; stroke:var(--border); stroke-width:10; }
-.timer-ring-fg{ fill:none; stroke:url(#timerGrad); stroke-width:10; stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
-.timer-center{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.timer-ring-wrap::before{
+    content:""; position:absolute; inset:6px; border-radius:50%; z-index:0;
+    background:radial-gradient(circle at 32% 24%, rgba(255,255,255,0.55), rgba(255,255,255,0.06) 45%, rgba(255,255,255,0.18) 75%);
+    backdrop-filter:blur(16px) saturate(1.4); -webkit-backdrop-filter:blur(16px) saturate(1.4);
+    border:1px solid rgba(255,255,255,0.6);
+    box-shadow: inset 0 2px 16px rgba(255,255,255,0.35), inset 0 -10px 22px rgba(0,0,0,0.05), 0 16px 36px rgba(0,0,0,0.1);
+}
+.dark-mode .timer-ring-wrap::before{
+    background:radial-gradient(circle at 32% 24%, rgba(255,255,255,0.2), rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.07) 75%);
+    border-color:rgba(255,255,255,0.16);
+    box-shadow: inset 0 2px 16px rgba(255,255,255,0.1), inset 0 -10px 22px rgba(0,0,0,0.3), 0 16px 36px rgba(0,0,0,0.35);
+}
+.timer-ring-wrap::after{
+    content:""; position:absolute; top:12%; inset-inline-start:22%; width:30%; height:16%; border-radius:50%; z-index:0;
+    background:linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0) 70%);
+    filter:blur(2px); transform:rotate(-25deg); pointer-events:none;
+}
+.timer-ring-wrap svg{ position:relative; z-index:1; transform:rotate(-90deg); width:100%; height:100%; }
+.timer-ring-bg{ fill:none; stroke:rgba(120,120,140,0.16); stroke-width:5; }
+.dark-mode .timer-ring-bg{ stroke:rgba(255,255,255,0.12); }
+.timer-ring-fg{ fill:none; stroke:url(#timerGrad); stroke-width:5; stroke-linecap:round; transition:stroke-dashoffset 1s linear; filter:drop-shadow(0 0 8px rgba(201,150,46,0.35)); }
+.timer-center{ position:absolute; inset:0; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .timer-minutes{ font-family:var(--font-display); font-size:56px; font-weight:800; color:var(--text-1); line-height:1; }
 .timer-label{ font-size:12px; color:var(--text-3); font-weight:700; margin-top:6px; letter-spacing:.5px; }
 .timer-actions{ display:flex; justify-content:center; gap:12px; flex-wrap:wrap; }
@@ -977,9 +995,10 @@ tbody tr:last-child td{ border-bottom:none; }
 /* ============ زر التوسّع لوضع التركيز الكامل ============ */
 .btn-expand-focus{
     position:absolute; top:0; left:0; width:38px; height:38px; border-radius:50%;
-    background:var(--bg-alt); border:1px solid var(--border); color:var(--text-2);
+    background:rgba(255,255,255,0.5); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.5); color:var(--text-2);
     display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:2; transition:.2s var(--ease);
 }
+.dark-mode .btn-expand-focus{ background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.15); }
 .btn-expand-focus:hover{ background:var(--gold); color:#fff; border-color:var(--gold); transform:scale(1.08); }
 html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 
