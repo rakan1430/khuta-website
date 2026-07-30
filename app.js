@@ -61,7 +61,7 @@ const APP_SUPPORT_URL = "";
    أي أثر لهما في الواجهة (لا رابط، لا قسم) طالما false. لتفعيل أي منهما:
    غيّر القيمة إلى true هنا وأعد النشر، لا حاجة لأي تعديل آخر.
    ============================================================ */
-const FEATURE_EXAM_SIMULATOR = true;   // قسم الاختبارات المحاكية
+const FEATURE_EXAM_SIMULATOR = false;   // قسم الاختبارات المحاكية
 const FEATURE_TUTORS_DIRECTORY = false; // قسم المدرّسين الخصوصيين
 
 /* نظام المشرفين — لم يعد مقتصراً على معرّف واحد ثابت في الكود. الصلاحية
@@ -6898,7 +6898,14 @@ function askChatbot(text){
 }
 
 let chatHistory = [];
-let geminiWorking = true; // يُطفأ تلقائياً بعد أول فشل حتى لا نكرر محاولات بطيئة فاشلة كل رسالة
+// بدل تعطيل Gemini نهائياً طوال الجلسة بعد أول فشل (كان يجبر الطالب على
+// إعادة تحميل الصفحة ليعمل الذكاء الاصطناعي مجدداً حتى لو كان الفشل عارضاً
+// وقتياً كبطء شبكة أو استيقاظ بطيء لخادم الدالة الوسيطة على Netlify)، نستخدم
+// فترة تهدئة قصيرة: نعيد المحاولة تلقائياً بعد 30 ثانية من آخر فشل
+let geminiLastFailAt = 0;
+const GEMINI_RETRY_COOLDOWN_MS = 30000;
+function isGeminiWorking(){ return (Date.now() - geminiLastFailAt) > GEMINI_RETRY_COOLDOWN_MS; }
+
 async function sendChatbotMessage(){
     /* يُحفظ نص سؤال الطالب ليستعمله زر "اشرحها على السبورة" أسفل رد المساعد */
     const input = document.getElementById("chatbot-input");
@@ -6908,7 +6915,7 @@ async function sendChatbotMessage(){
     addChatbotMessage(text, "user");
     input.value = "";
 
-    if(geminiWorking){
+    if(isGeminiWorking()){
         addChatbotMessage("...", "bot typing-indicator");
         try{
             const reply = await askGemini(text);
@@ -6921,25 +6928,52 @@ async function sendChatbotMessage(){
             return;
         }catch(e){
             removeTypingIndicator();
-            geminiWorking = false; // نتوقف عن محاولة Gemini لبقية الجلسة، وننتقل للمساعد المحلي فوراً
-            console.error("[خُطى] Gemini غير متاح، التحويل للمساعد المحلي:", e);
+            geminiLastFailAt = Date.now(); // نتحوّل للمساعد المحلي مؤقتاً، ونعيد محاولة Gemini تلقائياً بعد فترة التهدئة
+            console.error("[خُطى] الذكاء الاصطناعي غير متاح مؤقتاً — تفاصيل الخطأ للمطوّر (تحقق من GEMINI_API_KEY ونشر gemini-proxy.js على Netlify):", e);
+            answerLocally(text, true);
+            return;
         }
     }
-    answerLocally(text);
+    answerLocally(text, false);
 }
 
-function answerLocally(text){
-    const lower = text.toLowerCase();
-    const match = FAQ_BOT.find(f => f.kw.some(k => lower.includes(k.toLowerCase())));
+function answerLocally(text, viaFallback){
+    const lower = normalizeArabic(text);
+    // مطابقة صارمة أولاً (الكلمة المفتاحية كاملة)، ثم مطابقة بجذر الكلمة (أول
+    // 4 أحرف على الأقل) لتغطية اختلاف اللواحق العربية— مثال: "موزونتي" تُطابق
+    // كلمة "موزونة" رغم اختلاف اللاحقة، لأن نفس الجذر الأول موجود في الجملة
+    let match = FAQ_BOT.find(f => f.kw.some(k => lower.includes(normalizeArabic(k))));
+    if(!match){
+        match = FAQ_BOT.find(f => f.kw.some(k => {
+            const nk = normalizeArabic(k);
+            return nk.length >= 4 && lower.includes(nk.slice(0, Math.max(4, nk.length - 2)));
+        }));
+    }
     setTimeout(() => {
         if(match){
             addChatbotMessage(currentLang==='ar' ? match.ar : match.en, "bot");
+        } else if(viaFallback){
+            // نوضّح بصراحة أن هذا تعطّل مؤقت بالذكاء الاصطناعي، لا قصوراً دائماً
+            // في المساعد — حتى لا يظن الطالب أن الميزة غير موجودة أصلاً
+            addChatbotMessage(currentLang==='ar'
+                ? "😕 مساعدك الذكي غير متاح مؤقتاً الآن (مشكلة اتصال). جرّب ترسل سؤالك مرة ثانية بعد قليل، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط."
+                : "😕 Your smart assistant is temporarily unavailable (connection issue). Try sending your question again shortly, or reach us directly via WhatsApp from the Links page.", "bot");
         } else {
             addChatbotMessage(currentLang==='ar'
                 ? "ما عندي إجابة جاهزة لهذا السؤال تحديداً. جرّب صياغة أخرى، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط."
                 : "I don't have a ready answer for that specific question. Try rephrasing, or reach us directly via WhatsApp from the Links page.", "bot");
         }
     }, 250);
+}
+// تطبيع بسيط للعربية: توحيد أشكال الألف والهمزة والتاء المربوطة/الألف
+// المقصورة، وحذف التشكيل — يرفع دقة المطابقة بين صياغات الطالب المختلفة
+function normalizeArabic(s){
+    return String(s).toLowerCase()
+        .replace(/[\u064B-\u065F]/g, "")           // التشكيل
+        .replace(/[إأآا]/g, "ا")
+        .replace(/ة/g, "ه")
+        .replace(/ى/g, "ي")
+        .trim();
 }
 
 function removeTypingIndicator(){
@@ -7751,9 +7785,27 @@ function computeRoutinePressure(){
         calendar++;
     }
     effective = Math.round(effective * 2) / 2;
+    // كم يوماً من أيام الأسبوع السبعة إجازة كاملة في الروتين الثابت نفسه
+    // (بمعزل عن التواريخ المستثناة المؤقتة) — يُستخدم لرسائل الحالات القصوى
+    const offDaysInRoutine = routine.filter(m => m === 2).length;
+
     let level, msg;
-    if(remainingPlanDays === 0){ level = "ok"; msg = labT("خطتك مكتملة تقريباً 🎉","Plan nearly complete 🎉"); }
-    else if(effective < remainingPlanDays){
+    if(offDaysInRoutine === 7){
+        // الحالة القصوى: كل أيام الأسبوع إجازة في الروتين الثابت — رسالة
+        // ساخنة صريحة بدل رسالة "مضغوط" العامة، لأن الرقم وحده (0 فعلياً)
+        // لا يوصل حجم المفارقة بنفس وضوح جملة مباشرة
+        level = "tight";
+        msg = labT("🤨 خطتك كلها إجازة! سبعة أيام إجازة في نفس الأسبوع؟ يعطيك العافية بس... متى بالضبط ناوي تذاكر؟ رجّع يوماً واحداً على الأقل عادي.",
+                   "🤨 Your whole week is off?! Seven vacation days in the same week — respect the hustle, but... when exactly do you plan to study? Bring back at least one normal day.");
+    } else if(remainingPlanDays === 0){
+        level = "ok"; msg = labT("خطتك مكتملة تقريباً 🎉","Plan nearly complete 🎉");
+    } else if(offDaysInRoutine >= 4){
+        // أغلب الأسبوع إجازة (4 أيام فأكثر من 7) — تنبيه واضح لكن أهدأ من
+        // الحالة القصوى أعلاه، بغضّ النظر عن نتيجة حساب الأيام الفعلية
+        level = "tight";
+        msg = labT(`⚠️ ${offDaysInRoutine} من أيام أسبوعك إجازة — هذا كثير. تحتاج ${remainingPlanDays} يوم مذاكرة ولديك ${effective} فعلياً؛ فكّر تحوّل بعضها لـ"أخف" بدل الإجازة الكاملة`,
+                   `⚠️ ${offDaysInRoutine} of your 7 days are off — that's a lot. You need ${remainingPlanDays} study days but only have ${effective}; consider switching some to "Lighter" instead of fully off`);
+    } else if(effective < remainingPlanDays){
         level = "tight";
         msg = labT(`مضغوط: تحتاج ${remainingPlanDays} يوم مذاكرة ولديك ${effective} فعلياً قبل الاختبار — قلّل الإجازات أو خفّف أقل`,
                    `Tight: need ${remainingPlanDays} study days but only ${effective} available`);

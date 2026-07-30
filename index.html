@@ -690,13 +690,11 @@ body.dark-mode .dn-star{ opacity:1; animation:khuta-twinkle 1.8s ease-in-out inf
 }
 
 /* ============ مساعد الأسئلة الشائعة ============ */
-.chatbot-fab{
-    position:fixed; bottom:26px; inset-inline-end:26px; width:56px; height:56px; border-radius:50%;
-    background:linear-gradient(135deg,var(--gold),#B0812A); color:#fff; border:none; font-size:22px;
-    box-shadow:var(--shadow-gold); cursor:pointer; z-index:2500; transition:.25s var(--ease);
-}
-.chatbot-fab:hover{ transform:scale(1.08); }
-@media (max-width:992px){ .chatbot-fab{ bottom:104px; inset-inline-end:16px; width:46px; height:46px; font-size:18px; } }
+/* ملاحظة: تصميم .chatbot-fab الفعلي (بيضاوي بأيقونة ونص) معرَّف لاحقاً في
+   قسم "زر الشات العائم" — أُزيلت القاعدة الدائرية القديمة هنا التي كانت
+   تتسرّب خصائصها (width:56px الثابت وborder-radius:50%) فوق التصميم الجديد
+   لأن كلتا القاعدتين تستهدفان نفس الفئة وتتكاملان بدل أن تحل إحداهما محل
+   الأخرى بالكامل — وهذا ما كان يُظهر الزر مضغوطاً وناقصاً. */
 .chatbot-panel{
     position:fixed; bottom:92px; inset-inline-end:26px; width:340px; max-width:calc(100vw - 40px);
     max-height:70vh; background:rgba(255,255,255,0.72); backdrop-filter:blur(24px) saturate(1.4); -webkit-backdrop-filter:blur(24px) saturate(1.4);
@@ -3577,13 +3575,13 @@ body.dark-mode .chatbot-board-btn{
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-clipboard-question" style="color:var(--gold);"></i> <span data-i18n="examsim.title">اختبارات محاكية</span></h2>
                 <p class="card-sub" style="margin-bottom:20px;" data-i18n="examsim.sub">تدرّب بنمط مطابق تماماً لاختبار قياس الفعلي — بوقت أو بدون وقت.</p>
                 <div class="path-options" id="examsim-type-options" style="margin-bottom:16px;">
-                    <label class="path-card selected"><input type="radio" name="examsim_type" value="full" checked hidden><b data-i18n="examsim.full">اختبار قدرات كامل</b></label>
-                    <label class="path-card"><input type="radio" name="examsim_type" value="verbal" hidden><b data-i18n="examsim.verbalOnly">لفظي فقط</b></label>
-                    <label class="path-card"><input type="radio" name="examsim_type" value="quant" hidden><b data-i18n="examsim.quantOnly">كمي فقط</b></label>
+                    <label class="path-card selected" onclick="toggleSelection(this,'radio')"><input type="radio" name="examsim_type" value="full" checked hidden><b data-i18n="examsim.full">اختبار قدرات كامل</b></label>
+                    <label class="path-card" onclick="toggleSelection(this,'radio')"><input type="radio" name="examsim_type" value="verbal" hidden><b data-i18n="examsim.verbalOnly">لفظي فقط</b></label>
+                    <label class="path-card" onclick="toggleSelection(this,'radio')"><input type="radio" name="examsim_type" value="quant" hidden><b data-i18n="examsim.quantOnly">كمي فقط</b></label>
                 </div>
                 <div class="path-options" id="examsim-timed-options" style="margin-bottom:20px;">
-                    <label class="path-card selected"><input type="radio" name="examsim_timed" value="timed" checked hidden><b data-i18n="examsim.timed">بوقت (كالاختبار الحقيقي)</b></label>
-                    <label class="path-card"><input type="radio" name="examsim_timed" value="untimed" hidden><b data-i18n="examsim.untimed">بدون وقت</b></label>
+                    <label class="path-card selected" onclick="toggleSelection(this,'radio')"><input type="radio" name="examsim_timed" value="timed" checked hidden><b data-i18n="examsim.timed">بوقت (كالاختبار الحقيقي)</b></label>
+                    <label class="path-card" onclick="toggleSelection(this,'radio')"><input type="radio" name="examsim_timed" value="untimed" hidden><b data-i18n="examsim.untimed">بدون وقت</b></label>
                 </div>
                 <button type="button" class="btn btn-block" onclick="startExamSimulation()"><i class="fa-solid fa-play"></i> <span data-i18n="examsim.start">ابدأ الاختبار</span></button>
             </div>
