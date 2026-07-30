@@ -994,6 +994,19 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
     background:#0d0620; /* لون احتياطي فقط قبل رسم الكانفس أول مرة */
 }
 #focus-canvas-bg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+/* الخلفية الكونية المتحركة (Canvas) للكمبيوتر فقط، كما طُلب صراحة — على
+   الهاتف تُستبدل بتدرّج ثابت خفيف موفّر للطاقة والبطارية، بنفس ألوان كل ثيم */
+.focus-mode-mobile-bg{ display:none; position:absolute; inset:0; z-index:-1; }
+@media (max-width:700px){
+    #focus-canvas-bg{ display:none; }
+    .focus-mode-mobile-bg{ display:block; }
+    [data-bg-theme="night"] .focus-mode-mobile-bg{ background:linear-gradient(160deg, #0d0620, #1a0f35, #120a28); }
+    [data-bg-theme="forest"] .focus-mode-mobile-bg{ background:linear-gradient(160deg, #0a1f16, #0d2a1c, #081810); }
+    [data-bg-theme="sunset"] .focus-mode-mobile-bg{ background:linear-gradient(160deg, #2a1030, #5a1f35, #7a3020); }
+    [data-bg-theme="desk"] .focus-mode-mobile-bg{ background:linear-gradient(160deg, #1a1408, #241a0a, #0d0904); }
+    [data-bg-theme="ocean"] .focus-mode-mobile-bg{ background:linear-gradient(160deg, #050a1a, #0a1a33, #123152); }
+    [data-bg-theme="dawn"] .focus-mode-mobile-bg{ background:linear-gradient(160deg, #2a1735, #4a2050, #8a4a6a); }
+}
 .focus-mode-topbar{ display:flex; justify-content:space-between; align-items:center; padding:24px 30px; }
 .focus-mode-center{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 20px; }
 .focus-mode-icon{ font-size:26px; color:var(--gold); margin-bottom:10px; opacity:.9; }
@@ -1779,6 +1792,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
 <div id="focus-mode-overlay" class="focus-mode-overlay" style="display:none;">
     <div class="focus-mode-bg">
         <canvas id="focus-canvas-bg"></canvas>
+        <div class="focus-mode-mobile-bg"></div>
     </div>
     <div class="focus-mode-topbar">
         <div class="focus-theme-picker-wrap">

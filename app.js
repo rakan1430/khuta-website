@@ -4526,10 +4526,7 @@ function generateFocusStars(){
 function renderFocusCanvasFrame(time){
     const canvas = document.getElementById("focus-canvas-bg");
     const overlay = document.getElementById("focus-mode-overlay");
-    if(!canvas || !focusCanvasCtx || !overlay || overlay.style.display === "none"){
-        focusCanvasAnimId = null;
-        return; // نوقف الحلقة تماماً عند إغلاق وضع التركيز، توفيراً للطاقة والمعالجة
-    }
+    if(!canvas || !focusCanvasCtx || !overlay) return;
     const ctx = focusCanvasCtx;
     const w = canvas.width, h = canvas.height;
     const theme = FOCUS_THEME_PRESETS[overlay.dataset.bgTheme] || FOCUS_THEME_PRESETS.night;
@@ -4568,19 +4565,29 @@ function renderFocusCanvasFrame(time){
         ctx.fillStyle = grad;
         ctx.fillRect(x - b.r, y - b.r, b.r * 2, b.r * 2);
     });
-
-    focusCanvasAnimId = requestAnimationFrame(renderFocusCanvasFrame);
+}
+/* محرّك الحلقة منفصل تماماً عن دالة الرسم — يعتمد على علم boolean صريح
+   (وليس على قراءة overlay.style.display في كل إطار)، لتفادي أي هشاشة إن
+   لمس كود آخر تلك الخاصية لأي سبب مستقبلاً */
+let focusCanvasActive = false;
+function focusCanvasTick(time){
+    if(!focusCanvasActive){ focusCanvasAnimId = null; return; }
+    renderFocusCanvasFrame(time);
+    focusCanvasAnimId = requestAnimationFrame(focusCanvasTick);
 }
 function startFocusCanvasBg(){
+    if(window.innerWidth <= 700) return; // للكمبيوتر فقط — الهاتف يستخدم الخلفية الثابتة الخفيفة
     const canvas = document.getElementById("focus-canvas-bg");
     if(!canvas) return;
     focusCanvasCtx = canvas.getContext("2d");
     resizeFocusCanvas();
     generateFocusStars();
     document.getElementById("focus-mode-overlay").addEventListener("mousemove", handleFocusMouseMove);
-    if(!focusCanvasAnimId) focusCanvasAnimId = requestAnimationFrame(renderFocusCanvasFrame);
+    focusCanvasActive = true;
+    if(!focusCanvasAnimId) focusCanvasAnimId = requestAnimationFrame(focusCanvasTick);
 }
 function stopFocusCanvasBg(){
+    focusCanvasActive = false;
     if(focusCanvasAnimId){ cancelAnimationFrame(focusCanvasAnimId); focusCanvasAnimId = null; }
     document.getElementById("focus-mode-overlay").removeEventListener("mousemove", handleFocusMouseMove);
 }
