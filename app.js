@@ -34,7 +34,7 @@ try{
    أحياناً ولا يعمل أحياناً أخرى حسب سرعة تحميل الصفحة أو الجهاز. */
 initOAuthListener();
 
-const APP_OWNER_NAME = "rakan/mashal"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
+const APP_OWNER_NAME = "rakan/mashal/khalid"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
 const APP_OWNER_EMAIL = "sonyaloy9@gmail.com";
 
 /* نموذج الملاحظات — أرسل مباشرة دون فتح تطبيق بريد:
@@ -61,7 +61,7 @@ const APP_SUPPORT_URL = "";
    أي أثر لهما في الواجهة (لا رابط، لا قسم) طالما false. لتفعيل أي منهما:
    غيّر القيمة إلى true هنا وأعد النشر، لا حاجة لأي تعديل آخر.
    ============================================================ */
-const FEATURE_EXAM_SIMULATOR = false;   // قسم الاختبارات المحاكية
+const FEATURE_EXAM_SIMULATOR = true;   // قسم الاختبارات المحاكية
 const FEATURE_TUTORS_DIRECTORY = false; // قسم المدرّسين الخصوصيين
 
 /* نظام المشرفين — لم يعد مقتصراً على معرّف واحد ثابت في الكود. الصلاحية
