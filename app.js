@@ -2002,7 +2002,6 @@ function renderBadges(){
                 <span>${currentLang==='ar'?b.ar:b.en}</span>
             </div>`).join("");
     }
-    renderDashboardBadges();
 }
 
 function getCustomTasks(){
@@ -3358,99 +3357,6 @@ function adminStartFreeTimer(){
 }
 
 
-/* ============================================================
-   26) تخصيص لوحة التحكم — إظهار/إخفاء بطاقات، بجانب الترتيب بالأسهم
-   الموجود مسبقاً في initDashboardReorder/moveDashCard
-   ============================================================ */
-const DASHBOARD_CARDS = [
-    // ملاحظة: بطاقات "نظرة عامة" (overview-*) موجودة في قسم ثابت التخطيط أعلى
-    // اللوحة (#dash-overview)، وليست جزءاً من كومة #dashboard-cards القابلة
-    // لإعادة الترتيب بالأسهم — لذا reorderable:false لها تحديداً، حتى لا تُنتزع
-    // من مكانها الأصلي عند "إعادة الضبط الافتراضي"
-    { id: "dash-card-overview-hero", labelAr: "نظرة سريعة (XP والإحصائيات)", labelEn: "Quick overview (XP & stats)", defaultVisible: true, reorderable: false },
-    { id: "dash-card-overview-heatmap", labelAr: "خريطة النشاط اليومي", labelEn: "Daily activity heatmap", defaultVisible: true, reorderable: false },
-    { id: "dash-card-overview-quests", labelAr: "لمحة مهام اليوم", labelEn: "Today's tasks glance", defaultVisible: true, reorderable: false },
-    { id: "dash-card-overview-leaderboard", labelAr: "لوحة الصدارة المصغّرة", labelEn: "Mini leaderboard", defaultVisible: true, reorderable: false },
-    { id: "dash-card-progress", labelAr: "مسار التقدم", labelEn: "Progress Path", defaultVisible: true, reorderable: false },
-    { id: "dash-card-table", labelAr: "جدول المهام", labelEn: "Task Table", defaultVisible: true, reorderable: true },
-    { id: "dash-card-timer", labelAr: "وضع التركيز (المؤقت)", labelEn: "Focus Mode (Timer)", defaultVisible: true, reorderable: true },
-    { id: "dash-card-badges", labelAr: "الأوسمة والتروفيات", labelEn: "Badges & Trophies", defaultVisible: false, reorderable: true },
-    { id: "dash-card-community", labelAr: "المجتمع", labelEn: "Community", defaultVisible: false, reorderable: true },
-];
-
-function getDashboardCardVisibility(){
-    try{ return JSON.parse(localStorage.getItem("khuta_dashboard_visible")) || {}; }catch(e){ return {}; }
-}
-
-function applyDashboardCardVisibility(){
-    const saved = getDashboardCardVisibility();
-    DASHBOARD_CARDS.forEach(c => {
-        const el = document.getElementById(c.id);
-        if(!el) return;
-        const visible = Object.prototype.hasOwnProperty.call(saved, c.id) ? saved[c.id] : c.defaultVisible;
-        el.style.display = visible ? "" : "none";
-    });
-    const badgesCard = document.getElementById("dash-card-badges");
-    if(badgesCard && badgesCard.style.display !== "none") renderDashboardBadges();
-    const communityCard = document.getElementById("dash-card-community");
-    if(communityCard && communityCard.style.display !== "none") initCommunityIfNeeded();
-}
-
-function toggleDashboardCustomizer(){
-    const panel = document.getElementById("dashboard-customizer-panel");
-    const opening = panel.style.display === "none";
-    panel.style.display = opening ? "block" : "none";
-    if(opening) populateDashboardCustomizerList();
-}
-
-function populateDashboardCustomizerList(){
-    const list = document.getElementById("dashboard-customizer-list");
-    const saved = getDashboardCardVisibility();
-    list.innerHTML = DASHBOARD_CARDS.map(c => {
-        const visible = Object.prototype.hasOwnProperty.call(saved, c.id) ? saved[c.id] : c.defaultVisible;
-        return `
-        <label class="path-card ${visible ? 'selected' : ''}" style="cursor:pointer; display:flex; align-items:center; gap:10px; padding:12px 14px;" onclick="toggleDashboardCardCheckbox(this, '${c.id}')">
-            <input type="checkbox" ${visible ? "checked" : ""} style="width:18px; height:18px;">
-            <span>${currentLang==='ar' ? c.labelAr : c.labelEn}</span>
-        </label>`;
-    }).join("");
-}
-
-function toggleDashboardCardCheckbox(labelEl, cardId){
-    const checkbox = labelEl.querySelector("input");
-    const visible = checkbox.checked;
-    labelEl.classList.toggle("selected", visible);
-    const saved = getDashboardCardVisibility();
-    saved[cardId] = visible;
-    localStorage.setItem("khuta_dashboard_visible", JSON.stringify(saved));
-    applyDashboardCardVisibility();
-    if(visible) initDashboardReorder();
-}
-
-function resetDashboardCustomization(){
-    localStorage.removeItem("khuta_dashboard_visible");
-    localStorage.removeItem("khuta_dashboard_order");
-    const container = document.getElementById("dashboard-cards");
-    DASHBOARD_CARDS.filter(c => c.reorderable).forEach(c => {
-        const el = document.getElementById(c.id);
-        if(el) container.appendChild(el); // يعيد الترتيب الافتراضي (ترتيب ظهورها في HTML)
-    });
-    applyDashboardCardVisibility();
-    populateDashboardCustomizerList(); // تحديث حالة الـcheckboxes المعروضة فوراً في نفس اللوحة
-    showToast(currentLang==='ar' ? "↩️ عادت اللوحة لوضعها الافتراضي" : "↩️ Dashboard reset to default");
-}
-
-function renderDashboardBadges(){
-    const grid = document.getElementById("badges-grid-dashboard");
-    if(!grid) return;
-    const earned = getEarnedBadges();
-    const visible = BADGES.filter(b => !b.secret || earned.includes(b.id));
-    grid.innerHTML = visible.map(b => `
-        <div class="badge-chip ${earned.includes(b.id) ? "earned" : "locked"}" title="${currentLang==='ar'?b.ar:b.en}">
-            <i class="fa-solid ${b.icon}"></i>
-            <span>${currentLang==='ar'?b.ar:b.en}</span>
-        </div>`).join("");
-}
 
 /* ============================================================
    28) القسمان الجديدان — خلف علمي تفعيل (FEATURE_EXAM_SIMULATOR /
@@ -3953,12 +3859,6 @@ const ONBOARDING_STEPS = [
         titleAr: "ابدأ جلستك من هنا", titleEn: "Start your session here",
         textAr: "المؤقت يقسّم وقتك تلقائياً بين اللفظي والكمي، ويتعلّم من أدائك مع الوقت ليُعدّل التوزيع بنفسه.",
         textEn: "The timer auto-splits your time between verbal and quant, and learns from your pace over time to rebalance itself.",
-    },
-    {
-        id: "btn-customize-dashboard",
-        titleAr: "خصّص لوحتك", titleEn: "Customize your dashboard",
-        textAr: "أضف بطاقة الأوسمة أو المجتمع للوحتك، أو أخفِ ما لا تحتاجه — من زر «تخصيص لوحتك».",
-        textEn: "Add the badges or community card to your dashboard, or hide what you don't need — from the 'Customize dashboard' button.",
     },
     {
         selector: '[data-tab="calculator"]',
@@ -5134,8 +5034,6 @@ function finishLoginBoot(){
     }
     updateShortBreakLabel();
     updateCustomMinHint();
-    initDashboardReorder();
-    applyDashboardCardVisibility();
     updateExamCountdownWidget();
     applyFeatureFlags();
     initOverlayScrollLock();
@@ -5863,7 +5761,6 @@ let presenceChannel = null;
 async function startPresenceHeartbeat(){
     if(!sb) return;
     const el = document.getElementById("room-count");
-    const dashEl = document.getElementById("dash-room-count");
     try{
         const { data: userData } = await sb.auth.getUser();
         const uid = userData && userData.user && userData.user.id;
@@ -5874,7 +5771,6 @@ async function startPresenceHeartbeat(){
                 const state = presenceChannel.presenceState();
                 const count = Object.keys(state).length || 1;
                 if(el) el.textContent = count;
-                if(dashEl) dashEl.textContent = count;
                 const liveEl = document.getElementById("live-users-count");
                 if(liveEl) liveEl.textContent = count;
             })
@@ -5887,7 +5783,6 @@ async function startPresenceHeartbeat(){
         // فشل صامت مع بديل ثابت — الميزة الرئيسية للموقع لا تعتمد على هذا العدّاد
         console.error("[خُطى] تعذّر تفعيل الحضور اللحظي (Realtime):", e);
         if(el) el.textContent = "1";
-        if(dashEl) dashEl.textContent = "1";
     }
 }
 
@@ -6257,51 +6152,6 @@ function getSpecialties(){ return window.__REMOTE_SPECIALTIES__ || SPECIALTIES; 
 /* ============================================================
    24) ترتيب بطاقات لوحة التحكم — تحريك بسيط بالأسهم بدل السحب والإفلات
    ============================================================ */
-function initDashboardReorder(){
-    const container = document.getElementById("dashboard-cards");
-    if(!container) return;
-
-    // حقن أزرار تحريك صغيرة في زاوية كل بطاقة
-    container.querySelectorAll(":scope > .card").forEach(card => {
-        if(card.querySelector(".reorder-controls")) return;
-        const ctrl = document.createElement("div");
-        ctrl.className = "reorder-controls";
-        ctrl.innerHTML = `
-            <button type="button" title="${currentLang==='ar'?'تحريك للأعلى':'Move up'}" onclick="moveDashCard('${card.id}',-1)"><i class="fa-solid fa-chevron-up"></i></button>
-            <button type="button" title="${currentLang==='ar'?'تحريك للأسفل':'Move down'}" onclick="moveDashCard('${card.id}',1)"><i class="fa-solid fa-chevron-down"></i></button>
-        `;
-        card.style.position = "relative";
-        card.appendChild(ctrl);
-    });
-
-    // استرجاع الترتيب المحفوظ
-    let order = [];
-    try{ order = JSON.parse(localStorage.getItem("khuta_dashboard_order")) || []; }catch(e){}
-    if(order.length){
-        order.forEach(id => {
-            const el = document.getElementById(id);
-            if(el) container.appendChild(el);
-        });
-    }
-}
-
-function moveDashCard(id, direction){
-    const container = document.getElementById("dashboard-cards");
-    const card = document.getElementById(id);
-    if(!container || !card) return;
-    const cards = Array.from(container.querySelectorAll(":scope > .card"));
-    const idx = cards.indexOf(card);
-    const targetIdx = idx + direction;
-    if(targetIdx < 0 || targetIdx >= cards.length) return;
-    if(direction < 0){
-        container.insertBefore(card, cards[targetIdx]);
-    } else {
-        container.insertBefore(cards[targetIdx], card);
-    }
-    const newOrder = Array.from(container.querySelectorAll(":scope > .card")).map(c => c.id);
-    localStorage.setItem("khuta_dashboard_order", JSON.stringify(newOrder));
-}
-
 /* ============================================================
    23) حاسبة المعدل التراكمي للثانوي (GPA)
    ============================================================ */
