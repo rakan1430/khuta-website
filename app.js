@@ -926,6 +926,7 @@ window.onload = () => {
     checkAndClaimReferralRewards();
     checkExamReminder();
 
+    applyThemeChrome(localStorage.getItem("khuta_theme") === "dark");
     if(localStorage.getItem("khuta_theme") === "dark"){
         document.body.classList.add("dark-mode");
     }
@@ -1370,10 +1371,19 @@ function toggleSidebar(){
     localStorage.setItem("khuta_sidebar_collapsed", collapsed ? "1" : "0");
 }
 
+function applyThemeChrome(isDark){
+    // لون شريط حالة المتصفح (theme-color) + خلفية عنصر html نفسه — كانا
+    // ثابتين على الذهبي/الأبيض فيظهران كحواف فاتحة غريبة حول الصفحة على الهاتف
+    const meta = document.getElementById("meta-theme-color");
+    if(meta) meta.setAttribute("content", isDark ? "#0A0920" : "#F2EDE3");
+    document.documentElement.style.background = isDark ? "#0A0920" : "#F2EDE3";
+}
+
 function toggleTheme(){
     document.body.classList.toggle("dark-mode");
     const isDark = document.body.classList.contains("dark-mode");
     localStorage.setItem("khuta_theme", isDark ? "dark" : "light");
+    applyThemeChrome(isDark);
 }
 
 /* ============================================================

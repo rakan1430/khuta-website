@@ -22,7 +22,7 @@
 <meta name="twitter:description" content="جدول مذاكرة ذكي يتكيّف معك، حاسبة موزونة لكل الجامعات السعودية، ومجتمع طلاب يذاكرون معك. مجاني بالكامل.">
 <meta name="twitter:image" content="https://khutaa.netlify.app/icon-512.png">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#C9962E">
+<meta name="theme-color" id="meta-theme-color" content="#C9962E">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1770,6 +1770,34 @@ html[dir="ltr"] .focus-theme-picker{ transform: translateX(28px); }
     .focus-theme-picker.open{ transform: translateY(0); }
 }
 
+
+/* --- 16) إصلاح جذري لتخطيط الهاتف: المحتوى كان محشوراً في العمود الثاني ---
+   .main-content معرَّفة بلا تقييد بـ grid-column:2 (لتثبيتها بجانب القائمة
+   على الكمبيوتر بعد حوادث التموضع التلقائي الموثَّقة)، لكن على الهاتف تصبح
+   الشبكة عموداً واحداً 1fr — فيُدفع المحتوى لعمود ضمني ثانٍ: يخسر عرض الـgap
+   (26px)، وينحاز لليسار في RTL، ويترك فراغاً يمينياً. قيسَ الخلل والإصلاح
+   مباشرة على الموقع الحي (0px 1510px قبل ← عرض كامل متمركز بعد). */
+@media (max-width:992px){
+    .main-content{ grid-column:1; }
+}
+
+/* --- 17) خلفية عنصر html نفسه بلون الثيم — يمنع أي حواف/ومضات بيضاء على
+   الهاتف (مناطق تجاوز التمرير المطاطي، محيط شريط الحالة، لحظات التحميل) --- */
+html{ background:#F2EDE3; }
+html:has(body.dark-mode){ background:#0A0920; }
+
+/* --- 18) الشريط العلوي المخصص لزر "تخصيص لوحتك" أعلى اللوحة --- */
+.dash-toolbar{
+    display:flex; justify-content:flex-end; align-items:center;
+    margin:0 0 14px;
+}
+#dashboard-customizer-panel{ margin-bottom:18px; }
+
+/* --- 19) تناسق الهاتف: البطاقة الإحصائية اليتيمة تمتد بعرض الصف كاملاً --- */
+@media (max-width:700px){
+    .overview-hero-row .overview-stat-card:last-child{ grid-column:1 / -1; }
+}
+
 </style>
 </head>
 <body>
@@ -2433,6 +2461,18 @@ html[dir="ltr"] .focus-theme-picker{ transform: translateX(28px); }
 
         <!-- ===================== لوحة الجدول ===================== -->
         <section id="view-dashboard" class="view-section active">
+            <div class="dash-toolbar">
+                <button type="button" id="btn-customize-dashboard" class="btn btn-outline btn-sm btn-shimmer" onclick="toggleDashboardCustomizer()">
+                    <i class="fa-solid fa-sliders"></i> <span data-i18n="dash.customize">تخصيص لوحتك</span>
+                </button>
+            </div>
+            <div id="dashboard-customizer-panel" class="card" style="display:none; margin-bottom:18px; background:var(--bg-alt); border:1.5px dashed var(--border);">
+                <h2 style="margin-bottom:4px; font-size:16px;"><i class="fa-solid fa-sliders" style="color:var(--gold);"></i> <span data-i18n="dash.customizeTitle">تخصيص لوحتك</span></h2>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="dash.customizeDesc">فعّل أو أطفئ أي بطاقة وشاهدها تظهر/تختفي مباشرة في لوحتك أسفل، ورتّبها بأسهم أعلى/أسفل على كل بطاقة.</p>
+                <div id="dashboard-customizer-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                <button type="button" class="btn btn-outline btn-sm" style="margin-top:14px;" onclick="resetDashboardCustomization()"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="dash.resetDefault">إعادة الضبط الافتراضي</span></button>
+            </div>
+
 
             <div id="dash-overview">
                 <div class="overview-hero-row" id="dash-card-overview-hero">
@@ -2539,17 +2579,7 @@ html[dir="ltr"] .focus-theme-picker{ transform: translateX(28px); }
             </div>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; margin:22px 0 14px;">
-                <button type="button" id="btn-customize-dashboard" class="btn btn-outline btn-sm btn-shimmer" onclick="toggleDashboardCustomizer()">
-                    <i class="fa-solid fa-sliders"></i> <span data-i18n="dash.customize">تخصيص لوحتك</span>
-                </button>
-            </div>
-            <div id="dashboard-customizer-panel" class="card" style="display:none; margin-bottom:18px; background:var(--bg-alt); border:1.5px dashed var(--border);">
-                <h2 style="margin-bottom:4px; font-size:16px;"><i class="fa-solid fa-sliders" style="color:var(--gold);"></i> <span data-i18n="dash.customizeTitle">تخصيص لوحتك</span></h2>
-                <p class="card-sub" style="margin-bottom:14px;" data-i18n="dash.customizeDesc">فعّل أو أطفئ أي بطاقة وشاهدها تظهر/تختفي مباشرة في لوحتك أسفل، ورتّبها بأسهم أعلى/أسفل على كل بطاقة.</p>
-                <div id="dashboard-customizer-list" style="display:flex; flex-direction:column; gap:8px;"></div>
-                <button type="button" class="btn btn-outline btn-sm" style="margin-top:14px;" onclick="resetDashboardCustomization()"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="dash.resetDefault">إعادة الضبط الافتراضي</span></button>
-            </div>
+            
             <div id="dashboard-cards">
 
 
