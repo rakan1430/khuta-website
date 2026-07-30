@@ -1026,6 +1026,15 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
     [data-bg-theme="ocean"] .focus-mode-mobile-bg{ background:linear-gradient(160deg, #050a1a, #0a1a33, #123152); }
     [data-bg-theme="dawn"] .focus-mode-mobile-bg{ background:linear-gradient(160deg, #2a1735, #4a2050, #8a4a6a); }
 }
+/* توهج ناعم يتبع مؤشر الماوس بسلاسة — يعطي إحساساً حقيقياً بالتفاعل الحي مع
+   المساحة، وليس فقط خلفية متحركة بمعزل عن حركة المستخدم. للكمبيوتر فقط. */
+.focus-cursor-glow{
+    display:none; position:absolute; top:0; inset-inline-start:0; width:420px; height:420px; margin:-210px;
+    border-radius:50%; pointer-events:none; z-index:0; mix-blend-mode:screen;
+    background:radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(232,199,126,0.06) 40%, transparent 72%);
+    transition:opacity .4s ease, transform .15s ease-out; opacity:0; will-change:transform;
+}
+@media (min-width:701px){ .focus-cursor-glow{ display:block; } }
 .focus-mode-topbar{ display:flex; justify-content:space-between; align-items:center; padding:24px 30px; }
 .focus-mode-center{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 20px; }
 .focus-mode-icon{ font-size:26px; color:var(--gold); margin-bottom:10px; opacity:.9; }
@@ -1033,8 +1042,14 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 .focus-mode-sub{ color:rgba(255,255,255,0.55); font-size:14px; margin-bottom:18px; }
 .focus-session-pill{
     display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,0.08); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
-    border:1px solid rgba(255,255,255,0.15); padding:8px 18px; border-radius:99px; font-size:12.5px; font-weight:700; color:rgba(255,255,255,0.85); margin-bottom:28px;
+    border:1px solid rgba(255,255,255,0.15); padding:8px 18px; border-radius:99px; font-size:12.5px; font-weight:700; color:rgba(255,255,255,0.85); margin-bottom:10px;
 }
+.focus-change-goal-pill{
+    display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,0.05); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.12); padding:6px 16px; border-radius:99px; font-size:11.5px; font-weight:700; color:rgba(255,255,255,0.6);
+    margin-bottom:26px; cursor:pointer; transition:.2s var(--ease); font-family:var(--font-body);
+}
+.focus-change-goal-pill:hover{ background:rgba(201,150,46,0.16); border-color:rgba(232,199,126,0.35); color:#fff; transform:translateY(-1px); }
 .focus-mode-topbar button{
     background:rgba(255,255,255,0.08); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgba(255,255,255,0.15); color:#fff;
 }
@@ -1126,6 +1141,8 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 }
 .focus-mode-task-card{ inset-inline-end:26px; }
 .focus-mode-xp-card{ inset-inline-start:26px; }
+.focus-task-card-pulse{ animation:focusTaskPulse 1.2s ease; }
+@keyframes focusTaskPulse{ 0%,100%{ box-shadow: inset 0 1px 12px rgba(255,255,255,0.08), 0 16px 40px rgba(0,0,0,0.35); } 40%{ box-shadow: inset 0 1px 12px rgba(255,255,255,0.08), 0 0 0 3px rgba(201,150,46,0.5), 0 16px 40px rgba(0,0,0,0.35); } }
 .focus-task-label{ font-size:11px; color:rgba(255,255,255,0.5); font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
 .focus-task-count-pill{ background:var(--gold); color:#1a1200; font-size:10px; font-weight:800; padding:1px 7px; border-radius:99px; }
 #focus-task-info{ font-size:13.5px; font-weight:600; }
@@ -1812,6 +1829,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
     <div class="focus-mode-bg">
         <canvas id="focus-canvas-bg"></canvas>
         <div class="focus-mode-mobile-bg"></div>
+        <div id="focus-cursor-glow" class="focus-cursor-glow"></div>
     </div>
     <div class="focus-mode-topbar">
         <div class="focus-theme-picker-wrap">
@@ -1832,6 +1850,7 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
         <h1 data-i18n="focus.title">وضع التركيز</h1>
         <p class="focus-mode-sub" data-i18n="focus.subtitle">ركّز الآن، وكن فخوراً لاحقاً.</p>
         <div class="focus-session-pill" id="focus-session-pill"><span class="dot"></span><span id="focus-session-pill-text" data-i18n="focus.idle">جاهز للبدء</span></div>
+        <button type="button" class="focus-change-goal-pill" onclick="highlightFocusTaskList()"><i class="fa-solid fa-bullseye"></i> <span data-i18n="focus.changeGoal">تغيير الهدف</span></button>
 
         <div class="focus-timer-ring-wrap">
             <div class="focus-orbit-ring focus-orbit-ring-1"></div>

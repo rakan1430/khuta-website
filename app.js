@@ -384,6 +384,7 @@ ar:{
 "progress.dayOf":"اليوم الحالي","progress.totalDays":"إجمالي الأيام","progress.remaining":"أيام متبقية","progress.tasksDone":"مهام مكتملة",
 "table.title":"جدول مهامك المخصص","table.sub":"تُحسب الكميات تلقائياً بناءً على مدة خطتك","table.reset":"إعادة ضبط الخطة","table.editSources":"تعديل المصادر والخطة","table.freshStart":"بدء من جديد بالكامل",
 "dash.customize":"تخصيص لوحتك","dash.customizeTitle":"تخصيص لوحتك","dash.customizeDesc":"اختر البطاقات التي تريد رؤيتها، ورتّبها من صفحة اللوحة نفسها بأسهم أعلى/أسفل.","dash.resetDefault":"إعادة الضبط الافتراضي","dash.done":"تم",
+"deepreport.title":"تقريرك الأسبوعي المتعمّق","deepreport.sub":"تحليل حقيقي من بيانات مذاكرتك الفعلية — ليس تقديراً.",
 "overview.totalXp":"إجمالي نقاط الخبرة","overview.today":"اليوم","overview.streakDays":"يوم متتالي","overview.studyHours":"ساعة مذاكرة","overview.tasksToday":"إنجاز اليوم","overview.activityTitle":"نشاطك اليومي","overview.activitySub":"كل مربع يمثّل يوماً — كلما اغمّق اللون زادت دقائق مذاكرتك فيه","overview.less":"أقل","overview.more":"أكثر","overview.questsTitle":"مهام اليوم","overview.questsSub":"لمحة سريعة — عدّلها من جدولك الكامل أدناه","overview.leaderboardTitle":"لوحة الصدارة",
 "notif.title":"الإشعارات","notif.clearAll":"مسح الكل",
 "dash.communityDesc":"نظرة سريعة — تفاصيل أكثر في صفحة المجتمع الكاملة","dash.openCommunity":"فتح صفحة المجتمع",
@@ -469,7 +470,7 @@ ar:{
 "push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
 "focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.todayTasks":"مهام اليوم","focus.xpPoints":"نقاط XP",
 "focus.idle":"جاهز للبدء","focus.paused":"متوقف مؤقتاً","focus.inSession":"في جلسة تركيز","focus.onBreak":"في استراحة","focus.start":"ابدأ التركيز","focus.skip":"تخطّي",
-"focus.themeNight":"ليل نجمي","focus.themeSunset":"غروب الشمس","focus.themeDesk":"مكتب وقهوة","focus.themeOcean":"محيط هادئ","focus.themeDawn":"فجر دافئ",
+"focus.themeNight":"ليل نجمي","focus.themeForest":"غابة هادئة","focus.themeSunset":"غروب الشمس","focus.themeDesk":"مكتب وقهوة","focus.themeOcean":"محيط هادئ","focus.themeDawn":"فجر دافئ","focus.changeGoal":"تغيير الهدف",
 "account.noRecoveryNote":"⚠️ تذكير: حسابات اسم المستخدم لا تدعم استرجاع كلمة مرور منسية (لا نطلب بريدك الحقيقي أبداً) — احفظها في مكان آمن. بياناتك المحلية على جهازك تبقى آمنة دائماً بغض النظر.",
 "spec.title":"دليل التخصصات الذكي","spec.sub":"نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة","spec.search":"ابحث عن تخصص...",
 "room.title":"غرفة المذاكرة","room.sub":"لست وحدك — بدون شات، فقط إحساس بالرفقة","room.studying":"طالب يذاكر الآن معك",
@@ -537,6 +538,7 @@ en:{
 "progress.dayOf":"Current day","progress.totalDays":"Total days","progress.remaining":"Days left","progress.tasksDone":"Tasks done",
 "table.title":"Your custom task schedule","table.sub":"Quantities are calculated automatically from your plan length","table.reset":"Reset plan","table.editSources":"Edit sources & plan","table.freshStart":"Start completely fresh",
 "dash.customize":"Customize dashboard","dash.customizeTitle":"Customize Your Dashboard","dash.customizeDesc":"Choose which cards to show, and reorder them from the dashboard page using the up/down arrows.","dash.resetDefault":"Reset to default","dash.done":"Done",
+"deepreport.title":"Your Deep Weekly Report","deepreport.sub":"Real analysis from your actual study data — not an estimate.",
 "overview.totalXp":"Total XP","overview.today":"today","overview.streakDays":"day streak","overview.studyHours":"study hours","overview.tasksToday":"today's progress","overview.activityTitle":"Your daily activity","overview.activitySub":"Each square is a day — darker means more study minutes that day","overview.less":"Less","overview.more":"More","overview.questsTitle":"Today's tasks","overview.questsSub":"Quick glance — edit from your full schedule below","overview.leaderboardTitle":"Leaderboard",
 "notif.title":"Notifications","notif.clearAll":"Clear all",
 "dash.communityDesc":"Quick glance — more detail on the full Community page","dash.openCommunity":"Open Community page",
@@ -622,7 +624,7 @@ en:{
 "push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
 "focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.todayTasks":"Today's tasks","focus.xpPoints":"XP Points",
 "focus.idle":"Ready to start","focus.paused":"Paused","focus.inSession":"In a focus session","focus.onBreak":"On a break","focus.start":"Start focusing","focus.skip":"Skip",
-"focus.themeNight":"Starry night","focus.themeSunset":"Sunset","focus.themeDesk":"Desk & coffee","focus.themeOcean":"Calm ocean","focus.themeDawn":"Warm dawn",
+"focus.themeNight":"Starry night","focus.themeForest":"Calm forest","focus.themeSunset":"Sunset","focus.themeDesk":"Desk & coffee","focus.themeOcean":"Calm ocean","focus.themeDawn":"Warm dawn","focus.changeGoal":"Change goal",
 "account.noRecoveryNote":"⚠️ Reminder: username accounts don't support forgotten-password recovery (we never ask for your real email) — save it somewhere safe. Your local data on this device stays safe regardless.",
 "spec.title":"Smart Specialty Guide","spec.sub":"A general overview — check university sites for exact college details","spec.search":"Search a major...",
 "room.title":"Study Room","room.sub":"You're not alone — no chat, just a sense of company","room.studying":"student(s) studying with you now",
@@ -4448,6 +4450,15 @@ const FOCUS_QUOTES = [
 
 /* يُعيد توجيه الزر داخل وضع التركيز لنفس أزرار لوحة التحكم تماماً —
    لا تكرار لمنطق الجلسة، فقط "نقرة بالنيابة" لتفادي أي احتمال تعارض حالة */
+/* زر "تغيير الهدف" — يوجّه الانتباه فعلياً لقائمة المهام الحقيقية (مصدر
+   الحقيقة الوحيد لما يجب إنجازه اليوم)، بدل فتح نافذة اختيار منفصلة ووهمية */
+function highlightFocusTaskList(){
+    const card = document.getElementById("focus-task-card");
+    if(!card || card.style.display === "none") return;
+    card.scrollIntoView({ behavior:"smooth", block:"nearest" });
+    card.classList.add("focus-task-card-pulse");
+    setTimeout(() => card.classList.remove("focus-task-card-pulse"), 1200);
+}
 function focusModeStartOrPause(){
     const pauseBtn = document.getElementById("pause-btn");
     if(pauseBtn.disabled){
@@ -4516,6 +4527,15 @@ function resizeFocusCanvas(){
 function handleFocusMouseMove(e){
     focusMouseX = e.clientX / window.innerWidth;
     focusMouseY = e.clientY / window.innerHeight;
+    const glow = document.getElementById("focus-cursor-glow");
+    if(glow){
+        glow.style.opacity = "1";
+        glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+    }
+}
+function handleFocusMouseLeave(){
+    const glow = document.getElementById("focus-cursor-glow");
+    if(glow) glow.style.opacity = "0";
 }
 function generateFocusStars(){
     focusStars = [];
@@ -4583,6 +4603,7 @@ function startFocusCanvasBg(){
     resizeFocusCanvas();
     generateFocusStars();
     document.getElementById("focus-mode-overlay").addEventListener("mousemove", handleFocusMouseMove);
+    document.getElementById("focus-mode-overlay").addEventListener("mouseleave", handleFocusMouseLeave);
     focusCanvasActive = true;
     if(!focusCanvasAnimId) focusCanvasAnimId = requestAnimationFrame(focusCanvasTick);
 }
@@ -4590,6 +4611,9 @@ function stopFocusCanvasBg(){
     focusCanvasActive = false;
     if(focusCanvasAnimId){ cancelAnimationFrame(focusCanvasAnimId); focusCanvasAnimId = null; }
     document.getElementById("focus-mode-overlay").removeEventListener("mousemove", handleFocusMouseMove);
+    document.getElementById("focus-mode-overlay").removeEventListener("mouseleave", handleFocusMouseLeave);
+    const glow = document.getElementById("focus-cursor-glow");
+    if(glow) glow.style.opacity = "0";
 }
 window.addEventListener("resize", resizeFocusCanvas);
 document.addEventListener("click", (e) => {
