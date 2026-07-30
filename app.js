@@ -470,7 +470,7 @@ ar:{
 "push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
 "focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.todayTasks":"مهام اليوم","focus.xpPoints":"نقاط XP",
 "focus.idle":"جاهز للبدء","focus.paused":"متوقف مؤقتاً","focus.inSession":"في جلسة تركيز","focus.onBreak":"في استراحة","focus.start":"ابدأ التركيز","focus.skip":"تخطّي",
-"focus.themeNight":"ليل نجمي","focus.themeForest":"غابة هادئة","focus.themeSunset":"غروب الشمس","focus.themeDesk":"مكتب وقهوة","focus.themeOcean":"محيط هادئ","focus.themeDawn":"فجر دافئ","focus.changeGoal":"تغيير الهدف",
+"focus.themeNight":"ليل نجمي","focus.themeForest":"غابة هادئة","focus.themeSunset":"غروب الشمس","focus.themeDesk":"مكتب وقهوة","focus.themeOcean":"محيط هادئ","focus.themeDawn":"فجر دافئ",
 "account.noRecoveryNote":"⚠️ تذكير: حسابات اسم المستخدم لا تدعم استرجاع كلمة مرور منسية (لا نطلب بريدك الحقيقي أبداً) — احفظها في مكان آمن. بياناتك المحلية على جهازك تبقى آمنة دائماً بغض النظر.",
 "spec.title":"دليل التخصصات الذكي","spec.sub":"نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة","spec.search":"ابحث عن تخصص...",
 "room.title":"غرفة المذاكرة","room.sub":"لست وحدك — بدون شات، فقط إحساس بالرفقة","room.studying":"طالب يذاكر الآن معك",
@@ -624,7 +624,7 @@ en:{
 "push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
 "focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.todayTasks":"Today's tasks","focus.xpPoints":"XP Points",
 "focus.idle":"Ready to start","focus.paused":"Paused","focus.inSession":"In a focus session","focus.onBreak":"On a break","focus.start":"Start focusing","focus.skip":"Skip",
-"focus.themeNight":"Starry night","focus.themeForest":"Calm forest","focus.themeSunset":"Sunset","focus.themeDesk":"Desk & coffee","focus.themeOcean":"Calm ocean","focus.themeDawn":"Warm dawn","focus.changeGoal":"Change goal",
+"focus.themeNight":"Starry night","focus.themeForest":"Calm forest","focus.themeSunset":"Sunset","focus.themeDesk":"Desk & coffee","focus.themeOcean":"Calm ocean","focus.themeDawn":"Warm dawn",
 "account.noRecoveryNote":"⚠️ Reminder: username accounts don't support forgotten-password recovery (we never ask for your real email) — save it somewhere safe. Your local data on this device stays safe regardless.",
 "spec.title":"Smart Specialty Guide","spec.sub":"A general overview — check university sites for exact college details","spec.search":"Search a major...",
 "room.title":"Study Room","room.sub":"You're not alone — no chat, just a sense of company","room.studying":"student(s) studying with you now",
@@ -751,11 +751,16 @@ function timeAgoLabel(ts){
 }
 function renderNotificationBell(){
     const badge = document.getElementById("notif-bell-badge");
+    const focusBadge = document.getElementById("focus-header-bell-badge");
     const list = getNotifications();
     const unread = list.filter(n => !n.read).length;
     if(badge){
         badge.style.display = unread > 0 ? "flex" : "none";
         badge.textContent = unread > 9 ? "9+" : unread;
+    }
+    if(focusBadge){
+        focusBadge.style.display = unread > 0 ? "flex" : "none";
+        focusBadge.textContent = unread > 9 ? "9+" : unread;
     }
     const panelList = document.getElementById("notif-panel-list");
     if(!panelList) return;
@@ -776,6 +781,24 @@ function renderNotificationBell(){
 function toggleNotificationPanel(forceState){
     const panel = document.getElementById("notif-panel");
     const show = forceState !== undefined ? forceState : panel.style.display === "none";
+    // اللوحة مثبَّتة أصلاً بجانب جرس رأس الصفحة الرئيسي — لكن ذلك الرأس يختفي
+    // خلف طبقة وضع التركيز الكامل (z-index أعلى بكثير)، فإن فُتحت من هناك
+    // نعيد وضعها فعلياً بجانب جرس وضع التركيز العائم بدل أن تظهر خلف كل شيء
+    const overlay = document.getElementById("focus-mode-overlay");
+    const inFocusMode = overlay && overlay.style.display !== "none";
+    const focusBell = document.getElementById("focus-header-bell");
+    if(show && inFocusMode && focusBell){
+        const r = focusBell.getBoundingClientRect();
+        panel.style.position = "fixed";
+        panel.style.top = (r.bottom + 12) + "px";
+        panel.style.insetInlineEnd = (window.innerWidth - r.right) + "px";
+        panel.style.zIndex = "7500";
+    } else {
+        panel.style.position = "";
+        panel.style.top = "";
+        panel.style.insetInlineEnd = "";
+        panel.style.zIndex = "";
+    }
     panel.style.display = show ? "flex" : "none";
     if(show) markAllNotificationsRead();
 }
@@ -833,8 +856,14 @@ async function tryLoadRemoteUniversities(){
 setInterval(() => {
     const now = new Date();
     const locale = currentLang === "ar" ? "ar-SA" : "en-US";
-    document.getElementById("live-clock").textContent = now.toLocaleTimeString(locale, {hour:"2-digit", minute:"2-digit", second:"2-digit"});
-    document.getElementById("live-date").textContent = now.toLocaleDateString(locale, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+    const timeStr = now.toLocaleTimeString(locale, {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+    const dateStr = now.toLocaleDateString(locale, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+    document.getElementById("live-clock").textContent = timeStr;
+    document.getElementById("live-date").textContent = dateStr;
+    const focusClock = document.getElementById("focus-header-clock");
+    const focusDate = document.getElementById("focus-header-date");
+    if(focusClock) focusClock.textContent = timeStr;
+    if(focusDate) focusDate.textContent = dateStr;
 }, 1000);
 
 /* ============================================================
@@ -888,7 +917,12 @@ window.onload = () => {
 
 function updateWelcomeText(){
     const name = localStorage.getItem("khuta_name");
-    if(name) document.getElementById("welcome-text").textContent = t("welcome", {name});
+    if(name){
+        const greeting = t("welcome", {name});
+        document.getElementById("welcome-text").textContent = greeting;
+        const focusName = document.getElementById("focus-header-name");
+        if(focusName) focusName.textContent = greeting;
+    }
 }
 
 /* ============================================================
@@ -1817,6 +1851,10 @@ function renderGamification(){
     if(xpEl) animateNumberTo(xpEl, xp, " XP");
     if(lvlEl) lvlEl.textContent = currentLang === "ar" ? lvl.ar : lvl.en;
     if(streakEl) animateNumberTo(streakEl, streak);
+    const focusXpEl = document.getElementById("focus-header-xp");
+    const focusStreakEl = document.getElementById("focus-header-streak");
+    if(focusXpEl) focusXpEl.textContent = xp + " XP";
+    if(focusStreakEl) focusStreakEl.textContent = streak;
     const levelBadge = document.getElementById("header-mini-level-badge");
     if(levelBadge){
         const icon = xp >= 1000 ? "fa-crown" : xp >= 600 ? "fa-medal" : xp >= 300 ? "fa-bolt" : "fa-star";
@@ -3333,7 +3371,7 @@ const DASHBOARD_CARDS = [
     { id: "dash-card-overview-heatmap", labelAr: "خريطة النشاط اليومي", labelEn: "Daily activity heatmap", defaultVisible: true, reorderable: false },
     { id: "dash-card-overview-quests", labelAr: "لمحة مهام اليوم", labelEn: "Today's tasks glance", defaultVisible: true, reorderable: false },
     { id: "dash-card-overview-leaderboard", labelAr: "لوحة الصدارة المصغّرة", labelEn: "Mini leaderboard", defaultVisible: true, reorderable: false },
-    { id: "dash-card-progress", labelAr: "مسار التقدم", labelEn: "Progress Path", defaultVisible: true, reorderable: true },
+    { id: "dash-card-progress", labelAr: "مسار التقدم", labelEn: "Progress Path", defaultVisible: true, reorderable: false },
     { id: "dash-card-table", labelAr: "جدول المهام", labelEn: "Task Table", defaultVisible: true, reorderable: true },
     { id: "dash-card-timer", labelAr: "وضع التركيز (المؤقت)", labelEn: "Focus Mode (Timer)", defaultVisible: true, reorderable: true },
     { id: "dash-card-badges", labelAr: "الأوسمة والتروفيات", labelEn: "Badges & Trophies", defaultVisible: false, reorderable: true },
@@ -4319,17 +4357,21 @@ function renderAvatarDisplay(){
 /* نسخة مصغّرة من نفس منطق الأفاتار، للعرض في رأس الصفحة القابل للنقر للانتقال للملف الشخصي */
 function renderHeaderMiniAvatar(){
     const el = document.getElementById("header-mini-avatar");
-    if(!el) return;
+    const focusEl = document.getElementById("focus-header-avatar");
+    if(!el && !focusEl) return;
     const uploaded = localStorage.getItem("khuta_avatar");
     const presetId = localStorage.getItem("khuta_avatar_preset");
     const preset = PRESET_AVATARS.find(p => p.id === presetId);
+    let html;
     if(uploaded){
-        el.innerHTML = `<img src="${uploaded}" style="width:100%;height:100%;object-fit:cover;">`;
+        html = `<img src="${uploaded}" style="width:100%;height:100%;object-fit:cover;">`;
     } else if(preset){
-        el.innerHTML = `<div style="width:100%;height:100%;background:${preset.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;"><i class="fa-solid ${preset.icon}"></i></div>`;
+        html = `<div style="width:100%;height:100%;background:${preset.color};color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;"><i class="fa-solid ${preset.icon}"></i></div>`;
     } else {
-        el.innerHTML = `<div style="width:100%;height:100%;background:var(--bg-alt);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-size:18px;"><i class="fa-solid fa-user"></i></div>`;
+        html = `<div style="width:100%;height:100%;background:var(--bg-alt);color:var(--text-3);display:flex;align-items:center;justify-content:center;font-size:18px;"><i class="fa-solid fa-user"></i></div>`;
     }
+    if(el) el.innerHTML = html;
+    if(focusEl) focusEl.innerHTML = html;
 }
 
 function logSiteVisit(){
@@ -4450,15 +4492,6 @@ const FOCUS_QUOTES = [
 
 /* يُعيد توجيه الزر داخل وضع التركيز لنفس أزرار لوحة التحكم تماماً —
    لا تكرار لمنطق الجلسة، فقط "نقرة بالنيابة" لتفادي أي احتمال تعارض حالة */
-/* زر "تغيير الهدف" — يوجّه الانتباه فعلياً لقائمة المهام الحقيقية (مصدر
-   الحقيقة الوحيد لما يجب إنجازه اليوم)، بدل فتح نافذة اختيار منفصلة ووهمية */
-function highlightFocusTaskList(){
-    const card = document.getElementById("focus-task-card");
-    if(!card || card.style.display === "none") return;
-    card.scrollIntoView({ behavior:"smooth", block:"nearest" });
-    card.classList.add("focus-task-card-pulse");
-    setTimeout(() => card.classList.remove("focus-task-card-pulse"), 1200);
-}
 function focusModeStartOrPause(){
     const pauseBtn = document.getElementById("pause-btn");
     if(pauseBtn.disabled){
@@ -4641,6 +4674,13 @@ function openFocusMode(){
     overlay.dataset.bgTheme = savedTheme;
     document.querySelectorAll(".focus-theme-swatch").forEach(el => el.classList.toggle("active", el.dataset.theme === savedTheme));
     startFocusCanvasBg();
+
+    // تحديث فوري لكل بيانات الشريط العائم (الصورة، الاسم، XP، السلسلة،
+    // الإشعارات) عند فتح وضع التركيز — لا ننتظر التحديث الدوري التالي
+    renderHeaderMiniAvatar();
+    updateWelcomeText();
+    renderGamification();
+    renderNotificationBell();
 
     // نصيحة ثابتة طوال الجلسة الحالية — تُختار مرة واحدة عند بدء الجلسة (startMainSession)،
     // وهنا فقط نعرضها؛ إن فُتح وضع التركيز دون جلسة نشطة بعد، نختار واحدة بشكل استثنائي
