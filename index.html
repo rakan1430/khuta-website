@@ -1798,6 +1798,276 @@ html:has(body.dark-mode){ background:#0A0920; }
     .overview-hero-row .overview-stat-card:last-child{ grid-column:1 / -1; }
 }
 
+
+/* ============================================================
+   مختبر خُطى — أنماط السبورة، الدفتر، الخطط، الروتين، سجل الاختبارات
+   كل النوافذ بأنيميشن فتح/إغلاق انسيابي (scale + fade) لا ظهور مفاجئ
+   ============================================================ */
+.lab-overlay{
+    position:fixed; inset:0; z-index:6800; display:flex; align-items:center; justify-content:center;
+    padding:20px; background:rgba(8,6,24,0);
+    backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px);
+    transition: background .38s var(--ease), backdrop-filter .38s var(--ease);
+}
+.lab-overlay.lab-open{
+    background:rgba(8,6,24,0.62);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.lab-window{
+    width:100%; display:flex; flex-direction:column; overflow:hidden;
+    background: linear-gradient(165deg, rgba(132,112,240,0.20), rgba(26,20,58,0.92));
+    border:1.5px solid rgba(210,195,255,0.28); border-radius:26px;
+    box-shadow: inset 0 1px 14px rgba(255,255,255,0.10), 0 30px 80px rgba(0,0,0,0.55), 0 0 60px rgba(140,100,255,0.14);
+    opacity:0; transform: translateY(26px) scale(0.96);
+    transition: opacity .38s var(--ease), transform .38s var(--ease);
+}
+.lab-overlay.lab-open .lab-window{ opacity:1; transform: translateY(0) scale(1); }
+.board-window{ max-width:880px; height:min(86vh, 720px); }
+.plans-window{ max-width:680px; max-height:88vh; }
+.lab-window-head{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 18px; border-bottom:1px solid rgba(210,195,255,0.16); flex-shrink:0;
+}
+.lab-window-title{ color:#fff; font-size:15.5px; display:flex; align-items:center; gap:9px; }
+.lab-close-btn{
+    width:38px; height:38px; border-radius:50%; border:1px solid rgba(255,255,255,0.16);
+    background:rgba(255,255,255,0.06); color:#fff; cursor:pointer; font-size:15px;
+    display:flex; align-items:center; justify-content:center; transition:.2s var(--ease); flex-shrink:0;
+}
+.lab-close-btn:hover{ background:rgba(226,82,126,0.25); transform:rotate(90deg); }
+
+/* --- تبويبا السبورة/الدفتر بمؤشر منزلق --- */
+.board-tabs{ display:flex; gap:8px; }
+.board-tab{
+    padding:9px 16px; border-radius:12px; border:1px solid transparent; cursor:pointer;
+    background:transparent; color:rgba(255,255,255,0.6); font-family:var(--font-body);
+    font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px;
+    transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
+}
+.board-tab:hover{ color:#fff; background:rgba(255,255,255,0.06); }
+.board-tab.active{
+    color:#fff; background:linear-gradient(155deg, rgba(232,199,126,0.22), rgba(201,150,46,0.08));
+    border-color:rgba(255,210,130,0.4); box-shadow:0 0 16px rgba(255,182,72,0.18);
+}
+.board-pane{ display:none; flex:1; min-height:0; flex-direction:column; padding:16px 18px; gap:12px; opacity:0; transform:translateY(8px); }
+.board-pane.active{ display:flex; animation:labPaneIn .35s var(--ease) forwards; }
+@keyframes labPaneIn{ to{ opacity:1; transform:translateY(0); } }
+
+/* --- سطح السبورة --- */
+.board-ask-row{ display:flex; gap:10px; flex-shrink:0; }
+.board-ask-row input{ flex:1; }
+.board-surface-wrap{
+    flex:1; min-height:0; overflow-y:auto; border-radius:18px;
+    background:
+        radial-gradient(500px 260px at 85% 0%, rgba(129,84,255,0.16), transparent 60%),
+        linear-gradient(165deg, #1E1745, #171034);
+    border:1.5px solid rgba(210,195,255,0.22);
+    box-shadow: inset 0 2px 20px rgba(0,0,0,0.35);
+    padding:20px 22px;
+}
+.board-empty, .board-loading{ color:rgba(255,255,255,0.55); font-size:14px; line-height:1.9; text-align:center; padding:40px 10px; }
+.board-chalk-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--gold-soft); margin-inline-end:8px; animation:chalkPulse 1.1s ease-in-out infinite; }
+@keyframes chalkPulse{ 0%,100%{ opacity:.4; transform:scale(.85);} 50%{ opacity:1; transform:scale(1.15);} }
+.board-title{
+    font-size:17px; font-weight:800; color:#FFD98A; margin-bottom:14px;
+    padding-bottom:10px; border-bottom:1.5px dashed rgba(255,217,138,0.3);
+}
+.board-step{ margin-bottom:16px; opacity:0; transform:translateY(10px); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+.board-step.shown{ opacity:1; transform:translateY(0); }
+.board-say{ color:rgba(255,255,255,0.72); font-size:13px; margin-bottom:7px; }
+.board-lines{ padding:4px 12px; border-radius:10px; display:inline-block; min-width:180px; }
+.board-lines.mark-box{ border:1.5px solid rgba(255,217,138,0.55); box-shadow:0 0 14px rgba(255,182,72,0.15); }
+.board-lines.mark-underline .board-chalk-line:last-child{ border-bottom:2px solid rgba(255,217,138,0.6); padding-bottom:3px; }
+.board-chalk-line{
+    font-family:var(--font-mono); font-size:16.5px; color:#fff; line-height:2;
+    text-shadow:0 0 10px rgba(255,255,255,0.25); min-height:1.6em; direction:rtl;
+}
+.board-answer{
+    margin-top:6px; padding:12px 16px; border-radius:14px; font-weight:800; color:#B9F2DC;
+    background:linear-gradient(155deg, rgba(94,214,183,0.16), rgba(94,214,183,0.05));
+    border:1.5px solid rgba(94,214,183,0.4);
+    opacity:0; transform:scale(.96); transition: opacity .45s var(--ease), transform .45s var(--ease);
+}
+.board-answer.shown{ opacity:1; transform:scale(1); }
+.board-controls{ display:flex; gap:10px; justify-content:center; flex-shrink:0; }
+.chatbot-board-btn{
+    margin-top:6px; padding:6px 12px; border-radius:99px; cursor:pointer;
+    background:linear-gradient(155deg, rgba(232,199,126,0.22), rgba(201,150,46,0.08));
+    border:1px solid rgba(255,210,130,0.4); color:#fff; font-family:var(--font-body);
+    font-size:11.5px; font-weight:700; display:inline-flex; align-items:center; gap:7px;
+    transition:.25s var(--ease);
+}
+body:not(.dark-mode) .chatbot-board-btn{ color:var(--text-1); }
+.chatbot-board-btn:hover{ box-shadow:0 0 16px rgba(255,182,72,0.3); transform:translateY(-1px); }
+.chatbot-msg-board-link{
+    display:inline-flex; align-items:center; gap:6px; margin-top:6px; cursor:pointer;
+    font-size:11px; font-weight:700; color:var(--gold); background:none; border:none;
+    font-family:var(--font-body); padding:0; opacity:.85; transition:.2s;
+}
+.chatbot-msg-board-link:hover{ opacity:1; text-decoration:underline; }
+
+/* --- دفتر الطالب --- */
+.pad-layout{ display:flex; gap:14px; flex:1; min-height:0; }
+.pad-main{ flex:2.2; min-width:0; display:flex; flex-direction:column; gap:10px; }
+.pad-side{ flex:1; min-width:170px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+.pad-side-title{ font-size:12.5px; font-weight:800; color:rgba(255,255,255,0.75); display:flex; align-items:center; gap:8px; }
+.pad-tools{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
+.pad-color{
+    width:26px; height:26px; border-radius:50%; cursor:pointer; background:var(--c);
+    border:2px solid rgba(255,255,255,0.25); transition:.2s var(--ease);
+}
+.pad-color.active{ transform:scale(1.2); border-color:#fff; box-shadow:0 0 12px var(--c); }
+.pad-tool-btn{
+    width:32px; height:32px; border-radius:10px; cursor:pointer; color:#fff; font-size:13px;
+    background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.16); transition:.2s var(--ease);
+}
+.pad-tool-btn:hover{ background:rgba(255,255,255,0.14); }
+.pad-tool-btn.active{ background:rgba(226,82,126,0.3); border-color:rgba(240,140,168,0.6); }
+.pad-canvas-wrap{
+    flex:1; min-height:220px; border-radius:16px; overflow:hidden;
+    background:linear-gradient(165deg, #1E1745, #171034);
+    border:1.5px solid rgba(210,195,255,0.22); box-shadow: inset 0 2px 16px rgba(0,0,0,0.35);
+}
+#student-pad-canvas{ display:block; touch-action:none; cursor:crosshair; }
+#pad-text-input{ resize:vertical; }
+.pad-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.pad-actions input{ flex:1; min-width:140px; }
+.pad-ai-answer{
+    border-radius:14px; padding:12px 14px; font-size:12.5px; line-height:1.9; color:#fff;
+    background:linear-gradient(155deg, rgba(94,214,183,0.14), rgba(94,214,183,0.04));
+    border:1px solid rgba(94,214,183,0.35); max-height:180px; overflow-y:auto;
+    animation:labPaneIn .35s var(--ease) both;
+}
+.pad-ai-text{ margin-top:6px; }
+.pad-saved-row{ display:flex; gap:6px; align-items:stretch; }
+.pad-saved-open{
+    flex:1; min-width:0; text-align:start; cursor:pointer; padding:9px 11px; border-radius:12px;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff;
+    font-family:var(--font-body); display:flex; flex-direction:column; gap:2px; transition:.2s var(--ease);
+}
+.pad-saved-open:hover{ background:rgba(178,164,255,0.14); border-color:rgba(210,195,255,0.35); }
+.pad-saved-open b{ font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pad-saved-open span{ font-size:10px; color:rgba(255,255,255,0.5); }
+.pad-saved-del{ color:rgba(255,255,255,0.5); font-size:12px; }
+.pad-saved-del:hover{ color:var(--rose); }
+
+/* --- نافذة الخطط والروتين --- */
+.plans-body{ overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:22px; }
+.plans-section h3{ font-size:15px; color:#fff; margin-bottom:4px; }
+.plans-section .card-sub{ margin-bottom:12px; }
+.plans-save-row, .excluded-add-row{ display:flex; gap:8px; margin-bottom:12px; }
+.plans-save-row input{ flex:1; }
+.plans-saved-list{ display:flex; flex-direction:column; gap:8px; }
+.plan-row{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:14px;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+    animation:labPaneIn .3s var(--ease) both;
+}
+.plan-row-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.plan-row-info b{ color:#fff; font-size:13.5px; }
+.plan-row-info span{ font-size:11px; color:rgba(255,255,255,0.55); }
+.routine-days-grid{ display:flex; flex-direction:column; gap:7px; }
+.routine-day{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:8px 12px; border-radius:13px; background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.10);
+}
+.routine-day-name{ font-size:13px; font-weight:800; color:#fff; min-width:64px; }
+.routine-day-modes{ display:flex; gap:6px; }
+.routine-mode{
+    padding:6px 13px; border-radius:99px; cursor:pointer; font-family:var(--font-body);
+    font-size:11.5px; font-weight:700; color:rgba(255,255,255,0.65);
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14);
+    transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease);
+}
+.routine-mode.mode-normal.active{ color:#fff; background:rgba(94,214,183,0.22); border-color:rgba(94,214,183,0.55); box-shadow:0 0 12px rgba(94,214,183,0.2); }
+.routine-mode.mode-light.active{ color:#fff; background:rgba(232,199,126,0.22); border-color:rgba(232,199,126,0.55); box-shadow:0 0 12px rgba(232,199,126,0.2); }
+.routine-mode.mode-off.active{ color:#fff; background:rgba(226,82,126,0.22); border-color:rgba(240,140,168,0.55); box-shadow:0 0 12px rgba(226,82,126,0.2); }
+.routine-pressure{
+    border-radius:14px; padding:12px 14px; font-size:12.5px; font-weight:700; line-height:1.8;
+    color:rgba(255,255,255,0.75); background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.14); margin-bottom:12px;
+    transition: border-color .35s var(--ease), background .35s var(--ease);
+}
+.routine-pressure.level-tight{ color:#FFC9D6; background:rgba(226,82,126,0.12); border-color:rgba(240,140,168,0.45); }
+.routine-pressure.level-ok{ color:#C8F2E3; background:rgba(94,214,183,0.10); border-color:rgba(94,214,183,0.4); }
+.routine-pressure.level-loose{ color:#FFE9BE; background:rgba(232,199,126,0.10); border-color:rgba(232,199,126,0.45); }
+.routine-pressure-bar{ height:7px; border-radius:99px; background:rgba(255,255,255,0.10); overflow:hidden; margin-top:8px; }
+.routine-pressure-bar div{ height:100%; border-radius:99px; background:linear-gradient(90deg,#5ED6B7,#E8C77E,#E2527E); transition:width .6s var(--ease); }
+.excluded-dates-list{ display:flex; flex-wrap:wrap; gap:7px; }
+.excluded-chip{
+    display:inline-flex; align-items:center; gap:7px; padding:5px 11px; border-radius:99px;
+    font-size:11.5px; font-weight:700; color:#fff; font-family:var(--font-mono);
+    background:rgba(226,82,126,0.16); border:1px solid rgba(240,140,168,0.4);
+    animation:labPaneIn .3s var(--ease) both;
+}
+.excluded-chip button{ background:none; border:none; color:#FFC9D6; cursor:pointer; font-size:14px; padding:0; line-height:1; }
+.today-routine-pill{
+    font-size:10px; font-weight:800; padding:3px 9px; border-radius:99px; vertical-align:middle;
+    background:rgba(232,199,126,0.16); border:1px solid rgba(232,199,126,0.4); color:var(--gold);
+}
+
+/* --- بطاقة الاختبار من الملفات + السجل --- */
+.customexam-uploads{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+.customexam-drop{
+    flex:1; min-width:200px; cursor:pointer; text-align:center; padding:20px 14px; border-radius:16px;
+    border:1.5px dashed var(--border); color:var(--text-2); font-weight:700; font-size:13.5px;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    transition: border-color .25s var(--ease), background .25s var(--ease), transform .25s var(--ease);
+}
+.customexam-drop:hover{ border-color:var(--gold); background:rgba(201,150,46,0.06); transform:translateY(-2px); }
+.customexam-drop i{ font-size:20px; color:var(--gold); }
+.customexam-fname{ font-size:11px; font-weight:600; color:var(--text-3); word-break:break-all; }
+.customexam-actions{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.customexam-count{ font-size:12.5px; font-weight:700; color:var(--text-2); display:flex; align-items:center; gap:8px; }
+.customexam-count select{ width:auto; padding:8px 12px; }
+.examhist-row{
+    border:1px solid var(--border); border-radius:16px; margin-bottom:10px; overflow:hidden;
+    transition: border-color .3s var(--ease), box-shadow .3s var(--ease);
+}
+body.dark-mode .examhist-row{ border-color:rgba(178,164,255,0.2); background:rgba(255,255,255,0.03); }
+.examhist-row.open{ border-color:var(--gold); box-shadow:0 0 20px rgba(201,150,46,0.12); }
+.examhist-head{
+    width:100%; display:flex; align-items:center; gap:14px; padding:13px 16px; cursor:pointer;
+    background:none; border:none; font-family:var(--font-body); text-align:start; color:var(--text-1);
+}
+.examhist-pct{ font-family:var(--font-mono); font-size:20px; font-weight:800; min-width:58px; }
+.examhist-meta{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.examhist-meta b{ font-size:13.5px; }
+.examhist-meta span{ font-size:11px; color:var(--text-3); }
+.examhist-chev{ color:var(--text-3); transition:transform .35s var(--ease); }
+.examhist-row.open .examhist-chev{ transform:rotate(180deg); }
+.examhist-body{ display:grid; grid-template-rows:0fr; transition:grid-template-rows .4s var(--ease); }
+.examhist-row.open .examhist-body{ grid-template-rows:1fr; }
+.examhist-body-inner{ overflow:hidden; padding:0 16px; }
+.examhist-row.open .examhist-body-inner{ padding:0 16px 14px; }
+.examhist-q{ padding:10px 0; border-top:1px dashed var(--border); font-size:12.5px; }
+.examhist-qtext{ font-weight:700; margin-bottom:6px; line-height:1.8; }
+.examhist-qrow{ padding:2px 0; }
+.examhist-qrow.wrong{ color:var(--rose); }
+.examhist-qrow.right{ color:var(--teal); }
+.examhist-qrow.expl{ color:var(--text-2); font-size:11.5px; line-height:1.8; }
+.examhist-del{ margin-top:10px; font-size:11px; color:var(--text-3); }
+.examhist-del:hover{ color:var(--rose); }
+
+/* --- شات المساعد: فتح/إغلاق بأنيميشن بدل الظهور اللحظي --- */
+.chatbot-panel{ animation:notifPanelIn .3s var(--ease); transform-origin:bottom left; }
+html[dir="rtl"] .chatbot-panel{ transform-origin:bottom left; }
+.chatbot-panel.panel-closing{ animation:notifPanelOut .26s var(--ease) forwards; pointer-events:none; }
+
+/* --- الهاتف: النوافذ الجديدة تتكيف --- */
+@media (max-width:700px){
+    .lab-overlay{ padding:10px; align-items:flex-end; }
+    .lab-window{ border-radius:22px 22px 0 0; }
+    .board-window{ height:92vh; }
+    .lab-window{ transform:translateY(60px) scale(1); }
+    .pad-layout{ flex-direction:column; }
+    .pad-side{ min-width:0; max-height:130px; }
+    .routine-day{ flex-direction:column; align-items:stretch; gap:8px; }
+    .routine-day-modes{ justify-content:space-between; }
+    .routine-mode{ flex:1; text-align:center; }
+}
+
 </style>
 </head>
 <body>
@@ -2350,6 +2620,98 @@ html:has(body.dark-mode){ background:#0A0920; }
     </div>
 </div>
 
+
+<!-- ===================== السبورة الذكية ودفتر الطالب ===================== -->
+<div id="khuta-board-overlay" class="lab-overlay" style="display:none;">
+    <div class="lab-window board-window">
+        <div class="lab-window-head">
+            <div class="board-tabs">
+                <button type="button" class="board-tab active" data-tab="ai" onclick="switchBoardTab('ai')"><i class="fa-solid fa-chalkboard-user"></i> سبورة المعلّم الذكي</button>
+                <button type="button" class="board-tab" data-tab="pad" onclick="switchBoardTab('pad')"><i class="fa-solid fa-pen-ruler"></i> دفتري</button>
+            </div>
+            <button type="button" class="lab-close-btn" onclick="closeKhutaBoard()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="board-tab-ai" class="board-pane active">
+            <div class="board-ask-row">
+                <input type="text" id="board-ai-input" placeholder="اكتب سؤال قدرات (كمي أو لفظي) أو مفهوماً ليشرحه المعلّم على السبورة…" onkeydown="if(event.key==='Enter') boardExplain()">
+                <button type="button" class="btn btn-sm" onclick="boardExplain()"><i class="fa-solid fa-chalkboard"></i> اشرح</button>
+            </div>
+            <div class="board-surface-wrap">
+                <div id="board-surface" class="board-surface">
+                    <div class="board-empty">🧑‍🏫 اكتب سؤالاً بالأعلى وسيشرحه المعلّم خطوة بخطوة هنا — كأنك في فصل حقيقي</div>
+                </div>
+            </div>
+            <div class="board-controls">
+                <button type="button" id="board-play-btn" class="btn btn-sm btn-outline" onclick="toggleBoardPlayback()" disabled><i class="fa-solid fa-play"></i> تشغيل</button>
+                <button type="button" id="board-replay-btn" class="btn btn-sm btn-outline" onclick="playBoardFromStart()" disabled><i class="fa-solid fa-rotate-left"></i> إعادة</button>
+            </div>
+        </div>
+
+        <div id="board-tab-pad" class="board-pane">
+            <div class="pad-layout">
+                <div class="pad-main">
+                    <div class="pad-tools">
+                        <button type="button" class="pad-color active" style="--c:#FFFFFF" onclick="padSetColor('#FFFFFF',this)" aria-label="أبيض"></button>
+                        <button type="button" class="pad-color" style="--c:#FFD98A" onclick="padSetColor('#FFD98A',this)" aria-label="ذهبي"></button>
+                        <button type="button" class="pad-color" style="--c:#7FE0C3" onclick="padSetColor('#7FE0C3',this)" aria-label="أخضر"></button>
+                        <button type="button" class="pad-color" style="--c:#F08CA8" onclick="padSetColor('#F08CA8',this)" aria-label="وردي"></button>
+                        <button type="button" id="pad-eraser-btn" class="pad-tool-btn" onclick="padToggleEraser(this)" title="ممحاة"><i class="fa-solid fa-eraser"></i></button>
+                        <button type="button" class="pad-tool-btn" onclick="padUndo()" title="تراجع"><i class="fa-solid fa-rotate-left"></i></button>
+                        <button type="button" class="pad-tool-btn" onclick="padClear()" title="مسح الكل"><i class="fa-solid fa-broom"></i></button>
+                    </div>
+                    <div class="pad-canvas-wrap"><canvas id="student-pad-canvas"></canvas></div>
+                    <textarea id="pad-text-input" rows="2" placeholder="اكتب هنا أي شيء: معادلة، مسألة، ملاحظة… (يُحفظ مع اللوحة ويُرسل للذكاء)"></textarea>
+                    <div class="pad-actions">
+                        <input type="text" id="pad-name-input" placeholder="اسم اللوحة للحفظ…">
+                        <button type="button" class="btn btn-sm btn-outline" onclick="saveCurrentBoard()"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+                        <button type="button" class="btn btn-sm" onclick="sendPadToAI()"><i class="fa-solid fa-wand-magic-sparkles"></i> حلّها بالذكاء</button>
+                    </div>
+                    <div id="pad-ai-answer" class="pad-ai-answer" style="display:none;"></div>
+                </div>
+                <div class="pad-side">
+                    <div class="pad-side-title"><i class="fa-solid fa-box-archive"></i> لوحاتي المحفوظة</div>
+                    <div id="pad-saved-list" class="pad-saved-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== خططي والروتين الأسبوعي ===================== -->
+<div id="plans-overlay" class="lab-overlay" style="display:none;">
+    <div class="lab-window plans-window">
+        <div class="lab-window-head">
+            <b class="lab-window-title"><i class="fa-solid fa-layer-group" style="color:var(--gold);"></i> خططي والروتين الأسبوعي</b>
+            <button type="button" class="lab-close-btn" onclick="closePlansOverlay()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="plans-body">
+            <div class="plans-section">
+                <h3>📚 خططي المحفوظة</h3>
+                <p class="card-sub">احفظ خطتك الحالية باسم (مصادرك، جدولك، تقدمك) وأنشئ غيرها وبدّل بينها متى شئت</p>
+                <div class="plans-save-row">
+                    <input type="text" id="plan-name-input" placeholder="اسم الخطة… (مثال: خطة الشهرين المكثفة)">
+                    <button type="button" class="btn btn-sm" onclick="saveCurrentPlanAs()"><i class="fa-solid fa-floppy-disk"></i> حفظ الحالية</button>
+                </div>
+                <div id="plans-saved-list" class="plans-saved-list"></div>
+            </div>
+            <div class="plans-section">
+                <h3>🗓️ روتينك الأسبوعي</h3>
+                <p class="card-sub">حدّد إيقاع كل يوم من أسبوعك: عادي، أخف، أو إجازة — والمؤشر بالأعلى يخبرك فوراً إن كان جدولك مضغوطاً أو مرتاحاً</p>
+                <div id="routine-pressure" class="routine-pressure"></div>
+                <div id="routine-days-grid" class="routine-days-grid"></div>
+                <h3 style="margin-top:18px;">✈️ تواريخ مستثناة (سفر/ظرف)</h3>
+                <p class="card-sub">أي تاريخ تضيفه هنا يُحسب إجازة كاملة في مؤشر الضغط ولن يُنتظر منك مذاكرة فيه</p>
+                <div class="excluded-add-row">
+                    <input type="date" id="excluded-date-input">
+                    <button type="button" class="btn btn-sm btn-outline" onclick="addExcludedDate()"><i class="fa-solid fa-plus"></i> إضافة</button>
+                </div>
+                <div id="excluded-dates-list" class="excluded-dates-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ===================== مساعد الأسئلة الشائعة ===================== -->
 <button type="button" id="chatbot-fab" class="chatbot-fab" onclick="toggleChatbot()" title="مساعد الأسئلة الشائعة">
     <i class="fa-solid fa-comment-dots"></i>
@@ -2358,6 +2720,9 @@ html:has(body.dark-mode){ background:#0A0920; }
     <div class="chatbot-head">
         <div>
             <b data-i18n="bot.title">مساعد خُطى للأسئلة الشائعة</b>
+            <button type="button" class="chatbot-board-btn" onclick="openKhutaBoard('ai')" title="افتح السبورة — يشرح عليها المعلّم الذكي خطوة بخطوة">
+                <i class="fa-solid fa-chalkboard-user"></i> السبورة
+            </button>
             <div style="font-size:10.5px; opacity:.75;" data-i18n="bot.disclaimer">إجابات جاهزة مبرمجة مسبقاً وليست ذكاءً اصطناعياً حقيقياً</div>
         </div>
         <button type="button" class="btn-ghost" style="padding:6px;" onclick="toggleChatbot()"><i class="fa-solid fa-xmark"></i></button>
@@ -2462,6 +2827,9 @@ html:has(body.dark-mode){ background:#0A0920; }
         <!-- ===================== لوحة الجدول ===================== -->
         <section id="view-dashboard" class="view-section active">
             <div class="dash-toolbar">
+                <button type="button" class="btn btn-outline btn-sm" onclick="openPlansOverlay()">
+                    <i class="fa-solid fa-layer-group"></i> <span>خططي والروتين</span>
+                </button>
                 <button type="button" id="btn-customize-dashboard" class="btn btn-outline btn-sm btn-shimmer" onclick="toggleDashboardCustomizer()">
                     <i class="fa-solid fa-sliders"></i> <span data-i18n="dash.customize">تخصيص لوحتك</span>
                 </button>
@@ -2540,7 +2908,7 @@ html:has(body.dark-mode){ background:#0A0920; }
 
                     <div class="ov-sidebar-col">
                         <div class="card ov-quests-card" id="dash-card-overview-quests">
-                            <h2 style="margin-bottom:2px; font-size:15.5px;"><i class="fa-solid fa-list-check" style="color:var(--gold);"></i> <span data-i18n="overview.questsTitle">مهام اليوم</span></h2>
+                            <h2 style="margin-bottom:2px; font-size:15.5px;"><i class="fa-solid fa-list-check" style="color:var(--gold);"></i> <span data-i18n="overview.questsTitle">مهام اليوم</span> <span id="today-routine-pill" class="today-routine-pill" style="display:none;"></span></h2>
                             <p class="card-sub" style="margin-bottom:12px;" data-i18n="overview.questsSub">لمحة سريعة — عدّلها من جدولك الكامل أدناه</p>
                             <div id="ov-quests-list"></div>
                         </div>
@@ -2929,6 +3297,42 @@ html:has(body.dark-mode){ background:#0A0920; }
                     <label class="path-card"><input type="radio" name="examsim_timed" value="untimed" hidden><b data-i18n="examsim.untimed">بدون وقت</b></label>
                 </div>
                 <button type="button" class="btn btn-block" onclick="startExamSimulation()"><i class="fa-solid fa-play"></i> <span data-i18n="examsim.start">ابدأ الاختبار</span></button>
+            </div>
+
+            <div class="card" id="customexam-card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-file-import" style="color:var(--gold);"></i> اختبار محاكٍ من ملفاتك 📄</h2>
+                <p class="card-sub" style="margin-bottom:16px;">ارفع ملف الكمي و/أو اللفظي (txt أو pdf نصّي)، وسيقرأه الذكاء الاصطناعي ويؤلّف لك اختباراً محاكياً من محتواك أنت — بأسلوب أسئلة قياس</p>
+                <div class="customexam-uploads">
+                    <label class="customexam-drop">
+                        <i class="fa-solid fa-calculator"></i> ملف الكمي
+                        <input type="file" accept=".txt,.md,.pdf" hidden onchange="readStudyFile(this,'quant')">
+                        <span id="customexam-quant-name" class="customexam-fname"></span>
+                    </label>
+                    <label class="customexam-drop">
+                        <i class="fa-solid fa-book-open"></i> ملف اللفظي
+                        <input type="file" accept=".txt,.md,.pdf" hidden onchange="readStudyFile(this,'verbal')">
+                        <span id="customexam-verbal-name" class="customexam-fname"></span>
+                    </label>
+                </div>
+                <div class="customexam-actions">
+                    <label class="customexam-count">عدد الأسئلة لكل قسم
+                        <select id="customexam-qcount">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                        </select>
+                    </label>
+                    <button type="button" id="customexam-generate-btn" class="btn btn-sm" onclick="generateCustomExam()"><i class="fa-solid fa-wand-magic-sparkles"></i> ولّد الاختبار</button>
+                    <button type="button" id="customexam-start-btn" class="btn btn-sm btn-outline" style="display:none;" onclick="startCustomExam()"><i class="fa-solid fa-play"></i> ابدأ اختبار ملفاتك</button>
+                </div>
+                <div id="customexam-status" class="card-sub" style="margin-top:10px;"></div>
+            </div>
+
+            <div class="card" id="exam-history-card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--gold);"></i> اختباراتك السابقة</h2>
+                <p class="card-sub" style="margin-bottom:14px;">كل محاولة تُسجَّل هنا تلقائياً: درجتك، وتفصيل الأسئلة التي أخطأت فيها لتراجعها</p>
+                <div id="exam-history-list"></div>
             </div>
         </section>
 

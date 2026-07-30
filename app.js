@@ -3753,6 +3753,7 @@ function submitExam(){
 
     const xpEarned = Math.round(pct / 5); // مكافأة بسيطة تحفيزية، لا تُبالغ في القيمة
     awardXP(xpEarned);
+    recordExamAttempt(examState); // سجل الاختبارات السابقة: الدرجة + الأسئلة الخاطئة
 }
 
 function closeExamResults(){
@@ -6640,8 +6641,16 @@ const FAQ_BOT = [
 
 function toggleChatbot(){
     const panel = document.getElementById("chatbot-panel");
-    const opening = panel.style.display === "none";
-    panel.style.display = opening ? "flex" : "none";
+    const opening = panel.style.display === "none" || panel.classList.contains("panel-closing");
+    clearTimeout(panel.__closeT);
+    if(opening){
+        panel.classList.remove("panel-closing");
+        panel.style.display = "flex";
+    } else {
+        // إغلاق متدرّج بأنيميشن بدل الاختفاء اللحظي
+        panel.classList.add("panel-closing");
+        panel.__closeT = setTimeout(() => { panel.style.display = "none"; panel.classList.remove("panel-closing"); }, 260);
+    }
     if(opening && !panel.dataset.inited){
         panel.dataset.inited = "1";
         addChatbotMessage(currentLang==='ar' ? "أهلاً! أنا مساعد الأسئلة الشائعة لتطبيق خُطى. اسألني عن إيهاب، المنصف، المفكر، المعاصر، أو STEP." : "Hi! I'm Khuta's FAQ assistant. Ask me about Ehab, Al-Monsif, Al-Mufakkir, Al-Moaasir, or STEP.", "bot");
@@ -6660,6 +6669,17 @@ function addChatbotMessage(text, who){
     const div = document.createElement("div");
     div.className = "chatbot-msg " + who;
     div.textContent = text;
+    // مع كل رد للمساعد على سؤال فعلي: نعرض زر فتح السبورة ليشرحه المعلّم خطوة بخطوة
+    if(who === "bot" && window.__lastChatUserMsg){
+        const q = window.__lastChatUserMsg;
+        const link = document.createElement("button");
+        link.type = "button";
+        link.className = "chatbot-msg-board-link";
+        link.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i> ' + (currentLang==='ar' ? 'اشرحها على السبورة' : 'Explain on the board');
+        link.onclick = () => explainLastOnBoard(q);
+        div.appendChild(document.createElement("br"));
+        div.appendChild(link);
+    }
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
@@ -6672,9 +6692,11 @@ function askChatbot(text){
 let chatHistory = [];
 let geminiWorking = true; // يُطفأ تلقائياً بعد أول فشل حتى لا نكرر محاولات بطيئة فاشلة كل رسالة
 async function sendChatbotMessage(){
+    /* يُحفظ نص سؤال الطالب ليستعمله زر "اشرحها على السبورة" أسفل رد المساعد */
     const input = document.getElementById("chatbot-input");
     const text = input.value.trim();
     if(!text) return;
+    window.__lastChatUserMsg = text;
     addChatbotMessage(text, "user");
     input.value = "";
 
@@ -6753,3 +6775,799 @@ if("serviceWorker" in navigator){
         navigator.serviceWorker.register("sw.js").catch(() => { /* تجاهل بصمت */ });
     });
 }
+
+/* ============================================================
+   40) مختبر خُطى — الميزات الذكية الجديدة
+   أ) سبورة يشرح عليها Gemini خطوة بخطوة (من داخل شات المساعد)
+   ب) دفتر الطالب: رسم + كتابة، حفظ لوحات متعددة، إرسالها للذكاء ليحلّها
+   ج) توليد اختبار محاكي كامل من ملفات الطالب (كمي/لفظي) عبر Gemini
+   د) سجل الاختبارات السابقة: الدرجة + الأسئلة الخاطئة بمراجعة تفصيلية
+   هـ) خطط متعددة بأسماء: حفظ/تبديل/حذف لقطات كاملة للخطة
+   و) الروتين الأسبوعي (عادي/أخف/إجازة) + تواريخ مستثناة + مؤشر الضغط
+   — كل النوافذ تفتح وتُغلق بأنيميشن انسيابي، لا ظهور/اختفاء مفاجئ
+   ============================================================ */
+
+/* ---------- أدوات مشتركة ---------- */
+function labT(ar, en){ return currentLang === "ar" ? ar : en; }
+
+// فتح/إغلاق أي نافذة من نوافذ المختبر بأنيميشن موحّد (فئة .lab-open + إغلاق متدرّج)
+function labOverlayOpen(id){
+    const el = document.getElementById(id);
+    // يُلغي مؤقّت الإغلاق المعلّق من نداء إغلاق سابق سريع (فتح←إغلاق←فتح خلال
+    // أقل من 380ms) — بدونه كانت النافذة تُغلَق قسراً رغم إعادة فتحها للتو
+    clearTimeout(el.__closeT);
+    el.style.display = "flex";
+    // إجبار المتصفح على تثبيت حالة البداية قبل إضافة فئة الفتح كي يعمل الانتقال
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("lab-open")));
+    document.body.style.overflow = "hidden";
+}
+function labOverlayClose(id){
+    const el = document.getElementById(id);
+    el.classList.remove("lab-open");
+    clearTimeout(el.__closeT);
+    el.__closeT = setTimeout(() => { el.style.display = "none"; }, 380);
+    document.body.style.overflow = "";
+}
+
+// نداء Gemini لمرة واحدة (خارج سجل محادثة الشات) بتعليمات نظام خاصة —
+// يمر عبر نفس الدالة الوسيطة الآمنة على Netlify، المفتاح لا يغادر الخادم
+async function askGeminiRaw(systemText, userParts){
+    const res = await fetch("/.netlify/functions/gemini-proxy", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+            model: GEMINI_MODEL,
+            system_instruction: { parts:[{ text: systemText }] },
+            contents: [{ role:"user", parts: userParts }],
+        })
+    });
+    if(!res.ok) throw new Error("Gemini proxy HTTP " + res.status);
+    const json = await res.json();
+    const reply = json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts[0].text;
+    if(!reply) throw new Error("Empty Gemini response");
+    return reply;
+}
+// يلتقط JSON من رد النموذج حتى لو لفّه بأسوار ```json أو كلام زائد
+function extractJson(text){
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    let raw = fenced ? fenced[1] : text;
+    const first = raw.indexOf("{"); const last = raw.lastIndexOf("}");
+    if(first === -1 || last === -1) throw new Error("no json braces");
+    return JSON.parse(raw.slice(first, last + 1));
+}
+
+/* ============================================================
+   أ + ب) السبورة الذكية ودفتر الطالب — نافذة واحدة بتبويبين
+   ============================================================ */
+let boardState = { steps:[], idx:0, playing:false, playTimer:null, typeTimer:null };
+
+function openKhutaBoard(tab){
+    labOverlayOpen("khuta-board-overlay");
+    switchBoardTab(tab || "ai");
+    initStudentCanvas(); // آمنة الاستدعاء المتكرر — تُهيّئ مرة واحدة فقط
+    renderSavedBoardsList();
+}
+function closeKhutaBoard(){
+    stopBoardPlayback();
+    labOverlayClose("khuta-board-overlay");
+}
+function switchBoardTab(tab){
+    document.querySelectorAll(".board-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.getElementById("board-tab-ai").classList.toggle("active", tab === "ai");
+    document.getElementById("board-tab-pad").classList.toggle("active", tab === "pad");
+}
+
+/* ---------- السبورة التي يتحكم بها Gemini ---------- */
+const BOARD_SYSTEM_PROMPT = `أنت معلّم قدرات (GAT) سعودي خبير تشرح على سبورة داخل تطبيق خُطى. سيصلك سؤال أو مفهوم (كمي أو لفظي).
+أجب حصراً بكائن JSON واحد صالح دون أي نص خارجه ودون أسوار كود، بهذا الشكل بالضبط:
+{"title":"عنوان قصير للشرح","steps":[{"say":"جملة تمهيدية قصيرة يقولها المعلم","write":["سطر يُكتب على السبورة","سطر آخر"],"mark":"box"}],"answer":"الخلاصة/الإجابة النهائية بسطر واحد"}
+القواعد: من 3 إلى 6 خطوات. كل خطوة: say جملة واحدة قصيرة، write من 1 إلى 3 أسطر قصيرة (معادلات بالرموز العربية مثل س وص مقبولة)، mark واحدة من: "none" أو "box" (تأطير آخر سطر) أو "underline" (تسطير آخر سطر). اجعل الشرح تدريجياً كمعلم حقيقي، وبأسلوب اختبار القدرات السعودي.`;
+
+async function boardExplain(questionText){
+    const q = (questionText || document.getElementById("board-ai-input").value).trim();
+    if(!q){ showToast(labT("اكتب السؤال أو المفهوم أولاً", "Type the question or concept first")); return; }
+    document.getElementById("board-ai-input").value = q;
+    stopBoardPlayback();
+    const surface = document.getElementById("board-surface");
+    surface.innerHTML = `<div class="board-loading"><span class="board-chalk-dot"></span>${labT("المعلّم يحضّر الشرح…","Teacher is preparing…")}</div>`;
+    setBoardControlsEnabled(false);
+    try{
+        const reply = await askGeminiRaw(BOARD_SYSTEM_PROMPT, [{ text: q }]);
+        let data;
+        try{ data = extractJson(reply); }
+        catch(e){
+            // خطة بديلة: نعرض الرد نصاً عادياً على السبورة بدل الفشل الكامل
+            data = { title: labT("شرح","Explanation"), steps: [{ say:"", write: reply.split("\n").filter(l=>l.trim()).slice(0,8), mark:"none" }], answer:"" };
+        }
+        if(!Array.isArray(data.steps) || data.steps.length === 0) throw new Error("bad steps");
+        boardState.steps = data.steps;
+        boardState.answer = data.answer || "";
+        boardState.title = data.title || "";
+        boardState.idx = 0;
+        surface.innerHTML = `<div class="board-title">${escapeHtml(boardState.title)}</div><div id="board-steps-area"></div>`;
+        setBoardControlsEnabled(true);
+        playBoardFromStart();
+    }catch(e){
+        console.error("[خُطى] فشل شرح السبورة:", e);
+        surface.innerHTML = `<div class="board-loading">😕 ${labT("تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","Couldn't reach the AI right now — try again shortly")}</div>`;
+    }
+}
+
+function playBoardFromStart(){
+    document.getElementById("board-steps-area").innerHTML = "";
+    boardState.idx = 0;
+    boardState.playing = true;
+    updateBoardPlayBtn();
+    renderNextBoardStep();
+}
+function renderNextBoardStep(){
+    if(!boardState.playing) return;
+    if(boardState.idx >= boardState.steps.length){ renderBoardAnswer(); return; }
+    const step = boardState.steps[boardState.idx];
+    const area = document.getElementById("board-steps-area");
+    const wrap = document.createElement("div");
+    wrap.className = "board-step";
+    if(step.say) wrap.innerHTML += `<div class="board-say">🧑‍🏫 ${escapeHtml(step.say)}</div>`;
+    const linesBox = document.createElement("div");
+    linesBox.className = "board-lines" + (step.mark === "box" ? " mark-box" : "") + (step.mark === "underline" ? " mark-underline" : "");
+    wrap.appendChild(linesBox);
+    area.appendChild(wrap);
+    requestAnimationFrame(() => wrap.classList.add("shown"));
+    // كتابة الأسطر حرفاً حرفاً كطباشير حقيقي
+    const lines = (step.write || []).map(String);
+    let li = 0, ci = 0;
+    const lineEls = lines.map(() => { const d = document.createElement("div"); d.className = "board-chalk-line"; linesBox.appendChild(d); return d; });
+    clearInterval(boardState.typeTimer);
+    boardState.typeTimer = setInterval(() => {
+        if(li >= lines.length){
+            clearInterval(boardState.typeTimer);
+            boardState.idx++;
+            boardState.playTimer = setTimeout(renderNextBoardStep, 900);
+            return;
+        }
+        lineEls[li].textContent = lines[li].slice(0, ++ci);
+        if(ci >= lines[li].length){ li++; ci = 0; }
+        area.parentElement.scrollTop = area.parentElement.scrollHeight;
+    }, 28);
+}
+function renderBoardAnswer(){
+    boardState.playing = false;
+    updateBoardPlayBtn();
+    if(!boardState.answer) return;
+    const area = document.getElementById("board-steps-area");
+    const d = document.createElement("div");
+    d.className = "board-answer";
+    d.innerHTML = `✅ ${escapeHtml(boardState.answer)}`;
+    area.appendChild(d);
+    requestAnimationFrame(() => d.classList.add("shown"));
+    area.parentElement.scrollTop = area.parentElement.scrollHeight;
+}
+function toggleBoardPlayback(){
+    if(boardState.steps.length === 0) return;
+    if(boardState.playing){ stopBoardPlayback(); }
+    else{
+        // إن كان الشرح انتهى نعيده من البداية، وإلا نكمل من حيث توقفنا
+        if(boardState.idx >= boardState.steps.length) playBoardFromStart();
+        else { boardState.playing = true; updateBoardPlayBtn(); renderNextBoardStep(); }
+    }
+}
+function stopBoardPlayback(){
+    boardState.playing = false;
+    clearInterval(boardState.typeTimer);
+    clearTimeout(boardState.playTimer);
+    updateBoardPlayBtn();
+}
+function updateBoardPlayBtn(){
+    const b = document.getElementById("board-play-btn");
+    if(b) b.innerHTML = boardState.playing
+        ? `<i class="fa-solid fa-pause"></i> ${labT("إيقاف","Pause")}`
+        : `<i class="fa-solid fa-play"></i> ${labT("تشغيل","Play")}`;
+}
+function setBoardControlsEnabled(on){
+    ["board-play-btn","board-replay-btn"].forEach(id => { const b=document.getElementById(id); if(b) b.disabled = !on; });
+}
+// يُستدعى من زر "اشرحها على السبورة" أسفل ردود المساعد
+function explainLastOnBoard(text){
+    openKhutaBoard("ai");
+    boardExplain(text);
+}
+
+/* ---------- دفتر الطالب: رسم + كتابة + حفظ + إرسال للذكاء ---------- */
+let padState = { inited:false, drawing:false, strokes:[], current:null, color:"#FFFFFF", size:3, erase:false };
+
+function initStudentCanvas(){
+    if(padState.inited) return;
+    padState.inited = true;
+    const canvas = document.getElementById("student-pad-canvas");
+    const ctx = canvas.getContext("2d");
+    function resize(){
+        // نحافظ على الرسم عند تغيّر المقاس بإعادة رسم كل الخطوط المحفوظة
+        const box = canvas.parentElement.getBoundingClientRect();
+        canvas.width = Math.max(300, box.width - 4);
+        canvas.height = Math.max(240, box.height - 4);
+        redrawPad();
+    }
+    window.addEventListener("resize", () => { if(document.getElementById("khuta-board-overlay").style.display !== "none") resize(); });
+    setTimeout(resize, 60); // بعد اكتمال أنيميشن الفتح
+    const pos = (e) => {
+        const r = canvas.getBoundingClientRect();
+        const t = e.touches ? e.touches[0] : e;
+        return { x: t.clientX - r.left, y: t.clientY - r.top };
+    };
+    const down = (e) => {
+        padState.drawing = true;
+        padState.current = { color: padState.erase ? "__erase__" : padState.color, size: padState.erase ? 22 : padState.size, pts: [pos(e)] };
+        e.preventDefault();
+    };
+    const move = (e) => {
+        if(!padState.drawing) return;
+        padState.current.pts.push(pos(e));
+        drawStroke(ctx, padState.current, true);
+        e.preventDefault();
+    };
+    const up = () => {
+        if(!padState.drawing) return;
+        padState.drawing = false;
+        if(padState.current && padState.current.pts.length > 1) padState.strokes.push(padState.current);
+        padState.current = null;
+    };
+    canvas.addEventListener("pointerdown", down);
+    canvas.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    canvas.addEventListener("touchstart", down, {passive:false});
+    canvas.addEventListener("touchmove", move, {passive:false});
+    window.addEventListener("touchend", up);
+}
+function drawStroke(ctx, s, lastSegOnly){
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    ctx.lineWidth = s.size;
+    ctx.globalCompositeOperation = s.color === "__erase__" ? "destination-out" : "source-over";
+    ctx.strokeStyle = s.color === "__erase__" ? "rgba(0,0,0,1)" : s.color;
+    const pts = s.pts;
+    ctx.beginPath();
+    const from = lastSegOnly ? Math.max(0, pts.length - 2) : 0;
+    ctx.moveTo(pts[from].x, pts[from].y);
+    for(let i = from + 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.stroke();
+    ctx.globalCompositeOperation = "source-over";
+}
+function redrawPad(){
+    const canvas = document.getElementById("student-pad-canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    padState.strokes.forEach(s => drawStroke(ctx, s, false));
+}
+function padSetColor(c, btn){
+    padState.color = c; padState.erase = false;
+    document.querySelectorAll(".pad-color").forEach(b => b.classList.toggle("active", b === btn));
+    document.getElementById("pad-eraser-btn").classList.remove("active");
+}
+function padToggleEraser(btn){
+    padState.erase = !padState.erase;
+    btn.classList.toggle("active", padState.erase);
+}
+function padUndo(){ padState.strokes.pop(); redrawPad(); }
+function padClear(){ padState.strokes = []; redrawPad(); }
+
+const PAD_STORE_KEY = "khuta_student_boards";
+function getSavedBoards(){ try{ return JSON.parse(localStorage.getItem(PAD_STORE_KEY) || "[]"); }catch(e){ return []; } }
+function saveCurrentBoard(){
+    const name = (document.getElementById("pad-name-input").value || "").trim() || labT("لوحة بدون اسم","Untitled board");
+    const canvas = document.getElementById("student-pad-canvas");
+    // نصغّر الصورة المحفوظة (جودة 0.75) حتى لا نستهلك مساحة التخزين المحلي
+    const img = padState.strokes.length ? canvas.toDataURL("image/jpeg", 0.75) : "";
+    const list = getSavedBoards();
+    list.unshift({ id: Date.now().toString(36), name, date: new Date().toISOString(), img, text: document.getElementById("pad-text-input").value || "" });
+    while(list.length > 12) list.pop();
+    try{ localStorage.setItem(PAD_STORE_KEY, JSON.stringify(list)); }
+    catch(e){ showToast(labT("مساحة التخزين ممتلئة — احذف لوحات قديمة","Storage full — delete old boards")); return; }
+    showToast(labT("💾 حُفظت اللوحة: ","💾 Saved: ") + name);
+    document.getElementById("pad-name-input").value = "";
+    renderSavedBoardsList();
+}
+function renderSavedBoardsList(){
+    const box = document.getElementById("pad-saved-list");
+    if(!box) return;
+    const list = getSavedBoards();
+    if(list.length === 0){ box.innerHTML = `<div class="card-sub" style="padding:6px 2px;">${labT("لا لوحات محفوظة بعد","No saved boards yet")}</div>`; return; }
+    box.innerHTML = list.map(b => `
+        <div class="pad-saved-row">
+            <button type="button" class="pad-saved-open" onclick="openSavedBoard('${b.id}')" title="${labT("فتح","Open")}">
+                <b>${escapeHtml(b.name)}</b>
+                <span>${new Date(b.date).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US')}</span>
+            </button>
+            <button type="button" class="btn-ghost pad-saved-del" onclick="deleteSavedBoard('${b.id}')" title="${labT("حذف","Delete")}"><i class="fa-solid fa-trash"></i></button>
+        </div>`).join("");
+}
+function openSavedBoard(id){
+    const b = getSavedBoards().find(x => x.id === id);
+    if(!b) return;
+    document.getElementById("pad-text-input").value = b.text || "";
+    padState.strokes = [];
+    redrawPad();
+    if(b.img){
+        const canvas = document.getElementById("student-pad-canvas");
+        const ctx = canvas.getContext("2d");
+        const im = new Image();
+        im.onload = () => { ctx.drawImage(im, 0, 0, canvas.width, canvas.height); };
+        im.src = b.img;
+    }
+    showToast(labT("📂 فُتحت: ","📂 Opened: ") + b.name);
+}
+function deleteSavedBoard(id){
+    const list = getSavedBoards().filter(x => x.id !== id);
+    localStorage.setItem(PAD_STORE_KEY, JSON.stringify(list));
+    renderSavedBoardsList();
+}
+const PAD_AI_SYSTEM = `أنت معلّم قدرات (GAT) سعودي داخل تطبيق خُطى. سيرسل لك الطالب ما كتبه في دفتره (نص، وقد تُرفق صورة لرسمه اليدوي: معادلة أو مسألة أو مخطط). حلّل ما أرسله وحُلّه خطوة بخطوة بإيجاز واضح، وصحّح أي خطأ تراه. أجب بالعربية بأسطر قصيرة مرقّمة، واختم بسطر "الخلاصة: …".`;
+async function sendPadToAI(){
+    const text = document.getElementById("pad-text-input").value.trim();
+    const hasDrawing = padState.strokes.length > 0;
+    if(!text && !hasDrawing){ showToast(labT("اكتب أو ارسم شيئاً أولاً","Write or draw something first")); return; }
+    const out = document.getElementById("pad-ai-answer");
+    out.style.display = "block";
+    out.innerHTML = `<span class="board-chalk-dot"></span>${labT("الذكاء يحلّل دفترك…","AI is analyzing your pad…")}`;
+    const parts = [];
+    if(text) parts.push({ text: labT("ما كتبه الطالب: ","Student wrote: ") + text });
+    if(hasDrawing){
+        // نرسل الرسم كصورة — Gemini Flash يدعم الرؤية، والوسيط يمرّر الجسم كما هو.
+        // نرسم فوق خلفية داكنة أولاً لأن الشفاف يتحول أسودَ في JPEG فيختفي الحبر الداكن
+        const src = document.getElementById("student-pad-canvas");
+        const tmp = document.createElement("canvas");
+        tmp.width = src.width; tmp.height = src.height;
+        const tctx = tmp.getContext("2d");
+        tctx.fillStyle = "#1a1440"; tctx.fillRect(0,0,tmp.width,tmp.height);
+        tctx.drawImage(src, 0, 0);
+        const dataUrl = tmp.toDataURL("image/jpeg", 0.8);
+        parts.push({ inline_data: { mime_type: "image/jpeg", data: dataUrl.split(",")[1] } });
+        if(!text) parts.push({ text: labT("حلّل الرسم المرفق وحُلّه.","Analyze the attached drawing and solve it.") });
+    }
+    try{
+        const reply = await askGeminiRaw(PAD_AI_SYSTEM, parts);
+        out.innerHTML = `<b>🧑‍🏫 ${labT("حل المعلّم:","Teacher's solution:")}</b><div class="pad-ai-text">${escapeHtml(reply).replace(/\n/g,"<br>")}</div>`;
+    }catch(e){
+        console.error("[خُطى] فشل تحليل الدفتر:", e);
+        out.innerHTML = hasDrawing && !text
+            ? labT("😕 تعذّر إرسال الرسم — جرّب كتابة المسألة نصاً في خانة الكتابة","😕 Couldn't send the drawing — try typing the problem instead")
+            : labT("😕 تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","😕 Couldn't reach the AI — try again shortly");
+    }
+}
+
+/* ============================================================
+   ج) توليد اختبار محاكي من ملفات الطالب (كمي/لفظي)
+   ============================================================ */
+let customExamFiles = { quant:"", verbal:"" };
+
+async function readStudyFile(input, kind){
+    const file = input.files && input.files[0];
+    const label = document.getElementById("customexam-" + kind + "-name");
+    if(!file){ customExamFiles[kind] = ""; label.textContent = ""; return; }
+    label.textContent = "⏳ " + file.name;
+    try{
+        let text = "";
+        if(/\.pdf$/i.test(file.name)){
+            text = await extractPdfText(file);
+        } else {
+            text = await file.text();
+        }
+        // نقصّ النص لحد آمن يناسب حجم الطلب — كافٍ جداً لتوليد أسئلة متنوعة
+        customExamFiles[kind] = text.slice(0, 16000);
+        label.textContent = "✅ " + file.name + ` (${Math.min(text.length,16000).toLocaleString()} ${labT("حرف","chars")})`;
+    }catch(e){
+        console.error("[خُطى] فشل قراءة الملف:", e);
+        customExamFiles[kind] = "";
+        label.textContent = "❌ " + labT("تعذّرت القراءة — جرّب ملف txt أو pdf نصّي (غير مصوَّر)","Read failed — try a text-based txt/pdf");
+    }
+}
+// تحميل pdf.js كسولاً من CDN عند أول حاجة فقط
+let pdfjsReady = null;
+function loadPdfJs(){
+    if(pdfjsReady) return pdfjsReady;
+    pdfjsReady = new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+        s.onload = () => {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+            resolve(window.pdfjsLib);
+        };
+        s.onerror = () => reject(new Error("pdfjs load failed"));
+        document.head.appendChild(s);
+    });
+    return pdfjsReady;
+}
+async function extractPdfText(file){
+    const pdfjs = await loadPdfJs();
+    const buf = await file.arrayBuffer();
+    const doc = await pdfjs.getDocument({ data: buf }).promise;
+    let all = "";
+    const maxPages = Math.min(doc.numPages, 40);
+    for(let p = 1; p <= maxPages && all.length < 20000; p++){
+        const page = await doc.getPage(p);
+        const tc = await page.getTextContent();
+        all += tc.items.map(i => i.str).join(" ") + "\n";
+    }
+    if(all.trim().length < 60) throw new Error("pdf has no extractable text (scanned?)");
+    return all;
+}
+
+const CUSTOM_EXAM_SYSTEM = `أنت خبير إعداد أسئلة اختبار القدرات المعرفية السعودي (GAT). سيصلك محتوى دراسي رفعه الطالب. ولّد منه أسئلة اختيار من متعدد بمستوى وأسلوب اختبار القدرات الحقيقي.
+أجب حصراً بكائن JSON واحد صالح دون أي نص خارجه ودون أسوار كود:
+{"questions":[{"text":"نص السؤال","choices":["أ","ب","ج","د"],"correct":0,"explain":"شرح مختصر للحل"}]}
+القواعد: choices أربعة بالضبط دائماً، correct رقم من 0 إلى 3 لموقع الإجابة الصحيحة، الأسئلة مستمدة فعلاً من المحتوى المرسل ومتنوعة الصعوبة، ولا تكرر نفس الفكرة.`;
+
+async function generateCustomExam(){
+    const qCount = parseInt(document.getElementById("customexam-qcount").value) || 10;
+    const hasQ = !!customExamFiles.quant, hasV = !!customExamFiles.verbal;
+    if(!hasQ && !hasV){ showToast(labT("ارفع ملفاً واحداً على الأقل (كمي أو لفظي)","Upload at least one file")); return; }
+    const btn = document.getElementById("customexam-generate-btn");
+    const status = document.getElementById("customexam-status");
+    btn.disabled = true;
+    status.innerHTML = `<span class="board-chalk-dot"></span>${labT("الذكاء يقرأ ملفاتك ويؤلّف الأسئلة… (قد يستغرق حتى دقيقة)","AI is reading your files and writing questions…")}`;
+    const pool = { quant:[], verbal:[] };
+    try{
+        const jobs = [];
+        if(hasQ) jobs.push(["quant", customExamFiles.quant]);
+        if(hasV) jobs.push(["verbal", customExamFiles.verbal]);
+        for(const [kind, content] of jobs){
+            const label = kind === "quant" ? "كمية (رياضيات/حساب/هندسة/تحليل)" : "لفظية (استيعاب/تناظر/إكمال/معنى)";
+            const reply = await askGeminiRaw(CUSTOM_EXAM_SYSTEM,
+                [{ text: `ولّد ${qCount} سؤالاً من نوع أسئلة القدرات ال${label} من هذا المحتوى:\n\n${content}` }]);
+            const data = extractJson(reply);
+            const valid = (data.questions || []).filter(q =>
+                q && typeof q.text === "string" && Array.isArray(q.choices) && q.choices.length === 4 &&
+                Number.isInteger(q.correct) && q.correct >= 0 && q.correct <= 3
+            ).map((q, i) => ({
+                id: "cf_" + kind + "_" + i + "_" + Date.now().toString(36),
+                text: q.text, choices: q.choices.map(String), correct: q.correct,
+                explain: typeof q.explain === "string" ? q.explain : "",
+                source: labT("مولَّد من ملفك 📄","Generated from your file 📄"),
+            }));
+            pool[kind] = valid;
+        }
+        const total = pool.quant.length + pool.verbal.length;
+        if(total === 0) throw new Error("no valid questions");
+        localStorage.setItem("khuta_custom_exam_pool", JSON.stringify(pool));
+        status.innerHTML = `✅ ${labT(`جاهز! تولّد ${total} سؤالاً (${pool.quant.length} كمي، ${pool.verbal.length} لفظي)`, `Ready! ${total} questions generated`)}`;
+        document.getElementById("customexam-start-btn").style.display = "inline-flex";
+    }catch(e){
+        console.error("[خُطى] فشل توليد الاختبار:", e);
+        status.textContent = labT("😕 تعذّر التوليد — تأكد أن الملف نصّي واضح وجرّب مجدداً","😕 Generation failed — make sure the file is clear text and retry");
+    }
+    btn.disabled = false;
+}
+function startCustomExam(){
+    let pool = null;
+    try{ pool = JSON.parse(localStorage.getItem("khuta_custom_exam_pool") || "null"); }catch(e){}
+    if(!pool || ((pool.quant||[]).length + (pool.verbal||[]).length) === 0){
+        showToast(labT("ولّد الاختبار من ملفاتك أولاً","Generate the exam from your files first")); return;
+    }
+    const questions = [];
+    shuffleArray(pool.quant || []).forEach(q => questions.push({ ...q, type:"quant", sectionIndex:0 }));
+    shuffleArray(pool.verbal || []).forEach(q => questions.push({ ...q, type:"verbal", sectionIndex:0 }));
+    examState = {
+        type: "custom",
+        timed: false,
+        questions,
+        answers: {},
+        currentIndex: 0,
+        totalSeconds: 0,
+        remainingSeconds: 0,
+        multiSection: false,
+        fromFiles: true,
+    };
+    document.getElementById("exam-mode-overlay").style.display = "flex";
+    document.body.style.overflow = "hidden";
+    document.getElementById("exam-timer-pill").style.display = "none";
+    renderExamPalette();
+    goToExamQuestion(0);
+}
+
+/* ============================================================
+   د) سجل الاختبارات السابقة
+   ============================================================ */
+const EXAM_HISTORY_KEY = "khuta_exam_history";
+function getExamHistory(){ try{ return JSON.parse(localStorage.getItem(EXAM_HISTORY_KEY) || "[]"); }catch(e){ return []; } }
+function recordExamAttempt(state){
+    if(!state || !state.score) return;
+    const wrong = state.questions
+        .filter(q => state.answers[q.id] !== q.correct)
+        .map(q => ({
+            text: q.text, choices: q.choices, correct: q.correct,
+            chosen: (q.id in state.answers) ? state.answers[q.id] : null,
+            type: q.type, explain: q.explain || "", source: q.source || "",
+        }));
+    const list = getExamHistory();
+    list.unshift({
+        id: Date.now().toString(36),
+        date: new Date().toISOString(),
+        type: state.type,
+        fromFiles: !!state.fromFiles,
+        score: state.score,
+        wrong,
+    });
+    while(list.length > 30) list.pop();
+    try{ localStorage.setItem(EXAM_HISTORY_KEY, JSON.stringify(list)); }catch(e){ /* التخزين ممتلئ — نتجاهل بصمت */ }
+    renderExamHistory();
+}
+function examTypeLabel(a){
+    if(a.fromFiles || a.type === "custom") return labT("من ملفاتك 📄","From your files 📄");
+    return a.type === "full" ? labT("قدرات كامل","Full GAT") : a.type === "quant" ? labT("كمي","Quant") : labT("لفظي","Verbal");
+}
+function renderExamHistory(){
+    const box = document.getElementById("exam-history-list");
+    if(!box) return;
+    const list = getExamHistory();
+    if(list.length === 0){
+        box.innerHTML = `<div class="card-sub">${labT("لم تختبر بعد — أول اختبار لك سيُسجَّل هنا تلقائياً","No attempts yet — your first exam will be recorded here")}</div>`;
+        return;
+    }
+    box.innerHTML = list.map(a => `
+        <div class="examhist-row" id="examhist-${a.id}">
+            <button type="button" class="examhist-head" onclick="toggleExamHistRow('${a.id}')">
+                <span class="examhist-pct" style="color:${a.score.pct >= 70 ? 'var(--teal)' : a.score.pct >= 50 ? 'var(--gold)' : 'var(--rose)'}">${a.score.pct}%</span>
+                <span class="examhist-meta">
+                    <b>${examTypeLabel(a)}</b>
+                    <span>${new Date(a.date).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US', {weekday:"short", day:"numeric", month:"short"})} · ${a.score.correctCount}/${a.score.total} · ${labT("أخطاء:","Wrong:")} ${a.wrong.length}</span>
+                </span>
+                <i class="fa-solid fa-chevron-down examhist-chev"></i>
+            </button>
+            <div class="examhist-body">
+                <div class="examhist-body-inner">
+                    ${a.wrong.length === 0
+                        ? `<div class="card-sub">🎉 ${labT("لا أخطاء في هذه المحاولة!","No mistakes this attempt!")}</div>`
+                        : a.wrong.map(w => `
+                        <div class="examhist-q">
+                            <div class="examhist-qtext">${escapeHtml(w.text)}</div>
+                            <div class="examhist-qrow wrong">✗ ${labT("إجابتك:","Your answer:")} ${w.chosen === null ? labT("(لم تُجب)","(unanswered)") : escapeHtml(String(w.choices[w.chosen]))}</div>
+                            <div class="examhist-qrow right">✓ ${labT("الصحيحة:","Correct:")} ${escapeHtml(String(w.choices[w.correct]))}</div>
+                            ${w.explain ? `<div class="examhist-qrow expl">💡 ${escapeHtml(w.explain)}</div>` : ""}
+                        </div>`).join("")}
+                    <button type="button" class="btn-ghost examhist-del" onclick="deleteExamAttempt('${a.id}')"><i class="fa-solid fa-trash"></i> ${labT("حذف المحاولة","Delete attempt")}</button>
+                </div>
+            </div>
+        </div>`).join("");
+}
+function toggleExamHistRow(id){
+    document.getElementById("examhist-" + id).classList.toggle("open");
+}
+function deleteExamAttempt(id){
+    localStorage.setItem(EXAM_HISTORY_KEY, JSON.stringify(getExamHistory().filter(a => a.id !== id)));
+    renderExamHistory();
+}
+
+/* ============================================================
+   هـ) خطط متعددة بأسماء (لقطات كاملة) + و) الروتين الأسبوعي
+   ============================================================ */
+// نفس مجموعة مفاتيح الخطة المعتمدة في "البدء من جديد" — هي تعريف "الخطة" الرسمي في التطبيق
+const PLAN_SNAPSHOT_KEYS = [
+    "khuta_config", "khuta_plan_days", "khuta_plan_start", "khuta_session_minutes",
+    "khuta_task_status", "khuta_task_status_date", "khuta_xp_awarded_today",
+    "khuta_completed_dates", "khuta_missed_days_count", "khuta_redday_tracking_start",
+    "khuta_today_scale", "khuta_streak", "khuta_streak_last",
+    "khuta_checkin_verbal", "khuta_checkin_quant", "khuta_quant_share",
+    "khuta_last_session_minutes", "khuta_custom_tasks", "khuta_start_section",
+    "khuta_exam_date", "khuta_autobreak_minutes", "khuta_short_break_limit",
+    "khuta_week_routine", "khuta_excluded_dates",
+];
+const PLANS_STORE_KEY = "khuta_saved_plans";
+function getSavedPlans(){ try{ return JSON.parse(localStorage.getItem(PLANS_STORE_KEY) || "[]"); }catch(e){ return []; } }
+
+function openPlansOverlay(){
+    labOverlayOpen("plans-overlay");
+    renderSavedPlansList();
+    renderRoutineEditor();
+    renderExcludedDates();
+    updateRoutinePressure();
+}
+function closePlansOverlay(){ labOverlayClose("plans-overlay"); }
+
+function saveCurrentPlanAs(){
+    const name = (document.getElementById("plan-name-input").value || "").trim();
+    if(!name){ showToast(labT("اكتب اسماً للخطة أولاً","Name the plan first")); return; }
+    const snapshot = {};
+    PLAN_SNAPSHOT_KEYS.forEach(k => {
+        const v = localStorage.getItem(k);
+        if(v !== null) snapshot[k] = v;
+    });
+    const list = getSavedPlans().filter(p => p.name !== name); // نفس الاسم = تحديث
+    list.unshift({ id: Date.now().toString(36), name, date: new Date().toISOString(), snapshot });
+    while(list.length > 8) list.pop();
+    try{ localStorage.setItem(PLANS_STORE_KEY, JSON.stringify(list)); }
+    catch(e){ showToast(labT("مساحة التخزين ممتلئة","Storage full")); return; }
+    document.getElementById("plan-name-input").value = "";
+    showToast(labT("💾 حُفظت الخطة: ","💾 Plan saved: ") + name);
+    renderSavedPlansList();
+}
+function applySavedPlan(id){
+    const p = getSavedPlans().find(x => x.id === id);
+    if(!p) return;
+    // نمسح مفاتيح الخطة الحالية ثم نكتب اللقطة — دون أي location.reload
+    // (الدرس الموثَّق: إعادة التحميل كانت تُظهر شاشة الدخول خطأً أحياناً)
+    PLAN_SNAPSHOT_KEYS.forEach(k => localStorage.removeItem(k));
+    Object.entries(p.snapshot).forEach(([k, v]) => localStorage.setItem(k, v));
+    // نفس تسلسل إعادة البناء المجرَّب في "البدء من جديد"
+    buildScheduleTable();
+    renderProgress();
+    renderGamification();
+    renderBadges();
+    switchTab("dashboard");
+    renderRoutineEditor();
+    renderExcludedDates();
+    updateRoutinePressure();
+    closePlansOverlay();
+    showToast(labT("📚 انتقلت للخطة: ","📚 Switched to plan: ") + p.name);
+}
+function deleteSavedPlan(id){
+    localStorage.setItem(PLANS_STORE_KEY, JSON.stringify(getSavedPlans().filter(p => p.id !== id)));
+    renderSavedPlansList();
+}
+function renderSavedPlansList(){
+    const box = document.getElementById("plans-saved-list");
+    if(!box) return;
+    const list = getSavedPlans();
+    if(list.length === 0){
+        box.innerHTML = `<div class="card-sub">${labT("لا خطط محفوظة بعد — احفظ خطتك الحالية باسم لتعود لها متى شئت","No saved plans yet")}</div>`;
+        return;
+    }
+    box.innerHTML = list.map(p => `
+        <div class="plan-row">
+            <div class="plan-row-info">
+                <b>${escapeHtml(p.name)}</b>
+                <span>${new Date(p.date).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US')} · ${p.snapshot.khuta_plan_days ? p.snapshot.khuta_plan_days + " " + labT("يوم","days") : ""}</span>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="applySavedPlan('${p.id}')">${labT("تفعيل","Activate")}</button>
+            <button type="button" class="btn-ghost pad-saved-del" onclick="deleteSavedPlan('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>`).join("");
+}
+
+/* ---------- الروتين الأسبوعي + التواريخ المستثناة + مؤشر الضغط ---------- */
+const ROUTINE_KEY = "khuta_week_routine";       // مصفوفة 7 قيم: 0=عادي، 1=أخف، 2=إجازة (الفهرس 0=الأحد)
+const EXCLUDED_KEY = "khuta_excluded_dates";     // مصفوفة تواريخ YYYY-MM-DD (سفر/ظروف)
+function getWeekRoutine(){
+    try{
+        const r = JSON.parse(localStorage.getItem(ROUTINE_KEY) || "null");
+        if(Array.isArray(r) && r.length === 7) return r;
+    }catch(e){}
+    return [0,0,0,0,0,0,0];
+}
+function getExcludedDates(){ try{ return JSON.parse(localStorage.getItem(EXCLUDED_KEY) || "[]"); }catch(e){ return []; } }
+
+function renderRoutineEditor(){
+    const box = document.getElementById("routine-days-grid");
+    if(!box) return;
+    const routine = getWeekRoutine();
+    const days = currentLang === "ar"
+        ? ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"]
+        : ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const modes = [
+        { v:0, label: labT("عادي","Normal"),  cls:"mode-normal" },
+        { v:1, label: labT("أخف","Lighter"),  cls:"mode-light" },
+        { v:2, label: labT("إجازة","Off"),    cls:"mode-off" },
+    ];
+    box.innerHTML = days.map((d, i) => `
+        <div class="routine-day">
+            <div class="routine-day-name">${d}</div>
+            <div class="routine-day-modes">
+                ${modes.map(m => `<button type="button" class="routine-mode ${m.cls} ${routine[i]===m.v?'active':''}" onclick="setRoutineDay(${i},${m.v})">${m.label}</button>`).join("")}
+            </div>
+        </div>`).join("");
+}
+function setRoutineDay(dayIdx, mode){
+    const r = getWeekRoutine();
+    r[dayIdx] = mode;
+    localStorage.setItem(ROUTINE_KEY, JSON.stringify(r));
+    renderRoutineEditor();
+    updateRoutinePressure();
+    updateTodayRoutinePill();
+}
+function addExcludedDate(){
+    const val = document.getElementById("excluded-date-input").value;
+    if(!val) return;
+    const list = getExcludedDates();
+    if(!list.includes(val)) list.push(val);
+    list.sort();
+    localStorage.setItem(EXCLUDED_KEY, JSON.stringify(list));
+    document.getElementById("excluded-date-input").value = "";
+    renderExcludedDates();
+    updateRoutinePressure();
+}
+function removeExcludedDate(d){
+    localStorage.setItem(EXCLUDED_KEY, JSON.stringify(getExcludedDates().filter(x => x !== d)));
+    renderExcludedDates();
+    updateRoutinePressure();
+}
+function renderExcludedDates(){
+    const box = document.getElementById("excluded-dates-list");
+    if(!box) return;
+    const list = getExcludedDates();
+    box.innerHTML = list.length === 0
+        ? `<span class="card-sub">${labT("لا تواريخ مستثناة","No excluded dates")}</span>`
+        : list.map(d => `<span class="excluded-chip">${d} <button type="button" onclick="removeExcludedDate('${d}')" aria-label="حذف">×</button></span>`).join("");
+}
+/* مؤشر الضغط: يقارن أيام الخطة المتبقية بأيام المذاكرة الفعلية المتاحة حتى
+   موعد الاختبار (بعد خصم أيام الإجازة الأسبوعية والتواريخ المستثناة،
+   واحتساب "الأخف" نصف يوم) — ويخبر الطالب بصراحة: مضغوط / متوازن / مرتاح */
+function computeRoutinePressure(){
+    const routine = getWeekRoutine();
+    const excluded = new Set(getExcludedDates());
+    const planDays = parseInt(localStorage.getItem("khuta_plan_days") || "0");
+    const startStr = localStorage.getItem("khuta_plan_start");
+    const examStr = localStorage.getItem("khuta_exam_date");
+    const now = (typeof khutaNow === "function") ? khutaNow() : new Date();
+    let daysDone = 0;
+    if(startStr){
+        daysDone = Math.max(0, Math.floor((now - new Date(startStr)) / 86400000));
+    }
+    const remainingPlanDays = Math.max(0, planDays - daysDone);
+    if(!examStr || !planDays){
+        return { ok:false, remainingPlanDays };
+    }
+    const exam = new Date(examStr + "T00:00:00");
+    let effective = 0, calendar = 0;
+    const cur = new Date(now); cur.setHours(0,0,0,0);
+    while(cur < exam && calendar < 400){
+        const iso = cur.toISOString().slice(0,10);
+        const mode = excluded.has(iso) ? 2 : routine[cur.getDay()];
+        if(mode === 0) effective += 1;
+        else if(mode === 1) effective += 0.5;
+        cur.setDate(cur.getDate() + 1);
+        calendar++;
+    }
+    effective = Math.round(effective * 2) / 2;
+    let level, msg;
+    if(remainingPlanDays === 0){ level = "ok"; msg = labT("خطتك مكتملة تقريباً 🎉","Plan nearly complete 🎉"); }
+    else if(effective < remainingPlanDays){
+        level = "tight";
+        msg = labT(`مضغوط: تحتاج ${remainingPlanDays} يوم مذاكرة ولديك ${effective} فعلياً قبل الاختبار — قلّل الإجازات أو خفّف أقل`,
+                   `Tight: need ${remainingPlanDays} study days but only ${effective} available`);
+    }
+    else if(effective > remainingPlanDays * 1.6){
+        level = "loose";
+        msg = labT(`مرتاح جداً: تحتاج ${remainingPlanDays} يوماً ولديك ${effective} — لا بأس، لكن لا تخفف أكثر من اللازم`,
+                   `Very relaxed: need ${remainingPlanDays}, have ${effective}`);
+    }
+    else{
+        level = "ok";
+        msg = labT(`متوازن: تحتاج ${remainingPlanDays} يوم مذاكرة ولديك ${effective} متاحة قبل الاختبار 👌`,
+                   `Balanced: need ${remainingPlanDays}, have ${effective} 👌`);
+    }
+    return { ok:true, level, msg, needed: remainingPlanDays, available: effective };
+}
+function updateRoutinePressure(){
+    const box = document.getElementById("routine-pressure");
+    if(!box) return;
+    const p = computeRoutinePressure();
+    if(!p.ok){
+        box.className = "routine-pressure";
+        box.innerHTML = labT("حدّد موعد اختبارك وخطتك أولاً ليظهر مؤشر الضغط هنا","Set your exam date and plan first to see the pressure meter");
+        return;
+    }
+    box.className = "routine-pressure level-" + p.level;
+    const fill = Math.min(100, Math.round((p.needed / Math.max(p.available, 0.5)) * 100));
+    box.innerHTML = `
+        <div class="routine-pressure-msg">${p.msg}</div>
+        <div class="routine-pressure-bar"><div style="width:${fill}%"></div></div>`;
+}
+// شارة صغيرة على لوحة اليوم حين يكون اليوم "أخف" أو "إجازة" حسب روتينك
+function updateTodayRoutinePill(){
+    const pill = document.getElementById("today-routine-pill");
+    if(!pill) return;
+    const now = (typeof khutaNow === "function") ? khutaNow() : new Date();
+    const iso = new Date(now.getTime() - now.getTimezoneOffset()*60000).toISOString().slice(0,10);
+    const mode = getExcludedDates().includes(iso) ? 2 : getWeekRoutine()[now.getDay()];
+    if(mode === 0){ pill.style.display = "none"; return; }
+    pill.style.display = "inline-flex";
+    pill.textContent = mode === 2 ? labT("🏖️ اليوم إجازة حسب روتينك","🏖️ Off day per your routine")
+                                  : labT("🍃 اليوم أخف حسب روتينك","🍃 Lighter day per your routine");
+}
+
+/* ---------- تهيئة الوحدة عند الإقلاع ---------- */
+window.addEventListener("load", () => {
+    // متأخرة قليلاً بعد إقلاع التطبيق الأساسي
+    setTimeout(() => {
+        renderExamHistory();
+        updateTodayRoutinePill();
+        const pool = localStorage.getItem("khuta_custom_exam_pool");
+        if(pool){ const b = document.getElementById("customexam-start-btn"); if(b) b.style.display = "inline-flex"; }
+    }, 400);
+});
