@@ -632,8 +632,8 @@ body.dark-mode .dn-star{ opacity:1; animation:khuta-twinkle 1.8s ease-in-out inf
 .overview-stat-card b{ font-family:var(--font-mono); font-size:24px; font-weight:800; line-height:1.2; }
 .overview-stat-card span{ font-size:11px; color:var(--text-3); font-weight:700; margin-top:2px; }
 
-.overview-lower-row{ display:flex; flex-wrap:wrap; gap:16px; align-items:stretch; }
-.overview-lower-row .ov-heatmap-card{ flex:1.7 1 420px; min-width:0; display:flex; flex-direction:column; justify-content:center; }
+.overview-lower-row{ display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; }
+.overview-lower-row .ov-heatmap-card{ flex:1.7 1 420px; min-width:0; }
 .overview-lower-row .ov-sidebar-col{ flex:1 1 300px; min-width:0; }
 .ov-sidebar-col{ display:flex; flex-direction:column; gap:16px; }
 .ov-heatmap-scroll{ overflow-x:auto; padding-bottom:4px; direction:ltr; }
@@ -929,6 +929,14 @@ tbody tr:last-child td{ border-bottom:none; }
 .status-badge.status-done{ background:var(--teal-soft); color:var(--teal); }
 @keyframes spin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
 
+.reorder-controls{
+    position:absolute; top:14px; inset-inline-end:14px; display:flex; flex-direction:column; gap:4px; z-index:5;
+}
+.reorder-controls button{
+    width:26px; height:22px; border-radius:8px; border:1px solid var(--border); background:var(--bg-alt);
+    color:var(--text-3); cursor:pointer; font-size:10px; display:flex; align-items:center; justify-content:center;
+}
+.reorder-controls button:hover{ background:var(--gold); color:#fff; border-color:var(--gold); }
 .mini-progress{ width:100%; height:8px; border-radius:99px; background:var(--border); overflow:hidden; margin-top:8px; }
 .mini-progress > div{ height:100%; border-radius:99px; background:linear-gradient(90deg, var(--teal), #38B897); transition:width .4s var(--ease); }
 .row-actions{ display:flex; gap:6px; }
@@ -1396,38 +1404,42 @@ body.lang-en .brand small{ letter-spacing:1.5px; }
 }
 
 /* ============================================================
-   طبقة "السديم الكوني" — Cosmic Glass Theme
-   تحويل الوضع الداكن بالكامل ليطابق التصاميم التخيلية المعتمدة:
-   خلفية سديم بنفسجي بتوهجات دافئة + نجوم متلألئة (CSS فقط) +
-   بطاقات زجاجية مضيئة + قائمة جانبية بتوهج ذهبي + وضع تركيز حالم.
-   ملاحظة: كل القواعد هنا مقيّدة بـ body.dark-mode (ما عدا وضع
-   التركيز، فهو داكن دائماً بطبيعته) — الوضع الفاتح لا يتأثر إطلاقاً.
+   طبقة "السديم الكوني" — Cosmic Glass Theme (النسخة الثانية الموسّعة)
+   خلفية مجرّة كاملة + كل البطاقات زجاج بنفسجي شفاف + تخطيط "نظرة
+   عامة" متراصّ كما في التصميم التخيلي + أزرار مؤقّت زجاجية بلمسة
+   لونية + وضع تركيز مطابق للتصميم (رأس عائم أكبر، زر بدء ضخم زجاجي،
+   بطاقات سفلية أكبر، لوحة أجواء منزلقة، إشعارات بأنيميشن) + طي القائمة
+   الجانبية بحركة انسيابية. القواعد اللونية مقيّدة بالوضع الداكن؛
+   قواعد التخطيط والأنيميشن عامة لأنها سلوك وليست ألواناً.
    ============================================================ */
 
-/* --- 1) خلفية الصفحة: سديم بنفسجي عميق بتوهجات برتقالية دافئة --- */
+/* --- 1) خلفية مجرّة: سديم بنفسجي عميق + توهجات دافئة + حزام مجرّي مائل --- */
 body.dark-mode{
     background:
-        radial-gradient(1100px 700px at 88% -8%, rgba(129,84,255,0.22), transparent 62%),
-        radial-gradient(950px 650px at -8% 18%, rgba(76,58,168,0.26), transparent 60%),
-        radial-gradient(1000px 720px at 108% 82%, rgba(255,138,66,0.15), transparent 55%),
-        radial-gradient(760px 540px at -6% 104%, rgba(255,122,92,0.11), transparent 58%),
-        linear-gradient(180deg, #0A0920 0%, #120E2C 42%, #191033 100%);
+        radial-gradient(1100px 700px at 88% -8%, rgba(129,84,255,0.24), transparent 62%),
+        radial-gradient(950px 650px at -8% 18%, rgba(86,64,190,0.28), transparent 60%),
+        radial-gradient(1000px 720px at 108% 82%, rgba(255,138,66,0.16), transparent 55%),
+        radial-gradient(760px 540px at -6% 104%, rgba(255,122,92,0.12), transparent 58%),
+        radial-gradient(1400px 900px at 50% 120%, rgba(60,40,130,0.30), transparent 70%),
+        linear-gradient(180deg, #0A0920 0%, #120E2C 42%, #1A1136 100%);
     background-attachment: fixed;
 }
 
-/* --- 2) نجوم متلألئة — طبقتان بأحجام وإيقاعات مختلفة، بدون أي JS --- */
+/* --- 2) نجوم متلألئة + حزام "درب التبانة" مائل — CSS خالص بلا JS --- */
 body.dark-mode::before, body.dark-mode::after{
     content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
-    background-repeat:repeat;
 }
 body.dark-mode::before{
     background-image:
+        /* حزام مجرّي مائل ناعم يعبر الشاشة */
+        linear-gradient(115deg, transparent 30%, rgba(168,148,255,0.10) 44%, rgba(255,196,140,0.06) 52%, rgba(168,148,255,0.08) 58%, transparent 72%),
         radial-gradient(1.6px 1.6px at 22px 34px, rgba(255,255,255,0.85), transparent 55%),
         radial-gradient(1.2px 1.2px at 120px 86px, rgba(255,255,255,0.60), transparent 55%),
         radial-gradient(1.4px 1.4px at 200px 150px, rgba(232,199,126,0.70), transparent 55%),
         radial-gradient(1px 1px at 260px 40px, rgba(255,255,255,0.55), transparent 55%),
         radial-gradient(1.2px 1.2px at 310px 190px, rgba(200,180,255,0.60), transparent 55%);
-    background-size: 340px 240px;
+    background-size: 100% 100%, 340px 240px, 340px 240px, 340px 240px, 340px 240px, 340px 240px;
+    background-repeat: no-repeat, repeat, repeat, repeat, repeat, repeat;
     animation: cosmicTwinkleA 6s ease-in-out infinite;
 }
 body.dark-mode::after{
@@ -1437,45 +1449,65 @@ body.dark-mode::after{
         radial-gradient(1.1px 1.1px at 300px 220px, rgba(255,255,255,0.40), transparent 55%),
         radial-gradient(0.8px 0.8px at 420px 140px, rgba(232,199,126,0.50), transparent 55%);
     background-size: 460px 300px;
+    background-repeat: repeat;
     animation: cosmicTwinkleB 9s ease-in-out infinite;
 }
-@keyframes cosmicTwinkleA{ 0%,100%{ opacity:.9; } 50%{ opacity:.45; } }
+@keyframes cosmicTwinkleA{ 0%,100%{ opacity:.92; } 50%{ opacity:.55; } }
 @keyframes cosmicTwinkleB{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
 @media (prefers-reduced-motion: reduce){
     body.dark-mode::before, body.dark-mode::after{ animation:none; }
 }
-/* على الهاتف نكتفي بطبقة نجوم واحدة أخف حفاظاً على الأداء والبطارية */
 @media (max-width:700px){
     body.dark-mode::after{ display:none; }
     body.dark-mode{ background-attachment: scroll; }
 }
 
-/* --- 3) البطاقات: زجاج بنفسجي مضيء بحافة علوية لامعة وتوهج عند التمرير --- */
+/* --- 3) كل البطاقات: زجاج بنفسجي شفاف مضيء يُظهر المجرّة خلفه --- */
 body.dark-mode .card{
-    background: linear-gradient(168deg, rgba(102,90,205,0.16) 0%, rgba(28,23,62,0.55) 48%, rgba(19,15,44,0.62) 100%);
-    border:1px solid rgba(163,150,255,0.20);
-    box-shadow: 0 18px 50px rgba(5,3,18,0.55), inset 0 1px 0 rgba(255,255,255,0.10);
-    backdrop-filter: blur(26px) saturate(1.5); -webkit-backdrop-filter: blur(26px) saturate(1.5);
+    background: linear-gradient(165deg, rgba(132,112,240,0.20) 0%, rgba(52,42,110,0.34) 45%, rgba(32,24,76,0.42) 100%);
+    border:1px solid rgba(178,164,255,0.26);
+    box-shadow: 0 18px 50px rgba(5,3,18,0.50), inset 0 1px 0 rgba(255,255,255,0.14), inset 0 -18px 40px rgba(20,12,60,0.25);
+    backdrop-filter: blur(28px) saturate(1.6); -webkit-backdrop-filter: blur(28px) saturate(1.6);
 }
 @media (min-width:993px){
     body.dark-mode .card:hover{
-        border-color: rgba(196,178,255,0.38);
-        box-shadow: 0 24px 64px rgba(0,0,0,0.60), 0 0 36px rgba(129,84,255,0.16), inset 0 1px 0 rgba(255,255,255,0.14);
+        border-color: rgba(206,190,255,0.42);
+        box-shadow: 0 24px 64px rgba(0,0,0,0.55), 0 0 40px rgba(140,100,255,0.20), inset 0 1px 0 rgba(255,255,255,0.18);
     }
 }
 body.dark-mode .wizard-card{
-    background: linear-gradient(168deg, rgba(102,90,205,0.16), rgba(24,19,54,0.82));
-    border-color: rgba(163,150,255,0.22);
-    box-shadow: 0 24px 70px rgba(5,3,18,0.6), inset 0 1px 0 rgba(255,255,255,0.10);
+    background: linear-gradient(165deg, rgba(132,112,240,0.18), rgba(30,23,72,0.80));
+    border-color: rgba(178,164,255,0.26);
+    box-shadow: 0 24px 70px rgba(5,3,18,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+body.dark-mode .xp-hero-card{
+    background: linear-gradient(135deg, rgba(132,112,240,0.24), rgba(40,30,92,0.40) 55%, rgba(201,150,46,0.16));
+    border:1px solid rgba(214,186,140,0.30);
+    box-shadow: 0 18px 50px rgba(5,3,18,0.50), 0 0 34px rgba(232,199,126,0.12), inset 0 1px 0 rgba(255,255,255,0.14);
+    backdrop-filter: blur(28px) saturate(1.6); -webkit-backdrop-filter: blur(28px) saturate(1.6);
+}
+body.dark-mode .overview-stat-card{
+    background: linear-gradient(165deg, rgba(132,112,240,0.18), rgba(38,29,86,0.38));
+    border:1px solid rgba(178,164,255,0.24);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 12px 32px rgba(5,3,18,0.40);
+    backdrop-filter: blur(28px) saturate(1.6); -webkit-backdrop-filter: blur(28px) saturate(1.6);
+    transition: transform .25s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease);
+}
+@media (min-width:993px){
+    body.dark-mode .overview-stat-card:hover{
+        transform: translateY(-3px);
+        border-color: rgba(206,190,255,0.44);
+        box-shadow: 0 14px 38px rgba(0,0,0,0.50), 0 0 26px rgba(140,100,255,0.22);
+    }
 }
 
 /* --- 4) القائمة الجانبية: زجاج كوني + العنصر النشط بتوهج ذهبي حي --- */
 body.dark-mode .sidebar{
-    background: linear-gradient(180deg, rgba(96,84,196,0.14), rgba(22,18,52,0.62));
-    border-color: rgba(163,150,255,0.18);
-    box-shadow: 0 18px 60px rgba(5,3,18,0.50), inset 0 1px 0 rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(120,102,220,0.16), rgba(28,22,66,0.55));
+    border-color: rgba(178,164,255,0.22);
+    box-shadow: 0 18px 60px rgba(5,3,18,0.50), inset 0 1px 0 rgba(255,255,255,0.10);
 }
-body.dark-mode .nav-item:hover{ background: rgba(163,150,255,0.10); }
+body.dark-mode .nav-item:hover{ background: rgba(178,164,255,0.12); }
 body.dark-mode .nav-item.active{
     background: linear-gradient(155deg, rgba(255,196,100,0.26), rgba(201,150,46,0.08));
     border-color: rgba(255,208,124,0.55);
@@ -1486,89 +1518,155 @@ body.dark-mode .nav-item.active i{
     border-color:rgba(255,210,130,0.35); box-shadow:0 0 12px rgba(255,182,72,0.35);
 }
 
-/* --- 5) الأزرار: ذهب متوهج للأساسية + تدرّج وردي/كهرماني لزر بدء التركيز --- */
-body.dark-mode .btn:not(.btn-outline):not(.btn-ghost):not(.btn-teal):not(.btn-danger){
-    background: linear-gradient(120deg, #E8C77E 0%, #C9962E 55%, #B0812A 100%);
-    box-shadow: 0 10px 26px rgba(201,150,46,0.35), 0 0 18px rgba(232,199,126,0.18);
-}
-body.dark-mode .btn-outline:hover{
-    box-shadow: 0 0 18px rgba(232,199,126,0.18);
-}
-body.dark-mode .btn-start-session{
-    background: linear-gradient(100deg, #E2527E 0%, #F2784F 50%, #F7B34E 100%);
-    box-shadow: 0 12px 34px rgba(233,96,98,0.40), 0 0 30px rgba(245,169,75,0.30);
-}
-body.dark-mode .btn-start-session:hover{
-    box-shadow: 0 16px 44px rgba(233,96,98,0.50), 0 0 44px rgba(245,169,75,0.40);
-}
-
-/* --- 6) الحقول: زجاج بنفسجي خفيف بتوهج ذهبي عند التركيز --- */
-body.dark-mode input, body.dark-mode select, body.dark-mode textarea{
-    background: rgba(120,105,220,0.08);
-    border-color: rgba(163,150,255,0.22);
-}
-body.dark-mode input:focus, body.dark-mode select:focus, body.dark-mode textarea:focus{
-    background: rgba(120,105,220,0.14);
-    box-shadow: 0 0 0 4px rgba(232,199,126,0.14), 0 0 18px rgba(232,199,126,0.12);
-}
-
-/* --- 7) قسم "نظرة عامة": بطاقة XP مضيئة + بطاقات إحصائية تتفاعل --- */
-body.dark-mode .xp-hero-card{
-    background: linear-gradient(135deg, rgba(102,90,205,0.20), rgba(26,20,58,0.55) 55%, rgba(201,150,46,0.14));
-    border-color: rgba(232,199,126,0.28);
-    box-shadow: 0 18px 50px rgba(5,3,18,0.50), 0 0 32px rgba(232,199,126,0.10), inset 0 1px 0 rgba(255,255,255,0.10);
-}
-body.dark-mode .overview-stat-card{
-    background: linear-gradient(165deg, rgba(102,90,205,0.14), rgba(24,19,54,0.55));
-    border-color: rgba(163,150,255,0.18);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 10px 30px rgba(5,3,18,0.40);
-    transition: transform .25s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease);
-}
+/* --- 5) طي/فتح القائمة الجانبية بحركة انسيابية حقيقية ---
+   المبدأ: لا نحرّك grid-template-columns إطلاقاً (سبب الحادثتين الموثَّقتين
+   سابقاً)؛ بدل ذلك يصبح عمود القائمة auto فيتبع عرض القائمة نفسها، والعرض
+   وحده هو ما يتحرك (خاصية قابلة للتحريك بموثوقية). وأثناء الحركة فقط تُعلَّق
+   قواعد "القائمة العائمة المثبَّتة" عبر فئة sidebar-animating المؤقتة التي
+   يضيفها toggleSidebar، ثم تعود للعمل بعد انتهاء الحركة بلا أي قفزة بصرية. */
 @media (min-width:993px){
-    body.dark-mode .overview-stat-card:hover{
-        transform: translateY(-3px);
-        border-color: rgba(196,178,255,0.40);
-        box-shadow: 0 14px 36px rgba(0,0,0,0.50), 0 0 24px rgba(129,84,255,0.18);
+    .app-container{ grid-template-columns: auto 1fr; }
+    .app-container.sidebar-collapsed{ grid-template-columns: auto 1fr; }
+    .sidebar{
+        width:264px; min-width:0; box-sizing:border-box;
+        transition: width .42s var(--ease), opacity .30s ease, transform .35s ease,
+                    padding .42s var(--ease), border-width .42s var(--ease);
+    }
+    .app-container.sidebar-collapsed .sidebar{ width:0; }
+    .app-container.sidebar-collapsed.sidebar-animating .sidebar{
+        position:sticky; top:22px; inset-inline-start:auto; height:calc(100vh - 44px);
     }
 }
-body.dark-mode .xp-level-progress-bar{ background: rgba(120,105,220,0.14); }
+
+/* --- 6) قسم "نظرة عامة": تخطيط متراصّ كما في التصميم —
+   نشاطك اليومي بطاقة عريضة تمتد وتتساوى بارتفاع عمود (مهام اليوم +
+   لوحة الصدارة)، والخريطة الحرارية تملأ البطاقة بخلايا مرنة كبيرة،
+   ومسار التقدم صار بعرض كامل أسفلهما (نُقل في HTML). --- */
+@media (min-width:993px){
+    .overview-lower-row{
+        display:grid; grid-template-columns: 1.7fr 1fr;
+        gap:16px; align-items:stretch;
+    }
+    .overview-lower-row .ov-heatmap-card{ display:flex; flex-direction:column; }
+    .overview-lower-row .ov-heatmap-card .ov-heatmap-scroll{
+        flex:1; display:flex; align-items:center; overflow:visible;
+    }
+    .overview-lower-row .ov-heatmap-grid{
+        width:100%; grid-auto-columns:minmax(0,1fr); gap:5px;
+    }
+    .overview-lower-row .ov-heat-cell{
+        width:auto; height:auto; aspect-ratio:1/1; border-radius:5px;
+    }
+}
+body.dark-mode .ov-heat-cell{
+    background: rgba(120,105,220,0.10); border-color: rgba(178,164,255,0.14);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+body.dark-mode .ov-heat-cell:hover{ transform: scale(1.18); }
+body.dark-mode .ov-heat-cell[data-level="3"],
+body.dark-mode .ov-heat-cell[data-level="4"]{ box-shadow: 0 0 12px rgba(232,199,126,0.40); }
+body.dark-mode .ov-heat-swatch{ background: rgba(120,105,220,0.10); border-color: rgba(178,164,255,0.14); }
+
+/* --- 7) أزرار المؤقّت في لوحة التحكم: زجاج شفاف بالكامل بلمسة لونية خفيفة —
+   جلسة الخطة = ميلان برتقالي دافئ، الاستراحة = ميلان أخضر، الإيقاف المؤقت =
+   ميلان ذهبي. (بطلب صريح: زجاجية وليست ألواناً صريحة مصمتة) --- */
+body.dark-mode #btn-plan-session{
+    background: linear-gradient(155deg, rgba(255,150,80,0.26), rgba(255,150,80,0.08));
+    border:1.5px solid rgba(255,180,130,0.42); color:#fff;
+    backdrop-filter: blur(20px) saturate(1.5); -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    box-shadow: inset 0 1px 10px rgba(255,255,255,0.12), 0 10px 26px rgba(0,0,0,0.25), 0 0 22px rgba(255,150,80,0.14);
+}
+body.dark-mode #btn-plan-session:hover{
+    background: linear-gradient(155deg, rgba(255,150,80,0.38), rgba(255,150,80,0.14));
+    box-shadow: inset 0 1px 10px rgba(255,255,255,0.14), 0 14px 32px rgba(0,0,0,0.30), 0 0 32px rgba(255,150,80,0.22);
+}
+body.dark-mode #btn-short-break{
+    background: linear-gradient(155deg, rgba(94,214,183,0.24), rgba(94,214,183,0.07));
+    border:1.5px solid rgba(148,224,201,0.40); color:#fff;
+    backdrop-filter: blur(20px) saturate(1.5); -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    box-shadow: inset 0 1px 10px rgba(255,255,255,0.12), 0 10px 26px rgba(0,0,0,0.25);
+}
+body.dark-mode #btn-short-break:hover{
+    background: linear-gradient(155deg, rgba(94,214,183,0.36), rgba(94,214,183,0.12));
+}
+body.dark-mode #pause-btn{
+    background: linear-gradient(155deg, rgba(232,199,126,0.24), rgba(232,199,126,0.07));
+    border:1.5px solid rgba(232,199,126,0.40); color:#fff;
+    backdrop-filter: blur(20px) saturate(1.5); -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    box-shadow: inset 0 1px 10px rgba(255,255,255,0.12), 0 10px 26px rgba(0,0,0,0.25);
+}
+body.dark-mode #pause-btn:hover:not(:disabled){
+    background: linear-gradient(155deg, rgba(232,199,126,0.36), rgba(232,199,126,0.12));
+}
+
+/* --- 8) الحقول وشريط التمرير بالهوية الكونية --- */
+body.dark-mode input, body.dark-mode select, body.dark-mode textarea{
+    background: rgba(132,112,240,0.10);
+    border-color: rgba(178,164,255,0.24);
+}
+body.dark-mode input:focus, body.dark-mode select:focus, body.dark-mode textarea:focus{
+    background: rgba(132,112,240,0.16);
+    box-shadow: 0 0 0 4px rgba(232,199,126,0.14), 0 0 18px rgba(232,199,126,0.12);
+}
+@media (min-width:993px){
+    body.dark-mode ::-webkit-scrollbar-track{ background: rgba(18,13,40,0.7); }
+    body.dark-mode ::-webkit-scrollbar-thumb{ background: rgba(178,164,255,0.35); border-color: transparent; }
+    body.dark-mode ::-webkit-scrollbar-thumb:hover{ background: rgba(232,199,126,0.60); }
+}
+
+/* --- 9) أشرطة التقدم بتوهج --- */
+body.dark-mode .xp-level-progress-bar{ background: rgba(132,112,240,0.16); }
 body.dark-mode .xp-level-progress-bar div{
     background: linear-gradient(90deg, #E2527E, #F5A94B);
     box-shadow: 0 0 12px rgba(226,82,126,0.45);
 }
-body.dark-mode .mini-progress{ background: rgba(120,105,220,0.16); }
+body.dark-mode .mini-progress{ background: rgba(132,112,240,0.18); }
 body.dark-mode .mini-progress > div{
     background: linear-gradient(90deg, #5B7CFA, #8B5CF6);
     box-shadow: 0 0 10px rgba(108,92,231,0.40);
 }
 
-/* خريطة النشاط: توهج للخلايا العميقة + تكبير لطيف عند التمرير */
-body.dark-mode .ov-heat-cell{ transition: transform .15s ease, box-shadow .15s ease; }
-body.dark-mode .ov-heat-cell:hover{ transform: scale(1.35); }
-body.dark-mode .ov-heat-cell[data-level="3"],
-body.dark-mode .ov-heat-cell[data-level="4"]{ box-shadow: 0 0 10px rgba(232,199,126,0.45); }
-
-/* --- 8) شريط التمرير بهوية كونية --- */
-@media (min-width:993px){
-    body.dark-mode ::-webkit-scrollbar-track{ background: rgba(16,12,36,0.7); }
-    body.dark-mode ::-webkit-scrollbar-thumb{ background: rgba(163,150,255,0.35); border-color: transparent; }
-    body.dark-mode ::-webkit-scrollbar-thumb:hover{ background: rgba(232,199,126,0.60); }
+/* --- 10) لوحة الإشعارات: ظهور واختفاء انسيابيان + زجاج كوني --- */
+.notif-panel{ animation: notifPanelIn .30s var(--ease); transform-origin: top center; }
+.notif-panel.panel-closing{ animation: notifPanelOut .26s var(--ease) forwards; pointer-events:none; }
+@keyframes notifPanelIn{
+    from{ opacity:0; transform:translateY(-10px) scale(0.97); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes notifPanelOut{
+    from{ opacity:1; transform:translateY(0) scale(1); }
+    to{ opacity:0; transform:translateY(-10px) scale(0.97); }
+}
+body.dark-mode .notif-panel{
+    background: linear-gradient(165deg, rgba(132,112,240,0.20), rgba(28,22,66,0.85));
+    border-color: rgba(178,164,255,0.26);
+    box-shadow: 0 24px 60px rgba(5,3,18,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
 }
 
 /* ============================================================
-   وضع التركيز — "حلم بنفسجي" (ثيم ليل هادئ) يطابق التصميم التخيلي.
-   يعمل دائماً لأن وضع التركيز داكن بطبيعته بغضّ النظر عن ثيم الموقع.
+   وضع التركيز الكامل — مطابقة التصميم التخيلي
    ============================================================ */
-/* طبقة سديم فوق الكانفس: شفق بنفسجي علوي + دفء برتقالي أسفل الكثبان */
-[data-bg-theme="night"] .focus-mode-bg::after{
-    content:""; position:absolute; inset:0; pointer-events:none;
+
+/* --- 11) خلفية مجرّة لثيم "ليل هادئ": سديم بنفسجي + دفء برتقالي + حزام مجرّي --- */
+[data-bg-theme="night"] .focus-mode-bg::before{
+    content:""; position:absolute; inset:-4%; pointer-events:none; z-index:1;
     background:
-        radial-gradient(1000px 620px at 24% 6%, rgba(129,84,255,0.34), transparent 62%),
-        radial-gradient(900px 560px at 78% 96%, rgba(255,145,90,0.26), transparent 58%),
+        linear-gradient(112deg, transparent 30%, rgba(170,150,255,0.13) 45%, rgba(255,196,140,0.07) 53%, transparent 70%),
+        radial-gradient(2px 2px at 12% 24%, rgba(255,255,255,0.9), transparent 60%),
+        radial-gradient(1.6px 1.6px at 78% 16%, rgba(255,255,255,0.7), transparent 60%),
+        radial-gradient(1.6px 1.6px at 30% 68%, rgba(220,200,255,0.7), transparent 60%),
+        radial-gradient(2px 2px at 64% 44%, rgba(232,199,126,0.8), transparent 60%),
+        radial-gradient(1.4px 1.4px at 90% 78%, rgba(255,255,255,0.6), transparent 60%);
+    mix-blend-mode: screen;
+}
+[data-bg-theme="night"] .focus-mode-bg::after{
+    content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
+    background:
+        radial-gradient(1000px 620px at 24% 6%, rgba(129,84,255,0.36), transparent 62%),
+        radial-gradient(900px 560px at 78% 96%, rgba(255,145,90,0.28), transparent 58%),
         radial-gradient(700px 460px at 8% 92%, rgba(226,82,126,0.16), transparent 60%);
     mix-blend-mode: screen;
 }
-/* كرة المؤقّت الزجاجية: بلور بنفسجي بدل الأزرق المحايد */
 [data-bg-theme="night"] .focus-timer-ring-wrap::before{
     background:
         radial-gradient(circle at 32% 24%, rgba(255,255,255,0.28), rgba(190,160,255,0.10) 45%, rgba(129,84,255,0.16) 75%);
@@ -1577,7 +1675,6 @@ body.dark-mode .ov-heat-cell[data-level="4"]{ box-shadow: 0 0 10px rgba(232,199,
 [data-bg-theme="night"] .focus-timer-ring-wrap svg{
     filter: drop-shadow(0 0 26px rgba(180,140,255,0.50));
 }
-/* نسخة الهاتف من خلفية ثيم الليل — نفس الحلم البنفسجي بتدرّج ثابت موفّر */
 @media (max-width:700px){
     [data-bg-theme="night"] .focus-mode-mobile-bg{
         background:
@@ -1585,16 +1682,92 @@ body.dark-mode .ov-heat-cell[data-level="4"]{ box-shadow: 0 0 10px rgba(232,199,
             linear-gradient(165deg, #171034, #241548, #171030);
     }
 }
-/* زر "ابدأ التركيز" داخل وضع التركيز: تدرّج وردي→كهرماني متوهج كما في
-   التصميم التخيلي (يتقدم على قاعدة الزجاج الأخضر السابقة بترتيب التسلسل) */
+
+/* --- 12) الرأس العائم: أكبر وأوضح وأفخم، كما في التصميم بالضبط --- */
+.focus-header-float{
+    max-width:1120px; margin:-4px auto 26px; padding:14px 28px 14px 14px; gap:24px;
+    background:linear-gradient(155deg, rgba(255,255,255,0.14), rgba(255,255,255,0.04));
+    border:1.5px solid rgba(255,255,255,0.22);
+    box-shadow: inset 0 1px 14px rgba(255,255,255,0.10), 0 18px 44px rgba(0,0,0,0.35), 0 0 40px rgba(140,100,255,0.10);
+}
+.focus-header-avatar{ width:54px; height:54px; }
+.focus-header-greeting b{ font-size:16.5px; }
+.focus-header-greeting span{ font-size:12px; }
+.focus-header-stats{ gap:12px; }
+.focus-header-pill{ padding:10px 18px; font-size:14.5px; gap:9px; }
+.focus-header-pill i{ font-size:15px; }
+.focus-header-clock{ font-size:17px; letter-spacing:1px; color:rgba(255,255,255,0.9); }
+.focus-header-bell{ width:44px; height:44px; font-size:15px; }
+
+/* --- 13) زر "ابدأ التركيز": ضخم، زجاجي بتوهج دافئ — نفس زر التصميم --- */
 .focus-controls-row .btn-start-session{
-    background: linear-gradient(100deg, #E2527E 0%, #F2784F 50%, #F7B34E 100%);
-    border-color: rgba(255,190,140,0.45);
-    box-shadow: 0 12px 34px rgba(233,96,98,0.35), 0 0 26px rgba(245,169,75,0.28);
+    padding:20px 64px; font-size:20px; font-weight:800; border-radius:99px;
+    background: linear-gradient(100deg, rgba(255,120,100,0.40), rgba(255,165,80,0.30) 55%, rgba(255,196,110,0.24));
+    border:1.5px solid rgba(255,200,150,0.50); color:#fff;
+    box-shadow: inset 0 1px 14px rgba(255,255,255,0.20), 0 14px 40px rgba(240,110,80,0.30), 0 0 44px rgba(255,170,90,0.25);
 }
 .focus-controls-row .btn-start-session:hover{
-    background: linear-gradient(100deg, #E85F88 0%, #F58257 50%, #F9BC5E 100%);
-    box-shadow: 0 16px 44px rgba(233,96,98,0.45), 0 0 40px rgba(245,169,75,0.38);
+    background: linear-gradient(100deg, rgba(255,120,100,0.52), rgba(255,165,80,0.40) 55%, rgba(255,196,110,0.32));
+    box-shadow: inset 0 1px 14px rgba(255,255,255,0.24), 0 18px 50px rgba(240,110,80,0.40), 0 0 60px rgba(255,170,90,0.35);
+    transform: translateY(-2px);
+}
+.focus-controls-row .btn-start-session i{ font-size:18px; }
+
+/* --- 14) بطاقتا "مهام اليوم" و"نقاط XP" السفليتان: أكبر وزجاج كوني أوضح --- */
+@media (min-width:701px){
+    .focus-mode-task-card, .focus-mode-xp-card{
+        min-width:300px; padding:24px 28px; border-radius:26px;
+        background:linear-gradient(155deg, rgba(160,140,255,0.16), rgba(255,255,255,0.04));
+        border:1.5px solid rgba(210,195,255,0.28);
+        box-shadow: inset 0 1px 14px rgba(255,255,255,0.10), 0 20px 50px rgba(0,0,0,0.40), 0 0 34px rgba(140,100,255,0.12);
+    }
+    .focus-task-label{ font-size:13px; gap:8px; margin-bottom:10px; }
+    #focus-task-list{ max-height:220px; }
+    .focus-task-row{ font-size:14px; }
+    #focus-xp-value{ font-size:30px; font-family:var(--font-mono); font-weight:800;
+        background:linear-gradient(100deg, #FFD98A, #F5A94B); -webkit-background-clip:text; background-clip:text; color:transparent; }
+}
+
+/* --- 15) لوحة "أجواء التركيز": لوحة جانبية تنزلق بأنيميشن جميل ---
+   (على الكمبيوتر: من جانب الشاشة؛ على الهاتف: تبقى ورقة سفلية لكنها
+   تنزلق من الأسفل بنعومة بدل الظهور اللحظي) */
+.focus-theme-picker{
+    position:fixed; top:110px; inset-inline-end:26px; inset-inline-start:auto;
+    z-index:7600; min-width:240px; padding:16px; border-radius:22px;
+    background: linear-gradient(165deg, rgba(150,130,255,0.18), rgba(24,18,56,0.88));
+    border:1.5px solid rgba(210,195,255,0.28);
+    box-shadow: inset 0 1px 12px rgba(255,255,255,0.10), 0 24px 60px rgba(0,0,0,0.5), 0 0 44px rgba(140,100,255,0.14);
+    animation:none;
+    display:flex;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transform: translateX(-28px);
+    transition: opacity .38s var(--ease), transform .38s var(--ease), visibility 0s linear .38s;
+}
+html[dir="ltr"] .focus-theme-picker{ transform: translateX(28px); }
+.focus-theme-picker.open{
+    opacity:1; visibility:visible; pointer-events:auto;
+    transform: translateX(0);
+    transition: opacity .38s var(--ease), transform .38s var(--ease), visibility 0s;
+}
+.focus-picker-head{
+    display:flex; align-items:center; gap:8px; font-weight:800; font-size:14px; color:#fff;
+    padding:2px 4px 0;
+}
+.focus-picker-head i{ color:var(--gold-soft); font-size:12.5px; }
+.focus-picker-sub{ font-size:11px; color:rgba(255,255,255,0.55); font-weight:600; margin:2px 4px 8px; }
+.focus-theme-swatch{ padding:11px 12px; font-size:13px; border-radius:12px; }
+.focus-theme-swatch.active{
+    background: linear-gradient(155deg, rgba(232,199,126,0.24), rgba(201,150,46,0.08));
+    border:1px solid rgba(255,210,130,0.35);
+    box-shadow: 0 0 16px rgba(255,182,72,0.20);
+}
+@media (max-width:700px){
+    .focus-theme-picker{
+        transform: translateY(24px);
+        transition: opacity .38s var(--ease), transform .38s var(--ease), visibility 0s linear .38s;
+    }
+    html[dir="ltr"] .focus-theme-picker{ transform: translateY(24px); }
+    .focus-theme-picker.open{ transform: translateY(0); }
 }
 
 </style>
@@ -2060,7 +2233,9 @@ body.dark-mode .ov-heat-cell[data-level="4"]{ box-shadow: 0 0 10px rgba(232,199,
     <div class="focus-mode-topbar">
         <div class="focus-theme-picker-wrap">
             <button type="button" class="btn btn-sm" onclick="toggleFocusThemePicker()" title="خلفية وضع التركيز"><i class="fa-solid fa-palette"></i></button>
-            <div id="focus-theme-picker" class="focus-theme-picker" style="display:none;">
+            <div id="focus-theme-picker" class="focus-theme-picker">
+                <div class="focus-picker-head"><i class="fa-solid fa-sliders"></i> أجواء التركيز</div>
+                <p class="focus-picker-sub">اختر أجواءً تساعدك على التركيز</p>
                 <button type="button" class="focus-theme-swatch" data-theme="night" onclick="setFocusBgTheme('night')"><span class="swatch-dot" style="background:linear-gradient(135deg,#7C5CBF,#2E1A5C);"></span> <span data-i18n="focus.themeNight">ليل هادئ</span></button>
                 <button type="button" class="focus-theme-swatch" data-theme="forest" onclick="setFocusBgTheme('forest')"><span class="swatch-dot" style="background:linear-gradient(135deg,#5ED6B7,#0D3D2C);"></span> <span data-i18n="focus.themeForest">غابة هادئة</span></button>
                 <button type="button" class="focus-theme-swatch" data-theme="sunset" onclick="setFocusBgTheme('sunset')"><span class="swatch-dot" style="background:linear-gradient(135deg,#f2a154,#a13a4a);"></span> <span data-i18n="focus.themeSunset">غروب الشمس</span></button>
@@ -2085,6 +2260,9 @@ body.dark-mode .ov-heat-cell[data-level="4"]{ box-shadow: 0 0 10px rgba(232,199,
             <div class="focus-header-pill" title="سلسلة المذاكرة"><i class="fa-solid fa-fire" style="color:#E8848C;"></i> <b id="focus-header-streak">0</b></div>
             <div class="focus-header-pill" title="نقاط الخبرة"><i class="fa-solid fa-star" style="color:#E8C77E;"></i> <b id="focus-header-xp">0 XP</b></div>
             <div class="focus-header-clock" id="focus-header-clock">--:--:--</div>
+            <button type="button" class="focus-header-bell" onclick="toggleTheme()" title="تبديل الوضع الداكن/الفاتح" aria-label="تبديل الوضع الداكن/الفاتح">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+            </button>
             <button type="button" id="focus-header-bell" class="focus-header-bell" onclick="toggleNotificationPanel()" title="الإشعارات">
                 <i class="fa-solid fa-bell"></i>
                 <span id="focus-header-bell-badge" class="focus-header-bell-badge" style="display:none;">0</span>
@@ -2330,37 +2508,50 @@ body.dark-mode .ov-heat-cell[data-level="4"]{ box-shadow: 0 0 10px rgba(232,199,
                             <h2 style="margin-bottom:12px; font-size:15.5px;"><i class="fa-solid fa-ranking-star" style="color:var(--gold);"></i> <span data-i18n="overview.leaderboardTitle">لوحة الصدارة</span></h2>
                             <div id="ov-leaderboard-mini"></div>
                         </div>
-                        <div class="card" id="dash-card-progress">
-                            <div class="card-head">
-                                <div>
-                                    <div class="eyebrow"><i class="fa-solid fa-shoe-prints"></i> <span data-i18n="progress.eyebrow">مسار التقدم</span></div>
-                                    <h2 style="margin-top:6px;" id="progress-title" data-i18n="progress.title">أنت في الطريق الصحيح 🚀</h2>
-                                </div>
-                                <div class="progress-ring-mini">
-                                    <svg width="74" height="74" viewBox="0 0 74 74">
-                                        <circle cx="37" cy="37" r="30" fill="none" stroke="var(--border)" stroke-width="8"></circle>
-                                        <circle id="progress-ring-circle" cx="37" cy="37" r="30" fill="none" stroke="var(--gold)" stroke-width="8" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="188.5"></circle>
-                                    </svg>
-                                    <div class="val" id="progress-ring-val">0%</div>
-                                </div>
-                            </div>
-
-                            <div class="progress-summary">
-                                <div class="progress-stat"><b id="stat-day">0</b><span data-i18n="progress.dayOf">اليوم الحالي</span></div>
-                                <div class="progress-stat"><b id="stat-total">0</b><span data-i18n="progress.totalDays">إجمالي الأيام</span></div>
-                                <div class="progress-stat"><b id="stat-remaining">0</b><span data-i18n="progress.remaining">أيام متبقية</span></div>
-                                <div class="progress-stat"><b id="stat-tasks">0%</b><span data-i18n="progress.tasksDone">مهام مكتملة</span></div>
-                            </div>
-
-                            <div class="progress-path-wrap">
-                                <div class="progress-path" id="progress-path"></div>
-                            </div>
-                        </div>
                     </div>
                 </div>
+
+                <div class="card" id="dash-card-progress">
+                <div class="card-head">
+                    <div>
+                        <div class="eyebrow"><i class="fa-solid fa-shoe-prints"></i> <span data-i18n="progress.eyebrow">مسار التقدم</span></div>
+                        <h2 style="margin-top:6px;" id="progress-title" data-i18n="progress.title">أنت في الطريق الصحيح 🚀</h2>
+                    </div>
+                    <div class="progress-ring-mini">
+                        <svg width="74" height="74" viewBox="0 0 74 74">
+                            <circle cx="37" cy="37" r="30" fill="none" stroke="var(--border)" stroke-width="8"></circle>
+                            <circle id="progress-ring-circle" cx="37" cy="37" r="30" fill="none" stroke="var(--gold)" stroke-width="8" stroke-linecap="round" stroke-dasharray="188.5" stroke-dashoffset="188.5"></circle>
+                        </svg>
+                        <div class="val" id="progress-ring-val">0%</div>
+                    </div>
+                </div>
+
+                <div class="progress-summary">
+                    <div class="progress-stat"><b id="stat-day">0</b><span data-i18n="progress.dayOf">اليوم الحالي</span></div>
+                    <div class="progress-stat"><b id="stat-total">0</b><span data-i18n="progress.totalDays">إجمالي الأيام</span></div>
+                    <div class="progress-stat"><b id="stat-remaining">0</b><span data-i18n="progress.remaining">أيام متبقية</span></div>
+                    <div class="progress-stat"><b id="stat-tasks">0%</b><span data-i18n="progress.tasksDone">مهام مكتملة</span></div>
+                </div>
+
+                <div class="progress-path-wrap">
+                    <div class="progress-path" id="progress-path"></div>
+                </div>
+            </div>
             </div>
 
+            <div style="display:flex; justify-content:flex-end; margin:22px 0 14px;">
+                <button type="button" id="btn-customize-dashboard" class="btn btn-outline btn-sm btn-shimmer" onclick="toggleDashboardCustomizer()">
+                    <i class="fa-solid fa-sliders"></i> <span data-i18n="dash.customize">تخصيص لوحتك</span>
+                </button>
+            </div>
+            <div id="dashboard-customizer-panel" class="card" style="display:none; margin-bottom:18px; background:var(--bg-alt); border:1.5px dashed var(--border);">
+                <h2 style="margin-bottom:4px; font-size:16px;"><i class="fa-solid fa-sliders" style="color:var(--gold);"></i> <span data-i18n="dash.customizeTitle">تخصيص لوحتك</span></h2>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="dash.customizeDesc">فعّل أو أطفئ أي بطاقة وشاهدها تظهر/تختفي مباشرة في لوحتك أسفل، ورتّبها بأسهم أعلى/أسفل على كل بطاقة.</p>
+                <div id="dashboard-customizer-list" style="display:flex; flex-direction:column; gap:8px;"></div>
+                <button type="button" class="btn btn-outline btn-sm" style="margin-top:14px;" onclick="resetDashboardCustomization()"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="dash.resetDefault">إعادة الضبط الافتراضي</span></button>
+            </div>
             <div id="dashboard-cards">
+
 
             <div class="card" id="dash-card-table">
                 <div class="card-head">
@@ -2445,6 +2636,25 @@ body.dark-mode .ov-heat-cell[data-level="4"]{ box-shadow: 0 0 10px rgba(232,199,
                     <button type="button" class="btn btn-teal" id="btn-short-break" onclick="useShortBreak()"><i class="fa-solid fa-mug-hot"></i> <span id="short-break-label">استراحة 5د</span></button>
                     <button type="button" class="btn" onclick="togglePauseSession()" id="pause-btn" disabled><i class="fa-solid fa-pause"></i> <span data-i18n="timer.pause">إيقاف مؤقت</span></button>
                 </div>
+            </div>
+
+            <div class="card" id="dash-card-badges" style="display:none;">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
+                <p class="card-sub" data-i18n="badges.sub">تحفيزية بحتة — لا علاقة لها بنسبة تقدمك الفعلية في الخطة</p>
+                <div class="badges-row" id="badges-grid-dashboard"></div>
+            </div>
+
+            <div class="card" id="dash-card-community" style="display:none;">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-users" style="color:var(--gold);"></i> <span data-i18n="nav.community">المجتمع</span></h2>
+                <p class="card-sub" data-i18n="dash.communityDesc">نظرة سريعة — تفاصيل أكثر في صفحة المجتمع الكاملة</p>
+                <div style="display:flex; align-items:center; gap:14px; margin-top:14px; padding:14px 16px; background:var(--bg-alt); border-radius:14px;">
+                    <div class="ic" style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--teal),#38B897); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fa-solid fa-user-group"></i></div>
+                    <div>
+                        <b id="dash-room-count" style="font-size:20px;">1</b>
+                        <div class="card-sub" data-i18n="room.studying">طالب يذاكر الآن معك</div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm btn-block" style="margin-top:12px;" onclick="switchTab('community')"><span data-i18n="dash.openCommunity">فتح صفحة المجتمع</span></button>
             </div>
 
             </div>
