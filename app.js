@@ -34,7 +34,7 @@ try{
    أحياناً ولا يعمل أحياناً أخرى حسب سرعة تحميل الصفحة أو الجهاز. */
 initOAuthListener();
 
-const APP_OWNER_NAME = "rakan/mashal/khalid"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
+const APP_OWNER_NAME = "rakan/mashal"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
 const APP_OWNER_EMAIL = "sonyaloy9@gmail.com";
 
 /* نموذج الملاحظات — أرسل مباشرة دون فتح تطبيق بريد:
@@ -61,7 +61,7 @@ const APP_SUPPORT_URL = "";
    أي أثر لهما في الواجهة (لا رابط، لا قسم) طالما false. لتفعيل أي منهما:
    غيّر القيمة إلى true هنا وأعد النشر، لا حاجة لأي تعديل آخر.
    ============================================================ */
-const FEATURE_EXAM_SIMULATOR = true;   // قسم الاختبارات المحاكية
+const FEATURE_EXAM_SIMULATOR = false;   // قسم الاختبارات المحاكية
 const FEATURE_TUTORS_DIRECTORY = false; // قسم المدرّسين الخصوصيين
 
 /* نظام المشرفين — لم يعد مقتصراً على معرّف واحد ثابت في الكود. الصلاحية
@@ -3702,10 +3702,59 @@ function applyFeatureFlags(){
     document.getElementById("mobile-nav-tutors").style.display = FEATURE_TUTORS_DIRECTORY ? "" : "none";
 }
 
-/* ---------- الاختبارات المحاكية — أساس فقط، التفاصيل الكاملة (استخراج
-   الأسئلة من PDF، التوزيع، التصحيح) ستُبنى لاحقاً كما اتُّفق ---------- */
+/* ---------- محرّك الاختبارات المحاكية — يطابق منصة قياس الفعلية بنيوياً:
+   5 أقسام بمؤقّت مستقل 24 دقيقة لكل قسم، تقدّم أحادي الاتجاه (لا رجوع لقسم
+   أُنهي)، لوحة أسئلة تعرض القسم الحالي فقط، تعليمات + معادلات مرجعية. ---------- */
 let examState = null;
 let examTimerInterval = null;
+const EXAM_SECTION_COUNT = 5;
+const EXAM_SECTION_SECONDS = Math.round(120 * 60 / EXAM_SECTION_COUNT); // 1440 ثانية = 24 دقيقة تماماً كالاختبار الحقيقي
+
+// توزيع مجموعتي كمي/لفظي على عدد أقسام معطى بالتساوي قدر الإمكان (الفروقات
+// تذهب للأقسام الأولى) — معمَّمة عن منطق "full" الأصلي لتخدم أيضاً الاختبار
+// المولَّد من ملفات الطالب بأي حجم بنك أسئلة
+function splitIntoSections(quantPool, verbalPool, sectionCount){
+    const qPerSection = Math.floor(quantPool.length / sectionCount);
+    const vPerSection = Math.floor(verbalPool.length / sectionCount);
+    let qRemainder = quantPool.length - qPerSection * sectionCount;
+    let vRemainder = verbalPool.length - vPerSection * sectionCount;
+    const sections = [];
+    let qIdx = 0, vIdx = 0;
+    for(let s = 0; s < sectionCount; s++){
+        const qCount = qPerSection + (qRemainder > 0 ? 1 : 0); if(qRemainder > 0) qRemainder--;
+        const vCount = vPerSection + (vRemainder > 0 ? 1 : 0); if(vRemainder > 0) vRemainder--;
+        sections.push({ quant: quantPool.slice(qIdx, qIdx + qCount), verbal: verbalPool.slice(vIdx, vIdx + vCount) });
+        qIdx += qCount; vIdx += vCount;
+    }
+    return sections;
+}
+
+// يبني examState الكامل من هيكل {sections:[{quant,verbal}...]} جاهز —
+// نقطة دخول موحّدة يستخدمها كل من الاختبار القياسي والمولَّد من الملفات
+function buildSectionedExamState(built, type, timed, fromFiles){
+    const questions = [];
+    built.sections.forEach((sec, sIdx) => {
+        sec.quant.forEach(q => questions.push({ ...q, type:"quant", sectionIndex:sIdx }));
+        sec.verbal.forEach(q => questions.push({ ...q, type:"verbal", sectionIndex:sIdx }));
+    });
+    const sectionCount = built.sections.length;
+    return {
+        type, timed, fromFiles: !!fromFiles,
+        questions,
+        sectionCount,
+        currentSection: 0,
+        finishedSections: new Set(),
+        sectionSecondsTotal: timed ? EXAM_SECTION_SECONDS : 0,
+        sectionRemainingSeconds: timed ? EXAM_SECTION_SECONDS : 0,
+        currentIndex: 0,
+        answers: {},
+        marked: {},
+        visited: {},
+        multiSection: sectionCount > 1,
+        scaledDown: !!built.scaledDown,
+        fontStep: 0, // -1/0/+1 لأزرار A- A A+
+    };
+}
 
 function startExamSimulation(){
     const type = document.querySelector('input[name="examsim_type"]:checked').value;
@@ -3713,51 +3762,57 @@ function startExamSimulation(){
 
     const built = buildExamQuestionSet(type);
     const questions = [];
-    built.sections.forEach((sec, sIdx) => {
-        sec.quant.forEach(q => questions.push({ ...q, type:"quant", sectionIndex:sIdx }));
-        sec.verbal.forEach(q => questions.push({ ...q, type:"verbal", sectionIndex:sIdx }));
-    });
-
+    built.sections.forEach(sec => { questions.push(...sec.quant, ...sec.verbal); });
     if(questions.length === 0){
         showToast(currentLang==='ar' ? "لا توجد أسئلة متاحة بعد في هذا القسم" : "No questions available in this section yet");
         return;
     }
 
-    examState = {
-        type,
-        timed,
-        questions,
-        answers: {},
-        currentIndex: 0,
-        totalSeconds: 120 * 60,
-        remainingSeconds: 120 * 60,
-        multiSection: type === "full",
-    };
+    examState = buildSectionedExamState(built, type, timed, false);
 
     if(built.scaledDown){
         showToast(currentLang==='ar'
-            ? `⚠️ بنك الأسئلة الحالي صغير (تجريبي) — هذا اختبار مصغّر من ${questions.length} سؤال بدل 120`
-            : `⚠️ Current question bank is small (sample) — this is a scaled-down exam of ${questions.length} questions instead of 120`);
+            ? `⚠️ بنك الأسئلة الحالي صغير (تجريبي) — هذا اختبار مصغّر من ${examState.questions.length} سؤال بدل 120`
+            : `⚠️ Current question bank is small (sample) — this is a scaled-down exam of ${examState.questions.length} questions instead of 120`);
     }
 
-    document.getElementById("exam-mode-overlay").style.display = "flex";
-    document.body.style.overflow = "hidden";
-    document.getElementById("exam-timer-pill").style.display = timed ? "flex" : "none";
-    if(timed) startExamTimer();
-
-    renderExamPalette();
-    goToExamQuestion(0);
+    openExamOverlay();
 }
 
-function startExamTimer(){
+// نقطة دخول موحّدة لفتح واجهة الاختبار وبدء أول قسم — يستدعيها كل من
+// startExamSimulation وstartCustomExam بعد تجهيز examState بالكامل
+function openExamOverlay(){
+    document.getElementById("exam-mode-overlay").style.display = "flex";
+    document.body.style.overflow = "hidden";
+    document.getElementById("exam-user-name").textContent =
+        localStorage.getItem("khuta_name") || (currentLang==='ar' ? "ضيف" : "Guest");
+    setExamFontSize(examState.fontStep || 0);
+    beginCurrentSection(true);
+}
+
+function beginCurrentSection(isFirst){
+    examState.currentIndex = examState.questions.findIndex(q => q.sectionIndex === examState.currentSection);
+    if(examState.currentIndex === -1) examState.currentIndex = 0;
+    document.getElementById("exam-timer-block").style.display = examState.timed ? "block" : "none";
+    if(examState.timed){
+        if(!isFirst) examState.sectionRemainingSeconds = examState.sectionSecondsTotal;
+        startExamSectionTimer();
+    }
+    renderExamQuestion();
+    renderExamPalette();
+    renderExamStats();
+}
+
+function startExamSectionTimer(){
     clearInterval(examTimerInterval);
     examTimerInterval = setInterval(() => {
-        examState.remainingSeconds--;
-        if(examState.remainingSeconds <= 0){
+        examState.sectionRemainingSeconds--;
+        if(examState.sectionRemainingSeconds <= 0){
             clearInterval(examTimerInterval);
-            examState.remainingSeconds = 0;
-            showToast(currentLang==='ar' ? "⏰ انتهى الوقت — سيتم تصحيح إجاباتك الآن" : "⏰ Time's up — grading your answers now");
-            submitExam();
+            examState.sectionRemainingSeconds = 0;
+            updateExamTimerDisplay();
+            showToast(currentLang==='ar' ? "⏰ انتهى وقت هذا القسم" : "⏰ This section's time is up");
+            finishCurrentSection(true);
             return;
         }
         updateExamTimerDisplay();
@@ -3766,15 +3821,42 @@ function startExamTimer(){
 }
 
 function updateExamTimerDisplay(){
-    const m = Math.floor(examState.remainingSeconds / 60);
-    const s = examState.remainingSeconds % 60;
+    const m = Math.floor(examState.sectionRemainingSeconds / 60);
+    const s = examState.sectionRemainingSeconds % 60;
     document.getElementById("exam-timer-display").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-    document.getElementById("exam-timer-pill").classList.toggle("low-time", examState.remainingSeconds < 300);
+    document.getElementById("exam-timer-block").classList.toggle("low-time", examState.sectionRemainingSeconds < 180);
+}
+
+// إنهاء القسم الحالي: تأكيد (إلا إن كان تلقائياً بسبب انتهاء الوقت)، ثم
+// قفل القسم نهائياً (لا عودة إليه) والانتقال للتالي، أو تسليم الاختبار
+// كاملاً إن كان هذا آخر قسم — تماماً كقاعدة "لن يستطيع الإجابة على أي
+// أسئلة بعد انتهاء الزمن المحدد" في تعليمات الاختبار الحقيقي
+function confirmFinishSection(){ finishCurrentSection(false); }
+function finishCurrentSection(auto){
+    if(!examState) return;
+    const isLast = examState.currentSection >= examState.sectionCount - 1;
+    if(!auto){
+        const msg = isLast
+            ? (currentLang==='ar' ? "هذا آخر قسم — إنهاؤه سيُسلّم الاختبار كاملاً للتصحيح. متأكد؟" : "This is the last section — finishing it submits the whole exam. Are you sure?")
+            : (currentLang==='ar' ? "بعد إنهاء هذا القسم لن تقدر ترجع له إطلاقاً. متأكد؟" : "Once you finish this section you can't return to it. Are you sure?");
+        if(!confirm(msg)) return;
+    }
+    clearInterval(examTimerInterval);
+    examState.finishedSections.add(examState.currentSection);
+    if(isLast){
+        submitExam();
+        return;
+    }
+    examState.currentSection++;
+    beginCurrentSection(false);
+    showToast(currentLang==='ar' ? `📍 بدأ القسم ${examState.currentSection + 1} من ${examState.sectionCount}` : `📍 Section ${examState.currentSection + 1} of ${examState.sectionCount} started`);
 }
 
 function goToExamQuestion(index){
     if(!examState) return;
     if(index < 0 || index >= examState.questions.length) return;
+    const q = examState.questions[index];
+    if(q.sectionIndex !== examState.currentSection) return; // لا تنقّل خارج القسم المُقفل الحالي
     examState.currentIndex = index;
     renderExamQuestion();
     renderExamPalette();
@@ -3782,40 +3864,186 @@ function goToExamQuestion(index){
 
 function renderExamQuestion(){
     const q = examState.questions[examState.currentIndex];
+    examState.visited[q.id] = true;
+    const localTotal = examState.questions.filter(x => x.sectionIndex === examState.currentSection).length;
+    const localIndex = examState.questions.filter(x => x.sectionIndex === examState.currentSection).indexOf(q) + 1;
+
     document.getElementById("exam-question-number").textContent = currentLang==='ar'
-        ? `السؤال ${examState.currentIndex + 1} من ${examState.questions.length}`
-        : `Question ${examState.currentIndex + 1} of ${examState.questions.length}`;
-    document.getElementById("exam-section-label").textContent = examState.multiSection
-        ? (currentLang==='ar' ? `القسم ${q.sectionIndex + 1} من 5` : `Section ${q.sectionIndex + 1} of 5`)
-        : (q.type === "quant" ? (currentLang==='ar'?"كمي فقط":"Quant only") : (currentLang==='ar'?"لفظي فقط":"Verbal only"));
+        ? `رقم السؤال ${localIndex}` : `Question No. ${localIndex}`;
+    document.getElementById("exam-section-label").textContent = currentLang==='ar'
+        ? `القسم الحالي: ${examState.currentSection + 1} / ${examState.sectionCount}`
+        : `Current section: ${examState.currentSection + 1} / ${examState.sectionCount}`;
+    document.getElementById("exam-total-label").textContent = currentLang==='ar'
+        ? `مجموع الأسئلة: ${examState.questions.length}` : `Total questions: ${examState.questions.length}`;
     document.getElementById("exam-question-text").textContent = q.text;
-    document.getElementById("exam-source-footer").textContent = currentLang==='ar' ? `المصدر: ${q.source}` : `Source: ${q.source}`;
 
     const selected = examState.answers[q.id];
     const letters = ["أ","ب","ج","د"];
     document.getElementById("exam-choices").innerHTML = q.choices.map((choice, i) => `
         <div class="exam-choice ${selected===i?'selected':''}" onclick="selectExamAnswer(${i})">
-            <span class="choice-letter">${letters[i]}</span>
             <span>${escapeHtml(choice)}</span>
+            <span class="choice-letter">${letters[i]}</span>
         </div>`).join("");
 
+    const markbox = document.getElementById("exam-mark-checkbox");
+    if(markbox) markbox.checked = !!examState.marked[q.id];
+
+    const saveBtn = document.getElementById("exam-save-next-btn");
+    if(saveBtn){
+        const isLastInSection = localIndex >= localTotal;
+        saveBtn.innerHTML = isLastInSection
+            ? (currentLang==='ar' ? "حفظ" : "Save")
+            : (currentLang==='ar' ? "حفظ والتالي" : "Save & Next");
+    }
+
     if(examState.reviewMode) renderExamReviewChoices();
+    renderExamStats();
 }
 
 function selectExamAnswer(choiceIndex){
+    if(examState.reviewMode) return;
     const q = examState.questions[examState.currentIndex];
     examState.answers[q.id] = choiceIndex;
     renderExamQuestion();
     renderExamPalette();
 }
 
+// "حفظ والتالي": يحفظ (الإجابة محفوظة فعلاً فور الاختيار) وينتقل للسؤال
+// التالي داخل نفس القسم؛ في آخر سؤال بالقسم يبقى مكانه (يستخدم "إنهاء
+// القسم" صراحة للتقدّم، مطابقةً لسلوك المنصة الحقيقية)
+function examSaveAndNext(){
+    const sectionQs = examState.questions.filter(q => q.sectionIndex === examState.currentSection);
+    const localIdx = sectionQs.findIndex(q => q.id === examState.questions[examState.currentIndex].id);
+    if(localIdx < sectionQs.length - 1){
+        const nextGlobalIndex = examState.questions.indexOf(sectionQs[localIdx + 1]);
+        goToExamQuestion(nextGlobalIndex);
+    } else {
+        showToast(currentLang==='ar' ? "آخر سؤال في القسم — اضغط «إنهاء القسم» للمتابعة" : "Last question in this section — press \"Finish Section\" to continue");
+    }
+}
+
+function toggleMarkCurrentQuestion(){
+    const q = examState.questions[examState.currentIndex];
+    const checked = document.getElementById("exam-mark-checkbox").checked;
+    if(checked) examState.marked[q.id] = true; else delete examState.marked[q.id];
+    renderExamPalette();
+}
+
+// لوحة الأسئلة: تعرض أسئلة القسم الحالي فقط (بترقيم محلي 1..ن) مطابقةً
+// تماماً لمنصة قياس أثناء المحاولة الحية — أما أثناء المراجعة بعد التسليم
+// فتُعرض كل الأسئلة عبر كل الأقسام بحرية تنقّل كاملة وتلوين صحيح/خاطئ
 function renderExamPalette(){
     const grid = document.getElementById("exam-palette-grid");
-    grid.innerHTML = examState.questions.map((q, i) => {
+    if(!grid || !examState) return;
+
+    if(examState.reviewMode){
+        grid.innerHTML = examState.questions.map((q, globalIndex) => {
+            const isCorrect = examState.answers[q.id] === q.correct;
+            const isCurrent = globalIndex === examState.currentIndex;
+            const cls = ["exam-palette-item", isCorrect ? "answered" : "incorrect-flag"];
+            if(isCurrent) cls.push("current");
+            return `<div class="${cls.join(' ')}" onclick="goToReviewQuestion(${globalIndex})">${globalIndex+1}</div>`;
+        }).join("");
+        return;
+    }
+
+    const sectionQs = examState.questions.filter(q => q.sectionIndex === examState.currentSection);
+    grid.innerHTML = sectionQs.map((q, i) => {
+        const globalIndex = examState.questions.indexOf(q);
         const answered = examState.answers[q.id] !== undefined;
-        const isCurrent = i === examState.currentIndex;
-        return `<div class="exam-palette-item ${answered?'answered':''} ${isCurrent?'current':''}" onclick="goToExamQuestion(${i})">${i+1}</div>`;
+        const isCurrent = globalIndex === examState.currentIndex;
+        const marked = !!examState.marked[q.id];
+        const cls = ["exam-palette-item"];
+        if(marked) cls.push("marked");
+        else if(answered) cls.push("answered");
+        if(isCurrent) cls.push("current");
+        return `<div class="${cls.join(' ')}" onclick="goToExamQuestion(${globalIndex})">${i+1}</div>`;
     }).join("");
+}
+
+// شبكة الإحصاءات الأربعة أعلى لوحة الأسئلة — العمود الأول عدّاد خاص بالقسم
+// الحالي (كم بقي منه بلا إجابة)، والثلاثة الباقية إحصاء عالمي عبر كل
+// الاختبار (مجاب / تمت زيارته بلا إجابة / لم تُزَر بعد) وتجمع دوماً لمجموع
+// الأسئلة الكلي — يطابق أرقام لقطة الشاشة الحقيقية بنيوياً
+function renderExamStats(){
+    const box = document.getElementById("exam-stats-grid");
+    if(!box || !examState) return;
+    const sectionQs = examState.questions.filter(q => q.sectionIndex === examState.currentSection);
+    const answeredInSection = sectionQs.filter(q => examState.answers[q.id] !== undefined).length;
+    const remainingInSection = sectionQs.length - answeredInSection;
+
+    let answeredGlobal = 0, visitedNotAnsweredGlobal = 0, notVisitedGlobal = 0;
+    examState.questions.forEach(q => {
+        if(examState.answers[q.id] !== undefined) answeredGlobal++;
+        else if(examState.visited[q.id]) visitedNotAnsweredGlobal++;
+        else notVisitedGlobal++;
+    });
+
+    const L = (ar, en) => currentLang==='ar' ? ar : en;
+    box.innerHTML = `
+        <div class="exam-stat-box orange"><b>${remainingInSection}</b><span>${L('باقي من القسم','left in section')}</span></div>
+        <div class="exam-stat-box teal"><b>${answeredGlobal}</b><span>${L('تمت الاجابة','answered')}</span></div>
+        <div class="exam-stat-box blue"><b>${visitedNotAnsweredGlobal}</b><span>${L('تمت زيارته','visited')}</span></div>
+        <div class="exam-stat-box neutral"><b>${notVisitedGlobal}</b><span>${L('لم تتم زيارته','not visited')}</span></div>`;
+}
+
+function setExamFontSize(delta){
+    if(!examState) return;
+    if(delta === 0) examState.fontStep = 0;
+    else examState.fontStep = Math.max(-1, Math.min(1, (examState.fontStep || 0) + delta));
+    const area = document.getElementById("exam-question-area");
+    if(area) area.className = "exam-question-area" + (examState.fontStep ? " font-" + (examState.fontStep > 0 ? "lg" : "sm") : "");
+}
+
+/* ---------- نافذتا التعليمات والمعادلات ---------- */
+const EXAM_INSTRUCTIONS_TEXT = {
+    exam: [
+        "الغش أو الشروع فيه أو محاولة ذلك، أو الإخلال بسير الاختبارات، يعرّضك لاتخاذ الإجراء النظامي.",
+        "يُمنع اصطحاب الهاتف المحمول أثناء الاختبار لأي غرض، وإخراجه يعرّضك لاتخاذ الإجراء النظامي.",
+        "على الطالب إنهاء القسم الواحد خلال الوقت المحدد (24 دقيقة) ولن يستطيع الإجابة على أي أسئلة بعد انتهاء الزمن المحدد.",
+        "نظام الاختبارات يحسب للطالب الدرجة الأعلى في محاولاته.",
+        "لا يُسمح باستخدام جهاز الحاسب الآلي للغش بأي شكل من الأشكال في الاختبار.",
+        "جميع قواعد الاختبارات التقليدية تنطبق على الاختبارات الإلكترونية.",
+    ],
+    section: [
+        "هذا القسم يحتوي على مزيج من الأسئلة الكمية واللفظية بترتيب عشوائي.",
+        "بمجرد الضغط على «إنهاء القسم» أو انتهاء وقته، لن تستطيع العودة إليه أو تعديل إجاباتك فيه إطلاقاً.",
+        "يمكنك التنقل بحرية بين أسئلة هذا القسم فقط عبر لوحة الأسئلة الجانبية طوال مدته.",
+        "استخدم «تمييز السؤال للمراجعة» لوضع علامة على أي سؤال تريد العودة إليه قبل إنهاء القسم — لن يظهر هذا الخيار بعد إنهائه.",
+    ],
+};
+function openExamInstructionsModal(kind){
+    const title = document.getElementById("exam-instructions-title");
+    const body = document.getElementById("exam-instructions-body");
+    title.textContent = kind === "section"
+        ? (currentLang==='ar' ? "تعليمات القسم" : "Section Instructions")
+        : (currentLang==='ar' ? "تعليمات الاختبار" : "Exam Instructions");
+    const items = EXAM_INSTRUCTIONS_TEXT[kind] || EXAM_INSTRUCTIONS_TEXT.exam;
+    body.innerHTML = "<ol>" + items.map(t => `<li>${escapeHtml(t)}</li>`).join("") + "</ol>";
+    document.getElementById("exam-instructions-modal").style.display = "flex";
+}
+function closeExamInfoModal(id){ document.getElementById(id).style.display = "none"; }
+
+const EXAM_FORMULAS = [
+    { title:"المثلث القائم", body:"جا = مقابل ÷ وتر · جتا = مجاور ÷ وتر · ظا = مقابل ÷ مجاور" },
+    { title:"مجموع زوايا المثلث", body:"مجموع زوايا المثلث = ١٨٠°" },
+    { title:"مساحة المثلث", body:"المساحة = ½ × القاعدة × الارتفاع" },
+    { title:"مساحة الدائرة ومحيطها", body:"المساحة = ط × نق² · المحيط = ٢ × ط × نق (ط ≈ ٣.١٤)" },
+    { title:"المستطيل", body:"المساحة = الطول × العرض · المحيط = ٢ × (الطول + العرض)" },
+    { title:"مثلث قائم الزاوية (فيثاغورس)", body:"(الوتر)² = (الضلع الأول)² + (الضلع الثاني)²" },
+    { title:"حجم المكعب", body:"الحجم = الطول × العرض × الارتفاع" },
+    { title:"حجم الأسطوانة", body:"الحجم = ط × نق² × الارتفاع" },
+    { title:"المتوازي الأضلاع", body:"المساحة = القاعدة × الارتفاع · مجموع زوايا أي شكل رباعي = ٣٦٠°" },
+    { title:"شبه المنحرف", body:"المساحة = ½ × (القاعدة الصغرى + القاعدة الكبرى) × الارتفاع" },
+    { title:"تشابه المضلعات", body:"نسبة تشابه المساحتين = (نسبة تشابه الضلعين)²" },
+    { title:"تشابه المجسمات", body:"نسبة تشابه الحجمين = (نسبة تشابه الضلعين)³" },
+    { title:"مقياس الرسم في الخرائط", body:"مثال ١ : ١٠٠٠٠ يعني أن كل وحدة على الخريطة تمثّل ١٠٠٠٠ وحدة من نفس النوع على الطبيعة" },
+];
+function openExamFormulasModal(){
+    const grid = document.getElementById("exam-formulas-grid");
+    grid.innerHTML = EXAM_FORMULAS.map(f => `
+        <div class="exam-formula-box"><b>${escapeHtml(f.title)}</b><span>${escapeHtml(f.body)}</span></div>`).join("");
+    document.getElementById("exam-formulas-modal").style.display = "flex";
 }
 
 function confirmExitExam(){
@@ -3826,19 +4054,9 @@ function confirmExitExam(){
     examState = null;
 }
 
-function confirmSubmitExam(){
-    if(examState.reviewMode){
-        document.getElementById("exam-mode-overlay").style.display = "none";
-        document.getElementById("exam-results-overlay").style.display = "flex";
-        return;
-    }
-    const unanswered = examState.questions.length - Object.keys(examState.answers).length;
-    const msg = unanswered > 0
-        ? (currentLang==='ar' ? `لديك ${unanswered} سؤال بلا إجابة. إنهاء الاختبار الآن؟` : `You have ${unanswered} unanswered question(s). Finish the exam now?`)
-        : (currentLang==='ar' ? "إنهاء الاختبار وعرض النتيجة؟" : "Finish the exam and see your results?");
-    if(!confirm(msg)) return;
-    submitExam();
-}
+// إبقاء هذه الدالة لأزرار قديمة محتملة تستدعيها؛ في الواجهة الجديدة
+// "إنهاء القسم" في آخر قسم هو ما يُسلّم الاختبار فعلياً (انظر finishCurrentSection)
+function confirmSubmitExam(){ confirmFinishSection(); }
 
 function submitExam(){
     clearInterval(examTimerInterval);
@@ -3880,9 +4098,21 @@ function closeExamResults(){
 function reviewExamAnswers(){
     document.getElementById("exam-results-overlay").style.display = "none";
     document.getElementById("exam-mode-overlay").style.display = "flex";
-    document.getElementById("exam-timer-pill").style.display = "none";
+    document.body.style.overflow = "hidden";
+    document.getElementById("exam-timer-block").style.display = "none";
     examState.reviewMode = true;
-    goToExamQuestion(0);
+    examState.currentSection = 0;
+    // في وضع المراجعة تُفتح كل الأقسام للتصفح الحر (لا قفل بعد التسليم)
+    examState.finishedSections = new Set();
+    goToReviewQuestion(0);
+}
+// أثناء المراجعة نتجاوز قفل "نفس القسم فقط" في goToExamQuestion العادية
+function goToReviewQuestion(index){
+    if(!examState || index < 0 || index >= examState.questions.length) return;
+    examState.currentSection = examState.questions[index].sectionIndex;
+    examState.currentIndex = index;
+    renderExamQuestion();
+    renderExamPalette();
 }
 
 function renderExamReviewChoices(){
@@ -4774,6 +5004,7 @@ const FOCUS_THEME_PRESETS = {
 
 let focusCanvasCtx = null;
 let focusCanvasAnimId = null;
+let focusLastFrameTime = null;
 let focusMouseX = 0.5, focusMouseY = 0.5;
 let focusMouseXSmooth = 0.5, focusMouseYSmooth = 0.5;
 let focusStars = [];
@@ -4800,7 +5031,16 @@ function handleFocusMouseLeave(){
 function generateFocusStars(){
     focusStars = [];
     for(let i = 0; i < 55; i++){
-        focusStars.push({ x:Math.random(), y:Math.random(), r:Math.random()*1.3+0.4, phase:Math.random()*Math.PI*2, speed:Math.random()*0.001+0.0006 });
+        // انجراف ذاتي بطيء جداً بحدود ~0.1px/ثانية لكل نجمة، بزاوية عشوائية —
+        // يجعل الخلفية "حيّة" مع الوقت بدل السكون التام (يبقى غير محسوس
+        // خلال ثوانٍ قليلة لكنه واضح على مدى جلسة تركيز كاملة)
+        const angle = Math.random() * Math.PI * 2;
+        const speedPxPerSec = 0.05 + Math.random() * 0.1;
+        focusStars.push({
+            x:Math.random(), y:Math.random(), r:Math.random()*1.3+0.4,
+            phase:Math.random()*Math.PI*2, speed:Math.random()*0.001+0.0006,
+            vx: Math.cos(angle) * speedPxPerSec, vy: Math.sin(angle) * speedPxPerSec,
+        });
     }
 }
 function renderFocusCanvasFrame(time){
@@ -4810,6 +5050,11 @@ function renderFocusCanvasFrame(time){
     const ctx = focusCanvasCtx;
     const w = canvas.width, h = canvas.height;
     const theme = FOCUS_THEME_PRESETS[overlay.dataset.bgTheme] || FOCUS_THEME_PRESETS.night;
+
+    // دلتا الوقت بين الإطارين بالثواني — أساس حساب الانجراف البطيء جداً
+    // للنجوم بوحدة px/ثانية حقيقية بمعزل عن معدل تحديث الشاشة (fps)
+    const dt = focusLastFrameTime ? Math.min((time - focusLastFrameTime) / 1000, 0.25) : 0;
+    focusLastFrameTime = time;
 
     focusMouseXSmooth += (focusMouseX - focusMouseXSmooth) * 0.03;
     focusMouseYSmooth += (focusMouseY - focusMouseYSmooth) * 0.03;
@@ -4825,6 +5070,14 @@ function renderFocusCanvasFrame(time){
 
     if(theme.stars){
         focusStars.forEach(s => {
+            // انجراف بطيء جداً مع التفاف حول الحواف — px/ثانية محوَّلة لنسبة
+            // من أبعاد الكانفس الفعلية بما أن إحداثيات النجوم مخزَّنة كنسبة (0-1)
+            if(dt > 0){
+                s.x += (s.vx * dt) / w;
+                s.y += (s.vy * dt) / h;
+                if(s.x < -0.02) s.x += 1.04; else if(s.x > 1.02) s.x -= 1.04;
+                if(s.y < -0.02) s.y += 1.04; else if(s.y > 1.02) s.y -= 1.04;
+            }
             const twinkle = Math.max(0, 0.4 + Math.sin(time * s.speed + s.phase) * 0.35);
             ctx.beginPath();
             ctx.arc(s.x * w, s.y * h, s.r, 0, Math.PI * 2);
@@ -4862,6 +5115,7 @@ function startFocusCanvasBg(){
     focusCanvasCtx = canvas.getContext("2d");
     resizeFocusCanvas();
     generateFocusStars();
+    focusLastFrameTime = null; // نتفادى قفزة دلتا-وقت ضخمة عند إعادة تشغيل الحلقة بعد إيقاف مؤقّت
     document.getElementById("focus-mode-overlay").addEventListener("mousemove", handleFocusMouseMove);
     document.getElementById("focus-mode-overlay").addEventListener("mouseleave", handleFocusMouseLeave);
     focusCanvasActive = true;
@@ -4874,6 +5128,28 @@ function stopFocusCanvasBg(){
     document.getElementById("focus-mode-overlay").removeEventListener("mouseleave", handleFocusMouseLeave);
     const glow = document.getElementById("focus-cursor-glow");
     if(glow) glow.style.opacity = "0";
+}
+// انعكاس الكرة الزجاجية يتبع الفأرة فعلياً: نحوّل موضع الفأرة داخل مربّع
+// الكرة إلى إزاحة صغيرة (px) عبر متغيّرين CSS مخصَّصين يقرأهما ::after في
+// تعريف .focus-timer-ring-wrap — بلا أي رسم Canvas إضافي، مجرّد CSS حي
+function handleOrbShineMove(e){
+    const wrap = document.getElementById("focus-timer-ring-wrap");
+    if(!wrap) return;
+    const r = wrap.getBoundingClientRect();
+    if(r.width === 0 || r.height === 0) return;
+    const relX = (e.clientX - r.left) / r.width - 0.5;  // -0.5..0.5
+    const relY = (e.clientY - r.top) / r.height - 0.5;
+    const maxOffsetPx = 26;
+    wrap.style.setProperty("--shine-x", (relX * maxOffsetPx * 2).toFixed(1) + "px");
+    wrap.style.setProperty("--shine-y", (relY * maxOffsetPx * 2).toFixed(1) + "px");
+    wrap.classList.add("shine-tracking");
+}
+function resetOrbShine(){
+    const wrap = document.getElementById("focus-timer-ring-wrap");
+    if(!wrap) return;
+    wrap.style.removeProperty("--shine-x");
+    wrap.style.removeProperty("--shine-y");
+    wrap.classList.remove("shine-tracking");
 }
 window.addEventListener("resize", resizeFocusCanvas);
 document.addEventListener("click", (e) => {
@@ -4978,22 +5254,7 @@ function buildExamQuestionSet(examType){
     const availableVerbal = Math.min(targetVerbal, verbalPool.length);
     const scaledDown = (availableQuant < targetQuant) || (availableVerbal < targetVerbal);
 
-    const sections = [];
-    const qPerSection = Math.floor(availableQuant / 5);
-    const vPerSection = Math.floor(availableVerbal / 5);
-    let qRemainder = availableQuant - qPerSection * 5;
-    let vRemainder = availableVerbal - vPerSection * 5;
-    let qIdx = 0, vIdx = 0;
-
-    for(let s = 0; s < 5; s++){
-        const qCount = qPerSection + (qRemainder > 0 ? 1 : 0); if(qRemainder > 0) qRemainder--;
-        const vCount = vPerSection + (vRemainder > 0 ? 1 : 0); if(vRemainder > 0) vRemainder--;
-        sections.push({
-            quant: quantPool.slice(qIdx, qIdx + qCount),
-            verbal: verbalPool.slice(vIdx, vIdx + vCount),
-        });
-        qIdx += qCount; vIdx += vCount;
-    }
+    const sections = splitIntoSections(quantPool.slice(0, availableQuant), verbalPool.slice(0, availableVerbal), EXAM_SECTION_COUNT);
     return { sections, scaledDown, quantFirst };
 }
 
@@ -7511,28 +7772,18 @@ async function generateCustomExam(){
 function startCustomExam(){
     let pool = null;
     try{ pool = JSON.parse(localStorage.getItem("khuta_custom_exam_pool") || "null"); }catch(e){}
-    if(!pool || ((pool.quant||[]).length + (pool.verbal||[]).length) === 0){
+    const quantPool = shuffleArray(pool && pool.quant || []);
+    const verbalPool = shuffleArray(pool && pool.verbal || []);
+    const totalQ = quantPool.length + verbalPool.length;
+    if(totalQ === 0){
         showToast(labT("ولّد الاختبار من ملفاتك أولاً","Generate the exam from your files first")); return;
     }
-    const questions = [];
-    shuffleArray(pool.quant || []).forEach(q => questions.push({ ...q, type:"quant", sectionIndex:0 }));
-    shuffleArray(pool.verbal || []).forEach(q => questions.push({ ...q, type:"verbal", sectionIndex:0 }));
-    examState = {
-        type: "custom",
-        timed: false,
-        questions,
-        answers: {},
-        currentIndex: 0,
-        totalSeconds: 0,
-        remainingSeconds: 0,
-        multiSection: false,
-        fromFiles: true,
-    };
-    document.getElementById("exam-mode-overlay").style.display = "flex";
-    document.body.style.overflow = "hidden";
-    document.getElementById("exam-timer-pill").style.display = "none";
-    renderExamPalette();
-    goToExamQuestion(0);
+    // نفس بنية "5 أقسام" الحقيقية إن كان البنك كبيراً بما يكفي ليكون لها معنى
+    // (على الأقل ~3 أسئلة لكل قسم)، وإلا قسم واحد فقط لتفادي أقسام شبه فارغة
+    const sectionCount = totalQ >= 15 ? EXAM_SECTION_COUNT : 1;
+    const sections = splitIntoSections(quantPool, verbalPool, sectionCount);
+    examState = buildSectionedExamState({ sections, scaledDown:false }, "custom", false, true);
+    openExamOverlay();
 }
 
 /* ============================================================
