@@ -472,18 +472,19 @@ ar:{
 "account.title":"الحساب والمزامنة","account.sub":"استخدم خُطى كضيف تماماً بدون حساب — أنشئ حساباً فقط إن أردت حفظ تقدمك ونقله لجهاز آخر",
 "account.username":"اسم المستخدم","account.password":"كلمة المرور","account.password2":"تأكيد كلمة المرور",
 "account.signin":"تسجيل الدخول","account.signup":"إنشاء حساب جديد","account.createBtn":"إنشاء الحساب",
-"account.note":"لا نطلب بريدك الإلكتروني — فقط اسم مستخدم وكلمة مرور يخصّانك أنت.",
+"account.note":"اسم مستخدم وكلمة مرور فقط تكفي للبدء — البريد اختياري ولاسترجاع كلمة المرور فقط.",
+"account.realEmailOptional":"بريدك الإلكتروني (اختياري)","account.emailOptionalNote":"أدخله لتفعيل استرجاع كلمة المرور المنسية فوراً. اتركه فارغاً إن كنت تفضّل عدم مشاركة بريدك — لن نطلبه إلا برضاك.",
 "account.syncNow":"مزامنة الآن","account.signout":"تسجيل الخروج",
 "account.changePass":"تغيير كلمة المرور","account.newPass":"كلمة المرور الجديدة","account.newPass2":"تأكيد كلمة المرور الجديدة","account.savePass":"حفظ كلمة المرور الجديدة",
 "account.linkEmail":"ربط بريد لاسترجاع كلمة المرور","account.linkEmailDesc":"اربط بريدك الحقيقي مرة واحدة لتتمكّن من استرجاع كلمة المرور مستقبلاً إن نسيتها. سنرسل رابط تأكيد لهذا البريد — لن يكون فعّالاً إلا بعد الضغط عليه.","account.realEmail":"بريدك الإلكتروني الحقيقي","account.sendLink":"إرسال رابط التأكيد",
-"account.forgotPass":"نسيت كلمة المرور؟","account.forgotPassDesc":"يعمل فقط إن كنت قد ربطت بريداً حقيقياً بحسابك سابقاً من الملف الشخصي. أدخله هنا وسنرسل لك رابط إعادة تعيين كلمة المرور.","account.sendResetLink":"إرسال رابط إعادة التعيين",
+"account.forgotPass":"نسيت كلمة المرور؟","account.forgotPassDesc":"اكتب اسم مستخدمك. يعمل هذا فقط إن كنت قد ربطت بريداً حقيقياً بحسابك (عند التسجيل أو لاحقاً من الملف الشخصي).","account.sendResetLink":"إرسال رابط إعادة التعيين",
 "account.setNewPassTitle":"عيّن كلمة مرور جديدة","account.setNewPassDesc":"وصلت هنا عبر رابط إعادة تعيين كلمة المرور — اكتب كلمة مرورك الجديدة.",
 "referral.title":"ادعُ صديقاً","referral.desc":"كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.","referral.share":"مشاركة رابط الدعوة",
 "push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
 "focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.todayTasks":"مهام اليوم","focus.xpPoints":"نقاط XP",
 "focus.idle":"جاهز للبدء","focus.paused":"متوقف مؤقتاً","focus.inSession":"في جلسة تركيز","focus.onBreak":"في استراحة","focus.start":"ابدأ التركيز","focus.skip":"تخطّي",
 "focus.themeNight":"ليل نجمي","focus.themeForest":"غابة هادئة","focus.themeSunset":"غروب الشمس","focus.themeDesk":"مكتب وقهوة","focus.themeOcean":"محيط هادئ","focus.themeDawn":"فجر دافئ",
-"account.noRecoveryNote":"⚠️ تذكير: حسابات اسم المستخدم لا تدعم استرجاع كلمة مرور منسية (لا نطلب بريدك الحقيقي أبداً) — احفظها في مكان آمن. بياناتك المحلية على جهازك تبقى آمنة دائماً بغض النظر.",
+"account.noRecoveryNote":"💡 إن نسيت كلمة مرورك مستقبلاً، الاسترجاع يعمل فقط إن ربطت بريداً حقيقياً (بالأسفل، إن لم تفعل عند التسجيل).",
 "spec.title":"دليل التخصصات الذكي","spec.sub":"نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة","spec.search":"ابحث عن تخصص...",
 "room.title":"غرفة المذاكرة","room.sub":"لست وحدك — بدون شات، فقط إحساس بالرفقة","room.studying":"طالب يذاكر الآن معك",
 "lb.title":"لوحة الصدارة الأسبوعية","lb.sub":"اختياري بالكامل — شارك نقاطك التحفيزية إن أردت","lb.share":"شارِك اسمي ونقاطي في لوحة الصدارة",
@@ -639,18 +640,19 @@ en:{
 "account.title":"Account & Sync","account.sub":"Use Khuta fully as a guest, no account needed — only create one to save & carry your progress to another device",
 "account.username":"Username","account.password":"Password","account.password2":"Confirm password",
 "account.signin":"Sign in","account.signup":"Create new account","account.createBtn":"Create account",
-"account.note":"We never ask for your email — just a username and password of your own.",
+"account.note":"A username and password are enough to start — email is optional, for password recovery only.",
+"account.realEmailOptional":"Your email (optional)","account.emailOptionalNote":"Add it to enable forgotten-password recovery right away. Leave it blank if you'd rather not share it — we'll never require it.",
 "account.syncNow":"Sync now","account.signout":"Sign out",
 "account.changePass":"Change password","account.newPass":"New password","account.newPass2":"Confirm new password","account.savePass":"Save new password",
 "account.linkEmail":"Link email for password recovery","account.linkEmailDesc":"Link your real email once so you can recover your password later if forgotten. We'll send a confirmation link to it — it only takes effect once clicked.","account.realEmail":"Your real email","account.sendLink":"Send confirmation link",
-"account.forgotPass":"Forgot password?","account.forgotPassDesc":"Only works if you previously linked a real email to your account from Profile. Enter it here and we'll send a password reset link.","account.sendResetLink":"Send reset link",
+"account.forgotPass":"Forgot password?","account.forgotPassDesc":"Enter your username. This only works if you've linked a real email to your account (at signup or later from Profile).","account.sendResetLink":"Send reset link",
 "account.setNewPassTitle":"Set a new password","account.setNewPassDesc":"You arrived here via a password reset link — enter your new password.",
 "referral.title":"Invite a friend","referral.desc":"Every friend who joins via your link gives you both 50 XP.","referral.share":"Share invite link",
 "push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
 "focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.todayTasks":"Today's tasks","focus.xpPoints":"XP Points",
 "focus.idle":"Ready to start","focus.paused":"Paused","focus.inSession":"In a focus session","focus.onBreak":"On a break","focus.start":"Start focusing","focus.skip":"Skip",
 "focus.themeNight":"Starry night","focus.themeForest":"Calm forest","focus.themeSunset":"Sunset","focus.themeDesk":"Desk & coffee","focus.themeOcean":"Calm ocean","focus.themeDawn":"Warm dawn",
-"account.noRecoveryNote":"⚠️ Reminder: username accounts don't support forgotten-password recovery (we never ask for your real email) — save it somewhere safe. Your local data on this device stays safe regardless.",
+"account.noRecoveryNote":"💡 If you forget your password later, recovery only works if you've linked a real email (below, if you skipped it at signup).",
 "spec.title":"Smart Specialty Guide","spec.sub":"A general overview — check university sites for exact college details","spec.search":"Search a major...",
 "room.title":"Study Room","room.sub":"You're not alone — no chat, just a sense of company","room.studying":"student(s) studying with you now",
 "lb.title":"Weekly Leaderboard","lb.sub":"Fully optional — share your motivational points if you'd like","lb.share":"Share my name & points on the leaderboard",
@@ -3535,11 +3537,19 @@ const DASHBOARD_CARDS = [
     // اللوحة (#dash-overview)، وليست جزءاً من كومة #dashboard-cards القابلة
     // لإعادة الترتيب بالأسهم — لذا reorderable:false لها تحديداً، حتى لا تُنتزع
     // من مكانها الأصلي عند "إعادة الضبط الافتراضي"
+    //
+    // تبسيط أول تجربة (بطلب مراجعة تقنية خارجية): بطاقات الخريطة الحرارية
+    // ولوحة الصدارة ومسار التقدم غير مفيدة فعلياً في اليوم الأول (لا نشاط
+    // بعد لعرضه) وتزيد كثافة الشاشة على طالب جديد أنهى للتو معالج إنشاء
+    // الخطة — أصبحت مخفية افتراضياً وتُكتشف تدريجياً عبر "تخصيص لوحتك"
+    // (الجولة التعريفية تذكرها صراحة). هذا لا يمسّ أي مستخدم خصّص لوحته من
+    // قبل بأي شكل — انظر applyDashboardCardVisibility أدناه: نُفضّل دائماً
+    // الاختيار المحفوظ فعلياً للمستخدم على القيمة الافتراضية.
     { id: "dash-card-overview-hero", labelAr: "نظرة سريعة (XP والإحصائيات)", labelEn: "Quick overview (XP & stats)", defaultVisible: true, reorderable: false },
-    { id: "dash-card-overview-heatmap", labelAr: "خريطة النشاط اليومي", labelEn: "Daily activity heatmap", defaultVisible: true, reorderable: false },
+    { id: "dash-card-overview-heatmap", labelAr: "خريطة النشاط اليومي", labelEn: "Daily activity heatmap", defaultVisible: false, reorderable: false },
     { id: "dash-card-overview-quests", labelAr: "لمحة مهام اليوم", labelEn: "Today's tasks glance", defaultVisible: true, reorderable: false },
-    { id: "dash-card-overview-leaderboard", labelAr: "لوحة الصدارة المصغّرة", labelEn: "Mini leaderboard", defaultVisible: true, reorderable: false },
-    { id: "dash-card-progress", labelAr: "مسار التقدم", labelEn: "Progress Path", defaultVisible: true, reorderable: false },
+    { id: "dash-card-overview-leaderboard", labelAr: "لوحة الصدارة المصغّرة", labelEn: "Mini leaderboard", defaultVisible: false, reorderable: false },
+    { id: "dash-card-progress", labelAr: "مسار التقدم", labelEn: "Progress Path", defaultVisible: false, reorderable: false },
     { id: "dash-card-table", labelAr: "جدول المهام", labelEn: "Task Table", defaultVisible: true, reorderable: true },
     { id: "dash-card-timer", labelAr: "وضع التركيز (المؤقت)", labelEn: "Focus Mode (Timer)", defaultVisible: true, reorderable: true },
     { id: "dash-card-badges", labelAr: "الأوسمة والتروفيات", labelEn: "Badges & Trophies", defaultVisible: false, reorderable: true },
@@ -4356,8 +4366,8 @@ const ONBOARDING_STEPS = [
     {
         id: "btn-customize-dashboard",
         titleAr: "خصّص لوحتك", titleEn: "Customize your dashboard",
-        textAr: "أضف بطاقة الأوسمة أو المجتمع للوحتك، أو أخفِ ما لا تحتاجه — من زر «تخصيص لوحتك».",
-        textEn: "Add the badges or community card to your dashboard, or hide what you don't need — from the 'Customize dashboard' button.",
+        textAr: "بدأناك بأبسط لوحة ممكنة. من هنا تقدر تفعّل خريطة النشاط، لوحة الصدارة، مسار التقدم، الأوسمة، أو المجتمع، أو تخفي ما لا تحتاجه.",
+        textEn: "We started you with the simplest possible dashboard. From here you can turn on the activity heatmap, leaderboard, progress path, badges, or community — or hide what you don't need.",
     },
     {
         selector: '[data-tab="calculator"]',
@@ -5575,25 +5585,35 @@ function toggleForgotPasswordForm(){
 
 async function sendPasswordReset(){
     if(!sb){ showToast(currentLang==='ar' ? "خدمة الحساب غير متاحة حالياً" : "Account service unavailable"); return; }
-    const email = document.getElementById("forgot-email-input").value.trim();
-    if(!email || !email.includes("@")){
-        showToast(currentLang==='ar' ? "أدخل بريداً إلكترونياً صحيحاً" : "Enter a valid email address");
+    const username = document.getElementById("forgot-username-input").value.trim();
+    if(!username){
+        showToast(currentLang==='ar' ? "أدخل اسم المستخدم" : "Enter your username");
         return;
     }
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.href.split("#")[0] });
-    // نعرض نفس الرسالة سواء وُجد الحساب أم لا (ممارسة أمان قياسية — لا نكشف
-    // للزائر أي بريد مرتبط بحساب فعلي وأيها ليس كذلك)
-    document.getElementById("forgot-email-input").value = "";
+    const resolvedEmail = await resolveUsernameEmail(username);
+    // إن كان البريد المُحلَّل مطابقاً تماماً للبريد المصطنع، فهذا يعني أن
+    // هذا الحساب لم يربط بريداً حقيقياً بعد (لا فرق هنا بين "حساب غير
+    // موجود" و"حساب موجود بلا بريد مرتبط" — عمداً، لعدم كشف أي حساب فعلي)
+    if(resolvedEmail === usernameToEmail(username)){
+        document.getElementById("forgot-username-input").value = "";
+        document.getElementById("forgot-password-form").style.display = "none";
+        showToast(currentLang==='ar'
+            ? "📧 إن وُجد هذا الحساب وربط بريداً حقيقياً من قبل، وصلته رسالة إعادة التعيين. إن لم يصلك شيء، سجّل الدخول واربط بريداً من ملفك الشخصي أولاً."
+            : "📧 If this account exists and previously linked a real email, a reset message was sent. If nothing arrives, sign in and link an email from your profile first.");
+        return;
+    }
+    const { error } = await sb.auth.resetPasswordForEmail(resolvedEmail, { redirectTo: window.location.href.split("#")[0] });
+    document.getElementById("forgot-username-input").value = "";
     document.getElementById("forgot-password-form").style.display = "none";
     showToast(currentLang==='ar'
-        ? "📧 إن كان هذا البريد مرتبطاً بحساب، وصلته رسالة إعادة تعيين كلمة المرور."
-        : "📧 If this email is linked to an account, a password reset message was sent to it.");
+        ? "📧 وصلتك رسالة إعادة تعيين كلمة المرور على بريدك المرتبط."
+        : "📧 A password reset message was sent to your linked email.");
     if(error) console.error("[خُطى] استجابة resetPasswordForEmail:", error);
 }
 
 function loginScreenSignIn(){
     if(loginSignupMode){
-        signUpWithCreds("login-username", "login-password", "login-password2", true);
+        signUpWithCreds("login-username", "login-password", "login-password2", true, "login-email");
     } else {
         signInWithCreds("login-username", "login-password", true);
     }
@@ -5677,6 +5697,27 @@ function usernameToEmail(username){
     return `khuta.${clean}@${USERNAME_EMAIL_DOMAIN}`;
 }
 
+// يحدّد البريد الفعلي المرتبط باسم مستخدم عبر جدول username_lookup (يُزامَن
+// تلقائياً من الخادم — انظر SUPABASE_MIGRATION_password_recovery.sql).
+// نرجع للبريد المصطنع فقط إن لم يوجد صف بعد (حساب أُنشئ قبل هذا الإصلاح
+// ولم يُسجَّل دخول أو يُحدَّث منذ تشغيل الترحيل) — يحافظ هذا على عمل تسجيل
+// الدخول لكل الحسابات القديمة بلا استثناء، مع تفعيل الاسترجاع الحقيقي
+// تلقائياً لأي حساب دخل جدول username_lookup (كل حساب جديد، وأي حساب قديم
+// بعد أول تسجيل دخول ناجح له بفضل تعبئة الترحيل الرجعية)
+async function resolveUsernameEmail(username){
+    if(!sb) return usernameToEmail(username);
+    try{
+        // مطابقة غير حساسة لحالة الأحرف عمداً: user_data.username يُخزَّن
+        // بحالة الأحرف الأصلية كما كتبها الطالب، لكن تسجيل الدخول كان دائماً
+        // غير حساس لحالة الأحرف ضمنياً (usernameToEmail تصغّر الأحرف قبل بناء
+        // البريد المصطنع) — .ilike تحافظ على هذا السلوك بالضبط فلا ينكسر
+        // الدخول لأي حساب قائم بسبب اختلاف طفيف في حالة الأحرف
+        const { data } = await sb.from("username_lookup").select("email").ilike("username", username.trim()).maybeSingle();
+        if(data && data.email) return data.email;
+    }catch(e){ /* الجدول قد لا يكون منشأً بعد على مواقع لم تُشغّل الترحيل — نتجاهل بصمت */ }
+    return usernameToEmail(username);
+}
+
 function getSession(){ try{ return JSON.parse(localStorage.getItem("khuta_session")) || null; }catch(e){ return null; } }
 let manualAuthInProgress = false; // يمنع ازدواجية معالجة نفس حدث تسجيل الدخول بين signInWithCreds/signUpWithCreds والمستمع العام
 
@@ -5738,20 +5779,27 @@ function formatDuration(ms){
 }
 
 /* ---------- التسجيل ---------- */
-async function signUpAccount(){ return signUpWithCreds("acc-username", "acc-password", "acc-password2", false); }
+async function signUpAccount(){ return signUpWithCreds("acc-username", "acc-password", "acc-password2", false, "acc-email"); }
 
-async function signUpWithCreds(userId, passId, pass2Id, fromLoginScreen){
+async function signUpWithCreds(userId, passId, pass2Id, fromLoginScreen, emailId){
     if(!sb){ showToast(currentLang==='ar' ? "خدمة الحساب غير متاحة حالياً" : "Account service unavailable right now"); return; }
     const username = document.getElementById(userId).value.trim();
     const pass = document.getElementById(passId).value;
     const pass2 = document.getElementById(pass2Id).value;
+    const realEmailInput = emailId ? document.getElementById(emailId) : null;
+    const realEmail = realEmailInput ? realEmailInput.value.trim() : "";
     if(username.length < 3){ showToast(currentLang==='ar' ? "اسم المستخدم يجب أن يكون 3 أحرف على الأقل" : "Username must be at least 3 characters"); return; }
     if(pass.length < 6){ showToast(currentLang==='ar' ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters"); return; }
     if(pass !== pass2){ showToast(currentLang==='ar' ? "كلمتا المرور غير متطابقتين" : "Passwords don't match"); return; }
+    if(realEmail && !realEmail.includes("@")){ showToast(currentLang==='ar' ? "البريد المدخل غير صالح — اتركه فارغاً إن أردت المتابعة بدونه" : "Invalid email — leave it blank to continue without one"); return; }
 
     setAccountBusy(true);
     manualAuthInProgress = true;
-    const email = usernameToEmail(username);
+    // إن أدخل الطالب بريداً حقيقياً، يصبح هو هوية الحساب الفعلية في Supabase
+    // منذ التسجيل (فيعمل استرجاع كلمة المرور فوراً بلا خطوة إضافية لاحقاً).
+    // إن تركه فارغاً، السلوك القديم تماماً بلا أي تغيير: بريد مصطنع داخلي،
+    // ولا يُطلب بريد حقيقي إطلاقاً — نفس فلسفة الخصوصية الأصلية للموقع.
+    const email = realEmail || usernameToEmail(username);
     const { data, error } = await sb.auth.signUp({ email, password: pass });
     if(error){
         manualAuthInProgress = false;
@@ -5805,7 +5853,7 @@ async function signInWithCreds(userId, passId, fromLoginScreen){
 
     setAccountBusy(true);
     manualAuthInProgress = true;
-    const email = usernameToEmail(username);
+    const email = await resolveUsernameEmail(username);
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
     setAccountBusy(false);
 
@@ -8110,4 +8158,23 @@ window.addEventListener("load", () => {
         const pool = localStorage.getItem("khuta_custom_exam_pool");
         if(pool){ const b = document.getElementById("customexam-start-btn"); if(b) b.style.display = "inline-flex"; }
     }, 400);
+});
+
+/* ============================================================
+   41) الوصولية — دعم لوحة المفاتيح لكل العناصر القابلة للنقر المبنية على
+   div/span (قوائم التنقّل، رقائق الاختيار، عيّنات الألوان) بدل <button>
+   ------------------------------------------------------------
+   هذه العناصر أُضيف لها role="button" و tabindex="0" في HTML (بدل تحويلها
+   فعلياً إلى <button> تفادياً لأي كسر بصري في تنسيقاتها الحالية القائمة
+   على div/span) — هذا المستمع الوحيد يفعّل تشغيلها بمفتاحي Enter/Space
+   كأي زر حقيقي، لأي عنصر كهذا حالياً أو يُضاف مستقبلاً بنفس النمط، دون
+   حاجة لتكرار معالج لكل عنصر على حدة.
+   ============================================================ */
+document.addEventListener("keydown", function(e){
+    if(e.key !== "Enter" && e.key !== " ") return;
+    const el = e.target;
+    if(el && el.getAttribute && el.getAttribute("role") === "button" && el.hasAttribute("onclick")){
+        e.preventDefault(); // تفادي تمرير الصفحة عند الضغط على مسطرة المسافة
+        el.click();
+    }
 });

@@ -17,3 +17,40 @@
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+# ============================================================
+# تخزين مؤقّت للملفات — بحذر متعمَّد لأن المشروع قيد تطوير نشط ومستمر:
+# لا توجد أسماء ملفات مُرقَّمة/مُجزَّأة (مثل app.abc123.js) تتغيّر تلقائياً
+# مع كل تحديث، فأي مدة تخزين طويلة على index.html/app.js/styles.css قد
+# تُبقي زواراً عائدين يشغّلون نسخة قديمة من الموقع لفترة طويلة دون علمهم
+# حتى بعد رفعك تحديثاً جديداً على GitHub. لذا:
+# - index.html وapp.js وstyles.css: مدة قصيرة فقط (ساعة) + must-revalidate،
+#   توازن بين تسريع التنقّل داخل نفس الزيارة وضمان وصول التحديثات بسرعة
+#   معقولة للزوار العائدين.
+# - أيقونات PWA: لا تتغيّر عملياً أبداً بعد اعتمادها، وحتى لو تغيّرت فأثر
+#   بقاء نسخة قديمة منها لفترة تخزين مؤقت (أسبوعين) شكلي بحت لا وظيفي —
+#   آمنة لتخزين أطول.
+# - ملفات البيانات (content.json وuniversities.json وspecialties.json
+#   وexam-questions.json): بلا تخزين مؤقت إطلاقاً — هذه بالذات ما ذكرته
+#   أنك تُحدّثها مباشرة برفع نسخة جديدة على GitHub (بنك أسئلة جديد، تحديث
+#   بيانات جامعة...)، ويجب أن يصل أي تحديث لها فوراً لكل الزوار.
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+[[headers]]
+  for = "/app.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+[[headers]]
+  for = "/styles.css"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+[[headers]]
+  for = "/icon-*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=1209600, immutable"
+[[headers]]
+  for = "/*.json"
+  [headers.values]
+    Cache-Control = "no-cache"
