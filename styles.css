@@ -2289,24 +2289,40 @@ body.dark-mode .chatbot-board-btn{
    44) السبورة الذكية — نمط "كامل" من القائمة الجانبية (أكبر وأغنى)
    ============================================================ */
 .board-window.full-mode{ max-width:1280px; height:90vh; }
-.board-window.full-mode .board-tabs{ display:none; }
+/* التبويبات تبقى ظاهرة دائماً حتى في الوضع الكامل — ضرورية للوصول إلى
+   تبويب "محادثاتي" الذي يستثني نفسه من عرض السبورة+الدفتر جنباً إلى جنب */
 .board-full-hint{
     display:none; font-size:12px; color:rgba(255,255,255,0.6); text-align:center;
     padding:6px 0 2px; flex-shrink:0;
 }
-.board-window.full-mode .board-full-hint{ display:block; }
+.board-window.full-mode:not(.showing-chats) .board-full-hint{ display:block; }
 @media (min-width:901px){
-    .board-window.full-mode .board-content-split{ display:flex; flex:1; min-height:0; gap:0; }
-    .board-window.full-mode .board-content-split .board-pane{
+    .board-window.full-mode:not(.showing-chats) .board-content-split{ display:flex; flex:1; min-height:0; gap:0; }
+    .board-window.full-mode:not(.showing-chats) .board-content-split .board-pane#board-tab-ai,
+    .board-window.full-mode:not(.showing-chats) .board-content-split .board-pane#board-tab-pad{
         display:flex !important; flex:1; min-width:0; opacity:1; transform:none; animation:none;
     }
-    .board-window.full-mode #board-tab-ai{ border-inline-end:1px solid rgba(210,195,255,0.16); padding-inline-end:20px; }
-    .board-window.full-mode #board-tab-pad{ padding-inline-start:20px; }
+    .board-window.full-mode:not(.showing-chats) #board-tab-ai{ border-inline-end:1px solid rgba(210,195,255,0.16); padding-inline-end:20px; }
+    .board-window.full-mode:not(.showing-chats) #board-tab-pad{ padding-inline-start:20px; }
 }
-@media (max-width:900px){
-    /* على الشاشات الأضيق حتى في النمط الكامل، تبقى التبويبات ضرورية للمساحة */
-    .board-window.full-mode .board-tabs{ display:flex; }
+
+/* ---------- تبويب "محادثاتي" ---------- */
+.chats-tab-layout{ display:flex; flex-direction:column; gap:14px; height:100%; }
+.chats-tab-toolbar{ display:flex; flex-direction:column; gap:8px; flex-shrink:0; }
+.chats-tab-toolbar .btn{ align-self:flex-start; }
+.chat-history-list{ flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }
+.chat-history-row{ display:flex; gap:6px; align-items:stretch; }
+.chat-history-open{
+    flex:1; min-width:0; text-align:start; cursor:pointer; padding:12px 14px; border-radius:14px;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff;
+    font-family:var(--font-body); display:flex; flex-direction:column; gap:3px; transition:.2s var(--ease);
 }
+.chat-history-open:hover{ background:rgba(178,164,255,0.14); border-color:rgba(210,195,255,0.35); }
+.chat-history-row.active .chat-history-open{ border-color:rgba(255,210,130,0.5); box-shadow:0 0 14px rgba(255,182,72,0.15); }
+.chat-history-open b{ font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chat-history-open span{ font-size:10.5px; color:rgba(255,255,255,0.5); }
+.chat-history-del{ color:rgba(255,255,255,0.5); font-size:12px; padding:0 12px; }
+.chat-history-del:hover{ color:var(--rose); }
 
 /* ============================================================
    45) دليل الموقع بالذكاء الاصطناعي — يعيد استخدام نمط الجولة التعريفية

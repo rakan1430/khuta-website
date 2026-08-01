@@ -34,7 +34,7 @@ try{
    أحياناً ولا يعمل أحياناً أخرى حسب سرعة تحميل الصفحة أو الجهاز. */
 initOAuthListener();
 
-const APP_OWNER_NAME = "rakan/mashal"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
+const APP_OWNER_NAME = "rakan/mashal/khalid"; // ضع اسمك هنا بين علامتي التنصيص، مثال: "سونيا"
 const APP_OWNER_EMAIL = "sonyaloy9@gmail.com";
 
 /* نموذج الملاحظات — أرسل مباشرة دون فتح تطبيق بريد:
@@ -61,7 +61,7 @@ const APP_SUPPORT_URL = "";
    أي أثر لهما في الواجهة (لا رابط، لا قسم) طالما false. لتفعيل أي منهما:
    غيّر القيمة إلى true هنا وأعد النشر، لا حاجة لأي تعديل آخر.
    ============================================================ */
-const FEATURE_EXAM_SIMULATOR = false;   // قسم الاختبارات المحاكية
+const FEATURE_EXAM_SIMULATOR = true;   // قسم الاختبارات المحاكية
 const FEATURE_TUTORS_DIRECTORY = false; // قسم المدرّسين الخصوصيين
 
 /* نظام المشرفين — لم يعد مقتصراً على معرّف واحد ثابت في الكود. الصلاحية
@@ -7312,7 +7312,132 @@ async function askGemini(userText){
     const reply = json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts[0].text;
     if(!reply) throw new Error("Empty Gemini response");
     chatHistory.push({ role:"model", parts:[{ text: reply }] });
+    persistCurrentConversation(); // كل تبادل ناجح مع Gemini يُحفَظ تلقائياً — انظر القسم 42 أدناه
     return reply;
+}
+
+/* ============================================================
+   42) سجل محادثات المساعد الذكي — حفظ تلقائي، عنوان يولّده Gemini،
+   استكمال أو حذف من تبويب "محادثاتي" داخل السبورة الذكية
+   ------------------------------------------------------------
+   نطاق الحفظ: محادثات Gemini الحقيقية فقط (chatHistory يُملأ حصراً من
+   askGemini الناجحة) — ردود المساعد المحلي الاحتياطي عند تعطّل الاتصال
+   لا تُحسب "محادثة مع الذكاء الاصطناعي" فلا تُحفَظ.
+   ============================================================ */
+const CHAT_CONVERSATIONS_KEY = "khuta_chat_conversations";
+const MAX_SAVED_CONVERSATIONS = 30;      // حد أقصى لعدد المحادثات المحفوظة
+const MAX_MESSAGES_PER_CONVERSATION = 60; // حد أقصى لطول كل محادثة عند الحفظ (يقصّ الأقدم عند الحاجة)
+let currentConversationId = null; // null = محادثة لم تُحفظ بعد (ستُنشأ عند أول رد ناجح)
+
+function getChatConversations(){
+    try{ return JSON.parse(localStorage.getItem(CHAT_CONVERSATIONS_KEY) || "[]"); }catch(e){ return []; }
+}
+function saveChatConversations(list){
+    try{ localStorage.setItem(CHAT_CONVERSATIONS_KEY, JSON.stringify(list)); }
+    catch(e){ console.error("[خُطى] تعذّر حفظ سجل المحادثات (قد تكون مساحة التخزين ممتلئة):", e); }
+}
+
+function persistCurrentConversation(){
+    const list = getChatConversations();
+    let conv = list.find(c => c.id === currentConversationId);
+    if(!conv){
+        conv = { id: "conv_" + Date.now().toString(36) + Math.random().toString(36).slice(2,6), title: null, messages: [], createdAt: new Date().toISOString() };
+        currentConversationId = conv.id;
+        list.unshift(conv);
+    }
+    conv.messages = chatHistory.slice(-MAX_MESSAGES_PER_CONVERSATION);
+    conv.updatedAt = new Date().toISOString();
+    while(list.length > MAX_SAVED_CONVERSATIONS) list.pop(); // نحذف الأقدم تحديثاً عند تجاوز الحد
+    saveChatConversations(list);
+    if(!conv.title && chatHistory.length >= 2) generateConversationTitle(conv.id);
+    if(document.getElementById("board-tab-chats")?.classList.contains("active")) renderSavedConversationsList();
+}
+
+const CONVERSATION_TITLE_SYSTEM = `${KHUTA_IDENTITY_CORE}
+لخّص موضوع هذه المحادثة بعنوان قصير جداً (من 3 إلى 6 كلمات) بالعربية، بلا علامات ترقيم زائدة ولا علامات اقتباس ولا كلمة "عنوان" نفسها — أجب بالعنوان فقط لا غير.`;
+async function generateConversationTitle(convId){
+    const list = getChatConversations();
+    const conv = list.find(c => c.id === convId);
+    if(!conv || conv.title) return;
+    try{
+        const firstExchange = conv.messages.slice(0, 4)
+            .map(m => (m.role === "user" ? "الطالب: " : "المساعد: ") + (m.parts[0] && m.parts[0].text || ""))
+            .join("\n");
+        const rawTitle = await askGeminiRaw(CONVERSATION_TITLE_SYSTEM, [{ text: firstExchange }]);
+        const cleanTitle = rawTitle.trim().replace(/^["'«»]+|["'«»]+$/g, "").replace(/\.$/, "").slice(0, 60);
+        // نعيد قراءة القائمة (لا نعتمد على `list`/`conv` الملتقطتين قبل النداء
+        // غير المتزامن، تحسّباً لأي تعديل آخر طرأ على السجل أثناء الانتظار)
+        const freshList = getChatConversations();
+        const freshConv = freshList.find(c => c.id === convId);
+        if(freshConv && !freshConv.title){
+            freshConv.title = cleanTitle || (currentLang==='ar' ? "محادثة بلا عنوان" : "Untitled conversation");
+            saveChatConversations(freshList);
+            renderSavedConversationsList();
+        }
+    }catch(e){
+        console.error("[خُطى] تعذّر توليد عنوان المحادثة (ليست مشكلة حرجة، ستبقى بلا عنوان):", e);
+    }
+}
+
+function renderSavedConversationsList(){
+    const box = document.getElementById("chat-history-list");
+    if(!box) return;
+    const list = getChatConversations();
+    if(list.length === 0){
+        box.innerHTML = `<div class="card-sub" style="padding:8px 2px;">${labT("لا محادثات محفوظة بعد — أول محادثة حقيقية مع مساعدك ستُحفَظ هنا تلقائياً","No saved conversations yet — your first real exchange with your assistant will be saved here automatically")}</div>`;
+        return;
+    }
+    box.innerHTML = list.map(c => {
+        const dateStr = new Date(c.updatedAt || c.createdAt).toLocaleDateString(currentLang==='ar' ? 'ar-SA' : 'en-US', { day:"numeric", month:"short" });
+        const title = c.title || labT("محادثة بلا عنوان بعد…","Untitled conversation…");
+        return `
+        <div class="chat-history-row ${c.id===currentConversationId?'active':''}">
+            <button type="button" class="chat-history-open" onclick="openSavedConversation('${c.id}')">
+                <b>${escapeHtml(title)}</b>
+                <span>${dateStr} · ${c.messages.length} ${labT("رسالة","messages")}</span>
+            </button>
+            <button type="button" class="btn-ghost chat-history-del" onclick="deleteSavedConversation('${c.id}')" title="${labT("حذف","Delete")}"><i class="fa-solid fa-trash"></i></button>
+        </div>`;
+    }).join("");
+}
+
+function openSavedConversation(id){
+    const conv = getChatConversations().find(c => c.id === id);
+    if(!conv) return;
+    currentConversationId = conv.id;
+    chatHistory = conv.messages.slice();
+    const box = document.getElementById("chatbot-messages");
+    box.innerHTML = "";
+    chatHistory.forEach(m => {
+        const text = m.parts && m.parts[0] && m.parts[0].text || "";
+        addChatbotMessage(text, m.role === "user" ? "user" : "bot");
+    });
+    closeKhutaBoard();
+    const panel = document.getElementById("chatbot-panel");
+    if(panel.style.display === "none" || panel.classList.contains("panel-closing")) toggleChatbot();
+    renderSavedConversationsList();
+    showToast(labT("📂 تابع من حيث توقفت","📂 Continuing where you left off"));
+}
+
+function deleteSavedConversation(id){
+    if(!confirm(labT("حذف هذه المحادثة نهائياً؟ لا يمكن التراجع.","Delete this conversation permanently? This can't be undone."))) return;
+    saveChatConversations(getChatConversations().filter(c => c.id !== id));
+    if(currentConversationId === id){ currentConversationId = null; chatHistory = []; }
+    renderSavedConversationsList();
+}
+
+function startNewConversation(){
+    currentConversationId = null;
+    chatHistory = [];
+    const box = document.getElementById("chatbot-messages");
+    box.innerHTML = "";
+    closeKhutaBoard();
+    const panel = document.getElementById("chatbot-panel");
+    if(panel.style.display === "none" || panel.classList.contains("panel-closing")) toggleChatbot();
+    addChatbotMessage(currentLang==='ar'
+        ? "أهلاً يا بطل! 👋 محادثة جديدة — قلّي وش تبي."
+        : "Hey champ! 👋 New conversation — tell me what you need.", "bot");
+    renderSavedConversationsList();
 }
 
 /* ============================================================
@@ -7414,6 +7539,12 @@ function switchBoardTab(tab){
     document.querySelectorAll(".board-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
     document.getElementById("board-tab-ai").classList.toggle("active", tab === "ai");
     document.getElementById("board-tab-pad").classList.toggle("active", tab === "pad");
+    document.getElementById("board-tab-chats").classList.toggle("active", tab === "chats");
+    // في الوضع الكامل، السبورة والدفتر يُعرضان جنباً إلى جنب دوماً — لكن
+    // تبويب "محادثاتي" يستثني نفسه من هذا التقسيم ويأخذ العرض كاملاً وحده،
+    // مطابقةً لفئة .showing-chats في CSS
+    document.querySelector(".board-window").classList.toggle("showing-chats", tab === "chats");
+    if(tab === "chats") renderSavedConversationsList();
     // إصلاح جذري: كانت مساحة الرسم تُقاس مرة واحدة فقط عند فتح النافذة، وغالباً
     // بينما تبويب "دفتري" لا يزال display:none (لأن التبويب الافتراضي هو
     // السبورة) — فتُقرأ أبعاد صندوق صفرية وتسقط اللوحة لحجم احتياطي صغير

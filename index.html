@@ -782,6 +782,7 @@
             <div class="board-tabs">
                 <button type="button" class="board-tab active" data-tab="ai" onclick="switchBoardTab('ai')"><i class="fa-solid fa-chalkboard-user"></i> سبورة المعلّم الذكي</button>
                 <button type="button" class="board-tab" data-tab="pad" onclick="switchBoardTab('pad')"><i class="fa-solid fa-pen-ruler"></i> دفتري</button>
+                <button type="button" class="board-tab" data-tab="chats" onclick="switchBoardTab('chats')"><i class="fa-solid fa-comments"></i> محادثاتي</button>
             </div>
             <button type="button" class="lab-close-btn" onclick="closeKhutaBoard()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
         </div>
@@ -829,6 +830,16 @@
                     <div class="pad-side-title"><i class="fa-solid fa-box-archive"></i> لوحاتي المحفوظة</div>
                     <div id="pad-saved-list" class="pad-saved-list"></div>
                 </div>
+            </div>
+        </div>
+
+        <div id="board-tab-chats" class="board-pane">
+            <div class="chats-tab-layout">
+                <div class="chats-tab-toolbar">
+                    <button type="button" class="btn btn-sm" onclick="startNewConversation()"><i class="fa-solid fa-plus"></i> محادثة جديدة</button>
+                    <p class="card-sub">كل محادثاتك مع مساعدك الذكي محفوظة هنا تلقائياً — افتح أي واحدة لمتابعتها من حيث توقفت</p>
+                </div>
+                <div id="chat-history-list" class="chat-history-list"></div>
             </div>
         </div>
         </div>
