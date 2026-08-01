@@ -20,9 +20,15 @@
    GEMINI_API_KEY (من aistudio.google.com/apikey)
    وأيضاً (لتفعيل الحد الأقصى للطلبات): SUPABASE_SERVICE_ROLE_KEY
    (من Supabase → Settings → API — نفس المتغيّر المستخدم في send-reminders.js)
-   ============================================================ */
 
-const { createClient } = require("@supabase/supabase-js");
+   ⚠️ ملاحظة نشر مهمة: هذا الملف لا يعتمد على أي حزمة خارجية (لا
+   @supabase/supabase-js ولا غيرها) عمداً — فقط fetch المدمجة في Node.js،
+   عبر واجهة Supabase REST API مباشرة. جُرِّب سابقاً استيراد مكتبة
+   Supabase الرسمية هنا وفشل النشر فعلياً برسالة "Cannot find module"
+   رغم إدراجها في package.json (على الأرجح مشكلة تحزيم خاصة بـNetlify
+   لهذا الملف تحديداً) — الاعتماد على fetch وحدها يزيل هذا الخطر تماماً
+   ولا يحتاج أي إعداد نشر إضافي إطلاقاً.
+   ============================================================ */
 
 const SUPABASE_URL = "https://squhkiwjwwyrgufkaujf.supabase.co";
 const GEMINI_MODEL = "gemini-flash-latest";
@@ -151,19 +157,37 @@ function getClientIp(event){
 async function checkRateLimit(ip){
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if(!serviceKey) return { allowed: true }; // لا نُفشل الميزة كاملة إن لم يُضبط المفتاح بعد — نسمح مع تسجيل تحذير
+    const restHeaders = {
+        "apikey": serviceKey,
+        "Authorization": `Bearer ${serviceKey}`,
+        "Content-Type": "application/json",
+    };
+    const restBase = `${SUPABASE_URL}/rest/v1/gemini_rate_limit`;
     try{
-        const supabase = createClient(SUPABASE_URL, serviceKey);
         const now = new Date();
-        const { data: row } = await supabase.from("gemini_rate_limit").select("*").eq("ip", ip).maybeSingle();
+        const getRes = await fetch(`${restBase}?ip=eq.${encodeURIComponent(ip)}&select=*`, { headers: restHeaders });
+        if(!getRes.ok) throw new Error("rate-limit select failed: " + getRes.status);
+        const rows = await getRes.json();
+        const row = rows[0];
+
         if(!row || (now - new Date(row.window_start)) > RATE_LIMIT_WINDOW_MS){
-            await supabase.from("gemini_rate_limit").upsert({ ip, window_start: now.toISOString(), request_count: 1 });
+            // صف جديد أو نافذة جديدة — upsert عبر Prefer: resolution=merge-duplicates
+            await fetch(restBase, {
+                method: "POST",
+                headers: { ...restHeaders, "Prefer": "resolution=merge-duplicates" },
+                body: JSON.stringify({ ip, window_start: now.toISOString(), request_count: 1 }),
+            });
             return { allowed: true };
         }
         if(row.request_count >= RATE_LIMIT_MAX_REQUESTS){
             const retryAfterSec = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - new Date(row.window_start))) / 1000);
             return { allowed: false, retryAfterSec };
         }
-        await supabase.from("gemini_rate_limit").update({ request_count: row.request_count + 1 }).eq("ip", ip);
+        await fetch(`${restBase}?ip=eq.${encodeURIComponent(ip)}`, {
+            method: "PATCH",
+            headers: restHeaders,
+            body: JSON.stringify({ request_count: row.request_count + 1 }),
+        });
         return { allowed: true };
     }catch(e){
         // فشل التحقق نفسه (عطل مؤقت في Supabase مثلاً) لا يجب أن يُسقط ميزة
