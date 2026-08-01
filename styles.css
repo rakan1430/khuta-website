@@ -701,10 +701,10 @@ html.fontsize-large body{ zoom:1.15; }
 @media (max-width:992px){
     html.fontsize-small body, html.fontsize-large body{ zoom:1; }
 }
-.theme-swatches{ display:flex; gap:10px; margin-top:8px; }
+.theme-swatches{ display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; }
 .theme-swatch{
     width:36px; height:36px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:.2s;
-    display:flex; align-items:center; justify-content:center; color:#fff;
+    display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;
 }
 .theme-swatch.active{ border-color:var(--text-1); }
 
@@ -1022,6 +1022,10 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
     box-shadow: inset 0 1px 10px rgba(255,255,255,0.08), 0 14px 34px rgba(0,0,0,0.3);
 }
 @media (min-width:993px){ .focus-header-float{ display:flex; } }
+/* الزر الجديد أعلاه في .focus-mode-topbar مخصَّص للهاتف حصراً — على الكمبيوتر
+   زر تبديل الوضع موجود أصلاً داخل .focus-header-float فلا داعي لتكراره */
+@media (min-width:993px){ .focus-topbar-theme-btn{ display:none; } }
+.focus-topbar-theme-btn{ padding:9px 12px; }
 .focus-header-profile{ display:flex; align-items:center; gap:12px; cursor:pointer; }
 .focus-header-avatar-wrap{ position:relative; flex-shrink:0; }
 .focus-header-avatar{
