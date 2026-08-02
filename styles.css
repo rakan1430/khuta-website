@@ -79,6 +79,7 @@ body{
         var(--bg);
     color: var(--text-1);
     min-height:100vh;
+    min-height:100dvh; /* يحل مشكلة Safari الشهيرة: 100vh لا يحسب شريط العنوان المتحرك على الهاتف، فيترك فراغاً أو يقصّ المحتوى */
     display:flex;
     flex-direction:column;
     overflow-x:hidden;
@@ -774,8 +775,14 @@ textarea{ resize:vertical; min-height:100px; }
     .wizard-card{ padding:20px; border-radius:20px; margin:14px auto; }
 }
 @media (max-width:560px){
-    .overlay-screen{ padding:0; }
-    .wizard-card{ margin:0; border-radius:0; min-height:100vh; padding:28px 18px 40px; }
+    /* ⚠️ إصلاح مهم: كانت هذه القاعدة تصفّر padding بالكامل بما فيه
+       safe-area-inset-top الموروث من .overlay-screen الأساسية، فيرتفع
+       عنوان "خُطى" وعنوان المعالج التدريجي فعلياً تحت الشريط العلوي لنظام
+       iOS (الساعة/البطارية/الإشارة) على الهواتف ذات الحافة (notch) —
+       الآن نُبقي فقط الحشو الجانبي/السفلي صفراً ونحافظ على العلوي الآمن.
+    */
+    .overlay-screen{ padding:0; padding-top:env(safe-area-inset-top); }
+    .wizard-card{ margin:0; border-radius:0; min-height:100vh; min-height:100dvh; padding:28px 18px 40px; }
 }
 .wizard-steps{ display:flex; justify-content:center; gap:8px; margin-bottom:22px; }
 .wizard-steps span{ width:34px; height:5px; border-radius:99px; background:var(--border); }
@@ -1328,11 +1335,12 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 
 @media (max-width:900px){
     .exam-layout{ grid-template-columns:1fr; grid-template-rows:auto 1fr; height:auto; min-height:100%; }
-    .exam-sidebar{ border-inline-end:none; border-bottom:1px solid var(--border); max-height:46vh; }
+    .exam-sidebar{ border-inline-end:none; border-bottom:1px solid var(--border); max-height:46vh; padding:16px 14px; }
     .exam-palette-grid{ grid-template-columns:repeat(6, 1fr); }
-    .exam-question-area{ padding:22px 18px 16px; }
-    .exam-question-footer{ padding:14px 18px; }
-    .exam-main-topbar{ padding:12px 18px; }
+    .exam-question-area{ padding:18px 14px 14px; }
+    .exam-question-footer{ padding:12px 14px; }
+    .exam-main-topbar{ padding:10px 14px; }
+    .exam-choice{ padding:13px 14px; }
 }
 
 /* ---------- نافذتا التعليمات والمعادلات ---------- */
@@ -1987,7 +1995,7 @@ body:not(.dark-mode) .chatbot-board-btn{ color:var(--text-1); }
 
 /* --- دفتر الطالب --- */
 .pad-layout{ display:flex; gap:14px; flex:1; min-height:0; }
-.pad-main{ flex:2.2; min-width:0; display:flex; flex-direction:column; gap:10px; }
+.pad-main{ flex:2.2; min-width:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; min-height:0; }
 .pad-side{ flex:1; min-width:170px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
 .pad-side-title{ font-size:12.5px; font-weight:800; color:rgba(255,255,255,0.75); display:flex; align-items:center; gap:8px; }
 .pad-tools{ display:flex; gap:8px; align-items:center; flex-shrink:0; }
@@ -2062,6 +2070,15 @@ body:not(.dark-mode) .chatbot-board-btn{ color:var(--text-1); }
 .routine-mode.mode-normal.active{ color:#fff; background:rgba(94,214,183,0.22); border-color:rgba(94,214,183,0.55); box-shadow:0 0 12px rgba(94,214,183,0.2); }
 .routine-mode.mode-light.active{ color:#fff; background:rgba(232,199,126,0.22); border-color:rgba(232,199,126,0.55); box-shadow:0 0 12px rgba(232,199,126,0.2); }
 .routine-mode.mode-off.active{ color:#fff; background:rgba(226,82,126,0.22); border-color:rgba(240,140,168,0.55); box-shadow:0 0 12px rgba(226,82,126,0.2); }
+/* ⚠️ إصلاح مهم: كل هذا القسم (أسماء الأيام + الأزرار) صُمِّم بنص أبيض على
+   خلفيات شبه شفافة، بافتراض خلفية داكنة دائماً — يختفي تماماً في الوضع
+   النهاري (نص أبيض على تلوين فاتح جداً). نُبقي التصميم الداكن كما هو
+   ونضيف نسخة مخصصة بتباين واضح للوضع النهاري فقط. */
+body:not(.dark-mode) .routine-day-name{ color:var(--text-1); }
+body:not(.dark-mode) .routine-mode{ color:var(--text-2); background:rgba(0,0,0,0.04); border-color:var(--border); }
+body:not(.dark-mode) .routine-mode.mode-normal.active{ color:#0B4A3C; background:rgba(94,214,183,0.35); border-color:#3FAE8F; }
+body:not(.dark-mode) .routine-mode.mode-light.active{ color:#7A5A0E; background:rgba(232,199,126,0.4); border-color:#C9962E; }
+body:not(.dark-mode) .routine-mode.mode-off.active{ color:#8A1F42; background:rgba(226,82,126,0.32); border-color:#E2527E; }
 .routine-pressure{
     border-radius:14px; padding:12px 14px; font-size:12.5px; font-weight:700; line-height:1.8;
     color:rgba(255,255,255,0.75); background:rgba(255,255,255,0.05);
@@ -2218,8 +2235,17 @@ body.dark-mode .wiz-footer{ border-color:rgba(210,195,255,0.16); }
 #wiz-skip-btn.wiz-hidden{ visibility:hidden; }
 
 @media (max-width:700px){
-    .wiz-shell{ max-height:100vh; height:100vh; border-radius:0; margin:0; max-width:none; }
-    .wiz-topbar{ padding:20px 18px 6px; }
+    /* المعالج التدريجي له شريط علوي داخلي خاص به (.wiz-topbar) يتولّى
+       الحشو الآمن بنفسه أدناه — فنُلغي حشو .overlay-screen العلوي هنا
+       تحديداً لهذه النافذة فقط، تفادياً لحشو مضاعف يدفع المحتوى للأسفل
+       أكثر من اللازم (يبقى الحشو الآمن مفعَّلاً لشاشة الدخول العادية) */
+    .overlay-screen.wiz-overlay{ padding-top:0; }
+    .wiz-shell{
+        max-height:100vh; max-height:100dvh;
+        height:100vh; height:100dvh; /* dvh يحل مشكلة Safari الشهيرة لشريط العنوان المتحرك على الهاتف */
+        border-radius:0; margin:0; max-width:none;
+    }
+    .wiz-topbar{ padding:calc(20px + env(safe-area-inset-top)) 18px 6px; }
     .wiz-progress-row{ padding:10px 18px 4px; }
     .wiz-viewport{ padding:4px 18px 22px; }
     .wiz-footer{ padding:14px 16px; padding-bottom:calc(14px + env(safe-area-inset-bottom)); }

@@ -3770,6 +3770,17 @@ function startExamSimulation(){
     const type = document.querySelector('input[name="examsim_type"]:checked').value;
     const timed = document.querySelector('input[name="examsim_timed"]:checked').value === "timed" && type === "full";
 
+    // على الهاتف: نُعلم الطالب أن تجربة الاختبار أفضل بكثير على الكمبيوتر
+    // (شاشة أكبر، أقرب لواجهة قياس الفعلية) قبل البدء — مرة واحدة فقط لكل
+    // جلسة متصفح كي لا يتكرر الإزعاج مع كل محاولة اختبار
+    if(window.innerWidth <= 900 && !sessionStorage.getItem("khuta_mobile_exam_notice_shown")){
+        sessionStorage.setItem("khuta_mobile_exam_notice_shown", "1");
+        const proceed = confirm(currentLang==='ar'
+            ? "💻 تجربة الاختبار المحاكي أفضل بكثير على الكمبيوتر (شاشة أكبر، أقرب لواجهة الاختبار الحقيقي).\n\nتقدر تكمل على الهاتف الآن إن أردت — هيّأنا لك عرضاً أوسع يناسبه.\n\nتبي تكمل على الهاتف؟"
+            : "💻 The exam simulator works much better on a computer (bigger screen, closer to the real exam interface).\n\nYou can still continue on mobile now — we've widened the layout for it.\n\nContinue on mobile?");
+        if(!proceed) return;
+    }
+
     const built = buildExamQuestionSet(type);
     const questions = [];
     built.sections.forEach(sec => { questions.push(...sec.quant, ...sec.verbal); });
@@ -4436,16 +4447,36 @@ function runOnboardingStep(index){
     overlay.id = "onboarding-overlay";
     overlay.className = "onboarding-overlay";
     const pad = 8;
+    const isLast = index === ONBOARDING_STEPS.length - 1;
     overlay.innerHTML = `
         <div class="onboarding-spotlight" style="top:${rect.top - pad}px; left:${rect.left - pad}px; width:${rect.width + pad*2}px; height:${rect.height + pad*2}px;"></div>
-        <div class="onboarding-card" style="top:${Math.min(rect.bottom + 16, window.innerHeight - 180)}px; left:${Math.max(16, Math.min(rect.left, window.innerWidth - 300))}px;">
+        <div class="onboarding-card" id="onboarding-card-el">
             <span class="onboarding-step-count">${index + 1} / ${ONBOARDING_STEPS.length}</span>
             <b>${currentLang==='ar' ? step.titleAr : step.titleEn}</b>
             <p>${currentLang==='ar' ? step.textAr : step.textEn}</p>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; gap:8px;">
                 <button type="button" class="btn-ghost" style="font-size:12px;" onclick="document.getElementById('onboarding-overlay').remove()">${currentLang==='ar'?'تخطّي':'Skip'}</button>
+                <button type="button" class="btn btn-sm" onclick="runOnboardingStep(${index + 1})">${isLast ? (currentLang==='ar'?'إنهاء':'Done') : (currentLang==='ar'?'التالي':'Next')}</button>
+            </div>
         </div>`;
     document.body.appendChild(overlay);
+
+    // ⚠️ إصلاح مهم: كنا نحسب موضع البطاقة العلوي بافتراض ارتفاع ثابت
+    // (180px) قبل حتى إدراجها في الصفحة — قد يختلف الارتفاع الفعلي حسب
+    // طول النص، فتخرج البطاقة جزئياً عن الشاشة أسفلاً أو حتى أعلاها على
+    // الهاتف تحديداً. الآن نقيس البطاقة بعد إدراجها الفعلي، ونُبقيها ضمن
+    // حدود الشاشة الآمنة (مع مراعاة حواف الهاتف ذات النتوء) في كل الاتجاهات.
+    const card = document.getElementById("onboarding-card-el");
+    const cardRect = card.getBoundingClientRect();
+    const safeTop = 12, safeBottom = 12, safeSide = 14;
+    let top = rect.bottom + 16;
+    if(top + cardRect.height > window.innerHeight - safeBottom){
+        top = rect.top - cardRect.height - 16; // لا مكان أسفل الهدف — نضعها أعلاه بدلاً
+    }
+    top = Math.max(safeTop, Math.min(top, window.innerHeight - cardRect.height - safeBottom));
+    const left = Math.max(safeSide, Math.min(rect.left, window.innerWidth - cardRect.width - safeSide));
+    card.style.top = top + "px";
+    card.style.left = left + "px";
 }
 
 /* ============================================================
@@ -4493,7 +4524,7 @@ function aiGuideNavigate(key){
         const pad = 8;
         overlay.innerHTML = `
             <div class="onboarding-spotlight" style="top:${rect.top - pad}px; left:${rect.left - pad}px; width:${rect.width + pad*2}px; height:${rect.height + pad*2}px;"></div>
-            <div class="onboarding-card ai-guide-card" style="top:${Math.min(rect.bottom + 16, window.innerHeight - 180)}px; left:${Math.max(16, Math.min(rect.left, window.innerWidth - 300))}px;">
+            <div class="onboarding-card ai-guide-card" id="onboarding-card-el">
                 <span class="ai-guide-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> ${currentLang==='ar'?'مساعدك دلّك هنا':'Your assistant guided you here'}</span>
                 <b>${currentLang==='ar' ? cfg.titleAr : (cfg.titleEn || cfg.titleAr)}</b>
                 <p>${currentLang==='ar' ? cfg.textAr : (cfg.textEn || cfg.textAr)}</p>
@@ -4502,6 +4533,16 @@ function aiGuideNavigate(key){
                 </div>
             </div>`;
         document.body.appendChild(overlay);
+        // نفس إصلاح القياس بعد الإدراج الفعلي بدل افتراض ارتفاع ثابت (انظر runOnboardingStep)
+        const card = document.getElementById("onboarding-card-el");
+        const cardRect = card.getBoundingClientRect();
+        const safeTop = 12, safeBottom = 12, safeSide = 14;
+        let top = rect.bottom + 16;
+        if(top + cardRect.height > window.innerHeight - safeBottom) top = rect.top - cardRect.height - 16;
+        top = Math.max(safeTop, Math.min(top, window.innerHeight - cardRect.height - safeBottom));
+        const left = Math.max(safeSide, Math.min(rect.left, window.innerWidth - cardRect.width - safeSide));
+        card.style.top = top + "px";
+        card.style.left = left + "px";
         clearTimeout(window.__aiGuideAutoT);
         window.__aiGuideAutoT = setTimeout(() => overlay.remove(), 7000);
     }, 260); // مهلة قصيرة كي يكتمل تبديل القسم وتُقاس أبعاد العنصر بدقة
