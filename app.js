@@ -373,7 +373,7 @@ ar:{
 "wiz.foundTitle":"مصدرك لتأسيس الكمي","wiz.foundDesc":"اختر من أين تبدأ أساسياتك في القسم الكمي",
 "wiz.trainTitle":"مصادر تدريبك الكمي","wiz.trainDesc":"اختر بنكاً واحداً أو أكثر — يمكنك الجمع بينها",
 "wiz.extraTitle":"إعدادات إضافية","wiz.extraDesc":"مراجعة ليلة الامتحان، وترتيب جلستك اليومية",
-"wiz.paceTitle":"إيقاع خطتك","wiz.paceDesc":"مدة الخطة، وقتك اليومي، ويوم راحتك الأسبوعي إن أردت",
+"wiz.paceTitle":"إيقاع خطتك","wiz.paceDesc":"مدة الخطة، وقتك اليومي، ويوم راحتك الأسبوعي إن أردت","wiz.showPreview":"إظهار التفاصيل",
 "wiz.routineTitle":"روتينك الأسبوعي","wiz.routineDesc":"حدّد إيقاع كل يوم، وأضف أي تواريخ سفر أو ظروف مستثناة",
 "wiz.breaksTitle":"استراحتك الذكية","wiz.breaksDesc":"كل ساعة مذاكرة متواصلة، تبدأ استراحة تلقائية بالمدة التي تحددها",
 "wiz.confirmTitle":"خطتك جاهزة!","wiz.confirmDesc":"اكتب اسماً لحفظ هذه الخطة (اختياري)، ثم ابدأ رحلتك",
@@ -394,7 +394,7 @@ ar:{
 "nav.specialtiesShort":"التخصصات","nav.communityShort":"المجتمع",
 "progress.eyebrow":"مسار التقدم","progress.title":"أنت في الطريق الصحيح 🚀",
 "progress.dayOf":"اليوم الحالي","progress.totalDays":"إجمالي الأيام","progress.remaining":"أيام متبقية","progress.tasksDone":"مهام مكتملة",
-"table.title":"جدول مهامك المخصص","table.sub":"تُحسب الكميات تلقائياً بناءً على مدة خطتك","table.reset":"إعادة ضبط الخطة","table.editSources":"تعديل المصادر والخطة","table.freshStart":"بدء من جديد بالكامل",
+"table.title":"جدول مهامك المخصص","table.sub":"تُحسب الكميات تلقائياً بناءً على مدة خطتك","table.reset":"إعادة ضبط الخطة","table.editSources":"تعديل المصادر والخطة","table.freshStart":"بدء من جديد بالكامل","table.postponeToday":"تأجيل اليوم",
 "dash.customize":"تخصيص لوحتك","dash.customizeTitle":"تخصيص لوحتك","dash.customizeDesc":"اختر البطاقات التي تريد رؤيتها، ورتّبها من صفحة اللوحة نفسها بأسهم أعلى/أسفل.","dash.resetDefault":"إعادة الضبط الافتراضي","dash.done":"تم",
 "deepreport.title":"تقريرك الأسبوعي المتعمّق","deepreport.sub":"تحليل حقيقي من بيانات مذاكرتك الفعلية — ليس تقديراً.",
 "overview.totalXp":"إجمالي نقاط الخبرة","overview.today":"اليوم","overview.streakDays":"يوم متتالي","overview.studyHours":"ساعة مذاكرة","overview.tasksToday":"إنجاز اليوم","overview.activityTitle":"نشاطك اليومي","overview.activitySub":"كل مربع يمثّل يوماً — كلما اغمّق اللون زادت دقائق مذاكرتك فيه","overview.less":"أقل","overview.more":"أكثر","overview.questsTitle":"مهام اليوم","overview.questsSub":"لمحة سريعة — عدّلها من جدولك الكامل أدناه","overview.leaderboardTitle":"لوحة الصدارة",
@@ -480,6 +480,7 @@ ar:{
 "account.forgotPass":"نسيت كلمة المرور؟","account.forgotPassDesc":"اكتب اسم مستخدمك. يعمل هذا فقط إن كنت قد ربطت بريداً حقيقياً بحسابك (عند التسجيل أو لاحقاً من الملف الشخصي).","account.sendResetLink":"إرسال رابط إعادة التعيين",
 "account.setNewPassTitle":"عيّن كلمة مرور جديدة","account.setNewPassDesc":"وصلت هنا عبر رابط إعادة تعيين كلمة المرور — اكتب كلمة مرورك الجديدة.",
 "referral.title":"ادعُ صديقاً","referral.desc":"كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.","referral.share":"مشاركة رابط الدعوة",
+"mistakebank.title":"بنك أخطائك الشخصية","mistakebank.desc":"ليست أخطاء القدرات — بل أنماطك الشخصية التي تعطّل تقدّمك، نكتشفها من سلوكك الفعلي بمرور الوقت.",
 "push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
 "focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.todayTasks":"مهام اليوم","focus.xpPoints":"نقاط XP",
 "focus.idle":"جاهز للبدء","focus.paused":"متوقف مؤقتاً","focus.inSession":"في جلسة تركيز","focus.onBreak":"في استراحة","focus.start":"ابدأ التركيز","focus.skip":"تخطّي",
@@ -541,7 +542,7 @@ en:{
 "wiz.foundTitle":"Your Quant foundation source","wiz.foundDesc":"Choose where you'll build your Quant fundamentals",
 "wiz.trainTitle":"Your Quant training sources","wiz.trainDesc":"Pick one or more banks — you can combine them",
 "wiz.extraTitle":"Extra settings","wiz.extraDesc":"Exam-eve review, and your daily session order",
-"wiz.paceTitle":"Your plan's pace","wiz.paceDesc":"Plan length, daily time, and a weekly rest day if you'd like",
+"wiz.paceTitle":"Your plan's pace","wiz.paceDesc":"Plan length, daily time, and a weekly rest day if you'd like","wiz.showPreview":"Show details",
 "wiz.routineTitle":"Your weekly routine","wiz.routineDesc":"Set the rhythm of each day, and add any travel or excused dates",
 "wiz.breaksTitle":"Smart breaks","wiz.breaksDesc":"Every continuous study hour triggers an automatic break of the length you set",
 "wiz.confirmTitle":"Your plan is ready!","wiz.confirmDesc":"Name this plan to save it (optional), then start your journey",
@@ -562,7 +563,7 @@ en:{
 "nav.specialtiesShort":"Majors","nav.communityShort":"Community",
 "progress.eyebrow":"Progress path","progress.title":"You're on track 🚀",
 "progress.dayOf":"Current day","progress.totalDays":"Total days","progress.remaining":"Days left","progress.tasksDone":"Tasks done",
-"table.title":"Your custom task schedule","table.sub":"Quantities are calculated automatically from your plan length","table.reset":"Reset plan","table.editSources":"Edit sources & plan","table.freshStart":"Start completely fresh",
+"table.title":"Your custom task schedule","table.sub":"Quantities are calculated automatically from your plan length","table.reset":"Reset plan","table.editSources":"Edit sources & plan","table.freshStart":"Start completely fresh","table.postponeToday":"Postpone today",
 "dash.customize":"Customize dashboard","dash.customizeTitle":"Customize Your Dashboard","dash.customizeDesc":"Choose which cards to show, and reorder them from the dashboard page using the up/down arrows.","dash.resetDefault":"Reset to default","dash.done":"Done",
 "deepreport.title":"Your Deep Weekly Report","deepreport.sub":"Real analysis from your actual study data — not an estimate.",
 "overview.totalXp":"Total XP","overview.today":"today","overview.streakDays":"day streak","overview.studyHours":"study hours","overview.tasksToday":"today's progress","overview.activityTitle":"Your daily activity","overview.activitySub":"Each square is a day — darker means more study minutes that day","overview.less":"Less","overview.more":"More","overview.questsTitle":"Today's tasks","overview.questsSub":"Quick glance — edit from your full schedule below","overview.leaderboardTitle":"Leaderboard",
@@ -648,6 +649,7 @@ en:{
 "account.forgotPass":"Forgot password?","account.forgotPassDesc":"Enter your username. This only works if you've linked a real email to your account (at signup or later from Profile).","account.sendResetLink":"Send reset link",
 "account.setNewPassTitle":"Set a new password","account.setNewPassDesc":"You arrived here via a password reset link — enter your new password.",
 "referral.title":"Invite a friend","referral.desc":"Every friend who joins via your link gives you both 50 XP.","referral.share":"Share invite link",
+"mistakebank.title":"Your Personal Mistake Bank","mistakebank.desc":"Not GAT question mistakes — your own patterns that derail your progress, discovered from your actual behavior over time.",
 "push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
 "focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.todayTasks":"Today's tasks","focus.xpPoints":"XP Points",
 "focus.idle":"Ready to start","focus.paused":"Paused","focus.inSession":"In a focus session","focus.onBreak":"On a break","focus.start":"Start focusing","focus.skip":"Skip",
@@ -937,6 +939,7 @@ window.onload = () => {
     logSiteVisit();
     applyI18n();
     ensureTaskStatusFreshToday();
+    initIdleDetection();
     tryLoadUniversitiesFromSupabase();
     tryLoadRemoteUniversities();
     tryLoadRemoteContent();
@@ -1008,7 +1011,7 @@ function performFreshStart(){
     const keysToWipe = [
         "khuta_config", "khuta_plan_days", "khuta_plan_start", "khuta_session_minutes",
         "khuta_task_status", "khuta_task_status_date", "khuta_xp_awarded_today",
-        "khuta_completed_dates", "khuta_missed_days_count", "khuta_redday_tracking_start",
+        "khuta_completed_dates", "khuta_missed_days_count", "khuta_postponed_dates", "khuta_redday_tracking_start",
         "khuta_today_scale", "khuta_streak", "khuta_streak_last",
         "khuta_checkin_verbal", "khuta_checkin_quant", "khuta_quant_share",
         "khuta_last_session_minutes", "khuta_custom_tasks", "khuta_start_section",
@@ -1077,6 +1080,7 @@ function goToWizStep(indexOrKey){
         renderExcludedDates();
         updateRoutinePressure();
     }
+    if(key === "pace") renderPacePreview(); // لا تأثير إن كانت الصندوق مطويّة أصلاً (انظر الحارس داخل الدالة)
 
     renderWizProgress();
 }
@@ -1119,7 +1123,11 @@ function wizSkip(){ wizNext(); }
 // بالضبط بنفس آلية "خططي المحفوظة" الحالية (إعادة استخدام كاملة، لا تكرار).
 function finalizeSetupFromWizard(){
     const planName = (document.getElementById("wiz-final-plan-name").value || "").trim();
+    // نتحقق قبل finalizeSetup() لأنها ستكتب قيماً جديدة فوق أي خطة سابقة —
+    // وجود خطة مسبقة هنا يعني هذا تعديل لخطة قائمة لا إنشاءً أول لمرة
+    const isReEdit = !!localStorage.getItem("khuta_plan_start");
     finalizeSetup();
+    if(isReEdit) logBehaviorEvent("plan_edit");
     if(planName && typeof saveCurrentPlanAs === "function"){
         const nameInput = document.getElementById("plan-name-input");
         if(nameInput){
@@ -1260,6 +1268,115 @@ function setDaysFromExamDate(){
     document.querySelectorAll("#intensity-row .intensity-chip").forEach(c => c.classList.remove("selected"));
     localStorage.setItem("khuta_exam_date", val);
     updateExamCountdownWidget();
+    renderPacePreview();
+}
+
+/* ============================================================
+   معاينة إيقاع الخطة — يحسب فعلياً (لا تقريباً عشوائياً) كم يوماً سيحتاجه
+   الطالب لإنهاء كل مصادره المختارة بمعدل الساعات اليومية التي اختارها،
+   بإعادة استخدام نفس بيانات content.json التي يعتمدها buildScheduleTable
+   نفسه — حتى لا يتضارب رقمان مختلفان لنفس الحساب في مكانين من الموقع.
+   مخفية افتراضياً، تظهر فقط عند ضغط الطالب "إظهار التفاصيل" صراحة.
+   ============================================================ */
+function estimateTotalPlanMinutes(){
+    const content = getContent();
+    let totalMinutes = 0;
+    const breakdown = [];
+    function add(labelAr, labelEn, units, minutesPerUnit, approx){
+        if(!units || !minutesPerUnit) return;
+        const minutes = Math.round(units * minutesPerUnit);
+        totalMinutes += minutes;
+        breakdown.push({ labelAr, labelEn, minutes, approx: !!approx });
+    }
+
+    const skipVerbalEl = document.getElementById("skip_verbal_entirely");
+    if(!(skipVerbalEl && skipVerbalEl.checked)){
+        add("اللفظي (إيهاب)","Verbal (Ehab)", content.ehab.totalSections, content.ehab.minutesPerSection);
+    }
+    const foundRadio = document.querySelector('input[name="quant_found"]:checked');
+    const found = foundRadio ? foundRadio.value : null;
+    if(found === "moasser"){
+        const f = content.moasserFoundation;
+        // ملاحظة: لا يوفّر content.json وقتاً بالدقيقة لكل صفحة (المصدر
+        // مبني على "صفحات/يوم" لا "دقائق")، فنقدّرها بمعدل معقول (5 د/صفحة)
+        // — نُعلم الطالب بوضوح أن هذا الرقم تحديداً تقريبي في الواجهة
+        add("تأسيس كمي (المعاصر)","Quant foundation (Al-Moaasir)", f.days * f.pagesPerDay, 5, true);
+    }
+    if(found === "einstein"){
+        const e = content.einstein;
+        const reviewOnlyEl = document.getElementById("einstein_review_only");
+        const totalVideos = (reviewOnlyEl && reviewOnlyEl.checked) ? e.reviewVideos : e.totalVideos;
+        add("تأسيس كمي (أينشتاين)","Quant foundation (Einstein)", totalVideos, e.minutesPerVideo);
+    }
+    if(document.getElementById("train_monsif")?.checked){
+        add("تدريب (المنصف)","Training (Al-Monsif)", content.monsif.totalBanks, content.monsif.minutesPerBank);
+    }
+    if(document.getElementById("train_mufakkir_sec")?.checked){
+        add("تدريب أقسام (المفكر)","Training sections (Al-Mufakkir)", content.mufakkirSections.total, content.mufakkirSections.minutesPerSection);
+    }
+    if(document.getElementById("train_mufakkir_rep")?.checked){
+        add("متكرر (المفكر)","Repeated (Al-Mufakkir)", content.mufakkirRepeated.total / 10, content.mufakkirRepeated.minutesPer10Questions);
+    }
+    if(document.getElementById("train_moasser")?.checked){
+        add("تدريب (المعاصر)","Training (Al-Moaasir)", content.moasserTraining.totalBanks, content.moasserTraining.minutesPerBank);
+    }
+    return { totalMinutes, breakdown };
+}
+
+function togglePacePreview(){
+    const box = document.getElementById("pace-preview-box");
+    const btn = document.getElementById("pace-preview-toggle-btn");
+    const isOpen = box.classList.toggle("open");
+    btn.innerHTML = isOpen
+        ? `<i class="fa-solid fa-chevron-up"></i> ${labT("إخفاء التفاصيل","Hide details")}`
+        : `<i class="fa-solid fa-chevron-down"></i> ${labT("إظهار التفاصيل","Show details")}`;
+    if(isOpen) renderPacePreview();
+}
+
+function renderPacePreview(){
+    const box = document.getElementById("pace-preview-box");
+    if(!box || !box.classList.contains("open")) return; // لا داعي للحساب إن كانت مطويّة أصلاً
+
+    const hours = parseInt(document.getElementById("plan-hours").value) || 0;
+    const minutes = parseInt(document.getElementById("plan-minutes").value) || 0;
+    const dailyMinutes = hours * 60 + minutes;
+    const availableDays = parseInt(document.getElementById("plan-days").value) || 0;
+
+    if(dailyMinutes <= 0){
+        box.innerHTML = `<p class="pace-preview-note">${labT("حدّد وقتك اليومي أولاً لنعرض لك التقدير","Set your daily time first to see the estimate")}</p>`;
+        return;
+    }
+
+    const { totalMinutes, breakdown } = estimateTotalPlanMinutes();
+    if(totalMinutes === 0){
+        box.innerHTML = `<p class="pace-preview-note">${labT("اختر مصدراً واحداً على الأقل من الخطوات السابقة لنعرض لك التقدير","Pick at least one source from earlier steps to see the estimate")}</p>`;
+        return;
+    }
+
+    const neededDays = Math.max(1, Math.ceil(totalMinutes / dailyMinutes));
+    const buffer = availableDays - neededDays;
+    const hasApprox = breakdown.some(b => b.approx);
+
+    let bufferHtml;
+    if(availableDays <= 0){
+        bufferHtml = "";
+    } else if(buffer >= 0){
+        bufferHtml = `<div class="pace-preview-stat good"><b>${buffer}</b><span>${labT("يوم احتياطي للظروف","buffer day(s) for emergencies")}</span></div>`;
+    } else {
+        bufferHtml = `<div class="pace-preview-stat warn"><b>${Math.abs(buffer)}-</b><span>${labT("يوم — وقتك اليومي الحالي غير كافٍ لإنهاء كل شيء بالمدة المختارة","day(s) short — your current daily time won't finish everything in the chosen duration")}</span></div>`;
+    }
+
+    box.innerHTML = `
+        <div class="pace-preview-stats">
+            <div class="pace-preview-stat"><b>${neededDays}</b><span>${labT("يوماً لإنهاء كل مصادرك بهذا المعدل","day(s) to finish everything at this pace")}</span></div>
+            <div class="pace-preview-stat"><b>${breakdown.length}</b><span>${labT("مساراً دراسياً ستنجزه كاملاً","study track(s) you'll fully complete")}</span></div>
+            ${bufferHtml}
+        </div>
+        <div class="pace-preview-breakdown">
+            ${breakdown.map(b => `<div class="pace-preview-row"><span>${labT(b.labelAr, b.labelEn)}${b.approx ? " *" : ""}</span><b>${Math.round(b.minutes/60*10)/10} ${labT("ساعة","hr")}</b></div>`).join("")}
+        </div>
+        ${hasApprox ? `<p class="pace-preview-note">* ${labT("تقدير تقريبي (لا يوفّر المصدر وقتاً دقيقاً بالدقيقة)","approximate estimate (source doesn't provide exact per-minute timing)")}</p>` : ""}
+    `;
 }
 
 /* ---------- ودجة العد التنازلي الصغيرة في الرأس ---------- */
@@ -1386,6 +1503,7 @@ function setIntensity(days, el){
     const daysInput = document.getElementById("plan-days");
     if(days === "custom"){ daysInput.focus(); return; }
     daysInput.value = days;
+    renderPacePreview();
 }
 
 function toggleSkipVerbalUI(){
@@ -1451,7 +1569,7 @@ function switchTab(tabId, element){
     window.scrollTo({top:0, behavior:"smooth"});
     if(tabId === "community") initCommunityIfNeeded();
     if(tabId === "specialties") renderSpecialties();
-    if(tabId === "profile") renderProfileStats();
+    if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); }
     if(tabId === "tutors") renderTutors();
 }
 
@@ -1523,8 +1641,12 @@ function ensureTaskStatusFreshToday(){
         let config = {};
         try{ config = JSON.parse(localStorage.getItem("khuta_config")) || {}; }catch(e){}
         const lastDateWasRestDay = lastDate && config.restDay !== null && config.restDay !== undefined && new Date(lastDate).getDay() === config.restDay;
-        if(lastDate && localStorage.getItem("khuta_plan_start") && !getCompletedDates().includes(lastDate) && !lastDateWasRestDay){
+        // يوم أُجِّل عمداً بزر "تأجيل اليوم" يُحتسب فائتاً فوراً عند الضغط
+        // (ليس عند بداية الغد) — نستثنيه هنا كي لا يُحتسب مرتين
+        const lastDateWasPostponed = lastDate && getPostponedDates().includes(lastDate);
+        if(lastDate && localStorage.getItem("khuta_plan_start") && !getCompletedDates().includes(lastDate) && !lastDateWasRestDay && !lastDateWasPostponed){
             localStorage.setItem("khuta_missed_days_count", getMissedDaysCount() + 1);
+            logBehaviorEvent("missed_day", { date: lastDate });
         }
         localStorage.setItem("khuta_task_status", JSON.stringify({}));
         localStorage.setItem("khuta_xp_awarded", JSON.stringify({}));
@@ -2741,6 +2863,7 @@ function togglePauseSession(){
     const btn = document.getElementById("pause-btn");
     if(sessionPaused){
         pauseStartTs = Date.now();
+        logBehaviorEvent("timer_pause");
         btn.innerHTML = '<i class="fa-solid fa-play"></i> <span>' + t("timer.resume") + "</span>";
     } else {
         pauseStartTs = null;
@@ -2755,6 +2878,9 @@ function togglePauseSession(){
 function getCompletedDates(){
     try{ return JSON.parse(localStorage.getItem("khuta_completed_dates")) || []; }catch(e){ return []; }
 }
+function getPostponedDates(){
+    try{ return JSON.parse(localStorage.getItem("khuta_postponed_dates")) || []; }catch(e){ return []; }
+}
 /* أول مرة تعمل فيها هذه الميزة على جهاز الطالب، نُثبّت "نقطة بداية" التتبّع
    عند تاريخ اليوم — هذا يمنع اعتبار أيام سابقة (قبل وجود هذه الميزة أصلاً،
    أو قبل تسجيل أي بيانات إكمال) على أنها "فائتة" بالخطأ بأثر رجعي. */
@@ -2767,6 +2893,258 @@ function getRedDayTrackingStart(){
     return new Date(start);
 }
 function getMissedDaysCount(){ return parseInt(localStorage.getItem("khuta_missed_days_count")) || 0; }
+
+/* ============================================================
+   تنبيه تأجيل حقيقي — بدل تأجيل فوري بلا تفكير، نحسب فعلياً (بنفس منطق
+   effectiveDays المعتمد في buildScheduleTable) كم دقيقة إضافية سيحتاجها
+   كل يوم متبقٍ لو أُجِّل اليوم، ونعرضها قبل التأكيد لا بعده.
+   ============================================================ */
+function estimatePostponeImpact(){
+    const days = parseInt(localStorage.getItem("khuta_plan_days")) || 45;
+    let config = {};
+    try{ config = JSON.parse(localStorage.getItem("khuta_config")) || {}; }catch(e){}
+    const sessionMinutes = parseInt(localStorage.getItem("khuta_session_minutes")) || 90;
+    const restDaysCount = getRestDaysInPlanCount(config.restDay, days);
+    const currentEffectiveDays = Math.max(1, days - getMissedDaysCount() - restDaysCount);
+    const newEffectiveDays = Math.max(1, currentEffectiveDays - 1);
+    const extraMinutes = Math.round(sessionMinutes * (currentEffectiveDays / newEffectiveDays - 1));
+    return { extraMinutes, currentEffectiveDays, newEffectiveDays };
+}
+
+function postponeToday(){
+    if(!localStorage.getItem("khuta_plan_start")){
+        showToast(labT("لا توجد خطة نشطة بعد لتأجيلها","No active plan to postpone yet"));
+        return;
+    }
+    const todayStr = new Date().toDateString();
+    if(getPostponedDates().includes(todayStr) || getCompletedDates().includes(todayStr)){
+        showToast(labT("اليوم مُسجَّل بالفعل","Today is already recorded"));
+        return;
+    }
+
+    const impact = estimatePostponeImpact();
+    const msg = impact.extraMinutes > 0
+        ? labT(`إذا أجّلت هذه المهمة (تأجيل اليوم كاملاً)، فستصبح كل يوم متبقٍ زيادة بـ~${impact.extraMinutes} دقيقة تقريباً حتى تعوّض. هل ما زلت تريد التأجيل؟`,
+               `If you postpone this (skip today entirely), each remaining day grows by ~${impact.extraMinutes} minutes to catch up. Still want to postpone?`)
+        : labT("هل تريد تأجيل مهام اليوم كاملة لتوزيعها على الأيام المتبقية؟","Postpone today's tasks entirely to redistribute across remaining days?");
+    if(!confirm(msg)) return;
+
+    const postponed = getPostponedDates();
+    postponed.push(todayStr);
+    localStorage.setItem("khuta_postponed_dates", JSON.stringify(postponed));
+    localStorage.setItem("khuta_missed_days_count", getMissedDaysCount() + 1);
+    logBehaviorEvent("postpone_today", { extraMinutes: impact.extraMinutes });
+
+    buildScheduleTable();
+    renderProgress();
+    showToast(labT("📅 تم تأجيل اليوم — وُزِّع محتواه تلقائياً على الأيام المتبقية","📅 Today postponed — its content was redistributed across your remaining days"));
+}
+
+/* ============================================================
+   سجل الأحداث السلوكية — بنية مشتركة تغذّي كلاً من "اكتشاف الوهم" (كشف
+   الخمول أثناء التركيز) و"بنك الأخطاء الشخصية" (اكتشاف أنماط تعطّل تقدّم
+   الطالب: تأجيل متكرر، تعديل خطة متكرر، إيقاف مؤقّت متكرر...). محلي بالكامل
+   (localStorage) عمداً — يعمل حتى للضيوف بلا حساب، متّسقاً مع فلسفة الموقع.
+   ============================================================ */
+const BEHAVIOR_LOG_KEY = "khuta_behavior_log";
+const MAX_BEHAVIOR_EVENTS = 600; // كافٍ لاكتشاف أنماط على مدى أشهر بلا تضخّم لا نهائي
+
+function logBehaviorEvent(type, meta){
+    try{
+        const log = JSON.parse(localStorage.getItem(BEHAVIOR_LOG_KEY) || "[]");
+        log.push({ type, ts: new Date().toISOString(), meta: meta || {} });
+        while(log.length > MAX_BEHAVIOR_EVENTS) log.shift();
+        localStorage.setItem(BEHAVIOR_LOG_KEY, JSON.stringify(log));
+    }catch(e){ console.error("[خُطى] تعذّر تسجيل حدث سلوكي:", e); }
+}
+function getBehaviorLog(){
+    try{ return JSON.parse(localStorage.getItem(BEHAVIOR_LOG_KEY) || "[]"); }catch(e){ return []; }
+}
+
+/* ============================================================
+   اكتشاف الوهم — تحقّق ودّي عند خمول حقيقي أثناء جلسة نشطة فقط (لا حركة
+   فأرة/لمس/كتابة/تمرير)، وليس بفاصل زمني أعمى يقاطع تركيزاً حقيقياً. إن لم
+   يستجب الطالب خلال مهلة قصيرة، نوقف عدّ الوقت تلقائياً بدل تركه "وهمياً"
+   — الهدف تقليل الوقت الوهمي المحتسب، لا المراقبة أو المحاسبة.
+   ============================================================ */
+let lastActivityTs = Date.now();
+let idleCheckInterval = null;
+let lastIdleCheckinAt = 0;
+let idleCheckinTimeoutId = null;
+const IDLE_THRESHOLD_MS = 8 * 60 * 1000;         // 8 دقائق خمول حقيقي قبل السؤال
+const IDLE_CHECKIN_COOLDOWN_MS = 15 * 60 * 1000; // لا تكرار للسؤال خلال 15 دقيقة من آخر واحد
+const IDLE_RESPONSE_WINDOW_MS = 45 * 1000;       // مهلة الرد قبل اعتبارها "غير مؤكَّدة"
+
+function markActivity(){ lastActivityTs = Date.now(); }
+function initIdleDetection(){
+    ["mousemove","keydown","touchstart","scroll","click"].forEach(evt => {
+        document.addEventListener(evt, markActivity, { passive:true });
+    });
+    if(!idleCheckInterval) idleCheckInterval = setInterval(checkForIdle, 60 * 1000);
+}
+function checkForIdle(){
+    if(document.hidden) return; // التبويب غير ظاهر أصلاً — ليست الحالة التي نحتاج نسأل عنها (Page Visibility تكفي هنا)
+    if(typeof mainInterval === "undefined" || !mainInterval || sessionPaused) return; // لا جلسة نشطة الآن
+    if(document.getElementById("idle-checkin-modal")) return; // سؤال ظاهر بالفعل
+    if(Date.now() - lastIdleCheckinAt < IDLE_CHECKIN_COOLDOWN_MS) return;
+    if(Date.now() - lastActivityTs < IDLE_THRESHOLD_MS) return;
+    showIdleCheckin();
+}
+function showIdleCheckin(){
+    lastIdleCheckinAt = Date.now();
+    const modal = document.createElement("div");
+    modal.id = "idle-checkin-modal";
+    modal.className = "idle-checkin-modal";
+    modal.innerHTML = `
+        <div class="idle-checkin-card">
+            <div class="idle-checkin-icon">👋</div>
+            <b>${currentLang==='ar' ? 'لسه معانا؟' : 'Still with us?'}</b>
+            <p>${currentLang==='ar' ? 'ما لاحظنا أي تفاعل لفترة — بس نتأكد إنك لسه تذاكر، مو نتجسس عليك 😄' : "We noticed no activity for a while — just checking you're still studying, not spying on you 😄"}</p>
+            <button type="button" class="btn" onclick="confirmStillHere()">${currentLang==='ar'?'أيوه، أكمل 💪':"Yes, continuing 💪"}</button>
+        </div>`;
+    document.body.appendChild(modal);
+    logBehaviorEvent("idle_checkin_shown");
+    idleCheckinTimeoutId = setTimeout(() => {
+        if(document.getElementById("idle-checkin-modal")) resolveIdleAsAway();
+    }, IDLE_RESPONSE_WINDOW_MS);
+}
+function confirmStillHere(){
+    clearTimeout(idleCheckinTimeoutId);
+    document.getElementById("idle-checkin-modal")?.remove();
+    markActivity();
+    logBehaviorEvent("idle_confirmed");
+}
+function resolveIdleAsAway(){
+    document.getElementById("idle-checkin-modal")?.remove();
+    logBehaviorEvent("idle_ignored");
+    // نوقف عدّ الوقت تلقائياً بدل تركه محتسباً بلا تأكيد فعلي من الطالب —
+    // هذا صلب الميزة: تقليل الوقت الوهمي، لا مجرد تسجيله
+    if(typeof mainInterval !== "undefined" && mainInterval && !sessionPaused){
+        togglePauseSession();
+        showToast(currentLang==='ar' ? "⏸️ أوقفنا العدّاد مؤقتاً — ارجع واضغط استمرار متى جاهز" : "⏸️ Paused the timer — resume whenever you're ready");
+    }
+}
+
+/* ============================================================
+   بنك الأخطاء الشخصية — يكتشف أنماطاً بقواعد صريحة وواضحة من سجل الأحداث
+   السلوكية (لا ذكاء اصطناعي هنا، حساب وإحصاء فقط — أرخص وأدق وأسهل تفسيراً
+   وأكثر موثوقية من ترك نموذج لغوي "يكتشف" الأنماط من بيانات خام)
+   ============================================================ */
+const MISTAKE_EVENT_LABELS = {
+    missed_day:      { ar:"تفويت يوم كامل من الخطة", en:"missing a full plan day" },
+    postpone_today:  { ar:"تأجيل اليوم عمداً", en:"deliberately postponing the day" },
+    plan_edit:       { ar:"تعديل الخطة", en:"editing the plan" },
+    timer_pause:     { ar:"إيقاف المؤقّت مؤقتاً", en:"pausing the timer" },
+    idle_ignored:    { ar:"الانشغال عن المذاكرة أثناء الجلسة", en:"drifting away during a session" },
+};
+const MISTAKE_DAY_NAMES_AR = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const MISTAKE_DAY_NAMES_EN = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const MISTAKE_TRACKED_TYPES = ["missed_day","postpone_today","plan_edit","timer_pause","idle_ignored"];
+
+function computeMistakeBankInsights(){
+    const relevant = getBehaviorLog().filter(e => MISTAKE_TRACKED_TYPES.includes(e.type));
+    if(relevant.length === 0) return { ready:false };
+
+    const firstTs = new Date(relevant[0].ts).getTime();
+    const daysSinceFirst = (Date.now() - firstTs) / 86400000;
+    // حد أدنى مقصود: لا نستنتج أنماطاً من بيانات قليلة جداً أو فترة قصيرة
+    // جداً — استنتاج مبكر خاطئ أسوأ من عدم الاستنتاج إطلاقاً
+    if(relevant.length < 6 || daysSinceFirst < 10) return { ready:false };
+
+    const insights = [];
+    const counts = {};
+    relevant.forEach(e => { counts[e.type] = (counts[e.type]||0) + 1; });
+    const topType = Object.keys(counts).sort((a,b) => counts[b]-counts[a])[0];
+    const topCount = counts[topType];
+    const label = MISTAKE_EVENT_LABELS[topType];
+    const suggestions = {
+        plan_edit:      { ar:"جرّب تلتزم بخطة واحدة أسبوعاً كاملاً قبل تعديلها.", en:"Try committing to one plan for a full week before adjusting it." },
+        missed_day:     { ar:"خطوة صغيرة يومياً أفضل من يوم مثالي نادر — جرّب تقلّل حجم المهمة اليومية بدل تفويتها كاملة.", en:"A small daily step beats a rare perfect day — try shrinking the daily task instead of skipping it entirely." },
+        postpone_today: { ar:"قبل الضغط على تأجيل، جرّب تذاكر 10 دقائق فقط أولاً — غالباً تكمل أكثر مما تتوقع.", en:"Before hitting postpone, try studying for just 10 minutes first — you'll often do more than expected." },
+        idle_ignored:   { ar:"جرّب تفعّل وضع عدم الإزعاج على جوالك أثناء الجلسة القادمة.", en:"Try enabling Do Not Disturb on your phone during your next session." },
+        timer_pause:    { ar:"جرّب تقسّم الجلسة لفترات أقصر مع استراحات مجدولة بدل إيقافها يدوياً.", en:"Try shorter sessions with scheduled breaks instead of pausing manually." },
+    };
+    insights.push({
+        icon:"🔁",
+        titleAr:`أكثر شيء يتكرر معك: ${label.ar}`, titleEn:`Your most frequent pattern: ${label.en}`,
+        bodyAr:`حصل ${topCount} مرة خلال متابعتنا — أكثر من أي نمط آخر.`, bodyEn:`Happened ${topCount} times — more than any other pattern.`,
+        suggestionAr:suggestions[topType].ar, suggestionEn:suggestions[topType].en,
+    });
+
+    const topEvents = relevant.filter(e => e.type === topType);
+    if(topEvents.length >= 4){
+        const dayCounts = new Array(7).fill(0);
+        topEvents.forEach(e => { dayCounts[new Date(e.ts).getDay()]++; });
+        const maxDay = dayCounts.indexOf(Math.max(...dayCounts));
+        const maxDayShare = dayCounts[maxDay] / topEvents.length;
+        if(maxDayShare >= 0.4){
+            insights.push({
+                icon:"📅",
+                titleAr:`يوم ${MISTAKE_DAY_NAMES_AR[maxDay]} تحديداً`, titleEn:`Specifically on ${MISTAKE_DAY_NAMES_EN[maxDay]}`,
+                bodyAr:`${Math.round(maxDayShare*100)}% من "${label.ar}" يحصل يوم ${MISTAKE_DAY_NAMES_AR[maxDay]} بالذات.`,
+                bodyEn:`${Math.round(maxDayShare*100)}% of "${label.en}" happens specifically on ${MISTAKE_DAY_NAMES_EN[maxDay]}.`,
+                suggestionAr:`جهّز خطة أخف عمداً ليوم ${MISTAKE_DAY_NAMES_AR[maxDay]} بدل محاولة نفس الحمل المعتاد.`,
+                suggestionEn:`Plan a lighter load specifically for ${MISTAKE_DAY_NAMES_EN[maxDay]}.`,
+            });
+        }
+    }
+
+    const editEvents = relevant.filter(e => e.type === "plan_edit").sort((a,b) => new Date(a.ts)-new Date(b.ts));
+    if(editEvents.length >= 3){
+        const intervals = [];
+        for(let i=1;i<editEvents.length;i++) intervals.push((new Date(editEvents[i].ts) - new Date(editEvents[i-1].ts)) / 86400000);
+        const avgInterval = intervals.reduce((a,b)=>a+b,0) / intervals.length;
+        if(avgInterval < 4){
+            insights.push({
+                icon:"🔄",
+                titleAr:"تعديل الخطة بوتيرة سريعة", titleEn:"Editing your plan quickly",
+                bodyAr:`تعدّل خطتك كل ${avgInterval.toFixed(1)} يوم تقريباً — أسرع من أن تعطي أي خطة فرصة حقيقية.`,
+                bodyEn:`You edit your plan roughly every ${avgInterval.toFixed(1)} days.`,
+                suggestionAr:"التزم بخطة واحدة أسبوعاً كاملاً على الأقل قبل أي تعديل، حتى لو شعرت أنها غير مثالية.",
+                suggestionEn:"Commit to one plan for at least a week before adjusting, even if it feels imperfect.",
+            });
+        }
+    }
+
+    if(daysSinceFirst >= 14){
+        const midpoint = firstTs + (Date.now() - firstTs) / 2;
+        const firstHalf = relevant.filter(e => new Date(e.ts).getTime() < midpoint).length;
+        const secondHalf = relevant.length - firstHalf;
+        if(secondHalf > firstHalf * 1.6 && secondHalf >= 4){
+            insights.push({
+                icon:"📉",
+                titleAr:"التزامك يقلّ مع الوقت", titleEn:"Your consistency drops over time",
+                bodyAr:"عدد الأنماط المعطِّلة في النصف الثاني من متابعتنا أكبر بوضوح من النصف الأول.",
+                bodyEn:"Disruptive patterns increased notably in the second half of our tracking window.",
+                suggestionAr:"جرّب تقلّل حجم الخطة بعد الأسبوعين الأولين بدل الاستمرار بنفس الوتيرة الأولى المتحمّسة.",
+                suggestionEn:"Consider tapering the plan's intensity after the first couple of weeks.",
+            });
+        }
+    }
+
+    return { ready:true, insights: insights.slice(0, 3) }; // أفضل 3 رؤى كحد أقصى — لا نُغرق الطالب بتقرير طويل
+}
+
+function renderMistakeBank(){
+    const box = document.getElementById("mistake-bank-content");
+    if(!box) return;
+    const result = computeMistakeBankInsights();
+    if(!result.ready){
+        box.innerHTML = `<div class="mistake-bank-empty">🧠 ${currentLang==='ar'
+            ? `لسه نجمع بيانات كافية لاكتشاف أنماطك — استمر أسبوعين على الأقل من الاستخدام المنتظم وارجع هنا.`
+            : `Still gathering enough data to spot your patterns — keep using the app regularly for at least two weeks and check back.`}</div>`;
+        return;
+    }
+    box.innerHTML = result.insights.map(ins => `
+        <div class="mistake-insight">
+            <span class="mistake-insight-icon">${ins.icon}</span>
+            <div class="mistake-insight-body">
+                <b>${currentLang==='ar' ? ins.titleAr : ins.titleEn}</b>
+                <p>${currentLang==='ar' ? ins.bodyAr : ins.bodyEn}<span class="mistake-suggestion">💡 ${currentLang==='ar' ? ins.suggestionAr : ins.suggestionEn}</span></p>
+            </div>
+        </div>`).join("");
+}
+
 
 /* يحسب كم مرة سيقع يوم الراحة الأسبوعي المختار ضمن مدة الخطة كاملة، بدءاً من
    تاريخ بدء الخطة — يُستخدم لتوسيع كمية الأيام الفعلية للمذاكرة تلقائياً منذ
@@ -8021,7 +8399,7 @@ function deleteExamAttempt(id){
 const PLAN_SNAPSHOT_KEYS = [
     "khuta_config", "khuta_plan_days", "khuta_plan_start", "khuta_session_minutes",
     "khuta_task_status", "khuta_task_status_date", "khuta_xp_awarded_today",
-    "khuta_completed_dates", "khuta_missed_days_count", "khuta_redday_tracking_start",
+    "khuta_completed_dates", "khuta_missed_days_count", "khuta_postponed_dates", "khuta_redday_tracking_start",
     "khuta_today_scale", "khuta_streak", "khuta_streak_last",
     "khuta_checkin_verbal", "khuta_checkin_quant", "khuta_quant_share",
     "khuta_last_session_minutes", "khuta_custom_tasks", "khuta_start_section",

@@ -2364,3 +2364,62 @@ body.dark-mode .chatbot-board-btn{
     display:inline-flex; align-items:center; gap:5px; font-size:9.5px; font-weight:800;
     color:var(--gold); background:rgba(201,150,46,0.12); padding:3px 9px; border-radius:99px; margin-bottom:8px;
 }
+
+/* ============================================================
+   45) اكتشاف الوهم — نافذة التحقّق الودّي عند الخمول الحقيقي
+   ============================================================ */
+.idle-checkin-modal{
+    position:fixed; inset:0; z-index:7000; display:flex; align-items:center; justify-content:center;
+    background:rgba(8,6,24,0.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); padding:20px;
+    animation:notifPanelIn .3s var(--ease);
+}
+.idle-checkin-card{
+    width:100%; max-width:340px; background:var(--surface); border-radius:24px; padding:30px 26px;
+    text-align:center; box-shadow:var(--shadow-lg); border:1.5px solid var(--border);
+}
+.idle-checkin-icon{ font-size:40px; margin-bottom:10px; animation:idleWave 1.2s ease-in-out infinite; }
+@keyframes idleWave{ 0%,100%{ transform:rotate(0deg); } 25%{ transform:rotate(-12deg); } 75%{ transform:rotate(12deg); } }
+.idle-checkin-card b{ display:block; font-size:18px; margin-bottom:8px; }
+.idle-checkin-card p{ font-size:13px; color:var(--text-2); line-height:1.8; margin-bottom:18px; }
+.idle-checkin-card .btn{ width:100%; justify-content:center; }
+
+/* ============================================================
+   46) بنك الأخطاء الشخصية — بطاقة أنماط سلوكية في الملف الشخصي
+   ============================================================ */
+.mistake-bank-card{ display:flex; flex-direction:column; gap:12px; }
+.mistake-bank-empty{ font-size:13px; color:var(--text-3); line-height:1.9; text-align:center; padding:14px 6px; }
+.mistake-insight{
+    display:flex; gap:12px; align-items:flex-start; padding:14px 16px; border-radius:16px;
+    background:var(--bg-alt); border:1px solid var(--border);
+}
+.mistake-insight-icon{ font-size:20px; flex-shrink:0; }
+.mistake-insight-body b{ display:block; font-size:13.5px; margin-bottom:4px; }
+.mistake-insight-body p{ font-size:12.5px; color:var(--text-2); line-height:1.8; }
+.mistake-insight-body .mistake-suggestion{ color:var(--teal); font-weight:700; margin-top:6px; display:block; }
+
+/* ============================================================
+   47) معاينة إيقاع الخطة — تفاصيل قابلة للطي في خطوة "إيقاع خطتك"
+   ============================================================ */
+.pace-preview-toggle{ margin:4px 0 0; font-size:12.5px; }
+.pace-preview-box{
+    max-height:0; overflow:hidden; opacity:0;
+    transition: max-height .35s var(--ease), opacity .3s var(--ease), margin .35s var(--ease);
+}
+.pace-preview-box.open{ max-height:600px; opacity:1; margin-top:14px; }
+.pace-preview-stats{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.pace-preview-stat{
+    flex:1; min-width:120px; background:var(--bg-alt); border:1.5px solid var(--border); border-radius:14px;
+    padding:12px 14px; text-align:center;
+}
+.pace-preview-stat b{ display:block; font-size:22px; font-weight:800; font-family:var(--font-mono); color:var(--gold); margin-bottom:2px; }
+.pace-preview-stat span{ font-size:10.5px; color:var(--text-3); font-weight:700; line-height:1.4; }
+.pace-preview-stat.good b{ color:var(--teal); }
+.pace-preview-stat.warn{ border-color:rgba(226,82,126,0.4); }
+.pace-preview-stat.warn b{ color:var(--rose); font-size:18px; }
+.pace-preview-breakdown{ display:flex; flex-direction:column; gap:6px; }
+.pace-preview-row{
+    display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:8px 12px;
+    background:var(--bg-alt); border-radius:10px;
+}
+.pace-preview-row b{ color:var(--text-1); font-family:var(--font-mono); }
+.pace-preview-note{ font-size:11px; color:var(--text-3); margin-top:10px; line-height:1.7; text-align:center; }

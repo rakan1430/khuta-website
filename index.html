@@ -354,7 +354,7 @@
         <div class="input-row">
             <div class="form-group">
                 <label data-i18n="setup.days">مدة الخطة (بالأيام)</label>
-                <input type="number" id="plan-days" value="45" min="7" max="180">
+                <input type="number" id="plan-days" value="45" min="7" max="180" oninput="renderPacePreview()">
             </div>
             <div class="form-group">
                 <label data-i18n="setup.examDate">أو حدّد تاريخ اختبارك مباشرة (اختياري)</label>
@@ -365,9 +365,9 @@
             <div class="form-group">
                 <label data-i18n="setup.dailyTime">وقت المذاكرة اليومي</label>
                 <div class="field-inline">
-                    <input type="number" id="plan-hours" value="3" min="0" max="14" placeholder="0">
+                    <input type="number" id="plan-hours" value="3" min="0" max="14" placeholder="0" oninput="renderPacePreview()">
                     <span class="hint" data-i18n="setup.hours">ساعة</span>
-                    <input type="number" id="plan-minutes" value="30" min="0" max="59" placeholder="0">
+                    <input type="number" id="plan-minutes" value="30" min="0" max="59" placeholder="0" oninput="renderPacePreview()">
                     <span class="hint" data-i18n="setup.minutes">دقيقة</span>
                 </div>
             </div>
@@ -385,6 +385,8 @@
                 </select>
             </div>
         </div>
+        <button type="button" id="pace-preview-toggle-btn" class="btn-ghost pace-preview-toggle" onclick="togglePacePreview()"><i class="fa-solid fa-chevron-down"></i> <span data-i18n="wiz.showPreview">إظهار التفاصيل</span></button>
+        <div id="pace-preview-box" class="pace-preview-box"></div>
                 </div>
             </div>
 
@@ -1108,6 +1110,9 @@
                         <button type="button" class="btn btn-outline btn-sm" onclick="openSetupOverlay()">
                             <i class="fa-solid fa-sliders"></i> <span data-i18n="table.editSources">تعديل المصادر والخطة</span>
                         </button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="postponeToday()">
+                            <i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="table.postponeToday">تأجيل اليوم</span>
+                        </button>
                         <button type="button" class="btn btn-outline btn-sm" style="color:var(--rose); border-color:var(--rose);" onclick="confirmFreshStart()">
                             <i class="fa-solid fa-rotate-left"></i> <span data-i18n="table.freshStart">بدء من جديد بالكامل</span>
                         </button>
@@ -1697,6 +1702,12 @@
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus" style="color:var(--gold);"></i> <span data-i18n="referral.title">ادعُ صديقاً</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="referral.desc">كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.</p>
                 <button type="button" class="btn btn-block" onclick="shareReferralLink()"><i class="fa-solid fa-share-nodes"></i> <span data-i18n="referral.share">مشاركة رابط الدعوة</span></button>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom:4px;">🧠 <span data-i18n="mistakebank.title">بنك أخطائك الشخصية</span></h2>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="mistakebank.desc">ليست أخطاء القدرات — بل أنماطك الشخصية التي تعطّل تقدّمك، نكتشفها من سلوكك الفعلي بمرور الوقت.</p>
+                <div id="mistake-bank-content" class="mistake-bank-card"></div>
             </div>
         </section>
 
