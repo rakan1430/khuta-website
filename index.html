@@ -477,7 +477,7 @@
     </div>
 </div>
 
-<div id="toast" class="toast"><i class="fa-solid fa-circle-check"></i><span id="toast-text"></span></div>
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"><i class="fa-solid fa-circle-check"></i><span id="toast-text"></span></div>
 
 <!-- ===================== قسم المطوّر (مخفي) =====================
      لا يظهر إلا عند فتح الرابط مع #khuta-dev-2026 في نهايته، مثال:
@@ -668,7 +668,7 @@
 <div id="exam-results-overlay" class="overlay-screen" style="display:none; z-index:6200;">
     <div class="wizard-card" style="max-width:520px; text-align:center;">
         <h2 style="margin-bottom:6px;"><i class="fa-solid fa-chart-pie" style="color:var(--gold);"></i> <span data-i18n="examsim.resultsTitle">نتيجتك</span></h2>
-        <div id="exam-results-content"></div>
+        <div id="exam-results-content" role="status" aria-live="polite"></div>
         <div style="display:flex; gap:10px; margin-top:18px;">
             <button type="button" class="btn btn-outline" style="flex:1;" onclick="reviewExamAnswers()"><i class="fa-solid fa-eye"></i> <span data-i18n="examsim.review">مراجعة الإجابات</span></button>
             <button type="button" class="btn" style="flex:1;" onclick="closeExamResults()"><span data-i18n="dash.done">تم</span></button>

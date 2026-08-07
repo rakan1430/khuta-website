@@ -728,6 +728,63 @@ function setLang(lang){
 /* ============================================================
    3) أدوات عامة
    ============================================================ */
+/* ============================================================
+   تفاعلات دقيقة (Micro Interactions) — اهتزاز خفيف عند الخطأ، صوت رضا عند
+   الإنجاز، Confetti عند الأهداف الكبيرة. كلها تتحقق من الدعم أولاً ولا
+   تكسر شيئاً على جهاز أو متصفح لا يدعمها (iOS Safari مثلاً لا يدعم
+   الاهتزاز إطلاقاً — يتجاهلها بصمت بدل أي خطأ).
+   ============================================================ */
+function hapticError(){
+    if(navigator.vibrate) try{ navigator.vibrate(45); }catch(e){}
+}
+function hapticSuccess(){
+    if(navigator.vibrate) try{ navigator.vibrate([25,40,25]); }catch(e){}
+}
+
+let __khutaAudioCtx = null;
+// نغمة رضا قصيرة نولّدها برمجياً (Web Audio API) بدل ملف صوتي خارجي — لا
+// حاجة لاستضافة أي أصل صوتي، وتعمل فوراً بلا تحميل
+function playCompletionSound(){
+    try{
+        if(!__khutaAudioCtx) __khutaAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = __khutaAudioCtx;
+        if(ctx.state === "suspended") ctx.resume();
+        const now = ctx.currentTime;
+        [523.25, 659.25].forEach((freq, i) => { // مي-صول: نغمتان قصيرتان صاعدتان، رضا لا إلحاح
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0, now + i*0.09);
+            gain.gain.linearRampToValueAtTime(0.12, now + i*0.09 + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i*0.09 + 0.22);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(now + i*0.09); osc.stop(now + i*0.09 + 0.25);
+        });
+    }catch(e){ /* بعض المتصفحات تمنع الصوت قبل أول تفاعل مباشر من المستخدم — نتجاهل بصمت */ }
+}
+
+// Confetti خفيف بلا أي مكتبة خارجية — جسيمات CSS بسيطة تتساقط وتدور، تُزال
+// نفسها تلقائياً بعد انتهاء الحركة
+function triggerConfetti(){
+    if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return; // نحترم تفضيل تقليل الحركة
+    const colors = ["#C9962E","#1C8A72","#D6455A","#2E6BE0","#E8C77E"];
+    const container = document.createElement("div");
+    container.className = "confetti-container";
+    for(let i = 0; i < 60; i++){
+        const piece = document.createElement("span");
+        piece.className = "confetti-piece";
+        piece.style.left = (Math.random()*100) + "%";
+        piece.style.background = colors[i % colors.length];
+        piece.style.animationDelay = (Math.random()*0.4) + "s";
+        piece.style.animationDuration = (2.2 + Math.random()*1.2) + "s";
+        piece.style.setProperty("--drift", (Math.random()*140 - 70) + "px");
+        container.appendChild(piece);
+    }
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 3800);
+}
+
 function showToast(msg){
     const toast = document.getElementById("toast");
     document.getElementById("toast-text").textContent = msg;
@@ -1928,6 +1985,8 @@ function awardXP(amount, taskId){
     const awarded = getAwardedTasks();
     if(taskId){ if(awarded[taskId]) return; awarded[taskId] = true; localStorage.setItem("khuta_xp_awarded", JSON.stringify(awarded)); }
     setXP(getXP() + amount);
+    playCompletionSound();
+    hapticSuccess();
     // سجل XP اليومي — لعرض "+X اليوم" بصدق في بطاقة اللوحة، بنفس أسلوب سجل الدقائق اليومي
     const today = new Date().toDateString();
     let xpLog = {};
@@ -2102,6 +2161,7 @@ function checkBadges(){
 }
 
 function celebrateBadgeUnlock(badge){
+    triggerConfetti();
     const overlay = document.createElement("div");
     overlay.className = "badge-celebrate-overlay";
     overlay.onclick = () => overlay.remove();
@@ -6207,9 +6267,9 @@ async function signUpWithCreds(userId, passId, pass2Id, fromLoginScreen, emailId
     const pass2 = document.getElementById(pass2Id).value;
     const realEmailInput = emailId ? document.getElementById(emailId) : null;
     const realEmail = realEmailInput ? realEmailInput.value.trim() : "";
-    if(username.length < 3){ showToast(currentLang==='ar' ? "اسم المستخدم يجب أن يكون 3 أحرف على الأقل" : "Username must be at least 3 characters"); return; }
-    if(pass.length < 6){ showToast(currentLang==='ar' ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters"); return; }
-    if(pass !== pass2){ showToast(currentLang==='ar' ? "كلمتا المرور غير متطابقتين" : "Passwords don't match"); return; }
+    if(username.length < 3){ hapticError(); showToast(currentLang==='ar' ? "اسم المستخدم يجب أن يكون 3 أحرف على الأقل" : "Username must be at least 3 characters"); return; }
+    if(pass.length < 6){ hapticError(); showToast(currentLang==='ar' ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters"); return; }
+    if(pass !== pass2){ hapticError(); showToast(currentLang==='ar' ? "كلمتا المرور غير متطابقتين" : "Passwords don't match"); return; }
     if(realEmail && !realEmail.includes("@")){ showToast(currentLang==='ar' ? "البريد المدخل غير صالح — اتركه فارغاً إن أردت المتابعة بدونه" : "Invalid email — leave it blank to continue without one"); return; }
 
     setAccountBusy(true);
@@ -6286,6 +6346,7 @@ async function signInWithCreds(userId, passId, fromLoginScreen){
             return;
         }
         registerFailedAttempt(username);
+        hapticError();
         showToast(currentLang==='ar' ? `بيانات الدخول غير صحيحة (${error.message})` : `Invalid username or password (${error.message})`);
         return;
     }
