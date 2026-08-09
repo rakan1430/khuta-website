@@ -2456,3 +2456,27 @@ body.dark-mode .chatbot-board-btn{
     0%{ transform:translateY(0) translateX(0) rotate(0deg); opacity:1; }
     100%{ transform:translateY(110vh) translateX(var(--drift)) rotate(540deg); opacity:0; }
 }
+
+/* ============================================================
+   49) الموافقة على الرسائل + المستندات القانونية
+   ============================================================ */
+.consent-row{
+    display:flex; align-items:flex-start; gap:10px; cursor:pointer;
+    font-size:12.5px; line-height:1.7; color:var(--text-2);
+}
+.consent-row input[type="checkbox"]{ width:18px; height:18px; flex-shrink:0; margin-top:2px; cursor:pointer; }
+.link-inline{
+    color:var(--gold); font-weight:700; cursor:pointer; text-decoration:underline;
+    text-underline-offset:2px;
+}
+.link-inline:hover{ filter:brightness(1.15); }
+.legal-window{ max-width:640px; max-height:82vh; }
+.legal-body{
+    padding:20px 24px 26px; overflow-y:auto; font-size:13.5px; line-height:1.95; color:var(--text-2);
+}
+.legal-body h3{
+    font-size:14.5px; color:var(--gold); margin:18px 0 6px; font-family:var(--font-display);
+}
+.legal-body h3:first-child{ margin-top:0; }
+.legal-body p{ margin-bottom:10px; }
+.legal-body b{ color:var(--text-1); }

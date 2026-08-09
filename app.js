@@ -481,6 +481,10 @@ ar:{
 "account.setNewPassTitle":"عيّن كلمة مرور جديدة","account.setNewPassDesc":"وصلت هنا عبر رابط إعادة تعيين كلمة المرور — اكتب كلمة مرورك الجديدة.",
 "referral.title":"ادعُ صديقاً","referral.desc":"كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.","referral.share":"مشاركة رابط الدعوة",
 "mistakebank.title":"بنك أخطائك الشخصية","mistakebank.desc":"ليست أخطاء القدرات — بل أنماطك الشخصية التي تعطّل تقدّمك، نكتشفها من سلوكك الفعلي بمرور الوقت.",
+"account.marketingConsent":"أوافق على استقبال رسائل تذكيرية أحياناً على بريدي (ليست يومية، ويمكنك إيقافها متى شئت)","account.termsAgree":"بإنشائك حساباً فأنت توافق على","account.and":"و",
+"legal.termsLink":"شروط الاستخدام","legal.privacyLink":"سياسة الخصوصية",
+"privacy.title":"الخصوصية والرسائل","privacy.desc":"تحكّم كامل بما يصلك وبما نحفظه عنك.","privacy.noEmailNote":"لم تربط بريداً بحسابك بعد — اربطه أعلاه لتفعيل هذا الخيار.",
+"consent.title":"نرسل لك أحياناً؟","consent.body":"عندك بريد مرتبط بحسابك — تحب نرسل لك أحياناً رسالة تذكيرية بسيطة تشجّعك ترجع تذاكر؟ (ليست يومية إطلاقاً، وتقدر توقفها متى شئت من ملفك الشخصي)","consent.yes":"نعم، أرسلوا لي","consent.no":"لا، شكراً",
 "push.title":"التذكير اليومي","push.desc":"إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.","push.enable":"فعّل التذكير اليومي",
 "focus.exit":"خروج من وضع التركيز","focus.title":"وضع التركيز","focus.subtitle":"ركّز الآن، وكن فخوراً لاحقاً.","focus.todayTasks":"مهام اليوم","focus.xpPoints":"نقاط XP",
 "focus.idle":"جاهز للبدء","focus.paused":"متوقف مؤقتاً","focus.inSession":"في جلسة تركيز","focus.onBreak":"في استراحة","focus.start":"ابدأ التركيز","focus.skip":"تخطّي",
@@ -650,6 +654,10 @@ en:{
 "account.setNewPassTitle":"Set a new password","account.setNewPassDesc":"You arrived here via a password reset link — enter your new password.",
 "referral.title":"Invite a friend","referral.desc":"Every friend who joins via your link gives you both 50 XP.","referral.share":"Share invite link",
 "mistakebank.title":"Your Personal Mistake Bank","mistakebank.desc":"Not GAT question mistakes — your own patterns that derail your progress, discovered from your actual behavior over time.",
+"account.marketingConsent":"I agree to receive occasional reminder emails (not daily, and you can stop them anytime)","account.termsAgree":"By creating an account you agree to our","account.and":"and",
+"legal.termsLink":"Terms of Use","legal.privacyLink":"Privacy Policy",
+"privacy.title":"Privacy & Emails","privacy.desc":"Full control over what reaches you and what we store.","privacy.noEmailNote":"You haven't linked an email yet — link one above to enable this option.",
+"consent.title":"Send you occasional emails?","consent.body":"You have an email linked — would you like an occasional gentle reminder to get back to studying? (Never daily, and you can stop anytime from your profile)","consent.yes":"Yes, please","consent.no":"No thanks",
 "push.title":"Daily reminder","push.desc":"A real notification even if you've fully closed the site, if you haven't completed today's session.","push.enable":"Enable daily reminder",
 "focus.exit":"Exit focus mode","focus.title":"Focus Mode","focus.subtitle":"Focus now, be proud later.","focus.todayTasks":"Today's tasks","focus.xpPoints":"XP Points",
 "focus.idle":"Ready to start","focus.paused":"Paused","focus.inSession":"In a focus session","focus.onBreak":"On a break","focus.start":"Start focusing","focus.skip":"Skip",
@@ -997,6 +1005,8 @@ window.onload = () => {
     applyI18n();
     ensureTaskStatusFreshToday();
     initIdleDetection();
+    // نؤخّرها عمداً كي لا تزاحم بدء الصفحة ولا الجولة التعريفية للمستخدم الجديد
+    setTimeout(maybeAskForMarketingConsent, 6000);
     tryLoadUniversitiesFromSupabase();
     tryLoadRemoteUniversities();
     tryLoadRemoteContent();
@@ -1626,7 +1636,7 @@ function switchTab(tabId, element){
     window.scrollTo({top:0, behavior:"smooth"});
     if(tabId === "community") initCommunityIfNeeded();
     if(tabId === "specialties") renderSpecialties();
-    if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); }
+    if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); renderPrivacyCard(); }
     if(tabId === "tutors") renderTutors();
 }
 
@@ -4547,6 +4557,11 @@ function submitExam(){
     const xpEarned = Math.round(pct / 5); // مكافأة بسيطة تحفيزية، لا تُبالغ في القيمة
     awardXP(xpEarned);
     recordExamAttempt(examState); // سجل الاختبارات السابقة: الدرجة + الأسئلة الخاطئة
+
+    // بريد النتيجة: فقط للاختبار الكامل (لا لفظي/كمي منفرد)، وفقط لو كان
+    // هناك حساب فعلي — الخادم نفسه يتحقق أن البريد المرتبط حقيقي فعلاً،
+    // هذا مجرد تفادٍ لاستدعاء شبكي عديم الفائدة لضيف بلا حساب أصلاً
+    if(examState.type === "full" && sb) sendExamScoreEmail(examState.score);
 }
 
 function closeExamResults(){
@@ -6198,6 +6213,161 @@ async function resolveUsernameEmail(username){
 }
 
 function getSession(){ try{ return JSON.parse(localStorage.getItem("khuta_session")) || null; }catch(e){ return null; } }
+
+// يرسل نتيجة الاختبار الكامل بالبريد — فقط إن كان هناك جلسة Supabase حقيقية
+// (يتحقق الخادم من كون البريد المرتبط حقيقياً فعلاً، هذا مجرد استدعاء أولي)
+/* ============================================================
+   نظام الموافقة على الرسائل + المستندات القانونية
+   ------------------------------------------------------------
+   الموافقة تُحفظ في user_data (المزامَن مع الحساب) لا في localStorage فقط —
+   حتى تبقى صحيحة عبر أجهزة الطالب كلها، ولأن الوظيفة المجدولة على الخادم
+   ستحتاج قراءتها لاحقاً لتقرير من يستحق رسالة تذكيرية.
+   ============================================================ */
+async function updateMarketingConsent(consented){
+    try{
+        localStorage.setItem("khuta_marketing_consent", consented ? "1" : "0");
+        localStorage.setItem("khuta_consent_asked", "1");
+        const session = getSession();
+        if(sb && session && session.uid){
+            await sb.from("user_data").update({ marketing_consent: !!consented }).eq("id", session.uid);
+        }
+        showToast(consented
+            ? labT("👍 تمام — نرسل لك أحياناً تذكيراً بسيطاً","👍 Got it — we'll send occasional reminders")
+            : labT("✅ ما راح نرسل لك أي رسائل تذكيرية","✅ We won't send you any reminder emails"));
+    }catch(e){
+        console.error("[خُطى] تعذّر حفظ تفضيل الرسائل:", e);
+    }
+}
+
+function respondToConsentPrompt(consented){
+    document.getElementById("consent-prompt-modal").style.display = "none";
+    document.body.style.overflow = "";
+    updateMarketingConsent(consented);
+}
+
+// يسأل الحسابات القائمة (التي لديها بريد حقيقي مرتبط) مرة واحدة فقط
+async function maybeAskForMarketingConsent(){
+    try{
+        if(localStorage.getItem("khuta_consent_asked") === "1") return; // سُئل من قبل، لا نكرر أبداً
+        const session = getSession();
+        if(!sb || !session || !session.username) return;
+        const { data } = await sb.auth.getUser();
+        const email = data && data.user && data.user.email;
+        if(!email) return;
+        // لا نسأل إلا من ربط بريداً حقيقياً فعلاً — سؤال من لا بريد له بلا معنى
+        const clean = session.username.trim().toLowerCase().replace(/[^a-z0-9_.-]/g, "");
+        if(email.toLowerCase() === `khuta.${clean}@${USERNAME_EMAIL_DOMAIN}`) return;
+        document.getElementById("consent-prompt-modal").style.display = "flex";
+        document.body.style.overflow = "hidden";
+    }catch(e){ /* لا نُزعج الطالب بأي خطأ هنا — الميزة ثانوية بالكامل */ }
+}
+
+function renderPrivacyCard(){
+    const row = document.getElementById("profile-marketing-row");
+    const note = document.getElementById("profile-marketing-note");
+    const box = document.getElementById("profile-marketing-consent");
+    if(!row || !box) return;
+    const session = getSession();
+    if(!session){
+        row.style.display = "none";
+        note.style.display = "block";
+        note.textContent = labT("سجّل دخولك أولاً للتحكم بتفضيلات الرسائل.","Sign in first to manage email preferences.");
+        return;
+    }
+    row.style.display = "flex";
+    note.style.display = "none";
+    box.checked = localStorage.getItem("khuta_marketing_consent") === "1";
+}
+
+const LEGAL_DOCS = {
+    terms: {
+        titleAr: "شروط الاستخدام", titleEn: "Terms of Use",
+        bodyAr: `
+            <h3>١. طبيعة الخدمة</h3>
+            <p>خُطى أداة مساعدة لتنظيم مذاكرة اختبار القدرات العامة (GAT). التطبيق <b>غير تابع لهيئة تقويم التعليم والتدريب (قياس)</b> ولا لأي جهة رسمية، ولا يمثّلها بأي شكل.</p>
+            <h3>٢. دقة المحتوى</h3>
+            <p>بيانات الجامعات وأوزان النسب الموزونة ومتطلبات القبول تقريبية وقد تتغيّر. <b>تحقّق دائماً من الموقع الرسمي للجامعة</b> قبل اتخاذ أي قرار فعلي. الاختبارات المحاكية والأسئلة هي للتدريب فقط ولا تعكس الاختبار الحقيقي حرفياً.</p>
+            <h3>٣. الذكاء الاصطناعي</h3>
+            <p>المساعد الذكي أداة مساعدة قد تُخطئ. لا تعتمد على إجاباته وحدها في قرار مصيري، وراجع دائماً مصادرك الدراسية الأساسية.</p>
+            <h3>٤. حسابك</h3>
+            <p>أنت مسؤول عن الحفاظ على كلمة مرورك. التطبيق يعمل كاملاً بدون حساب (كضيف)، والحساب اختياري لمزامنة تقدّمك بين أجهزتك فقط.</p>
+            <h3>٥. الاستخدام المقبول</h3>
+            <p>يُمنع استخدام التطبيق لأي غرض غير قانوني، أو محاولة تعطيله، أو إساءة استخدام مواردة (مثل الإكثار المتعمّد من طلبات الذكاء الاصطناعي).</p>
+            <h3>٦. التغييرات</h3>
+            <p>قد تُحدَّث هذه الشروط مع تطوّر التطبيق. استمرارك في الاستخدام يعني موافقتك على النسخة المحدّثة.</p>`,
+        bodyEn: `
+            <h3>1. Nature of the service</h3>
+            <p>Khuta is a study-organization tool for the Saudi GAT exam. It is <b>not affiliated with Qiyas (ETEC)</b> or any official body.</p>
+            <h3>2. Content accuracy</h3>
+            <p>University data, weighted-score formulas, and admission requirements are approximate and subject to change. <b>Always verify with the university's official website.</b> Practice exams are for training only.</p>
+            <h3>3. AI assistant</h3>
+            <p>The AI assistant may make mistakes. Don't rely on it alone for important decisions.</p>
+            <h3>4. Your account</h3>
+            <p>You are responsible for your password. The app works fully without an account; accounts are optional and only sync progress across devices.</p>
+            <h3>5. Acceptable use</h3>
+            <p>Don't use the app for unlawful purposes, attempt to disrupt it, or abuse its resources.</p>
+            <h3>6. Changes</h3>
+            <p>These terms may be updated as the app evolves.</p>`,
+    },
+    privacy: {
+        titleAr: "سياسة الخصوصية", titleEn: "Privacy Policy",
+        bodyAr: `
+            <h3>ما الذي نجمعه فعلاً؟</h3>
+            <p><b>إن استخدمت التطبيق كضيف (بدون حساب):</b> لا نجمع عنك شيئاً إطلاقاً على خوادمنا. كل بياناتك (خطتك، تقدّمك، ملاحظاتك) محفوظة <b>داخل متصفحك أنت فقط</b> ولا تغادر جهازك.</p>
+            <p><b>إن أنشأت حساباً:</b> نحفظ اسم المستخدم، وكلمة مرور مشفّرة (لا نراها إطلاقاً)، وبيانات تقدّمك الدراسي (خطتك، ساعات مذاكرتك، نقاط الخبرة، نتائج اختباراتك) لمزامنتها بين أجهزتك.</p>
+            <p><b>البريد الإلكتروني اختياري بالكامل.</b> نستخدمه فقط لاسترجاع كلمة المرور، ولإرسال نتيجة اختبارك المحاكي، وللرسائل التذكيرية <b>إن وافقت عليها صراحةً فقط</b>.</p>
+            <h3>ما الذي لا نجمعه أبداً</h3>
+            <p>لا نجمع اسمك الحقيقي، ولا رقم هويتك، ولا رقم جوالك، ولا موقعك الجغرافي، ولا نبيع بياناتك لأي جهة إطلاقاً.</p>
+            <h3>خدمات خارجية نستخدمها</h3>
+            <p>Supabase (تخزين الحسابات والبيانات)، Netlify (استضافة الموقع)، Google Gemini (المساعد الذكي — تُرسَل أسئلتك له لتوليد الإجابة)، Brevo (إرسال البريد فقط لمن ربط بريده).</p>
+            <h3>حقوقك</h3>
+            <p>تقدر تحذف حسابك وكل بياناته في أي وقت من ملفك الشخصي. تقدر توقف الرسائل التذكيرية في أي لحظة. تقدر تستخدم التطبيق كاملاً بدون أي حساب من الأساس.</p>`,
+        bodyEn: `
+            <h3>What we actually collect</h3>
+            <p><b>As a guest (no account):</b> nothing at all reaches our servers. All your data stays in your own browser.</p>
+            <p><b>With an account:</b> username, an encrypted password (never visible to us), and your study progress, to sync across your devices.</p>
+            <p><b>Email is fully optional</b> — used only for password recovery, exam results, and reminders <b>only if you explicitly consent</b>.</p>
+            <h3>What we never collect</h3>
+            <p>No real name, national ID, phone number, or location. We never sell your data.</p>
+            <h3>Third-party services</h3>
+            <p>Supabase (accounts/data), Netlify (hosting), Google Gemini (AI assistant), Brevo (email delivery only).</p>
+            <h3>Your rights</h3>
+            <p>Delete your account and all data anytime from your profile. Stop reminder emails anytime. Use the app fully without an account.</p>`,
+    },
+};
+
+function openLegalModal(kind){
+    const doc = LEGAL_DOCS[kind];
+    if(!doc) return;
+    document.getElementById("legal-modal-title").textContent = currentLang==='ar' ? doc.titleAr : doc.titleEn;
+    document.getElementById("legal-modal-body").innerHTML = currentLang==='ar' ? doc.bodyAr : doc.bodyEn;
+    labOverlayOpen("legal-modal");
+}
+function closeLegalModal(){ labOverlayClose("legal-modal"); }
+
+async function sendExamScoreEmail(score){
+    try{
+        if(!sb) return;
+        const { data } = await sb.auth.getSession();
+        const accessToken = data && data.session && data.session.access_token;
+        if(!accessToken) return; // ضيف بلا حساب فعلي
+        const session = getSession();
+        await fetch("/.netlify/functions/send-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                type: "examScore",
+                accessToken,
+                username: session ? session.username : null,
+                score: score.correctCount, total: score.total,
+                examTypeLabel: "full",
+            }),
+        });
+    }catch(e){
+        console.error("[خُطى] تعذّر إرسال بريد النتيجة (لا يؤثر على تجربة الطالب):", e);
+    }
+}
+
 let manualAuthInProgress = false; // يمنع ازدواجية معالجة نفس حدث تسجيل الدخول بين signInWithCreds/signUpWithCreds والمستمع العام
 
 function setSession(s){
@@ -6292,7 +6462,13 @@ async function signUpWithCreds(userId, passId, pass2Id, fromLoginScreen, emailId
     }
     const uid = data.user && data.user.id;
     if(uid){
-        await sb.from("user_data").insert({ id: uid, username, data: collectLocalSnapshot() });
+        // نلتقط موافقة الرسائل من نفس النموذج (غير مفعّلة افتراضياً — موافقة
+        // حقيقية لا مفروضة)، ونعتبر الطالب "سُئل" فلا تظهر له نافذة السؤال لاحقاً
+        const consentBox = document.getElementById(fromLoginScreen ? "login-marketing-consent" : "acc-marketing-consent");
+        const consented = !!(consentBox && consentBox.checked && realEmail);
+        localStorage.setItem("khuta_marketing_consent", consented ? "1" : "0");
+        localStorage.setItem("khuta_consent_asked", "1");
+        await sb.from("user_data").insert({ id: uid, username, data: collectLocalSnapshot(), marketing_consent: consented });
         setSession({ uid, username });
         recordPendingReferral(uid);
     }

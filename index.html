@@ -104,6 +104,16 @@
             <label data-i18n="account.realEmailOptional" style="margin-top:10px; display:block;">بريدك الإلكتروني (اختياري)</label>
             <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
             <p class="hint" style="margin-top:6px;" data-i18n="account.emailOptionalNote">أدخله لتفعيل استرجاع كلمة المرور المنسية فوراً. اتركه فارغاً إن كنت تفضّل عدم مشاركة بريدك — لن نطلبه إلا برضاك.</p>
+            <label class="consent-row" style="margin-top:12px;">
+                <input type="checkbox" id="login-marketing-consent">
+                <span data-i18n="account.marketingConsent">أوافق على استقبال رسائل تذكيرية أحياناً على بريدي (ليست يومية، ويمكنك إيقافها متى شئت)</span>
+            </label>
+            <p class="hint" style="margin-top:10px;">
+                <span data-i18n="account.termsAgree">بإنشائك حساباً فأنت توافق على</span>
+                <span role="button" tabindex="0" class="link-inline" onclick="openLegalModal('terms')" data-i18n="legal.termsLink">شروط الاستخدام</span>
+                <span data-i18n="account.and">و</span>
+                <span role="button" tabindex="0" class="link-inline" onclick="openLegalModal('privacy')" data-i18n="legal.privacyLink">سياسة الخصوصية</span>
+            </p>
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button type="button" class="btn acc-btn" style="flex:1;" onclick="loginScreenSignIn()"><span data-i18n="account.signin">تسجيل الدخول</span></button>
@@ -478,6 +488,30 @@
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"><i class="fa-solid fa-circle-check"></i><span id="toast-text"></span></div>
+
+<!-- ===================== شروط الاستخدام وسياسة الخصوصية ===================== -->
+<div id="legal-modal" class="lab-overlay" style="display:none;">
+    <div class="lab-window legal-window">
+        <div class="lab-head">
+            <b id="legal-modal-title">شروط الاستخدام</b>
+            <button type="button" class="lab-close" onclick="closeLegalModal()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="legal-modal-body" class="legal-body"></div>
+    </div>
+</div>
+
+<!-- ===== طلب الموافقة الرجعي (للحسابات الموجودة التي لديها بريد مرتبط) ===== -->
+<div id="consent-prompt-modal" class="idle-checkin-modal" style="display:none;">
+    <div class="idle-checkin-card">
+        <div class="idle-checkin-icon">📬</div>
+        <b data-i18n="consent.title">نرسل لك أحياناً؟</b>
+        <p data-i18n="consent.body">عندك بريد مرتبط بحسابك — تحب نرسل لك أحياناً رسالة تذكيرية بسيطة تشجّعك ترجع تذاكر؟ (ليست يومية إطلاقاً، وتقدر توقفها متى شئت من ملفك الشخصي)</p>
+        <div style="display:flex; gap:8px;">
+            <button type="button" class="btn" style="flex:1;" onclick="respondToConsentPrompt(true)" data-i18n="consent.yes">نعم، أرسلوا لي</button>
+            <button type="button" class="btn btn-outline" style="flex:1;" onclick="respondToConsentPrompt(false)" data-i18n="consent.no">لا، شكراً</button>
+        </div>
+    </div>
+</div>
 
 <!-- ===================== قسم المطوّر (مخفي) =====================
      لا يظهر إلا عند فتح الرابط مع #khuta-dev-2026 في نهايته، مثال:
@@ -1579,6 +1613,16 @@
                         <label data-i18n="account.realEmailOptional" style="margin-top:10px; display:block;">بريدك الإلكتروني (اختياري)</label>
                         <input type="email" id="acc-email" placeholder="you@example.com" autocomplete="email">
                         <p class="hint" style="margin-top:6px;" data-i18n="account.emailOptionalNote">أدخله لتفعيل استرجاع كلمة المرور المنسية فوراً. اتركه فارغاً إن كنت تفضّل عدم مشاركة بريدك — لن نطلبه إلا برضاك.</p>
+                        <label class="consent-row" style="margin-top:12px;">
+                            <input type="checkbox" id="acc-marketing-consent">
+                            <span data-i18n="account.marketingConsent">أوافق على استقبال رسائل تذكيرية أحياناً على بريدي (ليست يومية، ويمكنك إيقافها متى شئت)</span>
+                        </label>
+                        <p class="hint" style="margin-top:10px;">
+                            <span data-i18n="account.termsAgree">بإنشائك حساباً فأنت توافق على</span>
+                            <span role="button" tabindex="0" class="link-inline" onclick="openLegalModal('terms')" data-i18n="legal.termsLink">شروط الاستخدام</span>
+                            <span data-i18n="account.and">و</span>
+                            <span role="button" tabindex="0" class="link-inline" onclick="openLegalModal('privacy')" data-i18n="legal.privacyLink">سياسة الخصوصية</span>
+                        </p>
                     </div>
                     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
                         <button type="button" class="btn acc-btn" onclick="signInAccount()"><i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="account.signin">تسجيل الدخول</span></button>
@@ -1708,6 +1752,20 @@
                 <h2 style="margin-bottom:4px;">🧠 <span data-i18n="mistakebank.title">بنك أخطائك الشخصية</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="mistakebank.desc">ليست أخطاء القدرات — بل أنماطك الشخصية التي تعطّل تقدّمك، نكتشفها من سلوكك الفعلي بمرور الوقت.</p>
                 <div id="mistake-bank-content" class="mistake-bank-card"></div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom:4px;">🔒 <span data-i18n="privacy.title">الخصوصية والرسائل</span></h2>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="privacy.desc">تحكّم كامل بما يصلك وبما نحفظه عنك.</p>
+                <label class="consent-row" id="profile-marketing-row" style="display:none;">
+                    <input type="checkbox" id="profile-marketing-consent" onchange="updateMarketingConsent(this.checked)">
+                    <span data-i18n="account.marketingConsent">أوافق على استقبال رسائل تذكيرية أحياناً على بريدي (ليست يومية، ويمكنك إيقافها متى شئت)</span>
+                </label>
+                <p class="hint" id="profile-marketing-note" style="margin-top:8px;" data-i18n="privacy.noEmailNote">لم تربط بريداً بحسابك بعد — اربطه أعلاه لتفعيل هذا الخيار.</p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="openLegalModal('terms')"><i class="fa-solid fa-file-contract"></i> <span data-i18n="legal.termsLink">شروط الاستخدام</span></button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="openLegalModal('privacy')"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="legal.privacyLink">سياسة الخصوصية</span></button>
+                </div>
             </div>
         </section>
 
