@@ -19,7 +19,69 @@ const USERNAME_EMAIL_DOMAIN = "gmail.com";
 const SENDER_EMAIL = "no-reply@khutaa.netlify.app"; // اسم المُرسِل الظاهر للطالب — أي عنوان، Brevo لا يشترط تحققه للإرسال بحصة السجل المجاني
 const SENDER_NAME = "خُطى";
 
-const ALLOWED_TYPES = ["examScore"];
+const ALLOWED_TYPES = ["examScore", "adminTest", "adminSendCampaign"];
+
+// يتحقق من كون المستخدم مشرفاً فعلياً عبر جدول app_admins على الخادم —
+// لا نثق إطلاقاً بأي ادعاء "أنا مشرف" قادم من المتصفح (نفس مبدأ gemini-proxy)
+async function verifyAdmin(userId){
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if(!serviceKey) return false;
+    try{
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/app_admins?uid=eq.${encodeURIComponent(userId)}&select=uid`, {
+            headers: { "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}` },
+        });
+        if(!res.ok) return false;
+        const rows = await res.json();
+        return rows.length > 0;
+    }catch(e){
+        console.error("[send-email] تعذّر التحقق من صلاحية المشرف:", e);
+        return false; // فشل التحقق = رفض (لا نفتح الباب عند الشك في مسار إداري)
+    }
+}
+
+// يسجّل كل محاولة إرسال في email_campaign_log — لتعرف لاحقاً ما أُرسل فعلاً
+async function logCampaignSend(messageId, email, status, errorDetail, isTest){
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if(!serviceKey) return;
+    try{
+        await fetch(`${SUPABASE_URL}/rest/v1/email_campaign_log`, {
+            method: "POST",
+            headers: { "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ message_id: messageId || null, recipient_email: email, status, error_detail: errorDetail || null, is_test: !!isTest }),
+        });
+    }catch(e){ console.error("[send-email] تعذّر تسجيل الإرسال:", e); }
+}
+
+// يجلب قائمة المستلمين المستحقين فعلاً حسب نمط الرسالة
+async function getCampaignRecipients(message){
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if(!serviceKey) return [];
+    const headers = { "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}` };
+    // من وافق صراحةً فقط — شرط غير قابل للتجاوز مهما كان نمط الرسالة
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/user_data?marketing_consent=eq.true&select=id,username,updated_at`, { headers });
+    if(!res.ok) return [];
+    const rows = await res.json();
+
+    const eligible = [];
+    for(const row of rows){
+        if(message.send_mode === "behavior"){
+            // نمط سلوكي: نرسل فقط لمن غاب فعلاً المدة المحددة. نعتمد على
+            // updated_at (عمود حقيقي يُحدَّث مع كل مزامنة) بدل التنقيب داخل
+            // حقل JSON — أدق وأبسط وأقل عرضة للكسر إن تغيّرت بنية البيانات
+            if(!row.updated_at) continue;
+            const daysSince = (Date.now() - new Date(row.updated_at).getTime()) / 86400000;
+            if(daysSince < (message.inactive_days || 5)) continue;
+        }
+        // نجلب البريد الحقيقي من auth عبر معرّف المستخدم
+        const uRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${row.id}`, { headers });
+        if(!uRes.ok) continue;
+        const user = await uRes.json();
+        if(!user.email || !isRealEmail(user.email, row.username)) continue;
+        eligible.push({ email: user.email, name: row.username });
+    }
+    return eligible;
+}
+
 const COOLDOWN_MS = 5 * 60 * 1000; // حماية إضافية: لا يزيد عن رسالة واحدة كل 5 دقائق لنفس المستخدم، حتى لو تكرر الاستدعاء بالخطأ
 
 // يتحقق من توكن الجلسة فعلياً عبر Supabase نفسها (لا نثق بأي id/email يرسله الطلب مباشرة)
@@ -110,6 +172,60 @@ exports.handler = async function(event){
     const user = await verifyUser(payload.accessToken);
     if(!user || !user.id){
         return { statusCode: 401, body: JSON.stringify({ error: "جلسة غير صالحة" }) };
+    }
+
+    /* ---------- المسارات الإدارية (تحقق صلاحية مستقل على الخادم) ---------- */
+    if(type === "adminTest" || type === "adminSendCampaign"){
+        const admin = await verifyAdmin(user.id);
+        if(!admin){
+            return { statusCode: 403, body: JSON.stringify({ error: "هذه العملية للمشرفين فقط" }) };
+        }
+        try{
+            const subject = String(payload.subject || "").slice(0, 300);
+            const bodyHtml = String(payload.bodyHtml || "").slice(0, 50000);
+            if(!subject || !bodyHtml){
+                return { statusCode: 400, body: JSON.stringify({ error: "العنوان والمحتوى مطلوبان" }) };
+            }
+
+            if(type === "adminTest"){
+                // إرسال تجريبي: لعناوين يحددها المشرف فقط، ولا يمس أي طالب حقيقي
+                const testEmails = Array.isArray(payload.testEmails) ? payload.testEmails.slice(0, 5) : [];
+                if(testEmails.length === 0){
+                    return { statusCode: 400, body: JSON.stringify({ error: "أدخل بريداً تجريبياً واحداً على الأقل" }) };
+                }
+                const results = [];
+                for(const email of testEmails){
+                    const clean = String(email).trim();
+                    if(!clean.includes("@")) { results.push({ email: clean, ok:false, error:"بريد غير صالح" }); continue; }
+                    const html = `<div style="background:#fff3cd;border:1px solid #ffc107;padding:10px;border-radius:8px;margin-bottom:14px;font-family:sans-serif;direction:rtl;text-align:right;font-size:12px;"><b>⚠️ رسالة تجريبية</b> — أُرسلت من لوحة إدارة خُطى للاختبار فقط، ولم تصل أي طالب.</div>${bodyHtml}`;
+                    const up = await sendViaBrevo(apiKey, clean, null, "[تجريبي] " + subject, html);
+                    const ok = up.ok;
+                    await logCampaignSend(payload.messageId, clean, ok ? "sent" : "failed", ok ? null : await up.text(), true);
+                    results.push({ email: clean, ok });
+                }
+                return { statusCode: 200, body: JSON.stringify({ ok:true, test:true, results }) };
+            }
+
+            // adminSendCampaign: إرسال فعلي للطلاب المستحقين
+            const message = payload.message || {};
+            const recipients = await getCampaignRecipients({
+                send_mode: message.send_mode || "broadcast",
+                inactive_days: message.inactive_days || 5,
+            });
+            if(recipients.length === 0){
+                return { statusCode: 200, body: JSON.stringify({ ok:true, sent:0, note:"لا يوجد مستلمون مستحقون حالياً" }) };
+            }
+            let sent = 0, failed = 0;
+            for(const r of recipients){
+                const up = await sendViaBrevo(apiKey, r.email, r.name, subject, bodyHtml);
+                if(up.ok){ sent++; await logCampaignSend(payload.messageId, r.email, "sent", null, false); }
+                else { failed++; await logCampaignSend(payload.messageId, r.email, "failed", await up.text(), false); }
+            }
+            return { statusCode: 200, body: JSON.stringify({ ok:true, sent, failed, total: recipients.length }) };
+        }catch(err){
+            console.error("[send-email] خطأ في المسار الإداري:", err);
+            return { statusCode: 500, body: JSON.stringify({ error: "خطأ داخلي: " + String(err.message || err) }) };
+        }
     }
 
     const username = payload.username; // فقط لبناء نمط البريد الوهمي للمقارنة، لا يُستخدم كمعرّف هوية
