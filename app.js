@@ -5341,6 +5341,170 @@ function logSiteVisit(){
 }
 
 let visitStatsPollTimer = null;
+/* ============================================================
+   لوحة إدارة رسائل البريد — للمشرفين فقط. الكتابة والقراءة تمر عبر Supabase
+   مباشرة (محمية بـRLS)، والإرسال الفعلي عبر send-email.js التي تتحقق من
+   صلاحية المشرف على الخادم مستقلةً — لا تكفي إخفاء الزر في الواجهة وحده.
+   ============================================================ */
+async function openCampaignPanel(){
+    if(!isAdmin) return;
+    document.getElementById("admin-overlay").style.display = "none";
+    document.getElementById("campaign-overlay").style.display = "flex";
+    switchCampaignTab("list", document.querySelector(".campaign-tab"));
+    await renderCampaignList();
+}
+
+function switchCampaignTab(pane, btn){
+    document.querySelectorAll(".campaign-pane").forEach(p => p.style.display = "none");
+    document.querySelectorAll(".campaign-tab").forEach(b => b.classList.remove("active"));
+    document.getElementById("campaign-pane-" + pane).style.display = "block";
+    if(btn) btn.classList.add("active");
+    if(pane === "list") renderCampaignList();
+    if(pane === "log") renderCampaignLog();
+}
+
+function onCampaignModeChange(){
+    const mode = document.getElementById("campaign-mode").value;
+    document.getElementById("campaign-inactive-group").style.display = mode === "behavior" ? "block" : "none";
+}
+
+async function renderCampaignList(){
+    const box = document.getElementById("campaign-list");
+    if(!sb){ box.innerHTML = "<p class='hint'>الاتصال بقاعدة البيانات غير متاح</p>"; return; }
+    box.innerHTML = "<p class='hint'>جاري التحميل…</p>";
+    try{
+        const { data, error } = await sb.from("marketing_messages").select("*").order("created_at", { ascending:false });
+        if(error) throw error;
+        if(!data || data.length === 0){ box.innerHTML = "<p class='hint'>لا توجد رسائل بعد — أنشئ واحدة من تبويب \"رسالة جديدة\"</p>"; return; }
+        box.innerHTML = data.map(m => {
+            const modeLabel = m.send_mode === "behavior" ? `ذكي (غاب ${m.inactive_days || 5} أيام)` : "جماعي";
+            const statusLabel = m.sent_at ? `أُرسلت ${new Date(m.sent_at).toLocaleDateString("ar-SA")}`
+                : (m.send_after && new Date(m.send_after) > new Date()) ? `مجدولة بعد ${new Date(m.send_after).toLocaleDateString("ar-SA")}`
+                : "جاهزة";
+            return `<div class="campaign-row">
+                <div class="campaign-row-main">
+                    <b>${escapeHtml(m.subject)}</b>
+                    <span class="campaign-meta">${modeLabel} · ${escapeHtml(m.occasion || "عام")} · ${statusLabel} · ${m.active ? "مفعّلة" : "معطّلة"}</span>
+                </div>
+                <div class="campaign-row-actions">
+                    <button type="button" class="btn btn-sm" onclick="sendCampaignNow(${m.id})">إرسال الآن</button>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="toggleCampaignActive(${m.id}, ${!m.active})">${m.active ? "تعطيل" : "تفعيل"}</button>
+                </div>
+            </div>`;
+        }).join("");
+    }catch(e){
+        box.innerHTML = "<p class='hint'>تعذّر تحميل الرسائل: " + escapeHtml(String(e.message || e)) + "</p>";
+    }
+}
+
+async function renderCampaignLog(){
+    const box = document.getElementById("campaign-log-list");
+    if(!sb) return;
+    box.innerHTML = "<p class='hint'>جاري التحميل…</p>";
+    try{
+        const { data, error } = await sb.from("email_campaign_log").select("*").order("sent_at", { ascending:false }).limit(60);
+        if(error) throw error;
+        if(!data || data.length === 0){ box.innerHTML = "<p class='hint'>لم تُرسل أي رسالة بعد</p>"; return; }
+        box.innerHTML = data.map(l => `<div class="campaign-row">
+            <div class="campaign-row-main">
+                <b>${escapeHtml(l.recipient_email)}</b>
+                <span class="campaign-meta">${new Date(l.sent_at).toLocaleString("ar-SA")} · ${l.status === "sent" ? "✅ نجحت" : "❌ فشلت"}${l.is_test ? " · تجريبية" : ""}</span>
+            </div>
+        </div>`).join("");
+    }catch(e){
+        box.innerHTML = "<p class='hint'>تعذّر تحميل السجل: " + escapeHtml(String(e.message || e)) + "</p>";
+    }
+}
+
+async function saveCampaignMessage(){
+    if(!isAdmin || !sb) return;
+    const subject = document.getElementById("campaign-subject").value.trim();
+    const bodyHtml = document.getElementById("campaign-body").value.trim();
+    if(!subject || !bodyHtml){ showToast("العنوان والمحتوى مطلوبان"); return; }
+    const sendAfterVal = document.getElementById("campaign-send-after").value;
+    try{
+        const { error } = await sb.from("marketing_messages").insert({
+            subject, body_html: bodyHtml,
+            occasion: document.getElementById("campaign-occasion").value.trim() || "عام",
+            send_mode: document.getElementById("campaign-mode").value,
+            inactive_days: parseInt(document.getElementById("campaign-inactive-days").value) || 5,
+            send_after: sendAfterVal ? new Date(sendAfterVal).toISOString() : null,
+            active: true,
+        });
+        if(error) throw error;
+        showToast("✅ حُفظت الرسالة");
+        document.getElementById("campaign-subject").value = "";
+        document.getElementById("campaign-body").value = "";
+        switchCampaignTab("list", document.querySelector(".campaign-tab"));
+    }catch(e){
+        showToast("تعذّر الحفظ: " + (e.message || e));
+    }
+}
+
+async function toggleCampaignActive(id, newState){
+    if(!isAdmin || !sb) return;
+    try{
+        const { error } = await sb.from("marketing_messages").update({ active: newState }).eq("id", id);
+        if(error) throw error;
+        renderCampaignList();
+    }catch(e){ showToast("تعذّر التحديث: " + (e.message || e)); }
+}
+
+// نداء موحّد للمسارات الإدارية في send-email.js (تتحقق من صلاحيتك على الخادم)
+async function callAdminEmail(type, extra){
+    const { data } = await sb.auth.getSession();
+    const accessToken = data && data.session && data.session.access_token;
+    if(!accessToken){ showToast("سجّل دخولك أولاً"); return null; }
+    const res = await fetch("/.netlify/functions/send-email", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, accessToken, ...extra }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if(!res.ok){ showToast("فشل: " + (json.error || res.status)); return null; }
+    return json;
+}
+
+async function sendCampaignTest(){
+    if(!isAdmin) return;
+    const subject = document.getElementById("campaign-subject").value.trim();
+    const bodyHtml = document.getElementById("campaign-body").value.trim();
+    const emailsRaw = document.getElementById("campaign-test-emails").value.trim();
+    if(!subject || !bodyHtml){ showToast("اكتب العنوان والمحتوى أولاً"); return; }
+    if(!emailsRaw){ showToast("أدخل بريداً تجريبياً واحداً على الأقل"); return; }
+    const testEmails = emailsRaw.split(",").map(s => s.trim()).filter(Boolean);
+    showToast("⏳ جاري الإرسال التجريبي…");
+    const result = await callAdminEmail("adminTest", { subject, bodyHtml, testEmails });
+    if(result){
+        const okCount = (result.results || []).filter(r => r.ok).length;
+        showToast(`🧪 أُرسلت تجريبياً: ${okCount} من ${testEmails.length}`);
+    }
+}
+
+async function sendCampaignNow(messageId){
+    if(!isAdmin || !sb) return;
+    try{
+        const { data, error } = await sb.from("marketing_messages").select("*").eq("id", messageId).single();
+        if(error) throw error;
+        const modeLabel = data.send_mode === "behavior" ? `الطلاب الغائبين ${data.inactive_days || 5} أيام فأكثر` : "كل الطلاب الموافقين";
+        if(!confirm(`سترسل "${data.subject}" إلى ${modeLabel}.\n\nهذه رسالة حقيقية ستصل طلاباً فعليين. متأكد؟`)) return;
+        showToast("⏳ جاري الإرسال…");
+        const result = await callAdminEmail("adminSendCampaign", {
+            subject: data.subject, bodyHtml: data.body_html, messageId: data.id,
+            message: { send_mode: data.send_mode, inactive_days: data.inactive_days },
+        });
+        if(result){
+            if(result.sent === 0 && result.note){ showToast("ℹ️ " + result.note); }
+            else{
+                showToast(`✅ أُرسلت لـ${result.sent} طالب${result.failed ? ` (فشل ${result.failed})` : ""}`);
+                if(data.send_mode === "broadcast"){
+                    await sb.from("marketing_messages").update({ sent_at: new Date().toISOString() }).eq("id", messageId);
+                }
+                renderCampaignList();
+            }
+        }
+    }catch(e){ showToast("تعذّر الإرسال: " + (e.message || e)); }
+}
+
 async function openVisitStatsPanel(){
     if(!isAdmin || !sb) return;
     document.getElementById("admin-overlay").style.display = "none";

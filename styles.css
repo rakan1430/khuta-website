@@ -2480,3 +2480,24 @@ body.dark-mode .chatbot-board-btn{
 .legal-body h3:first-child{ margin-top:0; }
 .legal-body p{ margin-bottom:10px; }
 .legal-body b{ color:var(--text-1); }
+
+/* ============================================================
+   50) لوحة إدارة رسائل البريد (للمشرفين)
+   ============================================================ */
+.campaign-tabs{ display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+.campaign-tab{
+    flex:1; min-width:100px; padding:10px 12px; border-radius:12px; cursor:pointer;
+    background:var(--bg-alt); border:1.5px solid var(--border); color:var(--text-2);
+    font-family:var(--font-body); font-weight:700; font-size:12.5px; transition:.2s;
+}
+.campaign-tab.active{ background:var(--gold); color:#fff; border-color:var(--gold); }
+.campaign-list{ display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto; }
+.campaign-row{
+    display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:12px 14px; background:var(--bg-alt); border:1px solid var(--border); border-radius:12px;
+}
+.campaign-row-main{ flex:1; min-width:160px; }
+.campaign-row-main b{ display:block; font-size:13.5px; margin-bottom:3px; }
+.campaign-meta{ font-size:11px; color:var(--text-3); line-height:1.6; }
+.campaign-row-actions{ display:flex; gap:6px; flex-shrink:0; }
+#campaign-body{ font-family:var(--font-mono); font-size:12.5px; line-height:1.7; resize:vertical; }

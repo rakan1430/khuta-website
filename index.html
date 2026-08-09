@@ -572,7 +572,70 @@
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openAnalyticsPanel()"><i class="fa-solid fa-chart-line"></i> لوحة التحليلات</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openLiveUsersPanel()"><i class="fa-solid fa-signal"></i> المتصلون الآن بالتفصيل</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openVisitStatsPanel()"><i class="fa-solid fa-eye"></i> زيارات الموقع اليوم</button>
+        <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openCampaignPanel()"><i class="fa-solid fa-envelope"></i> 📧 إدارة رسائل البريد</button>
         <button type="button" class="btn btn-sm btn-outline" style="margin-top:10px;" onclick="document.getElementById('admin-overlay').style.display='none'">إغلاق</button>
+    </div>
+</div>
+
+<!-- ===================== لوحة إدارة رسائل البريد (للمشرفين فقط) ===================== -->
+<div id="campaign-overlay" class="overlay-screen" style="display:none; z-index:5100;">
+    <div class="wizard-card" style="max-width:720px; text-align:start;">
+        <h2 style="margin-bottom:6px;"><i class="fa-solid fa-envelope"></i> إدارة رسائل البريد</h2>
+        <p class="card-sub" style="margin-bottom:16px;">اكتب الرسائل هنا أو من Supabase مباشرة. جرّبها على بريدك أولاً، ثم أرسلها فعلياً حين تجهز.</p>
+
+        <div class="campaign-tabs">
+            <button type="button" class="campaign-tab active" onclick="switchCampaignTab('list', this)">الرسائل</button>
+            <button type="button" class="campaign-tab" onclick="switchCampaignTab('new', this)">رسالة جديدة</button>
+            <button type="button" class="campaign-tab" onclick="switchCampaignTab('log', this)">سجل الإرسال</button>
+        </div>
+
+        <!-- قائمة الرسائل -->
+        <div id="campaign-pane-list" class="campaign-pane">
+            <div id="campaign-list" class="campaign-list"></div>
+        </div>
+
+        <!-- رسالة جديدة -->
+        <div id="campaign-pane-new" class="campaign-pane" style="display:none;">
+            <div class="form-group"><label>عنوان الرسالة</label><input type="text" id="campaign-subject" placeholder="مثال: وينك يا بطل؟"></div>
+            <div class="form-group">
+                <label>محتوى الرسالة (HTML مسموح)</label>
+                <textarea id="campaign-body" rows="7" placeholder="&lt;p&gt;نص الرسالة هنا...&lt;/p&gt;"></textarea>
+            </div>
+            <div class="input-row">
+                <div class="form-group">
+                    <label>نمط الإرسال</label>
+                    <select id="campaign-mode" onchange="onCampaignModeChange()">
+                        <option value="broadcast">جماعي — لكل من وافق</option>
+                        <option value="behavior">ذكي — لمن غاب فترة</option>
+                    </select>
+                </div>
+                <div class="form-group" id="campaign-inactive-group" style="display:none;">
+                    <label>أرسل لمن غاب (أيام)</label>
+                    <input type="number" id="campaign-inactive-days" value="5" min="1" max="60">
+                </div>
+            </div>
+            <div class="input-row">
+                <div class="form-group"><label>المناسبة (لتنظيمك)</label><input type="text" id="campaign-occasion" placeholder="عام"></div>
+                <div class="form-group"><label>لا تُرسل قبل (اختياري)</label><input type="date" id="campaign-send-after"></div>
+            </div>
+            <button type="button" class="btn btn-block" onclick="saveCampaignMessage()"><i class="fa-solid fa-floppy-disk"></i> حفظ الرسالة</button>
+
+            <div class="divider"></div>
+            <div class="form-group">
+                <label>🧪 إرسال تجريبي (بريد أو أكثر، مفصولة بفاصلة)</label>
+                <input type="text" id="campaign-test-emails" placeholder="you@example.com, friend@example.com">
+                <p class="hint" style="margin-top:6px;">يُرسل لهذه العناوين فقط — لن يصل أي طالب حقيقي، وستظهر الرسالة موسومة كتجريبية.</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-block" onclick="sendCampaignTest()"><i class="fa-solid fa-flask"></i> أرسل تجريبياً الآن</button>
+        </div>
+
+        <!-- سجل الإرسال -->
+        <div id="campaign-pane-log" class="campaign-pane" style="display:none;">
+            <div id="campaign-log-list" class="campaign-list"></div>
+        </div>
+
+        <div class="divider"></div>
+        <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('campaign-overlay').style.display='none'">إغلاق</button>
     </div>
 </div>
 
