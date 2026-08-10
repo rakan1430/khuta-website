@@ -16,7 +16,14 @@
 const SUPABASE_URL = "https://squhkiwjwwyrgufkaujf.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_4BW-zO8Z5yxFXPHZnhl99A_rWFb2k84"; // مفتاح عام آمن بالتصميم، نفسه المستخدم في app.js
 const USERNAME_EMAIL_DOMAIN = "gmail.com";
-const SENDER_EMAIL = "no-reply@khutaa.netlify.app"; // اسم المُرسِل الظاهر للطالب — أي عنوان، Brevo لا يشترط تحققه للإرسال بحصة السجل المجاني
+/* ⚠️ يجب أن يكون هذا العنوان مُضافاً ومُتحقَّقاً منه فعلياً في Brevo
+   (Settings → Senders, domains, IPs → Senders). كان مضبوطاً سابقاً على
+   no-reply@khutaa.netlify.app بافتراض خاطئ أن Brevo تقبل أي عنوان — لكنها
+   رفضت كل رسالة فعلياً بالسبب الحرفي: "the sender you used ... is not valid"،
+   فكانت الرسائل تظهر "أُرسلت" في اللوحة ثم لا تصل أحداً إطلاقاً.
+   لتغييره مستقبلاً (مثلاً لنطاق خاص): أضف العنوان الجديد في Brevo وفعّله
+   عبر رابط التأكيد أولاً، ثم غيّره هنا. */
+const SENDER_EMAIL = "soosrakan1430@gmail.com";
 const SENDER_NAME = "خُطى";
 
 const ALLOWED_TYPES = ["examScore", "adminTest", "adminSendCampaign"];
