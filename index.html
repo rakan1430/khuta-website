@@ -1914,7 +1914,11 @@
     <div id="watermark-owner"><span data-i18n="footer.by">بواسطة</span> <b id="owner-name-slot">[اسمك هنا]</b> · <a href="mailto:sonyaloy9@gmail.com">sonyaloy9@gmail.com</a></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- مثبَّت على نسخة محددة (وليس "@2" العائم) عمداً: تحصين ضد سلسلة التوريد
+     (Supply-chain) — عنوان "@2" العائم قد يخدم كوداً مختلفاً دون أي تغيير
+     في هذا الملف لو تغيّر أحدث إصدار من 2.x على npm، بينما هذا التثبيت
+     يضمن تحميل نفس الكود المُراجَع دائماً حتى تُحدَّث النسخة هنا يدوياً. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
 <script src="app.js" defer></script>
 </body>
 </html>
