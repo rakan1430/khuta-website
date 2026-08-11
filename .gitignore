@@ -1,0 +1,13 @@
+# تبعيات Node (تُنصَّب تلقائياً بواسطة Netlify عند النشر من package-lock.json)
+node_modules/
+
+# ملفات بيئة محلية — يجب ألا تحوي أي مفتاح سري حقيقي هذا الملف نفسه؛
+# كل المفاتيح (GEMINI_API_KEY, BREVO_API_KEY, SUPABASE_SERVICE_ROLE_KEY,
+# VAPID_PRIVATE_KEY) تُضبط فقط من Netlify Dashboard → Environment variables
+.env
+.env.*
+!.env.example
+
+# ملفات نظام شائعة
+.DS_Store
+*.log
