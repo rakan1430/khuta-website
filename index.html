@@ -39,6 +39,25 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div id="app-loading-screen">
+    <div class="loading-logo-wrap">
+        <svg class="loading-ring" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle class="loading-ring-track" cx="50" cy="50" r="42"/>
+            <circle class="loading-ring-arc" cx="50" cy="50" r="42"/>
+        </svg>
+        <div class="loading-logo-text">خُطى</div>
+    </div>
+    <div class="loading-caption" id="loading-caption">نجهّز رحلتك…</div>
+</div>
+<script>
+    // شبكة أمان مستقلة عن app.js نفسها: حتى لو تأخّر أو فشل التحميل الرئيسي
+    // لأي سبب، شاشة التحميل تختفي حتماً بعد أقصى مهلة معقولة بدل حبس الطالب
+    window.__loadingScreenShownAt = Date.now();
+    window.__loadingScreenSafetyTimer = setTimeout(function(){
+        var el = document.getElementById("app-loading-screen");
+        if(el) el.classList.add("hidden");
+    }, 6000);
+</script>
 <div class="bg-decor" aria-hidden="true">
     <svg class="bg-decor-rocket" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <g fill="none" stroke="currentColor" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
@@ -105,7 +124,7 @@
             <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
             <p class="hint" style="margin-top:6px;" data-i18n="account.emailOptionalNote">أدخله لتفعيل استرجاع كلمة المرور المنسية فوراً. اتركه فارغاً إن كنت تفضّل عدم مشاركة بريدك — لن نطلبه إلا برضاك.</p>
             <label class="consent-row" style="margin-top:12px;">
-                <input type="checkbox" id="login-marketing-consent">
+                <input type="checkbox" id="login-marketing-consent" checked>
                 <span data-i18n="account.marketingConsent">أوافق على استقبال رسائل تذكيرية أحياناً على بريدي (ليست يومية، ويمكنك إيقافها متى شئت)</span>
             </label>
             <p class="hint" style="margin-top:10px;">
@@ -1677,7 +1696,7 @@
                         <input type="email" id="acc-email" placeholder="you@example.com" autocomplete="email">
                         <p class="hint" style="margin-top:6px;" data-i18n="account.emailOptionalNote">أدخله لتفعيل استرجاع كلمة المرور المنسية فوراً. اتركه فارغاً إن كنت تفضّل عدم مشاركة بريدك — لن نطلبه إلا برضاك.</p>
                         <label class="consent-row" style="margin-top:12px;">
-                            <input type="checkbox" id="acc-marketing-consent">
+                            <input type="checkbox" id="acc-marketing-consent" checked>
                             <span data-i18n="account.marketingConsent">أوافق على استقبال رسائل تذكيرية أحياناً على بريدي (ليست يومية، ويمكنك إيقافها متى شئت)</span>
                         </label>
                         <p class="hint" style="margin-top:10px;">
@@ -1914,7 +1933,11 @@
     <div id="watermark-owner"><span data-i18n="footer.by">بواسطة</span> <b id="owner-name-slot">[اسمك هنا]</b> · <a href="mailto:sonyaloy9@gmail.com">sonyaloy9@gmail.com</a></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- مثبَّت على نسخة محددة (وليس "@2" العائم) عمداً: تحصين ضد سلسلة التوريد
+     (Supply-chain) — عنوان "@2" العائم قد يخدم كوداً مختلفاً دون أي تغيير
+     في هذا الملف لو تغيّر أحدث إصدار من 2.x على npm، بينما هذا التثبيت
+     يضمن تحميل نفس الكود المُراجَع دائماً حتى تُحدَّث النسخة هنا يدوياً. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
 <script src="app.js" defer></script>
 </body>
 </html>

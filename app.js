@@ -1047,7 +1047,21 @@ window.onload = () => {
         loadProfileForm();
         finishLoginBoot();
     }
+
+    hideLoadingScreen();
 };
+
+// يخفي شاشة التحميل بعد ضمان مدة عرض دنيا بسيطة (كي لا تومض بسرعة مزعجة
+// على اتصال سريع جداً)، ويلغي مؤقّت الأمان المستقل لأننا لسنا بحاجته الآن
+function hideLoadingScreen(){
+    clearTimeout(window.__loadingScreenSafetyTimer);
+    const el = document.getElementById("app-loading-screen");
+    if(!el) return;
+    const MIN_DISPLAY_MS = 500;
+    const elapsed = Date.now() - (window.__loadingScreenShownAt || 0);
+    const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
+    setTimeout(() => el.classList.add("hidden"), remaining);
+}
 
 function updateWelcomeText(){
     const name = localStorage.getItem("khuta_name");
@@ -4822,10 +4836,22 @@ async function shareReferralLink(){
    ============================================================ */
 const ONBOARDING_STEPS = [
     {
+        id: "dash-card-overview-quests",
+        titleAr: "مهام اليوم — نقطة البداية اليومية", titleEn: "Today's tasks — your daily starting point",
+        textAr: "هذه القائمة تُبنى تلقائياً من خطتك: كمية محددة من كل مصدر (إيهاب، المنصف، المعاصر...) موزّعة على أيام خطتك بالتساوي. أنجزت مهمة؟ علّم عليها ✓ وتكسب XP فوراً. لو تأخّرت يوماً، الموقع يعيد توزيع الباقي عليك تلقائياً — لا تحتاج تحسب شيئاً بنفسك أبداً.",
+        textEn: "This list is built automatically from your plan: a specific amount from each source, spread evenly across your plan's days. Check ✓ a task and earn XP instantly. Fall behind a day, and the site automatically redistributes what's left — you never have to calculate anything yourself.",
+    },
+    {
         id: "btn-plan-session",
         titleAr: "ابدأ جلستك من هنا", titleEn: "Start your session here",
-        textAr: "المؤقت يقسّم وقتك تلقائياً بين اللفظي والكمي، ويتعلّم من أدائك مع الوقت ليُعدّل التوزيع بنفسه.",
-        textEn: "The timer auto-splits your time between verbal and quant, and learns from your pace over time to rebalance itself.",
+        textAr: "المؤقت يقسّم وقتك تلقائياً بين اللفظي والكمي، ويتعلّم من أدائك مع الوقت ليُعدّل التوزيع بنفسه. استراحة تلقائية كل ساعة مذاكرة متواصلة، وعدد محدود من استراحات الخمس دقائق تختارها بنفسك.",
+        textEn: "The timer auto-splits your time between verbal and quant, and learns from your pace over time to rebalance itself. Automatic breaks every hour of continuous study, plus a limited number of 5-minute breaks you control.",
+    },
+    {
+        id: "chatbot-fab",
+        titleAr: "مساعدك الذكي — متاح دائماً", titleEn: "Your AI assistant — always available",
+        textAr: "علقت بسؤال كمي أو لفظي؟ اسأله وسيشرحه خطوة بخطوة على سبورة تفاعلية. أو اسأله أي شيء عن الموقع نفسه (\"كيف أحسب موزونتي؟\"، \"وين ألقى دليل التخصصات؟\") وسينقلك للمكان بنفسه مباشرة — جرّب واكتشف حتى الأوسمة السرّية 👀",
+        textEn: "Stuck on a quant or verbal question? Ask, and it'll explain step-by-step on an interactive board. Or ask anything about the site itself (\"how do I calculate my weighted score?\") and it'll take you straight there — even the secret badges are worth asking about 👀",
     },
     {
         id: "btn-customize-dashboard",
@@ -4856,12 +4882,6 @@ const ONBOARDING_STEPS = [
         titleAr: "لست وحدك", titleEn: "You're not alone",
         textAr: "شاهد كم طالباً يذاكر الآن معك، شارك في لوحة الصدارة الأسبوعية، أو اطرح سؤالاً سريعاً على حائط الأسئلة.",
         textEn: "See how many students are studying right now with you, join the weekly leaderboard, or ask a quick question on the community wall.",
-    },
-    {
-        id: "chatbot-fab",
-        titleAr: "مساعدك دائماً هنا", titleEn: "Your assistant is always here",
-        textAr: "اسأل عن أي سؤال كمي أو لفظي، أو عن أي ميزة في الموقع لا تعرفها بعد — أو حتى عن الأوسمة السرّية 👀",
-        textEn: "Ask any quant or verbal question, or about any site feature you haven't discovered yet — even the secret badges 👀",
     },
 ];
 
@@ -4921,7 +4941,7 @@ function runOnboardingStep(index){
     // حدود الشاشة الآمنة (مع مراعاة حواف الهاتف ذات النتوء) في كل الاتجاهات.
     const card = document.getElementById("onboarding-card-el");
     const cardRect = card.getBoundingClientRect();
-    const safeTop = 12, safeBottom = 12, safeSide = 14;
+    const safeTop = 16, safeBottom = 30, safeSide = 14; // safeBottom أكبر عمداً ليحسب هامش المنطقة الآمنة (شريط الإيماءة/الشريط السفلي) على الهواتف الحديثة
     let top = rect.bottom + 16;
     if(top + cardRect.height > window.innerHeight - safeBottom){
         top = rect.top - cardRect.height - 16; // لا مكان أسفل الهدف — نضعها أعلاه بدلاً
@@ -4989,7 +5009,7 @@ function aiGuideNavigate(key){
         // نفس إصلاح القياس بعد الإدراج الفعلي بدل افتراض ارتفاع ثابت (انظر runOnboardingStep)
         const card = document.getElementById("onboarding-card-el");
         const cardRect = card.getBoundingClientRect();
-        const safeTop = 12, safeBottom = 12, safeSide = 14;
+        const safeTop = 16, safeBottom = 30, safeSide = 14; // safeBottom أكبر عمداً ليحسب هامش المنطقة الآمنة (شريط الإيماءة/الشريط السفلي) على الهواتف الحديثة
         let top = rect.bottom + 16;
         if(top + cardRect.height > window.innerHeight - safeBottom) top = rect.top - cardRect.height - 16;
         top = Math.max(safeTop, Math.min(top, window.innerHeight - cardRect.height - safeBottom));
