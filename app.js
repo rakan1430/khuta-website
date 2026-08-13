@@ -8010,6 +8010,18 @@ function addChatbotMessage(text, who){
     box.scrollTop = box.scrollHeight;
 }
 
+// فقاعة مخصَّصة لتنبيه "سجّل الدخول لاستخدام الذكاء الاصطناعي" — منفصلة عن
+// addChatbotMessage عمداً (لا نريد زر "اشرحها على السبورة" غير المناسب هنا،
+// ونحتاج HTML فعلي لزر تسجيل الدخول الحقيقي، انظر buildAiAuthPromptHtml)
+function addChatbotAuthPrompt(message){
+    const box = document.getElementById("chatbot-messages");
+    const div = document.createElement("div");
+    div.className = "chatbot-msg bot";
+    div.innerHTML = buildAiAuthPromptHtml(message);
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
 function askChatbot(text){
     document.getElementById("chatbot-input").value = text;
     sendChatbotMessage();
@@ -8049,9 +8061,11 @@ async function sendChatbotMessage(){
             const limitMsg = getAiLimitErrorMessage(e);
             if(limitMsg){
                 // تسجيل دخول مطلوب / بلغ الحد — ليست مشكلة اتصال مؤقتة، فلا نرجع
-                // للمساعد المحلي (سيبدو مضللاً)، بل نوضّح السبب الحقيقي مباشرة
-                addChatbotMessage(limitMsg, "bot");
-                if(e.code === "AUTH_REQUIRED") document.getElementById("login-overlay").style.display = "flex";
+                // للمساعد المحلي (سيبدو مضللاً)، بل نوضّح السبب الحقيقي مباشرة.
+                // لا تحويل تلقائي مفاجئ لشاشة الدخول — زر حقيقي يفتحها فقط إن
+                // اختار الطالب ذلك بنفسه (كانت الرسالة تختفي فوراً قبل أن تُقرأ)
+                if(e.code === "AUTH_REQUIRED") addChatbotAuthPrompt(limitMsg);
+                else addChatbotMessage(limitMsg, "bot");
                 return;
             }
             geminiLastFailAt = Date.now(); // نتحوّل للمساعد المحلي مؤقتاً، ونعيد محاولة Gemini تلقائياً بعد فترة التهدئة
@@ -8164,6 +8178,20 @@ function getAiLimitErrorMessage(e){
             "📅 You've reached your weekly AI usage limit — it resets next week.");
     }
     return null;
+}
+
+// ⚠️ لا نحوّل الطالب تلقائياً لشاشة الدخول عند AUTH_REQUIRED (كان هذا
+// يبدو انقطاعاً مفاجئاً — الرسالة تختفي فوراً قبل أن يقرأها الطالب أصلاً).
+// بدلاً من ذلك: رسالة واضحة + زر حقيقي يفتح شاشة الدخول فقط إن اختار
+// الطالب ذلك بنفسه. يُستخدَم في كل نقاط دخول الذكاء الاصطناعي الأربع
+// (الدردشة، السبورة، الدفتر، توليد الاختبار) لسلوك موحّد.
+function buildAiAuthPromptHtml(message){
+    return `<div class="ai-auth-prompt">
+        <p>${escapeHtml(message)}</p>
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('login-overlay').style.display='flex'">
+            <i class="fa-solid fa-right-to-bracket"></i> ${labT("تسجيل الدخول","Sign in")}
+        </button>
+    </div>`;
 }
 
 async function askGemini(userText){
@@ -8418,8 +8446,11 @@ async function boardExplain(questionText){
     }catch(e){
         console.error("[خُطى] فشل شرح السبورة:", e);
         const limitMsg = getAiLimitErrorMessage(e);
-        surface.innerHTML = `<div class="board-loading">${limitMsg ? "" : "😕 "}${limitMsg || labT("تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","Couldn't reach the AI right now — try again shortly")}</div>`;
-        if(e.code === "AUTH_REQUIRED") document.getElementById("login-overlay").style.display = "flex";
+        if(e.code === "AUTH_REQUIRED"){
+            surface.innerHTML = buildAiAuthPromptHtml(limitMsg);
+        } else {
+            surface.innerHTML = `<div class="board-loading">${limitMsg ? "" : "😕 "}${limitMsg || labT("تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","Couldn't reach the AI right now — try again shortly")}</div>`;
+        }
     }
 }
 
@@ -8669,10 +8700,13 @@ async function sendPadToAI(){
     }catch(e){
         console.error("[خُطى] فشل تحليل الدفتر:", e);
         const limitMsg = getAiLimitErrorMessage(e);
-        out.innerHTML = limitMsg || (hasDrawing && !rawText
-            ? labT("😕 تعذّر إرسال الرسم — جرّب كتابة المسألة نصاً في خانة الكتابة","😕 Couldn't send the drawing — try typing the problem instead")
-            : labT("😕 تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","😕 Couldn't reach the AI — try again shortly"));
-        if(e.code === "AUTH_REQUIRED") document.getElementById("login-overlay").style.display = "flex";
+        if(e.code === "AUTH_REQUIRED"){
+            out.innerHTML = buildAiAuthPromptHtml(limitMsg);
+        } else {
+            out.innerHTML = limitMsg || (hasDrawing && !rawText
+                ? labT("😕 تعذّر إرسال الرسم — جرّب كتابة المسألة نصاً في خانة الكتابة","😕 Couldn't send the drawing — try typing the problem instead")
+                : labT("😕 تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","😕 Couldn't reach the AI — try again shortly"));
+        }
     }
 }
 
@@ -8770,8 +8804,11 @@ async function generateCustomExam(){
     }catch(e){
         console.error("[خُطى] فشل توليد الاختبار:", e);
         const limitMsg = getAiLimitErrorMessage(e);
-        status.textContent = limitMsg || labT("😕 تعذّر التوليد — تأكد أن الملف نصّي واضح وجرّب مجدداً","😕 Generation failed — make sure the file is clear text and retry");
-        if(e.code === "AUTH_REQUIRED") document.getElementById("login-overlay").style.display = "flex";
+        if(e.code === "AUTH_REQUIRED"){
+            status.innerHTML = buildAiAuthPromptHtml(limitMsg);
+        } else {
+            status.textContent = limitMsg || labT("😕 تعذّر التوليد — تأكد أن الملف نصّي واضح وجرّب مجدداً","😕 Generation failed — make sure the file is clear text and retry");
+        }
     }
     btn.disabled = false;
 }
