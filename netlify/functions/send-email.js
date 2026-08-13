@@ -11,7 +11,19 @@
    متغيّرات البيئة المطلوبة على Netlify:
    - BREVO_API_KEY (من Brevo → Settings → SMTP & API → API Keys، يبدأ بـ xkeysib-)
    - SUPABASE_SERVICE_ROLE_KEY (نفس المتغيّر المستخدم في gemini-proxy.js)
+
+   ⚠️ إضافة (رسائل الحملات لا تبدو واضحة/موثوقة للطلاب): رسائل adminSendCampaign
+   الآن تحمل تذييلاً واضحاً يشرح فعلياً لماذا وصلت هذه الرسالة (موافقة صريحة
+   عند التسجيل) + رابط إلغاء اشتراك حقيقي بضغطة واحدة، ورأس بريد
+   List-Unsubscribe قياسي (يدعمه Gmail/Outlook/ياهو مجاناً بلا أي خدمة
+   مدفوعة أو نطاق بريد مخصص). هذا يرفع شفافية الرسالة (تقلّل شعورها كرسالة
+   دعائية مجهولة المصدر) ويحسّن فرص وصولها لصندوق البريد الرئيسي بدل
+   التصنيف التلقائي كـ"ترويجية" — رابط الإلغاء موقَّع (HMAC) بمفتاح
+   SUPABASE_SERVICE_ROLE_KEY نفسه، فلا يحتاج متغيّر بيئة إضافي، ويُتحقَّق
+   منه في netlify/functions/unsubscribe.js.
    ============================================================ */
+
+const crypto = require("crypto");
 
 const SUPABASE_URL = "https://squhkiwjwwyrgufkaujf.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_4BW-zO8Z5yxFXPHZnhl99A_rWFb2k84"; // مفتاح عام آمن بالتصميم، نفسه المستخدم في app.js
@@ -25,8 +37,31 @@ const USERNAME_EMAIL_DOMAIN = "gmail.com";
    عبر رابط التأكيد أولاً، ثم غيّره هنا. */
 const SENDER_EMAIL = "soosrakan1430@gmail.com";
 const SENDER_NAME = "خُطى";
+const SITE_URL = "https://khutaa.netlify.app";
 
 const ALLOWED_TYPES = ["examScore", "adminTest", "adminSendCampaign"];
+
+// رابط إلغاء اشتراك موقَّع لكل مستخدم — لا يحتاج جدول توكنات منفصل، فقط
+// HMAC بمفتاح سرّي موجود أصلاً على الخادم (service_role). أي تلاعب بـuid
+// في الرابط يُبطل التوقيع فوراً (يُتحقَّق منه في unsubscribe.js).
+function buildUnsubscribeToken(userId, secret){
+    return crypto.createHmac("sha256", secret).update(userId).digest("hex").slice(0, 32);
+}
+function buildUnsubscribeUrl(userId, secret){
+    const token = buildUnsubscribeToken(userId, secret);
+    return `${SITE_URL}/.netlify/functions/unsubscribe?uid=${encodeURIComponent(userId)}&token=${token}`;
+}
+
+// تذييل شفاف يوضّح فعلياً لماذا وصلت الرسالة ورابط إلغاء حقيقي — يُضاف فقط
+// لرسائل الحملات (adminSendCampaign)، وليس لبريد نتيجة الاختبار (معاملاتي
+// بحت، لا يخضع لموافقة marketing_consent أصلاً)
+function appendUnsubscribeFooter(bodyHtml, unsubscribeUrl){
+    return `${bodyHtml}
+    <div style="margin-top:28px; padding-top:16px; border-top:1px solid #eee; font-family:sans-serif; direction:rtl; text-align:right; font-size:11px; color:#999; line-height:1.8;">
+        وصلتك هذه الرسالة من تطبيق <b>خُطى</b> لأنك وافقت صراحةً على استقبال رسائل تذكيرية عند إنشاء حسابك (أو من إعدادات ملفك الشخصي).
+        <a href="${unsubscribeUrl}" style="color:#999; text-decoration:underline;">إلغاء الاشتراك من هذه الرسائل نهائياً</a>
+    </div>`;
+}
 
 // يتحقق من كون المستخدم مشرفاً فعلياً عبر جدول app_admins على الخادم —
 // لا نثق إطلاقاً بأي ادعاء "أنا مشرف" قادم من المتصفح (نفس مبدأ gemini-proxy)
@@ -84,7 +119,7 @@ async function getCampaignRecipients(message){
         if(!uRes.ok) continue;
         const user = await uRes.json();
         if(!user.email || !isRealEmail(user.email, row.username)) continue;
-        eligible.push({ email: user.email, name: row.username });
+        eligible.push({ id: row.id, email: user.email, name: row.username });
     }
     return eligible;
 }
@@ -149,7 +184,9 @@ function buildExamScoreEmail(name, score, total, examTypeLabel){
     </div>`;
 }
 
-async function sendViaBrevo(apiKey, toEmail, toName, subject, html){
+// extraHeaders (اختياري): رؤوس بريد فعلية تُرسَل مع الرسالة نفسها (مثل
+// List-Unsubscribe) — Brevo تمرّرها كما هي عبر حقل "headers" في طلبها
+async function sendViaBrevo(apiKey, toEmail, toName, subject, html, extraHeaders){
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: { "api-key": apiKey, "Content-Type": "application/json", "Accept": "application/json" },
@@ -157,6 +194,7 @@ async function sendViaBrevo(apiKey, toEmail, toName, subject, html){
             sender: { email: SENDER_EMAIL, name: SENDER_NAME },
             to: [{ email: toEmail, name: toName || undefined }],
             subject, htmlContent: html,
+            ...(extraHeaders ? { headers: extraHeaders } : {}),
         }),
     });
     return res;
@@ -222,9 +260,22 @@ exports.handler = async function(event){
             if(recipients.length === 0){
                 return { statusCode: 200, body: JSON.stringify({ ok:true, sent:0, note:"لا يوجد مستلمون مستحقون حالياً" }) };
             }
+            const serviceKeyForUnsub = process.env.SUPABASE_SERVICE_ROLE_KEY;
             let sent = 0, failed = 0;
             for(const r of recipients){
-                const up = await sendViaBrevo(apiKey, r.email, r.name, subject, bodyHtml);
+                // رابط إلغاء اشتراك حقيقي مُخصَّص لكل مستلم + رأس List-Unsubscribe
+                // قياسي — يرفع شفافية الرسالة ويحسّن فرص وصولها للصندوق الرئيسي
+                // (انظر شرح هذا القرار أعلى الملف)، بلا أي خدمة أو نطاق مدفوع
+                let html = bodyHtml, extraHeaders;
+                if(serviceKeyForUnsub && r.id){
+                    const unsubUrl = buildUnsubscribeUrl(r.id, serviceKeyForUnsub);
+                    html = appendUnsubscribeFooter(bodyHtml, unsubUrl);
+                    extraHeaders = {
+                        "List-Unsubscribe": `<${unsubUrl}>`,
+                        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                    };
+                }
+                const up = await sendViaBrevo(apiKey, r.email, r.name, subject, html, extraHeaders);
                 if(up.ok){ sent++; await logCampaignSend(payload.messageId, r.email, "sent", null, false); }
                 else { failed++; await logCampaignSend(payload.messageId, r.email, "failed", await up.text(), false); }
             }
