@@ -8296,7 +8296,13 @@ async function callGeminiProxy(mode, extraFields){
     let accessToken = null;
     if(sb){
         const { data } = await sb.auth.getSession();
-        accessToken = data && data.session && data.session.access_token;
+        const session = data && data.session;
+        // الجلسة المجهولة (التي ينشئها التطبيق تلقائياً لكل ضيف من أجل
+        // المجتمع) ليست "حساباً مسجَّلاً" — الخادم يرفضها أصلاً، ونتحقق منها
+        // هنا أيضاً كي يرى الضيف رسالة تسجيل الدخول فوراً بلا طلب ضائع
+        if(session && session.user && session.user.is_anonymous !== true){
+            accessToken = session.access_token;
+        }
     }
     if(!accessToken){
         const err = new Error("Sign-in required for AI features");

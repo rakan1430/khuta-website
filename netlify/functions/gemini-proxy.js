@@ -420,8 +420,15 @@ exports.handler = async function (event) {
     // ⚠️ الذكاء الاصطناعي لحسابات مسجَّلة فقط (بطلب صريح من المطوّر، انظر
     // الشرح أعلى الملف) — لا نثق بأي بريد/معرّف يرسله الطلب، فقط بتوكن
     // جلسة Supabase حقيقي يُتحقَّق منه هنا على الخادم.
+    //
+    // ⚠️⚠️ user.is_anonymous شرط جوهري وليس تشدداً زائداً: التطبيق ينشئ لكل
+    // ضيف جلسة Supabase مجهولة صامتة (يحتاجها المجتمع — انظر
+    // signInAnonymously في app.js). تلك الجلسة توكنها صحيح تماماً ولها uid
+    // حقيقي في auth.users، فتعبر verifyUser بنجاح. بدون هذا الشرط يكون
+    // "الحد لحسابات مسجَّلة فقط" بلا معنى: يكفي الضيف مسح بيانات المتصفح
+    // ليحصل على uid مجهول جديد بحصة 10/يوم جديدة، بلا نهاية.
     const user = await verifyUser(payload.accessToken);
-    if(!user || !user.id){
+    if(!user || !user.id || user.is_anonymous === true){
         return {
             statusCode: 401,
             body: JSON.stringify({
