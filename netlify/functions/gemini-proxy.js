@@ -18,12 +18,13 @@
    ⚠️ لا تكتب مفتاح Gemini هنا في هذا الملف — يُضبط فقط من:
    Netlify Dashboard → Site configuration → Environment variables →
    GEMINI_API_KEY (من aistudio.google.com/apikey)
-   وأيضاً (لتفعيل الحد الأقصى للطلبات وحدود الاستخدام أدناه): SUPABASE_SERVICE_ROLE_KEY
-   (من Supabase → Settings → API — نفس المتغيّر المستخدم في send-reminders.js)
+   وأيضاً (لتفعيل الحد الأقصى للطلبات وحدود الاستخدام وبنك الأسئلة المشترك
+   أدناه): SUPABASE_SERVICE_ROLE_KEY (من Supabase → Settings → API — نفس
+   المتغيّر المستخدم في send-reminders.js وsend-email.js)
 
    ⚠️ ملاحظة نشر مهمة: هذا الملف لا يعتمد على أي حزمة خارجية (لا
-   @supabase/supabase-js ولا غيرها) عمداً — فقط fetch المدمجة في Node.js،
-   عبر واجهة Supabase REST API مباشرة. جُرِّب سابقاً استيراد مكتبة
+   @supabase/supabase-js ولا غيرها) عمداً — فقط fetch وcrypto المدمجتان في
+   Node.js، عبر واجهة Supabase REST API مباشرة. جُرِّب سابقاً استيراد مكتبة
    Supabase الرسمية هنا وفشل النشر فعلياً برسالة "Cannot find module"
    رغم إدراجها في package.json (على الأرجح مشكلة تحزيم خاصة بـNetlify
    لهذا الملف تحديداً) — الاعتماد على fetch وحدها يزيل هذا الخطر تماماً
@@ -38,17 +39,26 @@
    أي حد — كما طُلب صراحةً. لا خدمة مدفوعة لرفع الحد بعد (مخطَّطة مستقبلاً،
    غير مُفعَّلة الآن). التفاصيل الكاملة في verifyUser/verifyAdmin/
    checkAndIncrementAiQuota أدناه.
+
+   ⚠️ إضافة (بنك الأسئلة المشترك): نمط "exam" (اختبار من ملف الطالب) كان
+   يولّد أسئلة تُستخدَم لطالب واحد فقط ثم تُرمى نهائياً. الآن — بعد أن يؤكد
+   Gemini نفسه أن السؤال "valid" فعلاً (سؤال قدرات سليم مكتمل المعنى، لا
+   ركيك ولا مأخوذ من محتوى عام) — تُحفَظ نسخة منه في جدول
+   shared_exam_questions العام، لتصبح متاحة لاحقاً لأي طالب آخر يبدأ
+   اختباراً قياسياً دون الحاجة لرفع ملفات إطلاقاً. هذا حفظ من طرف الخادم
+   فقط (service_role) بعد تحقق فعلي — لا يثق بأي ادعاء "هذا سؤال صحيح" من
+   المتصفح، ولا يوقف أبداً استجابة الطالب نفسه لو فشل الحفظ (best-effort).
    ============================================================ */
+
+const crypto = require("crypto");
 
 const SUPABASE_URL = "https://squhkiwjwwyrgufkaujf.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_4BW-zO8Z5yxFXPHZnhl99A_rWFb2k84"; // مفتاح عام آمن بالتصميم، نفسه المستخدم في app.js وsend-email.js
-// ⚠️ ثابت على "gemini-2.5-flash" عمداً (وليس "gemini-flash-latest"): تأكّدنا
-// فعلياً أن "-latest" يشير لموديل تجريبي بحصة أضيق بكثير (فعّلنا الشات
-// مرتين متتاليتين على الموقع الحي فحصلنا فوراً على خطأ 429 "exceeded your
-// current quota" من Google نفسها، رغم أن الحد الأقصى الداخلي لخُطى لم
-// يُلامَس أصلاً) — كما أن ردوده كانت تتضمّن "thoughtSignature" (وضع تفكير
-// ممتد يستهلك حصة أكبر ويزيد زمن الاستجابة). "gemini-2.5-flash" هو الاسم
-// الثابت المُوصى به رسمياً للاستخدام الإنتاجي، بحصة مجانية أسخى بكثير.
+// ⚠️ ثابت على "gemini-3.6-flash" — راجع تعليقات الإصدارات السابقة في سجل
+// git إن احتجت تاريخ التبديل بين الموديلات (توقّفت أكثر من نسخة سابقة عن
+// الخدمة قبل موعدها الرسمي المعلَن؛ عند أي عطل مفاجئ، أول خطوة تشخيص هي
+// استدعاء هذه الدالة مباشرة عبر console المتصفح لقراءة رسالة خطأ Google
+// الحرفية).
 const GEMINI_MODEL = "gemini-3.6-flash";
 
 /* ---------- هوية خُطى الموحّدة — صلبة هنا فقط، لا يقدر أي طلب خارجي تعديلها ---------- */
@@ -103,8 +113,10 @@ const EXAM_SYSTEM_PROMPT = `${KHUTA_IDENTITY_CORE}
 
 أنت خبير إعداد أسئلة اختبار القدرات المعرفية السعودي (GAT). سيصلك محتوى دراسي رفعه الطالب. ولّد منه أسئلة اختيار من متعدد بمستوى وأسلوب اختبار القدرات الحقيقي.
 أجب حصراً بكائن JSON واحد صالح دون أي نص خارجه ودون أسوار كود:
-{"questions":[{"text":"نص السؤال","choices":["أ","ب","ج","د"],"correct":0,"explain":"شرح مختصر للحل"}]}
-القواعد: choices أربعة بالضبط دائماً، correct رقم من 0 إلى 3 لموقع الإجابة الصحيحة، الأسئلة مستمدة فعلاً من المحتوى المرسل ومتنوعة الصعوبة، ولا تكرر نفس الفكرة.`;
+{"questions":[{"text":"نص السؤال","choices":["أ","ب","ج","د"],"correct":0,"explain":"شرح مختصر للحل","valid":true,"source_hint":null}]}
+القواعد: choices أربعة بالضبط دائماً، correct رقم من 0 إلى 3 لموقع الإجابة الصحيحة، الأسئلة مستمدة فعلاً من المحتوى المرسل ومتنوعة الصعوبة، ولا تكرر نفس الفكرة.
+حقل "valid": true فقط إن كان السؤال بالفعل سؤال قدرات معرفية سليم، مكتمل المعنى بذاته دون حاجة لسياق خارجي، ومطابق فعلاً لنمط اختبار القدرات بإجابة صحيحة واحدة واضحة لا لبس فيها — اجعله false لأي سؤال ركيك أو ناقص أو غامض أو مأخوذ من محتوى المادة الدراسية العام لا القدرات نفسها، أو تكرار لفكرة سابقة في نفس الرد. سؤال بـvalid:false يبقى ضمن الرد لكن يُستبعد لاحقاً من إعادة الاستخدام لطلاب آخرين.
+حقل "source_hint": إن ذكر المحتوى المُرسَل صراحةً اسم دورة أو مصدر تدريبي معروف اشتُقّ منه السؤال (مثل "دورة المفكر" أو "كتاب المعاصر")، اكتب اسم المصدر فقط باختصار شديد (أقل من 40 حرفاً، بلا أي نص إضافي)؛ وإلا اجعله null.`;
 
 const TITLE_SYSTEM_PROMPT = `${KHUTA_IDENTITY_CORE}
 لخّص موضوع هذه المحادثة بعنوان قصير جداً (من 3 إلى 6 كلمات) بالعربية، بلا علامات ترقيم زائدة ولا علامات اقتباس ولا كلمة "عنوان" نفسها — أجب بالعنوان فقط لا غير.`;
@@ -315,6 +327,67 @@ async function checkAndIncrementAiQuota(userId, serviceKey){
     }
 }
 
+/* ---------- بنك الأسئلة المشترك (انظر الشرح في أعلى الملف) ---------- */
+function normalizeForHash(s){
+    return String(s).trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+// نسخة خادمية من extractJson المستخدَمة في app.js — هذا الملف بلا أي
+// اعتمادية مشتركة مع كود العميل عمداً (يعمل كدالة خادم مستقلة تماماً)
+function extractJsonServer(text){
+    const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    let raw = fenced ? fenced[1] : text;
+    const first = raw.indexOf("{"); const last = raw.lastIndexOf("}");
+    if(first === -1 || last === -1) throw new Error("no json braces");
+    return JSON.parse(raw.slice(first, last + 1));
+}
+
+async function storeSharedExamQuestions(section, upstreamBodyText){
+    if(section !== "quant" && section !== "verbal") return; // قيمة غير متوقعة — لا حفظ، لا خطأ
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if(!serviceKey) return;
+
+    const geminiJson = JSON.parse(upstreamBodyText);
+    const modelText = geminiJson.candidates && geminiJson.candidates[0]
+        && geminiJson.candidates[0].content && geminiJson.candidates[0].content.parts
+        && geminiJson.candidates[0].content.parts[0] && geminiJson.candidates[0].content.parts[0].text;
+    if(!modelText) return;
+
+    const data = extractJsonServer(modelText);
+    const validQuestions = (Array.isArray(data.questions) ? data.questions : []).filter(q =>
+        q && q.valid === true &&
+        typeof q.text === "string" && q.text.trim().length >= 8 &&
+        Array.isArray(q.choices) && q.choices.length === 4 &&
+        q.choices.every(c => typeof c === "string" && c.trim().length > 0) &&
+        Number.isInteger(q.correct) && q.correct >= 0 && q.correct <= 3
+    ).slice(0, 20); // حد أقصى للحفظ من استدعاء واحد — لا حاجة لأكثر دفعة واحدة
+
+    if(validQuestions.length === 0) return;
+
+    const rows = validQuestions.map(q => ({
+        section,
+        text: q.text.trim().slice(0, 1000),
+        choices: q.choices.map(c => String(c).trim().slice(0, 300)),
+        correct: q.correct,
+        explain: typeof q.explain === "string" && q.explain.trim() ? q.explain.trim().slice(0, 500) : null,
+        source_note: typeof q.source_hint === "string" && q.source_hint.trim() ? q.source_hint.trim().slice(0, 40) : null,
+        text_hash: crypto.createHash("sha256").update(normalizeForHash(q.text)).digest("hex"),
+    }));
+
+    // Prefer: resolution=ignore-duplicates يتجاهل أي صف يصطدم بفهرس
+    // text_hash الفريد بصمت (نفس السؤال رفعه طالب آخر من قبل) بدل فشل الطلب بالكامل
+    await fetch(`${SUPABASE_URL}/rest/v1/shared_exam_questions`, {
+        method: "POST",
+        headers: {
+            "apikey": serviceKey,
+            "Authorization": `Bearer ${serviceKey}`,
+            "Content-Type": "application/json",
+            "Prefer": "resolution=ignore-duplicates",
+        },
+        body: JSON.stringify(rows),
+    });
+}
+
 exports.handler = async function (event) {
     if (event.httpMethod !== "POST") {
         return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
@@ -417,6 +490,17 @@ exports.handler = async function (event) {
         );
 
         const text = await upstream.text();
+
+        // بعد نجاح توليد أسئلة من ملف طالب: نحفظ الأسئلة "الصالحة" فعلاً في
+        // البنك المشترك العام (انظر الشرح أعلى الملف). ننتظر إتمامها فعلياً
+        // (لا fire-and-forget) لأن بيئة Netlify Functions قد توقف تنفيذ
+        // الدالة بمجرد إرجاع الرد، فأي مهمة خلفية غير مُنتظَرة قد لا تكتمل
+        // إطلاقاً — لكن فشلها هنا لا يُظهر أي خطأ للطالب بأي حال.
+        if(mode === "exam" && upstream.ok){
+            try{ await storeSharedExamQuestions(payload.section, text); }
+            catch(e){ console.error("[gemini-proxy] تعذّر حفظ أسئلة البنك المشترك:", e); }
+        }
+
         return {
             statusCode: upstream.status,
             headers: { "Content-Type": "application/json" },
