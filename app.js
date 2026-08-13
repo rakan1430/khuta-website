@@ -381,6 +381,7 @@ ar:{
 "alert.title":"أحسنت! انتهت الجلسة 🎯",
 "alert.msg":"لقد أتممت جلسة تركيز رائعة. خذ نفساً عميقاً — استحققت استراحة قصيرة.",
 "alert.continue":"متابعة",
+"intro.skip":"تخطّي والبدء الآن",
 "brand.tag":"رفيق القدرات",
 "nav.dashboard":"الخطة والجدول","nav.calculator":"حساب الموزونة","nav.links":"الروابط المباشرة","nav.profile":"الملف الشخصي",
 "nav.account":"الحساب والمزامنة","nav.specialties":"دليل التخصصات","nav.community":"المجتمع",
@@ -554,6 +555,7 @@ en:{
 "alert.title":"Nicely done! Session complete 🎯",
 "alert.msg":"You finished a great focus session. Take a deep breath — you've earned a short break.",
 "alert.continue":"Continue",
+"intro.skip":"Skip & start now",
 "brand.tag":"QUDRAT COMPANION",
 "nav.dashboard":"Plan & Schedule","nav.calculator":"Weighted Score","nav.links":"Quick Links","nav.profile":"Profile",
 "nav.account":"Account & Sync","nav.specialties":"Specialty Guide","nav.community":"Community",
@@ -996,6 +998,33 @@ setInterval(() => {
     if(focusDate) focusDate.textContent = dateStr;
 }, 1000);
 
+// عبارات تتناوب أسفل حلقة التحميل بينما البيانات الحقيقية لا تزال تُجلَب —
+// لمسة بصرية بحتة، لا صلة لها بالتقدّم الفعلي (الحلقة نفسها هي التي تعكسه)
+const LOADING_CAPTIONS_AR = ["نجهّز رحلتك…", "نرتب جدولك…", "نحضّر بياناتك…", "على وشك الجاهزية…"];
+const LOADING_CAPTIONS_EN = ["Getting your journey ready…", "Setting up your schedule…", "Fetching your data…", "Almost there…"];
+let loadingCaptionTimer = null;
+function startLoadingCaptionRotation(){
+    const el = document.getElementById("loading-caption");
+    if(!el) return;
+    const list = currentLang === "ar" ? LOADING_CAPTIONS_AR : LOADING_CAPTIONS_EN;
+    let i = 0;
+    loadingCaptionTimer = setInterval(() => {
+        i = (i + 1) % list.length;
+        el.style.opacity = "0";
+        setTimeout(() => { el.textContent = list[i]; el.style.opacity = "1"; }, 220);
+    }, 1600);
+}
+
+// يحدّث حلقة التحميل لتعكس نسبة البيانات المكتملة فعلياً (loaded/total) —
+// وليست حركة دورانية عشوائية بلا معنى
+const LOADING_RING_CIRCUMFERENCE = 263.9; // 2π×42، نفس نصف قطر الدائرة في index.html
+function updateLoadingProgress(loaded, total){
+    const arc = document.getElementById("loading-ring-arc");
+    if(!arc || !total) return;
+    const fraction = Math.min(1, loaded / total);
+    arc.style.strokeDashoffset = String(LOADING_RING_CIRCUMFERENCE * (1 - fraction));
+}
+
 /* ============================================================
    5) تسجيل الدخول والتخصيص
    ============================================================ */
@@ -1005,15 +1034,32 @@ window.onload = () => {
     applyI18n();
     ensureTaskStatusFreshToday();
     initIdleDetection();
+    startLoadingCaptionRotation();
     // نؤخّرها عمداً كي لا تزاحم بدء الصفحة ولا الجولة التعريفية للمستخدم الجديد
     setTimeout(maybeAskForMarketingConsent, 6000);
-    tryLoadUniversitiesFromSupabase();
-    tryLoadRemoteUniversities();
-    tryLoadRemoteContent();
-    tryLoadRemoteCurriculum();
-    tryLoadRemoteSpecialties();
-    tryLoadRemoteExamQuestions();
-    loadSharedExamQuestions();
+
+    // ⚠️ تحسين مهم: كل دوال جلب البيانات أدناه كانت تُستدعى وتُترَك (fire-and-
+    // forget) بينما تختفي شاشة التحميل فوراً تقريباً بلا انتظارها — فيدخل
+    // الطالب أحياناً قبل اكتمال قوائم الجامعات/إلخ. الآن نجمعها في مصفوفة
+    // ونعرض شاشة التحميل حتى تكتمل فعلياً (كل دالة أدناه تتعامل مع فشلها
+    // داخلياً وتسقط برفق لبيانات محلية احتياطية، فلا يوجد خطر تعليق إلى
+    // الأبد — ومؤقّت الأمان في index.html يبقى شبكة أمان أخيرة أصلاً).
+    const coreDataLoaders = [
+        tryLoadUniversitiesFromSupabase(),
+        tryLoadRemoteUniversities(),
+        tryLoadRemoteContent(),
+        tryLoadRemoteCurriculum(),
+        tryLoadRemoteSpecialties(),
+        tryLoadRemoteExamQuestions(),
+        // بنك الأسئلة المشترك (مساهمات الطلاب المُتحقَّق منها) — ينتظره التحميل
+        // أيضاً كي لا يبدأ الطالب اختباراً محاكياً قبل وصول الأسئلة المشتركة
+        // فيراها ناقصة. الدالة تبتلع أخطاءها داخلياً فلا تُفشل بقية التحميل.
+        loadSharedExamQuestions(),
+    ];
+    let loadedCount = 0;
+    updateLoadingProgress(0, coreDataLoaders.length);
+    coreDataLoaders.forEach(p => p.then(() => updateLoadingProgress(++loadedCount, coreDataLoaders.length)));
+
     checkDevPanel();
     initContactLinks();
     checkAbandonedSession();
@@ -1038,30 +1084,108 @@ window.onload = () => {
         document.getElementById("app-container").classList.add("sidebar-collapsed");
     }
 
-    const session = getSession();
-    const name = localStorage.getItem("khuta_name");
-    if(!session && !name){
-        document.getElementById("login-overlay").style.display = "flex";
-    } else {
-        document.getElementById("login-overlay").style.display = "none";
-        updateWelcomeText();
-        loadProfileForm();
-        finishLoginBoot();
+    function enterApp(){
+        const session = getSession();
+        const name = localStorage.getItem("khuta_name");
+        if(!session && !name){
+            document.getElementById("login-overlay").style.display = "flex";
+        } else {
+            document.getElementById("login-overlay").style.display = "none";
+            updateWelcomeText();
+            loadProfileForm();
+            finishLoginBoot();
+        }
     }
 
-    hideLoadingScreen();
+    // ننتظر اكتمال كل التحميلات الأساسية فعلياً قبل إخفاء شاشة التحميل — لكن
+    // بحد أقصى فعلي (وليس Promise.all بلا سقف): fetch() بلا AbortController
+    // قد يعلق إلى الأبد إن لم يستجب الخادم إطلاقاً (لا يرفض حتى بعد فشله)،
+    // فبدون هذا السباق الزمني يبقى الطالب خلف شاشة تحميل قد تُخفى بصرياً
+    // بمؤقّت الأمان المستقل في index.html لكن دون أن يدخل التطبيق فعلياً أبداً
+    // (منطق enterApp/الترحيب معلَّق خلف Promise.all نفسها) — تحقّقنا من هذا
+    // فعلياً بمحاكاة انقطاع شبكة كامل قبل اعتماد هذا الإصلاح.
+    const CORE_DATA_TIMEOUT_MS = 8000;
+    const coreDataTimeout = new Promise(resolve => setTimeout(resolve, CORE_DATA_TIMEOUT_MS));
+    Promise.race([Promise.all(coreDataLoaders), coreDataTimeout]).then(() => {
+        hideLoadingScreen().then(() => showIntroIfFirstVisit(enterApp));
+    });
 };
 
 // يخفي شاشة التحميل بعد ضمان مدة عرض دنيا بسيطة (كي لا تومض بسرعة مزعجة
-// على اتصال سريع جداً)، ويلغي مؤقّت الأمان المستقل لأننا لسنا بحاجته الآن
+// على اتصال سريع جداً)، ويلغي مؤقّت الأمان المستقل لأننا لسنا بحاجته الآن.
+// يُرجع Promise يكتمل بعد انتهاء انتقال الإخفاء البصري فعلياً — يستخدمه
+// window.onload لمعرفة متى يظهر ترحيب أول زيارة (إن وُجد) بدل تراكب الشاشتين
 function hideLoadingScreen(){
     clearTimeout(window.__loadingScreenSafetyTimer);
+    clearInterval(loadingCaptionTimer);
     const el = document.getElementById("app-loading-screen");
-    if(!el) return;
-    const MIN_DISPLAY_MS = 500;
+    if(!el) return Promise.resolve();
+    const MIN_DISPLAY_MS = 900;
     const elapsed = Date.now() - (window.__loadingScreenShownAt || 0);
     const remaining = Math.max(0, MIN_DISPLAY_MS - elapsed);
-    setTimeout(() => el.classList.add("hidden"), remaining);
+    const FADE_MS = 500; // مطابق لمدة transition في CSS (#app-loading-screen)
+    return new Promise(resolve => {
+        setTimeout(() => {
+            el.classList.add("hidden");
+            setTimeout(resolve, FADE_MS);
+        }, remaining);
+    });
+}
+
+/* ============================================================
+   ترحيب أول زيارة — يظهر مرة واحدة فقط لكل متصفح (localStorage flag)،
+   بعد اختفاء شاشة التحميل مباشرة وقبل شاشة الدخول. أقصى مدة 10 ثوانٍ ثم
+   ينتقل تلقائياً، أو تخطٍّ فوري بالضغط على الزر — لا يحبس الطالب أبداً
+   ============================================================ */
+const INTRO_SEEN_KEY = "khuta_intro_seen";
+const INTRO_MAX_SECONDS = 10;
+let introFinishFn = null;
+
+function dismissIntro(){
+    if(introFinishFn) introFinishFn();
+}
+
+function showIntroIfFirstVisit(onDone){
+    if(localStorage.getItem(INTRO_SEEN_KEY)){ onDone(); return; }
+    localStorage.setItem(INTRO_SEEN_KEY, "1"); // يُعلَّم كمُشاهَد فوراً — لن يظهر مجدداً حتى لو أُغلقت الصفحة أثناءه
+    const overlay = document.getElementById("intro-overlay");
+    if(!overlay){ onDone(); return; }
+
+    const lines = currentLang === "ar" ? [
+        "رفيقك الذكي في رحلة اختبار القدرات 🎯",
+        "📅 جدول مذاكرة يبنيه لك النظام تلقائياً حسب مصادرك ووقتك",
+        "🧮 حاسبة موزونة دقيقة لأكثر من 30 جامعة سعودية",
+        "🤝 تذاكر مع مجتمع طلاب مثلك، ومساعد ذكاء اصطناعي يشرح لك خطوة بخطوة",
+    ] : [
+        "Your smart companion for the GAT journey 🎯",
+        "📅 A study schedule the system builds for you automatically",
+        "🧮 An accurate weighted-score calculator for 30+ Saudi universities",
+        "🤝 Study alongside a community of students, with an AI that explains step by step",
+    ];
+    lines.forEach((text, i) => {
+        const el = document.getElementById("intro-line-" + i);
+        if(el) el.textContent = text;
+    });
+
+    overlay.style.display = "flex";
+    let seconds = INTRO_MAX_SECONDS;
+    const countEl = document.getElementById("intro-skip-count");
+    const tick = setInterval(() => {
+        seconds--;
+        if(countEl) countEl.textContent = String(Math.max(seconds, 0));
+        if(seconds <= 0) finish();
+    }, 1000);
+
+    let finished = false;
+    function finish(){
+        if(finished) return;
+        finished = true;
+        clearInterval(tick);
+        introFinishFn = null;
+        overlay.classList.add("hidden");
+        setTimeout(() => { overlay.style.display = "none"; onDone(); }, 450);
+    }
+    introFinishFn = finish;
 }
 
 function updateWelcomeText(){

@@ -2504,32 +2504,98 @@ body.dark-mode .chatbot-board-btn{
 
 /* ============================================================
    51) شاشة التحميل الأولى — تظهر فوراً عند فتح الموقع، تختفي بسلاسة
-   عند اكتمال التجهيز
+   عند اكتمال التجهيز الفعلي (loading-ring-arc تعكس نسبة البيانات المكتملة
+   فعلياً — انظر updateLoadingProgress في app.js، ليست حركة تجميلية بحتة)
    ============================================================ */
 #app-loading-screen{
     position:fixed; inset:0; z-index:99999; display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:22px;
     background:radial-gradient(1200px 700px at 50% 30%, rgba(201,150,46,0.10), transparent 60%), var(--bg, #0A0F1D);
     transition:opacity .5s var(--ease), visibility .5s;
+    overflow:hidden;
 }
 #app-loading-screen.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
-.loading-logo-wrap{ position:relative; width:92px; height:92px; display:flex; align-items:center; justify-content:center; }
-.loading-ring{ position:absolute; inset:0; width:100%; height:100%; animation:loadingSpin 1.4s linear infinite; }
+#app-loading-screen::before{
+    content:""; position:absolute; inset:-20%; z-index:-1;
+    background:radial-gradient(600px 600px at 50% 50%, rgba(201,150,46,0.08), transparent 65%);
+    animation:loadingGlowPulse 3.2s ease-in-out infinite;
+}
+@keyframes loadingGlowPulse{ 0%,100%{ transform:scale(1); opacity:.7; } 50%{ transform:scale(1.15); opacity:1; } }
+.loading-logo-wrap{ position:relative; width:112px; height:112px; display:flex; align-items:center; justify-content:center; }
+.loading-ring{ position:absolute; inset:0; width:100%; height:100%; animation:loadingSpin 1.8s linear infinite; }
 .loading-ring-track{ fill:none; stroke:rgba(201,150,46,0.15); stroke-width:5; }
 .loading-ring-arc{
     fill:none; stroke:var(--gold, #C9962E); stroke-width:5; stroke-linecap:round;
-    stroke-dasharray:190; stroke-dashoffset:150;
+    stroke-dasharray:263.9; stroke-dashoffset:263.9; /* يبدأ فارغاً، JS يملؤه فعلياً حسب تقدّم التحميل الحقيقي */
+    transition:stroke-dashoffset .4s var(--ease);
 }
 @keyframes loadingSpin{ to{ transform:rotate(360deg); } }
 .loading-logo-text{
-    font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--gold, #C9962E);
+    font-family:var(--font-display); font-size:24px; font-weight:700; color:var(--gold, #C9962E);
     animation:loadingPulse 1.8s var(--ease) infinite;
 }
 @keyframes loadingPulse{ 0%,100%{ opacity:0.75; transform:scale(1); } 50%{ opacity:1; transform:scale(1.06); } }
 .loading-caption{
     font-family:var(--font-body); font-size:13px; color:rgba(255,255,255,0.55); letter-spacing:.3px;
+    min-height:18px; transition:opacity .3s var(--ease);
+}
+/* أربع شرارات صغيرة تدور حول الشعار ببطء بأطوار مختلفة — لمسة بصرية بحتة */
+.loading-sparkle{
+    position:absolute; width:5px; height:5px; border-radius:50%; background:var(--gold, #C9962E);
+    box-shadow:0 0 8px 1px rgba(201,150,46,0.7);
+    animation:loadingOrbit 5.5s linear infinite;
+}
+.loading-sparkle.s1{ top:50%; left:50%; animation-delay:0s; opacity:.9; }
+.loading-sparkle.s2{ top:50%; left:50%; animation-delay:-1.4s; opacity:.7; }
+.loading-sparkle.s3{ top:50%; left:50%; animation-delay:-2.8s; opacity:.5; }
+.loading-sparkle.s4{ top:50%; left:50%; animation-delay:-4.1s; opacity:.35; }
+@keyframes loadingOrbit{
+    from{ transform:rotate(0deg) translateX(64px) rotate(0deg) scale(1); }
+    50%{ transform:rotate(180deg) translateX(64px) rotate(-180deg) scale(1.4); }
+    to{ transform:rotate(360deg) translateX(64px) rotate(-360deg) scale(1); }
 }
 @media (prefers-reduced-motion: reduce){
     .loading-ring{ animation:none; }
     .loading-logo-text{ animation:none; }
+    .loading-sparkle{ animation:none; display:none; }
+    #app-loading-screen::before{ animation:none; }
+}
+
+/* ============================================================
+   52) ترحيب أول زيارة — مرة واحدة لكل متصفح، أقصى مدة 10 ثوانٍ أو تخطٍّ فوري
+   ============================================================ */
+.intro-overlay{
+    position:fixed; inset:0; z-index:99998; display:flex; align-items:center; justify-content:center;
+    /* متوافق مع المظهر الحالي (فاتح/داكن) عمداً — يتبع نفس متغيّرات
+       --bg/--text-1 المستخدمة في كل الموقع، فينتقل بسلاسة من شاشة التحميل
+       (نفس var(--bg)) أياً كان المظهر الفعلي، دون قفزة بصرية لخلفية داكنة
+       مفاجئة على الوضع الفاتح الافتراضي. */
+    background:radial-gradient(1400px 900px at 50% 20%, rgba(201,150,46,0.16), transparent 55%), var(--bg);
+    opacity:1; transition:opacity .45s var(--ease), visibility .45s;
+    padding:28px;
+}
+.intro-overlay.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+.intro-content{ max-width:480px; text-align:center; color:var(--text-1); }
+.intro-logo{
+    font-family:var(--font-display); font-size:54px; font-weight:800; color:var(--gold);
+    margin-bottom:26px; opacity:0; animation:introLogoIn .8s var(--ease) forwards;
+}
+.intro-logo .dot{ color:var(--rose); }
+@keyframes introLogoIn{ from{ opacity:0; transform:translateY(14px) scale(.92); } to{ opacity:1; transform:translateY(0) scale(1); } }
+.intro-line{
+    font-size:15.5px; line-height:1.9; margin:0 0 12px; opacity:0; color:var(--text-2);
+    animation:introLineIn .6s var(--ease) forwards;
+    animation-delay:calc(.5s + var(--d) * .35s);
+}
+@keyframes introLineIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+.intro-skip-btn{
+    margin-top:26px; padding:11px 24px; border-radius:999px; border:1px solid var(--border);
+    background:var(--bg-alt); color:var(--text-1); font-size:13px; font-weight:600; cursor:pointer;
+    opacity:0; animation:introLineIn .6s var(--ease) forwards; animation-delay:calc(.5s + var(--d) * .35s);
+    transition:background .2s var(--ease);
+}
+.intro-skip-btn:hover{ background:var(--surface-raised); }
+#intro-skip-count{ font-family:var(--font-mono); opacity:.7; }
+@media (prefers-reduced-motion: reduce){
+    .intro-logo, .intro-line, .intro-skip-btn{ animation:none; opacity:1; }
 }

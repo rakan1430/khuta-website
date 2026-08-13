@@ -41,22 +41,45 @@
 <body>
 <div id="app-loading-screen">
     <div class="loading-logo-wrap">
+        <div class="loading-sparkle s1"></div>
+        <div class="loading-sparkle s2"></div>
+        <div class="loading-sparkle s3"></div>
+        <div class="loading-sparkle s4"></div>
         <svg class="loading-ring" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <circle class="loading-ring-track" cx="50" cy="50" r="42"/>
-            <circle class="loading-ring-arc" cx="50" cy="50" r="42"/>
+            <circle class="loading-ring-arc" id="loading-ring-arc" cx="50" cy="50" r="42"/>
         </svg>
         <div class="loading-logo-text">خُطى</div>
     </div>
     <div class="loading-caption" id="loading-caption">نجهّز رحلتك…</div>
 </div>
+
+<!-- ===== ترحيب فخم لأول زيارة فقط (مرة واحدة لكل متصفح، أقصى مدة 10 ثوانٍ
+     أو تخطٍّ فوري) — يظهر بعد اختفاء شاشة التحميل مباشرة، قبل شاشة الدخول ===== -->
+<div id="intro-overlay" class="intro-overlay" style="display:none;">
+    <div class="intro-content">
+        <div class="intro-logo">خُطى<span class="dot">.</span></div>
+        <p class="intro-line" id="intro-line-0" style="--d:0"></p>
+        <p class="intro-line" id="intro-line-1" style="--d:1"></p>
+        <p class="intro-line" id="intro-line-2" style="--d:2"></p>
+        <p class="intro-line" id="intro-line-3" style="--d:3"></p>
+        <button type="button" id="intro-skip-btn" class="intro-skip-btn" onclick="dismissIntro()" style="--d:4">
+            <span id="intro-skip-label" data-i18n="intro.skip">تخطّي والبدء الآن</span> <span id="intro-skip-count">10</span>
+        </button>
+    </div>
+</div>
 <script>
     // شبكة أمان مستقلة عن app.js نفسها: حتى لو تأخّر أو فشل التحميل الرئيسي
     // لأي سبب، شاشة التحميل تختفي حتماً بعد أقصى مهلة معقولة بدل حبس الطالب
+    // ⚠️ رُفعت من 6 إلى 9 ثوانٍ عمداً: شاشة التحميل الآن تنتظر فعلياً اكتمال
+    // كل بيانات الموقع الحقيقية (جامعات، محتوى...) بدل الاختفاء الفوري
+    // كسابقاً — لكنها تبقى شبكة أمان أخيرة لا تحبس الطالب أبداً حتى لو
+    // تعطّلت كل الخدمات الخارجية دفعة واحدة.
     window.__loadingScreenShownAt = Date.now();
     window.__loadingScreenSafetyTimer = setTimeout(function(){
         var el = document.getElementById("app-loading-screen");
         if(el) el.classList.add("hidden");
-    }, 6000);
+    }, 9000);
 </script>
 <div class="bg-decor" aria-hidden="true">
     <svg class="bg-decor-rocket" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
