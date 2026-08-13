@@ -393,6 +393,25 @@ ar:{
 "nav.tahsili":"التحصيلي","nav.step":"ستيب (STEP)","nav.soon":"قريباً",
 "nav.dashboardShort":"الجدول","nav.calcShort":"الموزونة","nav.linksShort":"المصادر","nav.profileShort":"الملف",
 "nav.specialtiesShort":"التخصصات","nav.communityShort":"المجتمع",
+"nav.settings":"الإعدادات","nav.settingsShort":"الإعدادات",
+"settings.title":"الإعدادات","settings.sub":"كل تفضيلاتك في مكان واحد، مرتّبة حسب الغرض",
+"settings.grpLook":"المظهر والعرض","settings.grpLookSub":"الوضع، لون التطبيق، وحجم الخط",
+"settings.grpLang":"اللغة","settings.grpLangSub":"لغة عرض الموقع بالكامل",
+"settings.grpAccount":"الحساب والمزامنة","settings.grpAccountSub":"الدخول، المزامنة بين أجهزتك، وكلمة المرور",
+"settings.grpNotif":"الإشعارات والتذكير","settings.grpNotifSub":"تذكيرك بجلستك اليومية",
+"settings.grpPrivacy":"الخصوصية والرسائل","settings.grpPrivacySub":"ما يصلك على بريدك، وسياساتنا",
+"settings.grpApp":"التطبيق والبيانات","settings.grpAppSub":"التثبيت، العمل بدون إنترنت، النسخة، ونسخك الاحتياطية",
+"settings.modeTitle":"الوضع الليلي","settings.modeSub":"فاتح للنهار، وداكن مريح للعين في مذاكرة الليل",
+"settings.modeLight":"فاتح","settings.modeDark":"داكن",
+"settings.appTitle":"تطبيق خُطى على جهازك","settings.appSub":"ثبّت خُطى كتطبيق مستقل يفتح بضغطة واحدة من شاشتك الرئيسية — ويعمل حتى بدون إنترنت",
+"settings.install":"ثبّت التطبيق على جهازك",
+"settings.connLabel":"حالة الاتصال","settings.versionLabel":"نسخة النظام",
+"settings.offlineNote":"بدون إنترنت يعمل: الجدول، الموقّت، الحاسبة، وكل بياناتك المحفوظة على جهازك. ويحتاج اتصالاً: تسجيل الدخول والمزامنة، المجتمع، والذكاء الاصطناعي.",
+"settings.dataTitle":"نسخة احتياطية من بياناتك","settings.dataSub":"خُطى يحفظ تقدّمك داخل متصفحك أنت. نزّل نسخة احتياطية تحتفظ بها، أو استعدها إن غيّرت جهازك أو مسحت بيانات المتصفح.",
+"settings.dataExport":"تنزيل نسخة احتياطية","settings.dataImport":"استعادة من ملف",
+"settings.dataNote":"الاستعادة تستبدل تقدّمك الحالي على هذا الجهاز — سنطلب تأكيدك قبل تنفيذها.",
+"offline.bar":"أنت غير متصل بالإنترنت — جدولك وموقّتك وحاسبتك تعمل كالمعتاد، وما يحتاج اتصالاً سيعود تلقائياً.",
+"installBanner.title":"خُطى صار تطبيقاً تقدر تثبّته 📲","installBanner.body":"افتحه بضغطة من شاشتك الرئيسية، ويشتغل حتى بدون إنترنت.","installBanner.cta":"كيف؟",
 "progress.eyebrow":"مسار التقدم","progress.title":"أنت في الطريق الصحيح 🚀",
 "progress.dayOf":"اليوم الحالي","progress.totalDays":"إجمالي الأيام","progress.remaining":"أيام متبقية","progress.tasksDone":"مهام مكتملة",
 "table.title":"جدول مهامك المخصص","table.sub":"تُحسب الكميات تلقائياً بناءً على مدة خطتك","table.reset":"إعادة ضبط الخطة","table.editSources":"تعديل المصادر والخطة","table.freshStart":"بدء من جديد بالكامل","table.postponeToday":"تأجيل اليوم",
@@ -567,6 +586,25 @@ en:{
 "nav.tahsili":"Tahsili","nav.step":"STEP","nav.soon":"Soon",
 "nav.dashboardShort":"Schedule","nav.calcShort":"Score","nav.linksShort":"Sources","nav.profileShort":"Profile",
 "nav.specialtiesShort":"Majors","nav.communityShort":"Community",
+"nav.settings":"Settings","nav.settingsShort":"Settings",
+"settings.title":"Settings","settings.sub":"All your preferences in one place, grouped by purpose",
+"settings.grpLook":"Appearance & display","settings.grpLookSub":"Mode, app colour, and text size",
+"settings.grpLang":"Language","settings.grpLangSub":"Display language for the whole site",
+"settings.grpAccount":"Account & sync","settings.grpAccountSub":"Sign-in, syncing across devices, and password",
+"settings.grpNotif":"Notifications & reminders","settings.grpNotifSub":"Your daily study session reminder",
+"settings.grpPrivacy":"Privacy & messages","settings.grpPrivacySub":"What reaches your inbox, and our policies",
+"settings.grpApp":"App & data","settings.grpAppSub":"Install, offline use, version, and your backups",
+"settings.modeTitle":"Night mode","settings.modeSub":"Light by day, dark and easy on the eyes for night study",
+"settings.modeLight":"Light","settings.modeDark":"Dark",
+"settings.appTitle":"Khuta as an app on your device","settings.appSub":"Install Khuta as a standalone app that opens in one tap from your home screen — and works even without internet",
+"settings.install":"Install the app on your device",
+"settings.connLabel":"Connection","settings.versionLabel":"System version",
+"settings.offlineNote":"Works offline: your schedule, timer, calculator, and everything saved on your device. Needs a connection: sign-in and sync, community, and AI.",
+"settings.dataTitle":"Back up your data","settings.dataSub":"Khuta stores your progress inside your own browser. Download a backup to keep, or restore it if you change device or clear your browser data.",
+"settings.dataExport":"Download backup","settings.dataImport":"Restore from file",
+"settings.dataNote":"Restoring replaces your current progress on this device — we'll ask you to confirm first.",
+"offline.bar":"You're offline — your schedule, timer and calculator work as usual, and anything needing a connection will resume automatically.",
+"installBanner.title":"Khuta can be installed as an app 📲","installBanner.body":"Open it in one tap from your home screen, and it works even offline.","installBanner.cta":"How?",
 "progress.eyebrow":"Progress path","progress.title":"You're on track 🚀",
 "progress.dayOf":"Current day","progress.totalDays":"Total days","progress.remaining":"Days left","progress.tasksDone":"Tasks done",
 "table.title":"Your custom task schedule","table.sub":"Quantities are calculated automatically from your plan length","table.reset":"Reset plan","table.editSources":"Edit sources & plan","table.freshStart":"Start completely fresh","table.postponeToday":"Postpone today",
@@ -1107,7 +1145,11 @@ window.onload = () => {
     const CORE_DATA_TIMEOUT_MS = 8000;
     const coreDataTimeout = new Promise(resolve => setTimeout(resolve, CORE_DATA_TIMEOUT_MS));
     Promise.race([Promise.all(coreDataLoaders), coreDataTimeout]).then(() => {
-        hideLoadingScreen().then(() => showIntroIfFirstVisit(enterApp));
+        hideLoadingScreen().then(() => showIntroIfFirstVisit(() => {
+            enterApp();
+            renderConnectionStatus();  // شريط "بلا إنترنت" يظهر فوراً إن فُتح الموقع دون اتصال
+            maybeAnnounceInstallOnce(); // دعوة التثبيت — مرة واحدة لكل متصفح، بعد استقرار الواجهة
+        }));
     });
 };
 
@@ -1775,7 +1817,8 @@ function switchTab(tabId, element){
     window.scrollTo({top:0, behavior:"smooth"});
     if(tabId === "community") initCommunityIfNeeded();
     if(tabId === "specialties") renderSpecialties();
-    if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); renderPrivacyCard(); }
+    if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); }
+    if(tabId === "settings") renderSettings();
     if(tabId === "tutors") renderTutors();
 }
 
@@ -1826,6 +1869,287 @@ function toggleTheme(){
     const isDark = document.body.classList.contains("dark-mode");
     localStorage.setItem("khuta_theme", isDark ? "dark" : "light");
     applyThemeChrome(isDark);
+    renderThemeModeButtons(); // زر الرأس وأزرار الإعدادات يعبّران عن نفس الحالة
+}
+
+/* ============================================================
+   6) قسم الإعدادات
+   ------------------------------------------------------------
+   تفضيلات الطالب كانت موزّعة داخل "الملف الشخصي" بين بطاقات لا تجمعها فكرة
+   واحدة (لون، لغة، حساب، خصوصية) — نُقلت كلها هنا مجمّعة حسب الغرض، مع
+   إضافات يتوقّعها الطالب في أي موقع مذاكرة: الوضع الليلي كخيار صريح، تثبيت
+   التطبيق، حالة الاتصال، نسخة النظام، ونسخة احتياطية من بياناته.
+   ============================================================ */
+
+// نسخة النظام المعروضة في الإعدادات — ارفعها يدوياً مع كل إصدار ملموس.
+// تُكتَب أيضاً داخل ملف النسخة الاحتياطية لمعرفة أي إصدار أنتجها.
+const APP_VERSION = "1.4.0";
+
+/* ---------- المظهر ---------- */
+function setThemeMode(mode){
+    const isDark = mode === "dark";
+    document.body.classList.toggle("dark-mode", isDark);
+    localStorage.setItem("khuta_theme", isDark ? "dark" : "light");
+    applyThemeChrome(isDark);
+    renderThemeModeButtons();
+}
+
+function renderThemeModeButtons(){
+    const isDark = document.body.classList.contains("dark-mode");
+    const light = document.getElementById("settings-mode-light-btn");
+    const dark = document.getElementById("settings-mode-dark-btn");
+    if(light) light.classList.toggle("active", !isDark);
+    if(dark) dark.classList.toggle("active", isDark);
+}
+
+/* ---------- التثبيت كتطبيق (PWA) ---------- */
+
+// ⚠️ المتصفح يطلق beforeinstallprompt مرة واحدة فقط وفي لحظة يختارها هو. إن لم
+// نلتقطه ونحتفظ به، ضاعت إمكانية فتح نافذة التثبيت الأصلية نهائياً حتى إعادة
+// تحميل الصفحة — لذلك يُسجَّل المستمع هنا عند أعلى مستوى للملف وليس داخل
+// window.onload (الذي يعمل متأخراً بعد اكتمال كل الموارد).
+let deferredInstallPrompt = null;
+const INSTALL_ANNOUNCED_KEY = "khuta_install_announced";
+
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); // نمنع شريط المتصفح التلقائي، ونعرض دعوتنا في وقتنا نحن
+    deferredInstallPrompt = e;
+    renderInstallState();
+});
+
+window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    localStorage.setItem(INSTALL_ANNOUNCED_KEY, "1"); // لا معنى لدعوة التثبيت بعد التثبيت
+    hideInstallBanner();
+    renderInstallState();
+    showToast(labT("تم تثبيت خُطى على جهازك 🎉","Khuta is now installed on your device 🎉"));
+});
+
+// التطبيق مفتوح فعلاً كتطبيق مثبَّت (وليس في تبويب متصفح عادي)
+function isRunningAsInstalledApp(){
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+        || window.navigator.standalone === true; // صيغة iOS القديمة
+}
+
+// iOS لا يدعم beforeinstallprompt إطلاقاً في أي متصفح عليه (كلها تستخدم محرّك
+// Safari نفسه) — التثبيت هناك يدوي بالكامل عبر "إضافة إلى الشاشة الرئيسية"
+function isIosDevice(){
+    return /iPad|iPhone|iPod/.test(navigator.userAgent)
+        || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // iPadOS الحديث
+}
+
+function renderInstallState(){
+    const btn = document.getElementById("settings-install-btn");
+    const hint = document.getElementById("settings-install-hint");
+    if(!btn || !hint) return;
+
+    if(isRunningAsInstalledApp()){
+        btn.style.display = "none";
+        hint.textContent = labT("✅ أنت تستخدم خُطى كتطبيق مثبَّت على جهازك بالفعل.",
+                                "✅ You're already using Khuta as an installed app.");
+        return;
+    }
+    if(deferredInstallPrompt){
+        btn.style.display = "";
+        hint.textContent = labT("لا يستهلك مساحة تُذكر، وتقدر تحذفه في أي وقت كأي تطبيق.",
+                                "It takes almost no space, and you can remove it any time like any app.");
+        return;
+    }
+    // لا نافذة تثبيت متاحة: iOS (لا يدعمها) أو متصفح لم يُطلق الحدث بعد
+    btn.style.display = "none";
+    hint.textContent = isIosDevice()
+        ? labT("على الآيفون/الآيباد: افتح خُطى في Safari، ثم زر المشاركة ⬆️ → «إضافة إلى الشاشة الرئيسية».",
+               "On iPhone/iPad: open Khuta in Safari, then Share ⬆️ → \"Add to Home Screen\".")
+        : labT("متصفحك لم يُتِح التثبيت بعد. جرّب فتح خُطى في Chrome أو Edge، وتصفّح الموقع دقيقة ثم عد هنا.",
+               "Your browser hasn't offered installation yet. Try Chrome or Edge, browse for a minute, then come back.");
+}
+
+async function installKhutaApp(){
+    if(!deferredInstallPrompt){ renderInstallState(); return; }
+    const promptEvent = deferredInstallPrompt;
+    // الحدث صالح لاستعمال واحد فقط — نُسقطه فوراً كي لا يُستدعى prompt() مرتين
+    deferredInstallPrompt = null;
+    try{
+        promptEvent.prompt();
+        await promptEvent.userChoice; // ننتظر قرار الطالب لتحديث الحالة بدقة
+    }catch(e){
+        console.error("[خُطى] تعذّر فتح نافذة التثبيت:", e);
+    }
+    renderInstallState();
+}
+
+/* ---------- إعلان التثبيت لمرة واحدة فقط (لكل الطلاب) ---------- */
+
+// يظهر مرة واحدة لكل متصفح ولا يعود أبداً بعد إغلاقه أو استخدامه. لا يعتمد على
+// beforeinstallprompt عمداً كي يصل لطلاب iOS أيضاً (لا يُطلَق الحدث عندهم إطلاقاً).
+function maybeAnnounceInstallOnce(){
+    if(localStorage.getItem(INSTALL_ANNOUNCED_KEY) === "1") return;
+    if(isRunningAsInstalledApp()){
+        localStorage.setItem(INSTALL_ANNOUNCED_KEY, "1"); // مثبَّت أصلاً — لا داعي لإخباره
+        return;
+    }
+    // نؤخّرها كي لا تزاحم شاشة التحميل ولا ترحيب أول زيارة
+    setTimeout(() => {
+        const bar = document.getElementById("install-banner");
+        if(!bar || localStorage.getItem(INSTALL_ANNOUNCED_KEY) === "1") return;
+        bar.style.display = "flex";
+        requestAnimationFrame(() => bar.classList.add("show"));
+    }, 4000);
+}
+
+function hideInstallBanner(){
+    const bar = document.getElementById("install-banner");
+    if(!bar) return;
+    bar.classList.remove("show");
+    setTimeout(() => { bar.style.display = "none"; }, 320);
+}
+
+// الإغلاق والاستخدام كلاهما يُعلَّم كـ"شوهد" — الوعد للطالب أنها لمرة واحدة
+function dismissInstallBanner(){
+    localStorage.setItem(INSTALL_ANNOUNCED_KEY, "1");
+    hideInstallBanner();
+}
+
+function openInstallFromBanner(){
+    dismissInstallBanner();
+    switchTab("settings");
+    setTimeout(() => {
+        const box = document.getElementById("settings-install-box");
+        if(box) box.scrollIntoView({ behavior:"smooth", block:"center" });
+    }, 350);
+}
+
+/* ---------- حالة الاتصال ---------- */
+function renderConnectionStatus(){
+    const online = navigator.onLine;
+
+    const pill = document.getElementById("settings-conn-status");
+    if(pill){
+        pill.textContent = online ? labT("متصل","Online") : labT("غير متصل","Offline");
+        pill.classList.toggle("is-offline", !online);
+    }
+    const bar = document.getElementById("offline-bar");
+    if(bar) bar.style.display = online ? "none" : "flex";
+}
+
+window.addEventListener("online",  renderConnectionStatus);
+window.addEventListener("offline", renderConnectionStatus);
+
+/* ---------- النسخة الاحتياطية ---------- */
+
+// ⚠️ مفاتيح مستثناة عمداً من النسخ والاستعادة: هي رابط هذا المتصفح بحساب
+// بعينه، لا "تقدّم مذاكرة". استعادتها على جهاز آخر تجعل واجهة الموقع تظن أن
+// المستخدم هو صاحب النسخة بينما جلسة Supabase الحقيقية لشخص آخر — تعارض
+// مربك بلا فائدة. (رموز الدخول الفعلية ليست بهذه البادئة أصلاً فلا تُصدَّر.)
+const BACKUP_EXCLUDED_KEYS = ["khuta_session", "khuta_last_sync"];
+
+function collectBackupData(){
+    const data = {};
+    for(let i = 0; i < localStorage.length; i++){
+        const k = localStorage.key(i);
+        if(!k || !k.startsWith("khuta_")) continue;
+        if(BACKUP_EXCLUDED_KEYS.includes(k)) continue;
+        data[k] = localStorage.getItem(k);
+    }
+    return data;
+}
+
+function exportKhutaBackup(){
+    const data = collectBackupData();
+    const payload = {
+        app: "khuta",
+        version: APP_VERSION,
+        exportedAt: new Date().toISOString(),
+        data,
+    };
+    let url;
+    try{
+        const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+        url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `khuta-backup-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }catch(e){
+        console.error("[خُطى] تعذّر إنشاء النسخة الاحتياطية:", e);
+        showToast(labT("تعذّر إنشاء النسخة الاحتياطية على هذا المتصفح","Couldn't create the backup in this browser"));
+        return;
+    }finally{
+        if(url) setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+    showToast(labT(`تم تنزيل نسخة احتياطية (${Object.keys(data).length} عنصراً) 💾`,
+                   `Backup downloaded (${Object.keys(data).length} items) 💾`));
+}
+
+function importKhutaBackup(event){
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = ""; // كي يعمل اختيار الملف نفسه مرة أخرى لو احتاج الطالب
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onerror = () => showToast(labT("تعذّرت قراءة الملف","Couldn't read the file"));
+    reader.onload = () => {
+        let payload;
+        try{ payload = JSON.parse(reader.result); }
+        catch(e){ showToast(labT("الملف غير صالح — تأكد أنه ملف النسخة الاحتياطية نفسه","Invalid file — make sure it's the backup file")); return; }
+
+        if(!payload || payload.app !== "khuta" || !payload.data || typeof payload.data !== "object" || Array.isArray(payload.data)){
+            showToast(labT("هذا ليس ملف نسخة احتياطية من خُطى","This isn't a Khuta backup file"));
+            return;
+        }
+
+        // لا نثق بمحتوى الملف: نقبل فقط مفاتيح خُطى النصية، ونتجاهل أي شيء آخر
+        // قد يكون مدسوساً فيه (مفاتيح خارج نطاقنا، أو قيماً غير نصية)
+        const entries = Object.entries(payload.data).filter(([k, v]) =>
+            typeof k === "string" && k.startsWith("khuta_") &&
+            !BACKUP_EXCLUDED_KEYS.includes(k) && typeof v === "string"
+        );
+        if(entries.length === 0){
+            showToast(labT("الملف لا يحتوي بيانات خُطى صالحة","The file has no valid Khuta data"));
+            return;
+        }
+
+        const when = payload.exportedAt ? new Date(payload.exportedAt).toLocaleDateString(currentLang==='ar'?"ar-SA":"en-US") : "—";
+        const ok = confirm(labT(
+            `استعادة نسخة بتاريخ ${when} (${entries.length} عنصراً).\n\nسيستبدل هذا تقدّمك الحالي على هذا الجهاز. متأكد؟`,
+            `Restore backup from ${when} (${entries.length} items).\n\nThis replaces your current progress on this device. Continue?`
+        ));
+        if(!ok) return;
+
+        try{
+            // نمسح مفاتيح خُطى الحالية أولاً (عدا المستثناة) كي لا تبقى بقايا خطة
+            // قديمة مختلطة بالمستعادة — الاستعادة يجب أن تعطي الحالة نفسها تماماً
+            const stale = [];
+            for(let i = 0; i < localStorage.length; i++){
+                const k = localStorage.key(i);
+                if(k && k.startsWith("khuta_") && !BACKUP_EXCLUDED_KEYS.includes(k)) stale.push(k);
+            }
+            stale.forEach(k => localStorage.removeItem(k));
+            entries.forEach(([k, v]) => localStorage.setItem(k, v));
+        }catch(e){
+            console.error("[خُطى] تعذّرت الاستعادة:", e);
+            showToast(labT("تعذّرت الاستعادة — قد تكون مساحة التخزين ممتلئة","Restore failed — storage may be full"));
+            return;
+        }
+
+        showToast(labT("تمت الاستعادة ✅ — سنعيد تحميل الصفحة","Restored ✅ — reloading"));
+        setTimeout(() => location.reload(), 1200);
+    };
+    reader.readAsText(file);
+}
+
+/* ---------- رسم القسم بالكامل ---------- */
+function renderSettings(){
+    renderThemeModeButtons();
+    renderInstallState();
+    renderConnectionStatus();
+    renderPrivacyCard();   // بطاقة الخصوصية انتقلت من الملف الشخصي إلى هنا
+    renderAccountUI();     // وكذلك بطاقة الحساب والمزامنة
+    const ver = document.getElementById("settings-version");
+    if(ver) ver.textContent = "v" + APP_VERSION;
 }
 
 /* ============================================================
@@ -6977,6 +7301,10 @@ function renderAccountUI(){
         guestBox.style.display = "block";
         inBox.style.display = "none";
     }
+    // بطاقة الخصوصية صارت مجاورة لبطاقة الحساب في قسم الإعدادات، وحالتها تتبع
+    // وجود جلسة — نحدّثها من هنا كي تُصيب كل مسارات الدخول/الخروج دفعة واحدة
+    // بدل إضافة الاستدعاء في ستة مواضع منفصلة
+    renderPrivacyCard();
 }
 
 /* حسابات Google لا تملك "كلمة مرور" ندير نحن استرجاعها (Google تدير ذلك
