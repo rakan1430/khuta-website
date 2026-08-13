@@ -6,8 +6,28 @@
    Gemini، الخطوط، GitHub) — تمر هذه دائماً مباشرة للشبكة بدون أي تدخل،
    لتفادي أي احتمال لعرض بيانات قديمة مخزَّنة مؤقتاً.
    ============================================================ */
-const CACHE_NAME = "khuta-shell-v1";
-const SHELL_FILES = ["./", "./index.html", "./app.js", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+// ⚠️ ارفع رقم النسخة مع أي تغيير في قائمة الملفات أدناه — يُجبر المتصفحات على
+// بناء كاش جديد بدل الإبقاء على قائمة ملفات قديمة لم تعد موجودة.
+const CACHE_NAME = "khuta-shell-v2";
+// app.js قُسّم إلى js/*.js — يجب سرد كل جزء هنا بالاسم، فلا يقبل cache.addAll
+// أنماطاً. ⚠️ عند إضافة أي جزء جديد أضِفه هنا أيضاً وإلا لن يعمل الموقع بدون
+// إنترنت (سيُخزَّن لاحقاً عبر معالج fetch، لكن الزيارة الأولى بلا اتصال ستفشل).
+const SHELL_FILES = [
+  "./", "./index.html", "./styles.css", "./manifest.json",
+  "./icon-192.png", "./icon-512.png",
+  "./js/01-core-config.js",
+  "./js/02-universities.js",
+  "./js/03-i18n.js",
+  "./js/04-utils.js",
+  "./js/05-boot-nav.js",
+  "./js/06-schedule.js",
+  "./js/07-focus.js",
+  "./js/08-calc-profile.js",
+  "./js/09-features.js",
+  "./js/10-account.js",
+  "./js/11-community.js",
+  "./js/12-ai.js",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

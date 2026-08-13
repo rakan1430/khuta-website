@@ -47,7 +47,10 @@
   [headers.values]
     Cache-Control = "no-cache"
 [[headers]]
-  for = "/app.js"
+  # app.js قُسّم إلى js/*.js — النمط يغطي كل الأجزاء، وأي جزء يُضاف مستقبلاً
+  # يرث القاعدة تلقائياً بلا تعديل هنا (وهذا مقصود: نسيان تحديث هذا الملف
+  # بعد إضافة جزء جديد كان سيعيد بالضبط حوادث النسخ القديمة المخبّأة الثلاث).
+  for = "/js/*"
   [headers.values]
     Cache-Control = "no-cache"
 [[headers]]
