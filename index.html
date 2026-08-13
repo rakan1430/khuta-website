@@ -531,6 +531,24 @@
 
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"><i class="fa-solid fa-circle-check"></i><span id="toast-text"></span></div>
 
+<!-- شريط "بلا إنترنت" — يظهر تلقائياً عند انقطاع الاتصال ويختفي عند عودته،
+     كي يفهم الطالب سبب تعطّل الميزات التي تحتاج شبكة بدل رسالة خطأ غامضة -->
+<div id="offline-bar" class="offline-bar" role="status" aria-live="polite" style="display:none;">
+    <i class="fa-solid fa-cloud-arrow-down"></i>
+    <span data-i18n="offline.bar">أنت غير متصل بالإنترنت — جدولك وموقّتك وحاسبتك تعمل كالمعتاد، وما يحتاج اتصالاً سيعود تلقائياً.</span>
+</div>
+
+<!-- دعوة تثبيت التطبيق — تظهر مرة واحدة فقط لكل متصفح ثم لا تعود أبداً -->
+<div id="install-banner" class="install-banner" role="region" style="display:none;">
+    <i class="fa-solid fa-mobile-screen-button install-banner-icon"></i>
+    <div class="install-banner-text">
+        <b data-i18n="installBanner.title">خُطى صار تطبيقاً تقدر تثبّته 📲</b>
+        <span data-i18n="installBanner.body">افتحه بضغطة من شاشتك الرئيسية، ويشتغل حتى بدون إنترنت.</span>
+    </div>
+    <button type="button" class="btn btn-sm" onclick="openInstallFromBanner()"><span data-i18n="installBanner.cta">كيف؟</span></button>
+    <button type="button" class="install-banner-close" onclick="dismissInstallBanner()" title="إغلاق" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+</div>
+
 <!-- ===================== شروط الاستخدام وسياسة الخصوصية ===================== -->
 <div id="legal-modal" class="lab-overlay" style="display:none;">
     <div class="lab-window legal-window">
@@ -1033,6 +1051,7 @@
             <div class="nav-item" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i> <span data-i18n="nav.calculator">حساب الموزونة</span></div>
             <div class="nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i> <span data-i18n="nav.links">الروابط المباشرة</span></div>
             <div class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
+            <div class="nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i> <span data-i18n="nav.settings">الإعدادات</span></div>
             <div class="nav-item" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
             <div class="nav-item" data-tab="community" onclick="switchTab('community',this)" role="button" tabindex="0"><i class="fa-solid fa-users"></i> <span data-i18n="nav.community">المجتمع</span></div>
             <div class="nav-item nav-item-board" onclick="openKhutaBoard('ai', true)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.board">السبورة الذكية</span></div>
@@ -1053,6 +1072,7 @@
         <div class="mobile-nav-item" id="mobile-nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-clipboard-question"></i><span data-i18n="nav.examSimShort">اختبارات</span></div>
         <div class="mobile-nav-item" id="mobile-nav-tutors" data-tab="tutors" onclick="switchTab('tutors',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i><span data-i18n="nav.tutorsShort">مدرّسون</span></div>
         <div class="mobile-nav-item" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i><span data-i18n="nav.profileShort">الملف</span></div>
+        <div class="mobile-nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i><span data-i18n="nav.settingsShort">الإعدادات</span></div>
     </nav>
 
     <main class="main-content">
@@ -1095,6 +1115,7 @@
                     <i class="fa-solid fa-hourglass-half"></i>
                     <span id="exam-countdown-value">--</span>
                 </div>
+                <button type="button" class="header-settings-btn" onclick="switchTab('settings')" title="الإعدادات" aria-label="الإعدادات"><i class="fa-solid fa-gear"></i></button>
                 <button type="button" class="daynight-toggle" onclick="toggleTheme()" title="تبديل المظهر" aria-label="تبديل المظهر">
                     <span class="dn-track">
                         <span class="dn-cloud dn-cloud-1"></span>
@@ -1702,6 +1723,114 @@
             </div>
 
             <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold);"></i> <span data-i18n="stats.title">إحصائياتك</span></h2>
+                <p class="card-sub" data-i18n="stats.sub">نظرة عامة على مذاكرتك الفعلية حتى الآن</p>
+                <div class="input-row" style="grid-template-columns:repeat(2,1fr); margin-top:12px;">
+                    <div class="weight-chip"><b id="stat-total-hours">0</b><span data-i18n="stats.totalHours">إجمالي الساعات</span></div>
+                    <div class="weight-chip"><b id="stat-total-lessons">0</b><span data-i18n="stats.totalLessons">دروس/بنوك منجزة</span></div>
+                    <div class="weight-chip"><b id="stat-commit-rate">0%</b><span data-i18n="stats.commitRate">نسبة الالتزام</span></div>
+                    <div class="weight-chip"><b id="stat-pace">—</b><span data-i18n="stats.pace">متوسط الوقت لكل درس</span></div>
+                </div>
+                <div id="stat-week-compare" style="margin-top:16px; padding:14px 16px; background:var(--bg-alt); border-radius:14px; font-size:13px; line-height:2;"></div>
+                <button type="button" id="btn-deep-report" class="btn btn-outline btn-block" style="margin-top:12px;" onclick="handleDeepReportClick()"></button>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
+                <p class="card-sub" data-i18n="badges.sub">تحفيزية بحتة — لا علاقة لها بنسبة تقدمك الفعلية في الخطة</p>
+                <div class="badges-row" id="badges-grid"></div>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; padding:14px 16px; background:var(--bg-alt); border-radius:14px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-shield-halved" style="color:var(--gold); font-size:20px;"></i>
+                        <div>
+                            <div style="font-weight:700; font-size:13.5px;" data-i18n="shield.title">دروع حماية السلسلة</div>
+                            <div class="card-sub" data-i18n="shield.sub">يحمي درع سلسلتك تلقائياً أول يوم تفوّته — لديك: <span id="shield-count-display">0</span></div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="buyStreakShield()"><span data-i18n="shield.buy">اشترِ (100 XP)</span></button>
+                </div>
+            </div>
+
+            <div class="card feedback-box">
+                <h2 style="margin-bottom:6px;"><i class="fa-solid fa-comment-dots" style="color:var(--gold);"></i> <span data-i18n="feedback.title">ملاحظاتك تصلني مباشرة</span></h2>
+                <p class="card-sub" style="margin-bottom:16px;" data-i18n="feedback.sub">اكتب اقتراحك أو المشكلة التي واجهتك — تُرسل بضغطة واحدة دون أي خطوات إضافية</p>
+                <textarea id="feedback-text" placeholder="مثال: أتمنى إضافة..." data-i18n-ph="feedback.placeholder"></textarea>
+                <button type="button" id="feedback-send-btn" class="btn btn-teal" onclick="sendFeedback()"><i class="fa-solid fa-paper-plane"></i> <span data-i18n="feedback.send">إرسال الملاحظة</span></button>
+                <div id="feedback-success" style="display:none; align-items:center; gap:12px; margin-top:14px; padding:14px 16px; border-radius:14px; background:var(--teal-soft); color:var(--teal);">
+                    <i class="fa-solid fa-circle-check" style="font-size:20px;"></i>
+                    <div>
+                        <b data-i18n="feedback.successTitle">وصلتنا ملاحظتك! 🎉</b>
+                        <div style="font-size:12.5px; opacity:.85;" data-i18n="feedback.successMsg">شكراً لك، سنأخذها بعين الاعتبار.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus" style="color:var(--gold);"></i> <span data-i18n="referral.title">ادعُ صديقاً</span></h2>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="referral.desc">كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.</p>
+                <button type="button" class="btn btn-block" onclick="shareReferralLink()"><i class="fa-solid fa-share-nodes"></i> <span data-i18n="referral.share">مشاركة رابط الدعوة</span></button>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom:4px;">🧠 <span data-i18n="mistakebank.title">بنك أخطائك الشخصية</span></h2>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="mistakebank.desc">ليست أخطاء القدرات — بل أنماطك الشخصية التي تعطّل تقدّمك، نكتشفها من سلوكك الفعلي بمرور الوقت.</p>
+                <div id="mistake-bank-content" class="mistake-bank-card"></div>
+            </div>
+
+        </section>
+
+        <!-- ===================== الإعدادات ===================== -->
+        <section id="view-settings" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-gear" style="color:var(--gold);"></i> <span data-i18n="settings.title">الإعدادات</span></h2>
+                <p class="card-sub" data-i18n="settings.sub">كل تفضيلاتك في مكان واحد، مرتّبة حسب الغرض</p>
+            </div>
+
+            <h3 class="settings-group-head"><i class="fa-solid fa-palette"></i> <span><b data-i18n="settings.grpLook">المظهر والعرض</b><em data-i18n="settings.grpLookSub">الوضع، لون التطبيق، وحجم الخط</em></span></h3>
+            <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-circle-half-stroke" style="color:var(--gold);"></i> <span data-i18n="settings.modeTitle">الوضع الليلي</span></h2>
+                <p class="card-sub" data-i18n="settings.modeSub">فاتح للنهار، وداكن مريح للعين في مذاكرة الليل</p>
+                <div class="lang-switch" style="margin-top:12px;">
+                    <button type="button" id="settings-mode-light-btn" onclick="setThemeMode('light')"><i class="fa-solid fa-sun"></i> <span data-i18n="settings.modeLight">فاتح</span></button>
+                    <button type="button" id="settings-mode-dark-btn" onclick="setThemeMode('dark')"><i class="fa-solid fa-moon"></i> <span data-i18n="settings.modeDark">داكن</span></button>
+                </div>
+            </div>
+            <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-palette" style="color:var(--gold);"></i> <span data-i18n="theme.title">لون التطبيق</span></h2>
+                <p class="card-sub" data-i18n="theme.sub">اختر اللون الذي يناسب ذوقك</p>
+                <div class="theme-swatches">
+                    <div class="theme-swatch" data-accent="" style="background:#C9962E;" onclick="setAccent('')" title="ذهبي (افتراضي)" role="button" tabindex="0" aria-label="ذهبي (افتراضي)"><i class="fa-solid fa-check" style="display:none;"></i></div>
+                    <div class="theme-swatch" data-accent="accent-green" style="background:#1C8A72;" onclick="setAccent('accent-green')" title="أخضر" role="button" tabindex="0" aria-label="أخضر"><i class="fa-solid fa-check" style="display:none;"></i></div>
+                    <div class="theme-swatch" data-accent="accent-purple" style="background:#7C5CBF;" onclick="setAccent('accent-purple')" title="بنفسجي" role="button" tabindex="0" aria-label="بنفسجي"><i class="fa-solid fa-check" style="display:none;"></i></div>
+                    <div class="theme-swatch" data-accent="accent-blue" style="background:#2E6BE0;" onclick="setAccent('accent-blue')" title="أزرق" role="button" tabindex="0" aria-label="أزرق"><i class="fa-solid fa-check" style="display:none;"></i></div>
+                    <div class="theme-swatch" data-accent="accent-rose" style="background:#C4436B;" onclick="setAccent('accent-rose')" title="وردي" role="button" tabindex="0" aria-label="وردي"><i class="fa-solid fa-check" style="display:none;"></i></div>
+                    <div class="theme-swatch" data-accent="accent-teal2" style="background:#0E9384;" onclick="setAccent('accent-teal2')" title="فيروزي" role="button" tabindex="0" aria-label="فيروزي"><i class="fa-solid fa-check" style="display:none;"></i></div>
+                    <div class="theme-swatch" data-accent="accent-amber" style="background:#D97B1F;" onclick="setAccent('accent-amber')" title="كهرماني" role="button" tabindex="0" aria-label="كهرماني"><i class="fa-solid fa-check" style="display:none;"></i></div>
+                    <div class="theme-swatch" data-accent="accent-indigo" style="background:#4F46C7;" onclick="setAccent('accent-indigo')" title="نيلي" role="button" tabindex="0" aria-label="نيلي"><i class="fa-solid fa-check" style="display:none;"></i></div>
+                </div>
+                <div class="desktop-only-feature" style="margin-top:16px;">
+                    <p class="card-sub" style="margin-bottom:8px;" data-i18n="theme.fontSizeLabel">حجم الخط</p>
+                    <div class="lang-switch">
+                        <button id="fontsize-small-btn" onclick="setFontSize('small')" data-i18n="theme.fontSmall">صغير</button>
+                        <button id="fontsize-medium-btn" class="active" onclick="setFontSize('medium')" data-i18n="theme.fontMedium">متوسط (افتراضي)</button>
+                        <button id="fontsize-large-btn" onclick="setFontSize('large')" data-i18n="theme.fontLarge">كبير</button>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="settings-group-head"><i class="fa-solid fa-language"></i> <span><b data-i18n="settings.grpLang">اللغة</b><em data-i18n="settings.grpLangSub">لغة عرض الموقع بالكامل</em></span></h3>
+            <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-language" style="color:var(--gold);"></i> <span data-i18n="lang.title">لغة الموقع</span></h2>
+                <p class="card-sub" data-i18n="lang.sub">اختر لغة عرض الموقع</p>
+                <div class="lang-switch" style="margin-top:10px;">
+                    <button id="lang-ar-btn" class="active" onclick="setLang('ar')">العربية</button>
+                    <button id="lang-en-btn" onclick="setLang('en')">English</button>
+                </div>
+            </div>
+
+            <h3 class="settings-group-head"><i class="fa-solid fa-cloud-arrow-up"></i> <span><b data-i18n="settings.grpAccount">الحساب والمزامنة</b><em data-i18n="settings.grpAccountSub">الدخول، المزامنة بين أجهزتك، وكلمة المرور</em></span></h3>
+            <div class="card">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-cloud-arrow-up" style="color:var(--gold);"></i> <span data-i18n="account.title">الحساب والمزامنة</span></h2>
                 <p class="card-sub" data-i18n="account.sub">استخدم خُطى كضيف تماماً بدون حساب — أنشئ حساباً فقط إن أردت حفظ تقدمك ونقله لجهاز آخر</p>
 
@@ -1765,100 +1894,14 @@
                 </div>
             </div>
 
-            <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold);"></i> <span data-i18n="stats.title">إحصائياتك</span></h2>
-                <p class="card-sub" data-i18n="stats.sub">نظرة عامة على مذاكرتك الفعلية حتى الآن</p>
-                <div class="input-row" style="grid-template-columns:repeat(2,1fr); margin-top:12px;">
-                    <div class="weight-chip"><b id="stat-total-hours">0</b><span data-i18n="stats.totalHours">إجمالي الساعات</span></div>
-                    <div class="weight-chip"><b id="stat-total-lessons">0</b><span data-i18n="stats.totalLessons">دروس/بنوك منجزة</span></div>
-                    <div class="weight-chip"><b id="stat-commit-rate">0%</b><span data-i18n="stats.commitRate">نسبة الالتزام</span></div>
-                    <div class="weight-chip"><b id="stat-pace">—</b><span data-i18n="stats.pace">متوسط الوقت لكل درس</span></div>
-                </div>
-                <div id="stat-week-compare" style="margin-top:16px; padding:14px 16px; background:var(--bg-alt); border-radius:14px; font-size:13px; line-height:2;"></div>
-                <button type="button" id="btn-deep-report" class="btn btn-outline btn-block" style="margin-top:12px;" onclick="handleDeepReportClick()"></button>
-            </div>
-
-            <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-palette" style="color:var(--gold);"></i> <span data-i18n="theme.title">لون التطبيق</span></h2>
-                <p class="card-sub" data-i18n="theme.sub">اختر اللون الذي يناسب ذوقك</p>
-                <div class="theme-swatches">
-                    <div class="theme-swatch" data-accent="" style="background:#C9962E;" onclick="setAccent('')" title="ذهبي (افتراضي)" role="button" tabindex="0" aria-label="ذهبي (افتراضي)"><i class="fa-solid fa-check" style="display:none;"></i></div>
-                    <div class="theme-swatch" data-accent="accent-green" style="background:#1C8A72;" onclick="setAccent('accent-green')" title="أخضر" role="button" tabindex="0" aria-label="أخضر"><i class="fa-solid fa-check" style="display:none;"></i></div>
-                    <div class="theme-swatch" data-accent="accent-purple" style="background:#7C5CBF;" onclick="setAccent('accent-purple')" title="بنفسجي" role="button" tabindex="0" aria-label="بنفسجي"><i class="fa-solid fa-check" style="display:none;"></i></div>
-                    <div class="theme-swatch" data-accent="accent-blue" style="background:#2E6BE0;" onclick="setAccent('accent-blue')" title="أزرق" role="button" tabindex="0" aria-label="أزرق"><i class="fa-solid fa-check" style="display:none;"></i></div>
-                    <div class="theme-swatch" data-accent="accent-rose" style="background:#C4436B;" onclick="setAccent('accent-rose')" title="وردي" role="button" tabindex="0" aria-label="وردي"><i class="fa-solid fa-check" style="display:none;"></i></div>
-                    <div class="theme-swatch" data-accent="accent-teal2" style="background:#0E9384;" onclick="setAccent('accent-teal2')" title="فيروزي" role="button" tabindex="0" aria-label="فيروزي"><i class="fa-solid fa-check" style="display:none;"></i></div>
-                    <div class="theme-swatch" data-accent="accent-amber" style="background:#D97B1F;" onclick="setAccent('accent-amber')" title="كهرماني" role="button" tabindex="0" aria-label="كهرماني"><i class="fa-solid fa-check" style="display:none;"></i></div>
-                    <div class="theme-swatch" data-accent="accent-indigo" style="background:#4F46C7;" onclick="setAccent('accent-indigo')" title="نيلي" role="button" tabindex="0" aria-label="نيلي"><i class="fa-solid fa-check" style="display:none;"></i></div>
-                </div>
-                <div class="desktop-only-feature" style="margin-top:16px;">
-                    <p class="card-sub" style="margin-bottom:8px;" data-i18n="theme.fontSizeLabel">حجم الخط</p>
-                    <div class="lang-switch">
-                        <button id="fontsize-small-btn" onclick="setFontSize('small')" data-i18n="theme.fontSmall">صغير</button>
-                        <button id="fontsize-medium-btn" class="active" onclick="setFontSize('medium')" data-i18n="theme.fontMedium">متوسط (افتراضي)</button>
-                        <button id="fontsize-large-btn" onclick="setFontSize('large')" data-i18n="theme.fontLarge">كبير</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-language" style="color:var(--gold);"></i> <span data-i18n="lang.title">لغة الموقع</span></h2>
-                <p class="card-sub" data-i18n="lang.sub">اختر لغة عرض الموقع</p>
-                <div class="lang-switch" style="margin-top:10px;">
-                    <button id="lang-ar-btn" class="active" onclick="setLang('ar')">العربية</button>
-                    <button id="lang-en-btn" onclick="setLang('en')">English</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
-                <p class="card-sub" data-i18n="badges.sub">تحفيزية بحتة — لا علاقة لها بنسبة تقدمك الفعلية في الخطة</p>
-                <div class="badges-row" id="badges-grid"></div>
-
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; padding:14px 16px; background:var(--bg-alt); border-radius:14px;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-shield-halved" style="color:var(--gold); font-size:20px;"></i>
-                        <div>
-                            <div style="font-weight:700; font-size:13.5px;" data-i18n="shield.title">دروع حماية السلسلة</div>
-                            <div class="card-sub" data-i18n="shield.sub">يحمي درع سلسلتك تلقائياً أول يوم تفوّته — لديك: <span id="shield-count-display">0</span></div>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline" onclick="buyStreakShield()"><span data-i18n="shield.buy">اشترِ (100 XP)</span></button>
-                </div>
-            </div>
-
-            <div class="card feedback-box">
-                <h2 style="margin-bottom:6px;"><i class="fa-solid fa-comment-dots" style="color:var(--gold);"></i> <span data-i18n="feedback.title">ملاحظاتك تصلني مباشرة</span></h2>
-                <p class="card-sub" style="margin-bottom:16px;" data-i18n="feedback.sub">اكتب اقتراحك أو المشكلة التي واجهتك — تُرسل بضغطة واحدة دون أي خطوات إضافية</p>
-                <textarea id="feedback-text" placeholder="مثال: أتمنى إضافة..." data-i18n-ph="feedback.placeholder"></textarea>
-                <button type="button" id="feedback-send-btn" class="btn btn-teal" onclick="sendFeedback()"><i class="fa-solid fa-paper-plane"></i> <span data-i18n="feedback.send">إرسال الملاحظة</span></button>
-                <div id="feedback-success" style="display:none; align-items:center; gap:12px; margin-top:14px; padding:14px 16px; border-radius:14px; background:var(--teal-soft); color:var(--teal);">
-                    <i class="fa-solid fa-circle-check" style="font-size:20px;"></i>
-                    <div>
-                        <b data-i18n="feedback.successTitle">وصلتنا ملاحظتك! 🎉</b>
-                        <div style="font-size:12.5px; opacity:.85;" data-i18n="feedback.successMsg">شكراً لك، سنأخذها بعين الاعتبار.</div>
-                    </div>
-                </div>
-            </div>
-
+            <h3 class="settings-group-head"><i class="fa-solid fa-bell"></i> <span><b data-i18n="settings.grpNotif">الإشعارات والتذكير</b><em data-i18n="settings.grpNotifSub">تذكيرك بجلستك اليومية</em></span></h3>
             <div class="card">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-bell" style="color:var(--gold);"></i> <span data-i18n="push.title">التذكير اليومي</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="push.desc">إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.</p>
                 <button type="button" class="btn btn-block" onclick="subscribeToPushNotifications()"><i class="fa-solid fa-bell"></i> <span data-i18n="push.enable">فعّل التذكير اليومي</span></button>
             </div>
 
-            <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus" style="color:var(--gold);"></i> <span data-i18n="referral.title">ادعُ صديقاً</span></h2>
-                <p class="card-sub" style="margin-bottom:14px;" data-i18n="referral.desc">كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.</p>
-                <button type="button" class="btn btn-block" onclick="shareReferralLink()"><i class="fa-solid fa-share-nodes"></i> <span data-i18n="referral.share">مشاركة رابط الدعوة</span></button>
-            </div>
-
-            <div class="card">
-                <h2 style="margin-bottom:4px;">🧠 <span data-i18n="mistakebank.title">بنك أخطائك الشخصية</span></h2>
-                <p class="card-sub" style="margin-bottom:14px;" data-i18n="mistakebank.desc">ليست أخطاء القدرات — بل أنماطك الشخصية التي تعطّل تقدّمك، نكتشفها من سلوكك الفعلي بمرور الوقت.</p>
-                <div id="mistake-bank-content" class="mistake-bank-card"></div>
-            </div>
-
+            <h3 class="settings-group-head"><i class="fa-solid fa-shield-halved"></i> <span><b data-i18n="settings.grpPrivacy">الخصوصية والرسائل</b><em data-i18n="settings.grpPrivacySub">ما يصلك على بريدك، وسياساتنا</em></span></h3>
             <div class="card">
                 <h2 style="margin-bottom:4px;">🔒 <span data-i18n="privacy.title">الخصوصية والرسائل</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="privacy.desc">تحكّم كامل بما يصلك وبما نحفظه عنك.</p>
@@ -1872,8 +1915,39 @@
                     <button type="button" class="btn btn-outline btn-sm" onclick="openLegalModal('privacy')"><i class="fa-solid fa-shield-halved"></i> <span data-i18n="legal.privacyLink">سياسة الخصوصية</span></button>
                 </div>
             </div>
-        </section>
 
+            <h3 class="settings-group-head"><i class="fa-solid fa-mobile-screen-button"></i> <span><b data-i18n="settings.grpApp">التطبيق والبيانات</b><em data-i18n="settings.grpAppSub">التثبيت، العمل بدون إنترنت، النسخة، ونسخك الاحتياطية</em></span></h3>
+            <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-mobile-screen-button" style="color:var(--gold);"></i> <span data-i18n="settings.appTitle">تطبيق خُطى على جهازك</span></h2>
+                <p class="card-sub" data-i18n="settings.appSub">ثبّت خُطى كتطبيق مستقل يفتح بضغطة واحدة من شاشتك الرئيسية — ويعمل حتى بدون إنترنت</p>
+
+                <div id="settings-install-box" style="margin-top:16px;">
+                    <button type="button" id="settings-install-btn" class="btn btn-block" onclick="installKhutaApp()"><i class="fa-solid fa-download"></i> <span data-i18n="settings.install">ثبّت التطبيق على جهازك</span></button>
+                    <p class="hint" id="settings-install-hint" style="margin-top:10px;"></p>
+                </div>
+
+                <div class="settings-row" style="margin-top:18px;">
+                    <span class="settings-row-label"><i class="fa-solid fa-wifi"></i> <span data-i18n="settings.connLabel">حالة الاتصال</span></span>
+                    <span id="settings-conn-status" class="settings-pill">—</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-row-label"><i class="fa-solid fa-code-branch"></i> <span data-i18n="settings.versionLabel">نسخة النظام</span></span>
+                    <span id="settings-version" class="settings-pill settings-pill-mono">—</span>
+                </div>
+
+                <p class="hint" style="margin-top:14px;" data-i18n="settings.offlineNote">بدون إنترنت يعمل: الجدول، الموقّت، الحاسبة، وكل بياناتك المحفوظة على جهازك. ويحتاج اتصالاً: تسجيل الدخول والمزامنة، المجتمع، والذكاء الاصطناعي.</p>
+            </div>
+            <div class="card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-floppy-disk" style="color:var(--gold);"></i> <span data-i18n="settings.dataTitle">نسخة احتياطية من بياناتك</span></h2>
+                <p class="card-sub" data-i18n="settings.dataSub">خُطى يحفظ تقدّمك داخل متصفحك أنت. نزّل نسخة احتياطية تحتفظ بها، أو استعدها إن غيّرت جهازك أو مسحت بيانات المتصفح.</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="exportKhutaBackup()"><i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="settings.dataExport">تنزيل نسخة احتياطية</span></button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('settings-restore-input').click()"><i class="fa-solid fa-file-arrow-up"></i> <span data-i18n="settings.dataImport">استعادة من ملف</span></button>
+                    <input type="file" id="settings-restore-input" accept="application/json,.json" style="display:none;" onchange="importKhutaBackup(event)">
+                </div>
+                <p class="hint" style="margin-top:10px;" data-i18n="settings.dataNote">الاستعادة تستبدل تقدّمك الحالي على هذا الجهاز — سنطلب تأكيدك قبل تنفيذها.</p>
+            </div>
+        </section>
         <!-- ===================== دليل التخصصات ===================== -->
         <section id="view-specialties" class="view-section">
             <div class="card">
