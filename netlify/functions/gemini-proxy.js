@@ -18,9 +18,9 @@
    ⚠️ لا تكتب مفتاح Gemini هنا في هذا الملف — يُضبط فقط من:
    Netlify Dashboard → Site configuration → Environment variables →
    GEMINI_API_KEY (من aistudio.google.com/apikey)
-   وأيضاً (لتفعيل الحد الأقصى للطلبات وبنك الأسئلة المشترك أدناه):
-   SUPABASE_SERVICE_ROLE_KEY (من Supabase → Settings → API — نفس المتغيّر
-   المستخدم في send-reminders.js وsend-email.js)
+   وأيضاً (لتفعيل الحد الأقصى للطلبات وحدود الاستخدام وبنك الأسئلة المشترك
+   أدناه): SUPABASE_SERVICE_ROLE_KEY (من Supabase → Settings → API — نفس
+   المتغيّر المستخدم في send-reminders.js وsend-email.js)
 
    ⚠️ ملاحظة نشر مهمة: هذا الملف لا يعتمد على أي حزمة خارجية (لا
    @supabase/supabase-js ولا غيرها) عمداً — فقط fetch وcrypto المدمجتان في
@@ -29,6 +29,16 @@
    رغم إدراجها في package.json (على الأرجح مشكلة تحزيم خاصة بـNetlify
    لهذا الملف تحديداً) — الاعتماد على fetch وحدها يزيل هذا الخطر تماماً
    ولا يحتاج أي إعداد نشر إضافي إطلاقاً.
+
+   ⚠️ إضافة (حدود الاستخدام لكل طالب — بطلب صريح من المطوّر): الذكاء
+   الاصطناعي بكل أنماطه (دردشة/سبورة/دفتر/توليد اختبار) أصبح متاحاً لحسابات
+   مسجَّلة فقط — لا ضيوف. السبب: الضيف بلا حساب ليس له هوية يمكن التحقق
+   منها من الخادم، فأي حد له قابل للتجاوز بمجرد مسح بيانات المتصفح، مما
+   يُفرغ الحد من معناه. لكل مستخدم مسجَّل حد 10 استخدامات/يوم و50/أسبوع
+   (مجموع كل الأنماط معاً)، والمشرفون (جدول app_admins) معفَون تماماً بلا
+   أي حد — كما طُلب صراحةً. لا خدمة مدفوعة لرفع الحد بعد (مخطَّطة مستقبلاً،
+   غير مُفعَّلة الآن). التفاصيل الكاملة في verifyUser/verifyAdmin/
+   checkAndIncrementAiQuota أدناه.
 
    ⚠️ إضافة (بنك الأسئلة المشترك): نمط "exam" (اختبار من ملف الطالب) كان
    يولّد أسئلة تُستخدَم لطالب واحد فقط ثم تُرمى نهائياً. الآن — بعد أن يؤكد
@@ -43,6 +53,7 @@
 const crypto = require("crypto");
 
 const SUPABASE_URL = "https://squhkiwjwwyrgufkaujf.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_4BW-zO8Z5yxFXPHZnhl99A_rWFb2k84"; // مفتاح عام آمن بالتصميم، نفسه المستخدم في app.js وsend-email.js
 // ⚠️ ثابت على "gemini-3.6-flash" — راجع تعليقات الإصدارات السابقة في سجل
 // git إن احتجت تاريخ التبديل بين الموديلات (توقّفت أكثر من نسخة سابقة عن
 // الخدمة قبل موعدها الرسمي المعلَن؛ عند أي عطل مفاجئ، أول خطوة تشخيص هي
@@ -216,6 +227,106 @@ async function checkRateLimit(ip){
     }
 }
 
+/* ---------- هوية المتصل + حدود الاستخدام لكل طالب (انظر الشرح أعلى الملف) ---------- */
+
+// يتحقق من توكن الجلسة فعلياً عبر Supabase نفسها — لا نثق بأي id/email يرسله
+// الطلب مباشرة (نفس مبدأ send-email.js بالضبط)
+async function verifyUser(accessToken){
+    if(!accessToken || typeof accessToken !== "string") return null;
+    try{
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+            headers: { "Authorization": `Bearer ${accessToken}`, "apikey": SUPABASE_ANON_KEY },
+        });
+        if(!res.ok) return null;
+        return await res.json();
+    }catch(e){
+        console.error("[gemini-proxy] تعذّر التحقق من هوية المستخدم:", e);
+        return null;
+    }
+}
+
+// يتحقق من كون المستخدم مشرفاً فعلياً عبر جدول app_admins على الخادم —
+// المشرفون معفَون كلياً من حدود الاستخدام أدناه (بطلب صريح من المطوّر)
+async function verifyAdmin(userId, serviceKey){
+    try{
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/app_admins?uid=eq.${encodeURIComponent(userId)}&select=uid`, {
+            headers: { "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}` },
+        });
+        if(!res.ok) return false;
+        const rows = await res.json();
+        return rows.length > 0;
+    }catch(e){
+        console.error("[gemini-proxy] تعذّر التحقق من صلاحية المشرف:", e);
+        return false; // فشل التحقق = لا إعفاء (لا نمنح صلاحية غير مؤكدة عند الشك)
+    }
+}
+
+const AI_DAILY_LIMIT = 10;  // مجموع كل أنماط الذكاء الاصطناعي معاً لكل طالب يومياً
+const AI_WEEKLY_LIMIT = 50; // أقل من 10×7=70 عمداً — يمنع استنفاد اليوم الكامل كل يوم من الأسبوع
+
+// بداية الأسبوع (الأحد UTC، يطابق تقويم الأسبوع الدراسي السعودي) — يُستخدَم
+// فقط لتحديد متى يُعاد ضبط week_count إلى صفر، وليس حساباً فلكياً دقيقاً
+function startOfWeekUTC(date){
+    const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+    d.setUTCDate(d.getUTCDate() - d.getUTCDay()); // getUTCDay(): 0 = الأحد
+    return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+// يتحقق من حدّي اليوم/الأسبوع لمستخدم مسجَّل ويزيدهما إن سُمح بالطلب —
+// قراءة-ثم-كتابة (نفس أسلوب checkRateLimit أعلاه بالضبط)، سباق نادر جداً
+// ومقبول هنا (لا يستحق تعقيد RPC إضافي لهذا الحجم من الاستخدام)
+async function checkAndIncrementAiQuota(userId, serviceKey){
+    const restHeaders = {
+        "apikey": serviceKey,
+        "Authorization": `Bearer ${serviceKey}`,
+        "Content-Type": "application/json",
+    };
+    const restBase = `${SUPABASE_URL}/rest/v1/ai_usage_quota`;
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const thisWeekStart = startOfWeekUTC(now);
+
+    try{
+        const getRes = await fetch(`${restBase}?user_id=eq.${encodeURIComponent(userId)}&select=*`, { headers: restHeaders });
+        if(!getRes.ok) throw new Error("ai-quota select failed: " + getRes.status);
+        const rows = await getRes.json();
+        const row = rows[0];
+
+        if(!row){
+            // أول استخدام إطلاقاً لهذا المستخدم — صف جديد بعدّاد 1/1
+            await fetch(restBase, {
+                method: "POST",
+                headers: restHeaders,
+                body: JSON.stringify({ user_id: userId, day_date: today, day_count: 1, week_start: thisWeekStart, week_count: 1 }),
+            });
+            return { allowed: true };
+        }
+
+        // إعادة ضبط أي نافذة (يوم/أسبوع) انتهت فعلياً قبل التحقق من الحدود
+        const dayCount = row.day_date === today ? row.day_count : 0;
+        const weekCount = row.week_start === thisWeekStart ? row.week_count : 0;
+
+        if(dayCount >= AI_DAILY_LIMIT) return { allowed: false, reason: "day" };
+        if(weekCount >= AI_WEEKLY_LIMIT) return { allowed: false, reason: "week" };
+
+        await fetch(`${restBase}?user_id=eq.${encodeURIComponent(userId)}`, {
+            method: "PATCH",
+            headers: restHeaders,
+            body: JSON.stringify({
+                day_date: today, day_count: dayCount + 1,
+                week_start: thisWeekStart, week_count: weekCount + 1,
+                updated_at: now.toISOString(),
+            }),
+        });
+        return { allowed: true };
+    }catch(e){
+        // فشل التحقق نفسه (عطل مؤقت في Supabase) لا يجب أن يمنع طالباً شرعياً
+        // من استخدام الميزة — نسمح مع تسجيل الخطأ، مطابقاً لفلسفة checkRateLimit
+        console.error("[gemini-proxy] تعذّر التحقق من حدود الاستخدام:", e);
+        return { allowed: true };
+    }
+}
+
 /* ---------- بنك الأسئلة المشترك (انظر الشرح في أعلى الملف) ---------- */
 function normalizeForHash(s){
     return String(s).trim().toLowerCase().replace(/\s+/g, " ");
@@ -306,14 +417,53 @@ exports.handler = async function (event) {
         return { statusCode: 400, body: JSON.stringify({ error: "قيمة mode غير صالحة — يجب أن تكون واحدة من: " + Object.keys(MODE_SYSTEM_PROMPTS).join(", ") }) };
     }
 
-    const ip = getClientIp(event);
-    const rate = await checkRateLimit(ip);
-    if(!rate.allowed){
+    // ⚠️ الذكاء الاصطناعي لحسابات مسجَّلة فقط (بطلب صريح من المطوّر، انظر
+    // الشرح أعلى الملف) — لا نثق بأي بريد/معرّف يرسله الطلب، فقط بتوكن
+    // جلسة Supabase حقيقي يُتحقَّق منه هنا على الخادم.
+    const user = await verifyUser(payload.accessToken);
+    if(!user || !user.id){
         return {
-            statusCode: 429,
-            headers: { "Retry-After": String(rate.retryAfterSec || 60) },
-            body: JSON.stringify({ error: "طلبات كثيرة جداً من هذا الجهاز — حاول بعد قليل" }),
+            statusCode: 401,
+            body: JSON.stringify({
+                error: "سجّل الدخول (أو أنشئ حساباً مجانياً) لاستخدام الذكاء الاصطناعي — متاح لحسابات مسجَّلة فقط حالياً",
+                code: "AUTH_REQUIRED",
+            }),
         };
+    }
+
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // المشرفون معفَون كلياً من كل حدود الاستخدام أدناه (بطلب صريح من
+    // المطوّر: "بدون حد أبداً") — يتجاوزون حتى حد الطلبات لكل IP
+    const isAdmin = serviceKey ? await verifyAdmin(user.id, serviceKey) : false;
+
+    if(!isAdmin){
+        if(serviceKey){
+            const quota = await checkAndIncrementAiQuota(user.id, serviceKey);
+            if(!quota.allowed){
+                const isWeekly = quota.reason === "week";
+                return {
+                    statusCode: 429,
+                    body: JSON.stringify({
+                        error: isWeekly
+                            ? `بلغت حدّك الأسبوعي من استخدام الذكاء الاصطناعي (${AI_WEEKLY_LIMIT} استخدام) — يتجدد الحد الأسبوع القادم`
+                            : `بلغت حدّك اليومي من استخدام الذكاء الاصطناعي (${AI_DAILY_LIMIT} استخدامات) — يتجدد الحد غداً`,
+                        code: isWeekly ? "WEEKLY_LIMIT" : "DAILY_LIMIT",
+                    }),
+                };
+            }
+        }
+
+        // حماية إضافية ضد إساءة آلية سريعة حتى من حساب مسجَّل شرعي —
+        // مستقلة عن حدّي اليوم/الأسبوع أعلاه (طبقة دفاع ثانية، انظر checkRateLimit)
+        const ip = getClientIp(event);
+        const rate = await checkRateLimit(ip);
+        if(!rate.allowed){
+            return {
+                statusCode: 429,
+                headers: { "Retry-After": String(rate.retryAfterSec || 60) },
+                body: JSON.stringify({ error: "طلبات كثيرة جداً من هذا الجهاز — حاول بعد قليل" }),
+            };
+        }
     }
 
     let contents;

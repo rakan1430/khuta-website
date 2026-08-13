@@ -8172,6 +8172,18 @@ function addChatbotMessage(text, who){
     box.scrollTop = box.scrollHeight;
 }
 
+// فقاعة مخصَّصة لتنبيه "سجّل الدخول لاستخدام الذكاء الاصطناعي" — منفصلة عن
+// addChatbotMessage عمداً (لا نريد زر "اشرحها على السبورة" غير المناسب هنا،
+// ونحتاج HTML فعلي لزر تسجيل الدخول الحقيقي، انظر buildAiAuthPromptHtml)
+function addChatbotAuthPrompt(message){
+    const box = document.getElementById("chatbot-messages");
+    const div = document.createElement("div");
+    div.className = "chatbot-msg bot";
+    div.innerHTML = buildAiAuthPromptHtml(message);
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+}
+
 function askChatbot(text){
     document.getElementById("chatbot-input").value = text;
     sendChatbotMessage();
@@ -8208,6 +8220,16 @@ async function sendChatbotMessage(){
             return;
         }catch(e){
             removeTypingIndicator();
+            const limitMsg = getAiLimitErrorMessage(e);
+            if(limitMsg){
+                // تسجيل دخول مطلوب / بلغ الحد — ليست مشكلة اتصال مؤقتة، فلا نرجع
+                // للمساعد المحلي (سيبدو مضللاً)، بل نوضّح السبب الحقيقي مباشرة.
+                // لا تحويل تلقائي مفاجئ لشاشة الدخول — زر حقيقي يفتحها فقط إن
+                // اختار الطالب ذلك بنفسه (كانت الرسالة تختفي فوراً قبل أن تُقرأ)
+                if(e.code === "AUTH_REQUIRED") addChatbotAuthPrompt(limitMsg);
+                else addChatbotMessage(limitMsg, "bot");
+                return;
+            }
             geminiLastFailAt = Date.now(); // نتحوّل للمساعد المحلي مؤقتاً، ونعيد محاولة Gemini تلقائياً بعد فترة التهدئة
             console.error("[خُطى] الذكاء الاصطناعي غير متاح مؤقتاً — تفاصيل الخطأ للمطوّر (تحقق من GEMINI_API_KEY ونشر gemini-proxy.js على Netlify):", e);
             answerLocally(text, true);
@@ -8265,21 +8287,73 @@ function removeTypingIndicator(){
 // منها الخادم) والبيانات الفعلية اللازمة لذلك النمط. لا "model" ولا
 // "system_instruction" يُرسَلان من المتصفح إطلاقاً بعد الآن (انظر الشرح
 // الأمني أعلى الملف) — كلاهما مضبوطان صلباً داخل gemini-proxy.js نفسها.
+//
+// ⚠️ الذكاء الاصطناعي بكل أنماطه أصبح لحسابات مسجَّلة فقط (بطلب صريح من
+// المطوّر — حد يومي/أسبوعي لكل طالب، والمشرفون معفَون كلياً). نرسل توكن
+// الجلسة الحقيقي مع كل طلب؛ الخادم هو من يتحقق منه فعلياً ويطبّق الحد —
+// هذا فقط يوفّر التوكن اللازم، لا "يثق" العميل بنفسه بأي شيء.
 async function callGeminiProxy(mode, extraFields){
+    let accessToken = null;
+    if(sb){
+        const { data } = await sb.auth.getSession();
+        accessToken = data && data.session && data.session.access_token;
+    }
+    if(!accessToken){
+        const err = new Error("Sign-in required for AI features");
+        err.code = "AUTH_REQUIRED";
+        throw err;
+    }
     const res = await fetch("/.netlify/functions/gemini-proxy", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ mode, ...extraFields })
+        body: JSON.stringify({ mode, accessToken, ...extraFields })
     });
     if(!res.ok){
-        const errBody = await res.text().catch(() => "");
+        const errBody = await res.json().catch(() => ({}));
         console.error("[خُطى] الدالة الوسيطة رفضت الطلب — الحالة:", res.status, "التفاصيل:", errBody);
-        throw new Error("Gemini proxy HTTP " + res.status);
+        const err = new Error(errBody.error || ("Gemini proxy HTTP " + res.status));
+        err.code = errBody.code;
+        throw err;
     }
     const json = await res.json();
     const reply = json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts[0].text;
     if(!reply) throw new Error("Empty Gemini response");
     return reply;
+}
+
+// رسالة موحّدة لأخطاء الذكاء الاصطناعي "الدائمة" (تسجيل الدخول مطلوب / بلغت
+// الحد) — تُعيد null لأي خطأ آخر (عطل اتصال مؤقت مثلاً) ليستمر المستدعي
+// بمعالجته بالأسلوب المعتاد (الرجوع للمساعد المحلي، رسالة "جرّب لاحقاً"...)
+function getAiLimitErrorMessage(e){
+    if(!e || !e.code) return null;
+    if(e.code === "AUTH_REQUIRED"){
+        return labT(
+            "🔒 سجّل الدخول (أو أنشئ حساباً مجانياً بضغطة واحدة) لاستخدام المساعد الذكي — متاح لحسابات مسجَّلة فقط حالياً.",
+            "🔒 Sign in (or create a free account in one click) to use the AI assistant — currently available to registered accounts only.");
+    }
+    if(e.code === "DAILY_LIMIT"){
+        return labT("⏳ بلغت حدّك اليومي من استخدام الذكاء الاصطناعي — يتجدد الحد غداً.",
+            "⏳ You've reached your daily AI usage limit — it resets tomorrow.");
+    }
+    if(e.code === "WEEKLY_LIMIT"){
+        return labT("📅 بلغت حدّك الأسبوعي من استخدام الذكاء الاصطناعي — يتجدد الحد الأسبوع القادم.",
+            "📅 You've reached your weekly AI usage limit — it resets next week.");
+    }
+    return null;
+}
+
+// ⚠️ لا نحوّل الطالب تلقائياً لشاشة الدخول عند AUTH_REQUIRED (كان هذا
+// يبدو انقطاعاً مفاجئاً — الرسالة تختفي فوراً قبل أن يقرأها الطالب أصلاً).
+// بدلاً من ذلك: رسالة واضحة + زر حقيقي يفتح شاشة الدخول فقط إن اختار
+// الطالب ذلك بنفسه. يُستخدَم في كل نقاط دخول الذكاء الاصطناعي الأربع
+// (الدردشة، السبورة، الدفتر، توليد الاختبار) لسلوك موحّد.
+function buildAiAuthPromptHtml(message){
+    return `<div class="ai-auth-prompt">
+        <p>${escapeHtml(message)}</p>
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('login-overlay').style.display='flex'">
+            <i class="fa-solid fa-right-to-bracket"></i> ${labT("تسجيل الدخول","Sign in")}
+        </button>
+    </div>`;
 }
 
 async function askGemini(userText){
@@ -8533,7 +8607,12 @@ async function boardExplain(questionText){
         playBoardFromStart();
     }catch(e){
         console.error("[خُطى] فشل شرح السبورة:", e);
-        surface.innerHTML = `<div class="board-loading">😕 ${labT("تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","Couldn't reach the AI right now — try again shortly")}</div>`;
+        const limitMsg = getAiLimitErrorMessage(e);
+        if(e.code === "AUTH_REQUIRED"){
+            surface.innerHTML = buildAiAuthPromptHtml(limitMsg);
+        } else {
+            surface.innerHTML = `<div class="board-loading">${limitMsg ? "" : "😕 "}${limitMsg || labT("تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","Couldn't reach the AI right now — try again shortly")}</div>`;
+        }
     }
 }
 
@@ -8782,9 +8861,14 @@ async function sendPadToAI(){
         out.innerHTML = `<b>🧑‍🏫 ${labT("حل المعلّم:","Teacher's solution:")}</b><div class="pad-ai-text">${escapeHtml(reply).replace(/\n/g,"<br>")}</div>`;
     }catch(e){
         console.error("[خُطى] فشل تحليل الدفتر:", e);
-        out.innerHTML = hasDrawing && !rawText
-            ? labT("😕 تعذّر إرسال الرسم — جرّب كتابة المسألة نصاً في خانة الكتابة","😕 Couldn't send the drawing — try typing the problem instead")
-            : labT("😕 تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","😕 Couldn't reach the AI — try again shortly");
+        const limitMsg = getAiLimitErrorMessage(e);
+        if(e.code === "AUTH_REQUIRED"){
+            out.innerHTML = buildAiAuthPromptHtml(limitMsg);
+        } else {
+            out.innerHTML = limitMsg || (hasDrawing && !rawText
+                ? labT("😕 تعذّر إرسال الرسم — جرّب كتابة المسألة نصاً في خانة الكتابة","😕 Couldn't send the drawing — try typing the problem instead")
+                : labT("😕 تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","😕 Couldn't reach the AI — try again shortly"));
+        }
     }
 }
 
@@ -8881,7 +8965,12 @@ async function generateCustomExam(){
         document.getElementById("customexam-start-btn").style.display = "inline-flex";
     }catch(e){
         console.error("[خُطى] فشل توليد الاختبار:", e);
-        status.textContent = labT("😕 تعذّر التوليد — تأكد أن الملف نصّي واضح وجرّب مجدداً","😕 Generation failed — make sure the file is clear text and retry");
+        const limitMsg = getAiLimitErrorMessage(e);
+        if(e.code === "AUTH_REQUIRED"){
+            status.innerHTML = buildAiAuthPromptHtml(limitMsg);
+        } else {
+            status.textContent = limitMsg || labT("😕 تعذّر التوليد — تأكد أن الملف نصّي واضح وجرّب مجدداً","😕 Generation failed — make sure the file is clear text and retry");
+        }
     }
     btn.disabled = false;
 }

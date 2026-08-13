@@ -2013,6 +2013,11 @@ body:not(.dark-mode) .chatbot-board-btn{ color:var(--text-1); }
 }
 .chatbot-msg-board-link:hover{ opacity:1; text-decoration:underline; }
 
+/* تنبيه "سجّل الدخول لاستخدام الذكاء الاصطناعي" — رسالة واضحة + زر حقيقي
+   بدل تحويل الطالب فجأة لشاشة الدخول (انظر buildAiAuthPromptHtml في app.js) */
+.ai-auth-prompt{ display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+.ai-auth-prompt p{ margin:0; font-size:13px; line-height:1.8; }
+
 /* --- دفتر الطالب --- */
 .pad-layout{ display:flex; gap:14px; flex:1; min-height:0; }
 .pad-main{ flex:2.2; min-width:0; display:flex; flex-direction:column; gap:10px; overflow-y:auto; min-height:0; }
