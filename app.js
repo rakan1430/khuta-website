@@ -1051,6 +1051,10 @@ window.onload = () => {
         tryLoadRemoteCurriculum(),
         tryLoadRemoteSpecialties(),
         tryLoadRemoteExamQuestions(),
+        // بنك الأسئلة المشترك (مساهمات الطلاب المُتحقَّق منها) — ينتظره التحميل
+        // أيضاً كي لا يبدأ الطالب اختباراً محاكياً قبل وصول الأسئلة المشتركة
+        // فيراها ناقصة. الدالة تبتلع أخطاءها داخلياً فلا تُفشل بقية التحميل.
+        loadSharedExamQuestions(),
     ];
     let loadedCount = 0;
     updateLoadingProgress(0, coreDataLoaders.length);
@@ -7722,8 +7726,17 @@ const EXAM_QUESTIONS_LOCAL = {
     ],
 };
 
+// يدمج بنك الأسئلة المشترك (shared_exam_questions في Supabase — يُبنى
+// تلقائياً من أسئلة صالحة استخرجها الذكاء الاصطناعي من ملفات طلاب سابقين،
+// انظر gemini-proxy.js) فوق المصدر الأساسي (البعيد إن وُجد، وإلا المحلي)
 function getExamQuestions(){
-    return window.__REMOTE_EXAM_QUESTIONS__ || EXAM_QUESTIONS_LOCAL;
+    const base = window.__REMOTE_EXAM_QUESTIONS__ || EXAM_QUESTIONS_LOCAL;
+    const shared = window.__SHARED_EXAM_QUESTIONS__;
+    if(!shared || (!shared.quant.length && !shared.verbal.length)) return base;
+    return {
+        quant: [...(base.quant || []), ...shared.quant],
+        verbal: [...(base.verbal || []), ...shared.verbal],
+    };
 }
 
 async function tryLoadRemoteExamQuestions(){
@@ -7736,6 +7749,34 @@ async function tryLoadRemoteExamQuestions(){
             window.__REMOTE_EXAM_QUESTIONS__ = json;
         }
     }catch(e){ /* تجاهل بصمت — نستمر بالأمثلة المدمجة محلياً */ }
+}
+
+// يحمّل بنك الأسئلة المشترك من Supabase (قراءة عامة، لا حاجة لحساب) —
+// يكبر تلقائياً بمرور الوقت كلما ولّد طلاب أكثر أسئلة صالحة من ملفاتهم
+// الخاصة، فيصبح الاختبار القياسي (بلا رفع ملفات) أغنى تدريجياً بدل بقائه
+// عالقاً على 13 سؤالاً توضيحياً فقط
+async function loadSharedExamQuestions(){
+    if(!sb) return;
+    try{
+        const { data, error } = await sb.from("shared_exam_questions")
+            .select("id,section,text,choices,correct,explain,source_note")
+            .limit(1000);
+        if(error || !data) return;
+        const quant = [], verbal = [];
+        data.forEach(row => {
+            const q = {
+                id: "shared_" + row.id,
+                text: row.text,
+                choices: row.choices,
+                correct: row.correct,
+                explain: row.explain || "",
+                source: row.source_note || (currentLang==='ar' ? "من مساهمات الطلاب 🤝" : "From student contributions 🤝"),
+            };
+            if(row.section === "quant") quant.push(q);
+            else if(row.section === "verbal") verbal.push(q);
+        });
+        window.__SHARED_EXAM_QUESTIONS__ = { quant, verbal };
+    }catch(e){ console.error("[خُطى] تعذّر تحميل بنك الأسئلة المشترك:", e); }
 }
 
 async function tryLoadRemoteSpecialties(){
@@ -8820,7 +8861,7 @@ async function generateCustomExam(){
         for(const [kind, content] of jobs){
             const label = kind === "quant" ? "كمية (رياضيات/حساب/هندسة/تحليل)" : "لفظية (استيعاب/تناظر/إكمال/معنى)";
             const reply = await callGeminiProxy("exam",
-                { text: `ولّد ${qCount} سؤالاً من نوع أسئلة القدرات ال${label} من هذا المحتوى:\n\n${content}` });
+                { text: `ولّد ${qCount} سؤالاً من نوع أسئلة القدرات ال${label} من هذا المحتوى:\n\n${content}`, section: kind });
             const data = extractJson(reply);
             const valid = (data.questions || []).filter(q =>
                 q && typeof q.text === "string" && Array.isArray(q.choices) && q.choices.length === 4 &&
