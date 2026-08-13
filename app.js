@@ -8046,6 +8046,14 @@ async function sendChatbotMessage(){
             return;
         }catch(e){
             removeTypingIndicator();
+            const limitMsg = getAiLimitErrorMessage(e);
+            if(limitMsg){
+                // تسجيل دخول مطلوب / بلغ الحد — ليست مشكلة اتصال مؤقتة، فلا نرجع
+                // للمساعد المحلي (سيبدو مضللاً)، بل نوضّح السبب الحقيقي مباشرة
+                addChatbotMessage(limitMsg, "bot");
+                if(e.code === "AUTH_REQUIRED") document.getElementById("login-overlay").style.display = "flex";
+                return;
+            }
             geminiLastFailAt = Date.now(); // نتحوّل للمساعد المحلي مؤقتاً، ونعيد محاولة Gemini تلقائياً بعد فترة التهدئة
             console.error("[خُطى] الذكاء الاصطناعي غير متاح مؤقتاً — تفاصيل الخطأ للمطوّر (تحقق من GEMINI_API_KEY ونشر gemini-proxy.js على Netlify):", e);
             answerLocally(text, true);
@@ -8103,21 +8111,59 @@ function removeTypingIndicator(){
 // منها الخادم) والبيانات الفعلية اللازمة لذلك النمط. لا "model" ولا
 // "system_instruction" يُرسَلان من المتصفح إطلاقاً بعد الآن (انظر الشرح
 // الأمني أعلى الملف) — كلاهما مضبوطان صلباً داخل gemini-proxy.js نفسها.
+//
+// ⚠️ الذكاء الاصطناعي بكل أنماطه أصبح لحسابات مسجَّلة فقط (بطلب صريح من
+// المطوّر — حد يومي/أسبوعي لكل طالب، والمشرفون معفَون كلياً). نرسل توكن
+// الجلسة الحقيقي مع كل طلب؛ الخادم هو من يتحقق منه فعلياً ويطبّق الحد —
+// هذا فقط يوفّر التوكن اللازم، لا "يثق" العميل بنفسه بأي شيء.
 async function callGeminiProxy(mode, extraFields){
+    let accessToken = null;
+    if(sb){
+        const { data } = await sb.auth.getSession();
+        accessToken = data && data.session && data.session.access_token;
+    }
+    if(!accessToken){
+        const err = new Error("Sign-in required for AI features");
+        err.code = "AUTH_REQUIRED";
+        throw err;
+    }
     const res = await fetch("/.netlify/functions/gemini-proxy", {
         method:"POST",
         headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ mode, ...extraFields })
+        body: JSON.stringify({ mode, accessToken, ...extraFields })
     });
     if(!res.ok){
-        const errBody = await res.text().catch(() => "");
+        const errBody = await res.json().catch(() => ({}));
         console.error("[خُطى] الدالة الوسيطة رفضت الطلب — الحالة:", res.status, "التفاصيل:", errBody);
-        throw new Error("Gemini proxy HTTP " + res.status);
+        const err = new Error(errBody.error || ("Gemini proxy HTTP " + res.status));
+        err.code = errBody.code;
+        throw err;
     }
     const json = await res.json();
     const reply = json.candidates && json.candidates[0] && json.candidates[0].content && json.candidates[0].content.parts[0].text;
     if(!reply) throw new Error("Empty Gemini response");
     return reply;
+}
+
+// رسالة موحّدة لأخطاء الذكاء الاصطناعي "الدائمة" (تسجيل الدخول مطلوب / بلغت
+// الحد) — تُعيد null لأي خطأ آخر (عطل اتصال مؤقت مثلاً) ليستمر المستدعي
+// بمعالجته بالأسلوب المعتاد (الرجوع للمساعد المحلي، رسالة "جرّب لاحقاً"...)
+function getAiLimitErrorMessage(e){
+    if(!e || !e.code) return null;
+    if(e.code === "AUTH_REQUIRED"){
+        return labT(
+            "🔒 سجّل الدخول (أو أنشئ حساباً مجانياً بضغطة واحدة) لاستخدام المساعد الذكي — متاح لحسابات مسجَّلة فقط حالياً.",
+            "🔒 Sign in (or create a free account in one click) to use the AI assistant — currently available to registered accounts only.");
+    }
+    if(e.code === "DAILY_LIMIT"){
+        return labT("⏳ بلغت حدّك اليومي من استخدام الذكاء الاصطناعي — يتجدد الحد غداً.",
+            "⏳ You've reached your daily AI usage limit — it resets tomorrow.");
+    }
+    if(e.code === "WEEKLY_LIMIT"){
+        return labT("📅 بلغت حدّك الأسبوعي من استخدام الذكاء الاصطناعي — يتجدد الحد الأسبوع القادم.",
+            "📅 You've reached your weekly AI usage limit — it resets next week.");
+    }
+    return null;
 }
 
 async function askGemini(userText){
@@ -8371,7 +8417,9 @@ async function boardExplain(questionText){
         playBoardFromStart();
     }catch(e){
         console.error("[خُطى] فشل شرح السبورة:", e);
-        surface.innerHTML = `<div class="board-loading">😕 ${labT("تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","Couldn't reach the AI right now — try again shortly")}</div>`;
+        const limitMsg = getAiLimitErrorMessage(e);
+        surface.innerHTML = `<div class="board-loading">${limitMsg ? "" : "😕 "}${limitMsg || labT("تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","Couldn't reach the AI right now — try again shortly")}</div>`;
+        if(e.code === "AUTH_REQUIRED") document.getElementById("login-overlay").style.display = "flex";
     }
 }
 
@@ -8620,9 +8668,11 @@ async function sendPadToAI(){
         out.innerHTML = `<b>🧑‍🏫 ${labT("حل المعلّم:","Teacher's solution:")}</b><div class="pad-ai-text">${escapeHtml(reply).replace(/\n/g,"<br>")}</div>`;
     }catch(e){
         console.error("[خُطى] فشل تحليل الدفتر:", e);
-        out.innerHTML = hasDrawing && !rawText
+        const limitMsg = getAiLimitErrorMessage(e);
+        out.innerHTML = limitMsg || (hasDrawing && !rawText
             ? labT("😕 تعذّر إرسال الرسم — جرّب كتابة المسألة نصاً في خانة الكتابة","😕 Couldn't send the drawing — try typing the problem instead")
-            : labT("😕 تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","😕 Couldn't reach the AI — try again shortly");
+            : labT("😕 تعذّر الوصول للذكاء الاصطناعي الآن — جرّب بعد قليل","😕 Couldn't reach the AI — try again shortly"));
+        if(e.code === "AUTH_REQUIRED") document.getElementById("login-overlay").style.display = "flex";
     }
 }
 
@@ -8719,7 +8769,9 @@ async function generateCustomExam(){
         document.getElementById("customexam-start-btn").style.display = "inline-flex";
     }catch(e){
         console.error("[خُطى] فشل توليد الاختبار:", e);
-        status.textContent = labT("😕 تعذّر التوليد — تأكد أن الملف نصّي واضح وجرّب مجدداً","😕 Generation failed — make sure the file is clear text and retry");
+        const limitMsg = getAiLimitErrorMessage(e);
+        status.textContent = limitMsg || labT("😕 تعذّر التوليد — تأكد أن الملف نصّي واضح وجرّب مجدداً","😕 Generation failed — make sure the file is clear text and retry");
+        if(e.code === "AUTH_REQUIRED") document.getElementById("login-overlay").style.display = "flex";
     }
     btn.disabled = false;
 }
