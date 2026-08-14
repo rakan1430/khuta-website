@@ -37,6 +37,28 @@ try{
 // الدوال داخل ملف واحد — وهذا الرفع لا يعبر حدود ملفات <script> المنفصلة،
 // فنقلناه هنا عند تقسيم app.js. الاستدعاء نفسه لم يتحرك إطلاقاً كي يبقى
 // توقيت تسجيل مستمع onAuthStateChange كما هو تماماً (انظر الشرح فوقه).
+// ⚠️ يمنع ازدواجية معالجة نفس حدث تسجيل الدخول بين signInWithCreds/signUpWithCreds
+// والمستمع العام أدناه. مُعرَّف هنا تحديداً وليس مع بقية كود الحساب: المستمع
+// أدناه يقرأه، والمستمع يُسجَّل في هذا الملف الأول — فلو بقي التعريف في ملف
+// لاحق لكان في "المنطقة الميتة" (TDZ) لحظة إطلاق أول حدث. انظر شرح الطابور أدناه.
+let manualAuthInProgress = false;
+
+/* ⚠️⚠️ درس من خلل حقيقي وقع في الإنتاج بعد تقسيم app.js إلى ملفات:
+   جسم المستمع أدناه يستدعي دوالّ ومتغيّرات مُعرَّفة في ملفات لاحقة
+   (getSession، setSession، renderAccountUI، finishLoginBoot…). حين كان
+   التطبيق ملفاً واحداً كان رفع التعريفات يغطّي ذلك دائماً. بعد التقسيم صار
+   بإمكان حدث مصادقة أن يصل قبل تنفيذ تلك الملفات، فيرتفع خطأ
+   "manualAuthInProgress is not defined" ويسقط معالجة تسجيل الدخول بالكامل —
+   وهذا ما رُصد فعلياً في سجل أخطاء الطلاب.
+
+   الحل: نبقي التسجيل مبكراً كما هو (كي لا نفوّت PASSWORD_RECOVERY أبداً)،
+   لكن نؤجّل *المعالجة* حتى اكتمال تحميل كل الملفات: أي حدث يصل قبل الجاهزية
+   يُحفَظ في طابور ويُعالَج فور اكتمالها (انظر flushPendingAuthEvents، تُستدعى
+   من نهاية آخر ملف). حدث PASSWORD_RECOVERY وحده يُعالَج فوراً لأنه لا يحتاج
+   سوى عناصر DOM موجودة أصلاً. */
+let __authHandlersReady = false;
+let __pendingAuthEvents = [];
+
 function initOAuthListener(){
     if(!sb) return;
     sb.auth.onAuthStateChange(async (event, session) => {
@@ -45,6 +67,26 @@ function initOAuthListener(){
             document.getElementById("password-recovery-overlay").style.display = "flex";
             return;
         }
+        if(!__authHandlersReady){
+            __pendingAuthEvents.push({ event, session });
+            return;
+        }
+        await handleAuthStateEvent(event, session);
+    });
+}
+
+// يُستدعى من نهاية آخر ملف سكربت، بعد ضمان تنفيذ كل التعريفات
+async function flushPendingAuthEvents(){
+    __authHandlersReady = true;
+    const queued = __pendingAuthEvents;
+    __pendingAuthEvents = [];
+    for(const item of queued){
+        try{ await handleAuthStateEvent(item.event, item.session); }
+        catch(e){ console.error("[خُطى] تعذّرت معالجة حدث مصادقة مؤجَّل:", e); }
+    }
+}
+
+async function handleAuthStateEvent(event, session){
         // ⚠️ إصلاح خلل حرج: sb.auth.signInWithPassword (تسجيل الدخول باسم مستخدم)
         // يُطلق أيضاً حدث SIGNED_IN هذا بالضبط، وكان هذا المستمع يعالجه بشكل
         // مستقل ومتزامن مع معالجة signInWithCreds الخاصة به لنفس الحدث —
@@ -75,7 +117,6 @@ function initOAuthListener(){
         checkAdminStatus();
         showToast(currentLang==='ar' ? "أهلاً بك 👋" : "Welcome 👋");
         finishLoginBoot();
-    });
 }
 
 initOAuthListener();
