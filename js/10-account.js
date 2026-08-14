@@ -503,7 +503,9 @@ async function sendExamScoreEmail(score){
     }
 }
 
-let manualAuthInProgress = false; // يمنع ازدواجية معالجة نفس حدث تسجيل الدخول بين signInWithCreds/signUpWithCreds والمستمع العام
+// ⚠️ manualAuthInProgress نُقل تعريفه إلى js/01-core-config.js عمداً (بجوار
+// مستمع onAuthStateChange الذي يقرأه). إعادة تعريفه هنا بـlet ستُسقط الملف
+// كاملاً بخطأ "Identifier has already been declared" — لا تُعِده.
 
 function setSession(s){
     localStorage.setItem("khuta_session", JSON.stringify(s));
