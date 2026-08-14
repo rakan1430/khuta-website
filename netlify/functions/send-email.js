@@ -118,7 +118,7 @@ async function getCampaignRecipients(message){
         const uRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${row.id}`, { headers });
         if(!uRes.ok) continue;
         const user = await uRes.json();
-        if(!user.email || !isRealEmail(user.email, row.username)) continue;
+        if(!user.email || !isRealEmail(user.email)) continue;
         eligible.push({ id: row.id, email: user.email, name: row.username });
     }
     return eligible;
@@ -136,13 +136,21 @@ async function verifyUser(accessToken){
     return res.json();
 }
 
-function isRealEmail(email, username){
-    if(!email) return false;
-    // البريد الوهمي الداخلي يُبنى دائماً بنمط khuta.{اسم_المستخدم}@gmail.com — أي بريد
-    // مختلف عن هذا النمط يعني الطالب ربط بريداً حقيقياً فعلاً
-    const clean = (username || "").trim().toLowerCase().replace(/[^a-z0-9_.-]/g, "");
-    const synthetic = `khuta.${clean}@${USERNAME_EMAIL_DOMAIN}`;
-    return email.toLowerCase() !== synthetic;
+// ⚠️ إصلاح أمني: هذه الدالة كانت تبني البريد المصطنع المتوقَّع من اسم مستخدم
+// قادم من *جسم الطلب* (payload.username) ثم تقارنه ببريد الجلسة. أي طالب مسجَّل
+// كان يستطيع إرسال اسم مستخدم مختلف عن اسمه الحقيقي، فتفشل المطابقة ويُعتبَر
+// بريده المصطنع "حقيقياً" — فتُرسَل نتيجته فعلياً إلى khuta.{اسمه}@gmail.com،
+// وهو عنوان Gmail قابل لأن يخص شخصاً حقيقياً تماماً (Gmail يتجاهل النقاط، أي
+// khuta.ali@gmail.com = khutaali@gmail.com). النتيجة: بريد غير مرغوب لطرف ثالث
+// + تسريب اسم الطالب ودرجته له + خطر إدراج نطاق المرسِل في القوائم السوداء.
+//
+// الإصلاح: لا نستقبل اسم المستخدم إطلاقاً في هذا القرار. النمط نفسه يكفي —
+// كل البُنى المصطنعة تبدأ بـ"khuta." على نطاق gmail، فنطابقه مباشرة.
+const SYNTHETIC_EMAIL_RE = new RegExp(`^khuta\\.[a-z0-9_.\\-]*@${USERNAME_EMAIL_DOMAIN.replace(/\./g, "\\.")}$`, "i");
+
+function isRealEmail(email){
+    if(!email || typeof email !== "string") return false;
+    return !SYNTHETIC_EMAIL_RE.test(email.trim().toLowerCase());
 }
 
 async function checkCooldown(userId){
@@ -214,8 +222,12 @@ exports.handler = async function(event){
         return { statusCode: 400, body: JSON.stringify({ error: "قيمة type غير صالحة" }) };
     }
 
+    // is_anonymous مرفوض صراحةً: التطبيق ينشئ جلسة Supabase مجهولة صامتة لكل
+    // ضيف (يحتاجها المجتمع)، وتوكنها صحيح تماماً فتعبر verifyUser بنجاح. بدون
+    // هذا الشرط يستطيع أي زائر استنزاف حصة Brevo بطلبات متكررة. نفس الإصلاح
+    // المطبَّق في gemini-proxy.js للسبب نفسه.
     const user = await verifyUser(payload.accessToken);
-    if(!user || !user.id){
+    if(!user || !user.id || user.is_anonymous === true){
         return { statusCode: 401, body: JSON.stringify({ error: "جلسة غير صالحة" }) };
     }
 
@@ -286,8 +298,7 @@ exports.handler = async function(event){
         }
     }
 
-    const username = payload.username; // فقط لبناء نمط البريد الوهمي للمقارنة، لا يُستخدم كمعرّف هوية
-    if(!isRealEmail(user.email, username)){
+    if(!isRealEmail(user.email)){
         return { statusCode: 200, body: JSON.stringify({ skipped: true, reason: "لا يوجد بريد حقيقي مرتبط" }) };
     }
 
