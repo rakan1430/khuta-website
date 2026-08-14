@@ -6,12 +6,42 @@
    Gemini، الخطوط، GitHub) — تمر هذه دائماً مباشرة للشبكة بدون أي تدخل،
    لتفادي أي احتمال لعرض بيانات قديمة مخزَّنة مؤقتاً.
    ============================================================ */
-const CACHE_NAME = "khuta-shell-v1";
-const SHELL_FILES = ["./", "./index.html", "./app.js", "./manifest.json", "./icon-192.png", "./icon-512.png"];
+// ارفع رقم النسخة مع أي تغيير في قائمة الملفات أدناه.
+const CACHE_NAME = "khuta-shell-v2";
+// app.js قُسّم إلى js/*.js فصار لا بد من سردها بالاسم هنا.
+//
+// ملاحظة للمطوّر: لست مضطراً لتذكّر تحديث هذه القائمة. لو أضفت ملفاً جديداً
+// ولم تكتبه هنا، سيُخزَّن تلقائياً بمجرد أول زيارة للموقع باتصال (عبر معالج
+// fetch أدناه)، ولو حذفت ملفاً وتركت اسمه هنا فلن يتعطّل شيء أيضاً — انظر
+// سبب ذلك في تعليق install أدناه.
+const SHELL_FILES = [
+  "./", "./index.html", "./styles.css", "./manifest.json",
+  "./icon-192.png", "./icon-512.png",
+  "./js/01-core-config.js",
+  "./js/02-universities.js",
+  "./js/03-i18n.js",
+  "./js/04-utils.js",
+  "./js/05-boot-nav.js",
+  "./js/06-schedule.js",
+  "./js/07-focus.js",
+  "./js/08-calc-profile.js",
+  "./js/09-features.js",
+  "./js/10-account.js",
+  "./js/11-community.js",
+  "./js/12-ai.js",
+];
 
 self.addEventListener("install", (event) => {
+  // ⚠️ نخزّن كل ملف على حدة عمداً بدل cache.addAll: الأخيرة ترفض العملية
+  // بالكامل لو فشل ملف واحد فقط من القائمة (اسم خاطئ أو ملف حُذف)، فتضيع
+  // كل قدرة العمل بدون إنترنت دفعة واحدة وبصمت. بهذه الطريقة يكلّف أي اسم
+  // قديم في القائمة ملفه وحده لا غير، ويبقى الباقي مخزَّناً وشغّالاً.
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_FILES)).catch(() => {})
+    caches.open(CACHE_NAME).then((cache) =>
+      Promise.all(SHELL_FILES.map((f) =>
+        cache.add(f).catch((e) => console.warn("[خُطى][sw] تعذّر تخزين", f, e))
+      ))
+    ).catch(() => {})
   );
   self.skipWaiting();
 });

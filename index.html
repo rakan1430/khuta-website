@@ -2035,6 +2035,28 @@
      في هذا الملف لو تغيّر أحدث إصدار من 2.x على npm، بينما هذا التثبيت
      يضمن تحميل نفس الكود المُراجَع دائماً حتى تُحدَّث النسخة هنا يدوياً. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
-<script src="app.js" defer></script>
+<!-- ⚠️ app.js (‏9676 سطراً) قُسّم إلى الأجزاء أدناه لتسهيل التعديل والمراجعة على
+     GitHub. التقسيم ميكانيكي بحت: القطع تمّ عند حدود المستوى الأعلى فقط مع
+     الحفاظ على الترتيب الأصلي حرفياً، وتم التحقق آلياً أن دمج هذه الملفات
+     بهذا الترتيب يطابق app.js الأصلي بايت ببايت (نفس تجزئة SHA-256).
+
+     ⚠️⚠️ الترتيب أدناه إلزامي ولا يجوز تغييره أو إعادة ترتيبه: الكود يعتمد
+     على أن ما يُنفَّذ فور التحميل يأتي بعد ما يعتمد عليه. الملفات ليست وحدات
+     (modules) — كلها نصوص كلاسيكية تتشارك النطاق العام، فدوالها وثوابتها
+     مرئية لبعضها كما لو كانت ملفاً واحداً.
+
+     عند إضافة ملف جديد: أضِف وسم <script> له هنا بنفس نمط الترتيب. -->
+<script src="js/01-core-config.js" defer></script>
+<script src="js/02-universities.js" defer></script>
+<script src="js/03-i18n.js" defer></script>
+<script src="js/04-utils.js" defer></script>
+<script src="js/05-boot-nav.js" defer></script>
+<script src="js/06-schedule.js" defer></script>
+<script src="js/07-focus.js" defer></script>
+<script src="js/08-calc-profile.js" defer></script>
+<script src="js/09-features.js" defer></script>
+<script src="js/10-account.js" defer></script>
+<script src="js/11-community.js" defer></script>
+<script src="js/12-ai.js" defer></script>
 </body>
 </html>
