@@ -23,6 +23,42 @@ const { createClient } = require("@supabase/supabase-js");
 const SUPABASE_URL = "https://squhkiwjwwyrgufkaujf.supabase.co";
 const VAPID_PUBLIC_KEY = "BMWllR59gW0Z5EHMNv1CQxEKzGjvoNY8SEznutD9Du1KVVGohKA8lu9Z8Rx7tnBSfW2ZypVGiXIcPdBRE-id9gA";
 
+// ⚠️ حارس أمني: هذه الدالة تستخدم service_role وترسل إشعاراً لكل طالب مشترك،
+// ولا تتحقق من هوية المتصل إطلاقاً (لا يمكنها ذلك — لا مستخدم في التشغيل
+// المجدول). Netlify يمنع استدعاء الدوال المجدولة عبر HTTP، لكن الاعتماد على
+// ذلك وحده افتراض ضمني غير مفروض في الكود: لو تغيّر سلوك المنصة أو أُزيلت
+// الجدولة سهواً من netlify.toml، لأصبح بإمكان أي شخص إغراق كل طلاب الموقع
+// بإشعارات متكررة.
+//
+// الحارس هنا لا يعتمد على أي تفصيل غير موثَّق في حمولة Netlify (كي لا ينكسر
+// التذكير لو تغيّر شكلها): يسجّل ببساطة وقت آخر تشغيل ويرفض أي تشغيل قبل مرور
+// 20 ساعة. التشغيل اليومي المجدول (كل 24 ساعة) يمر دائماً بهامش 4 ساعات،
+// وأي محاولة إغراق تُرفض بعد أول طلب.
+const MIN_HOURS_BETWEEN_RUNS = 20;
+
+async function claimRunSlot(supabase) {
+    const { data, error } = await supabase
+        .from("job_runs").select("last_run_at").eq("job_name", "send-reminders").maybeSingle();
+
+    // فشل قراءة الحارس نفسه لا يجب أن يمنع التذكير اليومي المشروع — نسمح ونسجّل
+    if (error) {
+        console.error("[خُطى] تعذّرت قراءة حارس التشغيل، نكمل:", error);
+        return true;
+    }
+
+    if (data && data.last_run_at) {
+        const hours = (Date.now() - new Date(data.last_run_at).getTime()) / 36e5;
+        if (hours < MIN_HOURS_BETWEEN_RUNS) {
+            console.warn(`[خُطى] رُفض تشغيل مبكر: مضت ${hours.toFixed(1)} ساعة فقط منذ آخر إرسال`);
+            return false;
+        }
+    }
+
+    await supabase.from("job_runs")
+        .upsert({ job_name: "send-reminders", last_run_at: new Date().toISOString() });
+    return true;
+}
+
 exports.handler = async function () {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
@@ -35,6 +71,10 @@ exports.handler = async function () {
     webpush.setVapidDetails("mailto:support@khuta.app", VAPID_PUBLIC_KEY, vapidPrivateKey);
 
     const supabase = createClient(SUPABASE_URL, serviceKey);
+
+    if (!(await claimRunSlot(supabase))) {
+        return { statusCode: 429, body: JSON.stringify({ skipped: "too soon since last run" }) };
+    }
     const { data: subscriptions, error } = await supabase.from("push_subscriptions").select("*");
 
     if (error) {
