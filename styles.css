@@ -1937,6 +1937,21 @@ html:has(body.dark-mode){ background:#0A0920; }
 .lab-window-head{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     padding:14px 18px; border-bottom:1px solid rgba(210,195,255,0.16); flex-shrink:0;
+    min-width:0; /* يسمح للتبويبات بالتقلّص بدل دفع زر الإغلاق خارج الشاشة */
+}
+/* على الشاشات الضيّقة نضغط الحشوة قليلاً ونُبرز زر الإغلاق كي يبقى واضحاً */
+@media (max-width:600px){
+    .lab-window-head{ padding:12px 12px; gap:8px; }
+    .board-tabs{ gap:5px; }
+    .board-tab{ padding:9px 10px; font-size:12.5px; }
+    .lab-close-btn{
+        background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.3);
+    }
+    /* ملاحظة: جُرِّب تدرّج تلاشٍ عند الحافة كإشارة لوجود تبويبات أخرى، لكنه
+       ظهر ككتلة صلبة تحجب التبويب المجاور بدل أن يوحي بالاستمرار — فأُزيل.
+       البديل المعتمد: التبويب النشط يُجلب للعرض تلقائياً (scrollIntoView في
+       switchBoardTab)، فيرى الطالب موضعه دائماً، والسحب الأفقي يعمل طبيعياً. */
+    .board-tabs-wrap{ flex:1 1 auto; min-width:0; display:flex; }
 }
 .lab-window-title{ color:#fff; font-size:15.5px; display:flex; align-items:center; gap:9px; }
 .lab-close-btn{
@@ -1947,11 +1962,25 @@ html:has(body.dark-mode){ background:#0A0920; }
 .lab-close-btn:hover{ background:rgba(226,82,126,0.25); transform:rotate(90deg); }
 
 /* --- تبويبا السبورة/الدفتر بمؤشر منزلق --- */
-.board-tabs{ display:flex; gap:8px; }
+/* ⚠️ إصلاح خلل حقيقي على الهاتف: مع إضافة تبويب رابع ("اشرح ملفي") صار صف
+   التبويبات أعرض من الشاشة على الأجهزة الضيّقة (390px وأقل)، فيدفع زر الإغلاق
+   خارج الشاشة تماماً (قيس فعلياً عند x=-26) — أي يدخل الطالب السبورة ولا يجد
+   أي وسيلة للخروج منها. وفي الوقت نفسه كان overflow-x:visible فلا يمكن سحب
+   الصف للوصول للتبويبات المخفية.
+   الحل: الصف وحده يتقلّص ويُمرَّر أفقياً (min-width:0 ضرورية وإلا رفض عنصر
+   flex التقلّص دون محتواه)، والتبويبات لا تتقلّص ولا يلتفّ نصّها، وزر الإغلاق
+   يبقى ثابتاً دائماً. */
+.board-tabs{
+    display:flex; gap:8px; flex:1 1 auto; min-width:0;
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
+    scrollbar-width:none; scroll-behavior:smooth;
+}
+.board-tabs::-webkit-scrollbar{ display:none; }
 .board-tab{
     padding:9px 16px; border-radius:12px; border:1px solid transparent; cursor:pointer;
     background:transparent; color:rgba(255,255,255,0.6); font-family:var(--font-body);
     font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px;
+    flex-shrink:0; white-space:nowrap;
     transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
 }
 .board-tab:hover{ color:#fff; background:rgba(255,255,255,0.06); }
@@ -2858,4 +2887,13 @@ body.dark-mode .chatbot-board-btn{
     .filex-drop{ padding:22px 14px; }
     .scan-doc{ width:96px; height:124px; }
     @keyframes scanBeamSweep{ 0%{ top:-36px; } 100%{ top:124px; } }
+}
+
+/* التبويب الأول اسمه طويل ("سبورة المعلّم الذكي") ويلتهم وحده ثلث الصف على
+   الهاتف، فتُدفع بقية التبويبات خارج الشاشة. نعرض اسماً مختصراً على الشاشات
+   الضيّقة فقط — والتمرير الأفقي يبقى شبكة أمان لأي عرض أضيق من المتوقَّع. */
+.tab-label-short{ display:none; }
+@media (max-width:600px){
+    .tab-label-full{ display:none; }
+    .tab-label-short{ display:inline; }
 }

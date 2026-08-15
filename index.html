@@ -939,12 +939,12 @@
 <div id="khuta-board-overlay" class="lab-overlay" style="display:none;">
     <div class="lab-window board-window">
         <div class="lab-window-head">
-            <div class="board-tabs">
-                <button type="button" class="board-tab active" data-tab="ai" onclick="switchBoardTab('ai')"><i class="fa-solid fa-chalkboard-user"></i> سبورة المعلّم الذكي</button>
+            <div class="board-tabs-wrap"><div class="board-tabs">
+                <button type="button" class="board-tab active" data-tab="ai" onclick="switchBoardTab('ai')"><i class="fa-solid fa-chalkboard-user"></i> <span class="tab-label-full">سبورة المعلّم الذكي</span><span class="tab-label-short">السبورة</span></button>
                 <button type="button" class="board-tab" data-tab="file" onclick="switchBoardTab('file')"><i class="fa-solid fa-file-lines"></i> <span data-i18n="filex.tab">اشرح ملفي</span></button>
                 <button type="button" class="board-tab" data-tab="pad" onclick="switchBoardTab('pad')"><i class="fa-solid fa-pen-ruler"></i> دفتري</button>
                 <button type="button" class="board-tab" data-tab="chats" onclick="switchBoardTab('chats')"><i class="fa-solid fa-comments"></i> محادثاتي</button>
-            </div>
+            </div></div>
             <button type="button" class="lab-close-btn" onclick="closeKhutaBoard()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
