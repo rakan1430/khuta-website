@@ -469,12 +469,16 @@ function closeKhutaBoard(){
 function switchBoardTab(tab){
     document.querySelectorAll(".board-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
     document.getElementById("board-tab-ai").classList.toggle("active", tab === "ai");
+    document.getElementById("board-tab-file").classList.toggle("active", tab === "file");
     document.getElementById("board-tab-pad").classList.toggle("active", tab === "pad");
     document.getElementById("board-tab-chats").classList.toggle("active", tab === "chats");
     // في الوضع الكامل، السبورة والدفتر يُعرضان جنباً إلى جنب دوماً — لكن
     // تبويب "محادثاتي" يستثني نفسه من هذا التقسيم ويأخذ العرض كاملاً وحده،
     // مطابقةً لفئة .showing-chats في CSS
     document.querySelector(".board-window").classList.toggle("showing-chats", tab === "chats");
+    // تبويب "اشرح ملفي" يستثني نفسه أيضاً من عرض السبورة+الدفتر جنباً إلى جنب
+    // ويأخذ عرض النافذة كاملاً — شرح الملف طويل ويحتاج المساحة
+    document.querySelector(".board-window").classList.toggle("showing-file", tab === "file");
     if(tab === "chats") renderSavedConversationsList();
     // إصلاح جذري: كانت مساحة الرسم تُقاس مرة واحدة فقط عند فتح النافذة، وغالباً
     // بينما تبويب "دفتري" لا يزال display:none (لأن التبويب الافتراضي هو
@@ -833,6 +837,198 @@ async function extractPdfText(file){
     return all;
 }
 
+/* ============================================================
+   اشرح ملفي — يرفع الطالب ملف مادته فيُفحَص ثم يُشرح بالكامل، مع إمكانية
+   سؤال المعلّم عن أي شيء فيه بعد ذلك.
+   ------------------------------------------------------------
+   ⚠️ شرط "مواد دراسية حقيقية فقط" مفروض على الخادم لا هنا (انظر
+   FILE_EXPLAIN_SYSTEM_PROMPT في gemini-proxy.js): المتصفح يرسل نص الملف
+   فقط، ولا يملك أي وسيلة لتجاوز الشرط. ما نفعله هنا هو عرض سبب الرفض للطالب
+   برسالة مفهومة، لا اتخاذ قرار القبول.
+   ============================================================ */
+let fileExplainState = { text: "", name: "", data: null };
+
+// نص شرح مراحل الفحص — يتبدّل أثناء الانتظار فيبقى الطالب مطمئناً أن العمل جارٍ
+const SCAN_STEPS_AR = ["نقرأ صفحات ملفك…", "نتأكد أنه محتوى دراسي…", "نستخرج المفاهيم الأساسية…", "نرتّبها كدرس متسلسل…", "نجهّز الأمثلة والأخطاء الشائعة…"];
+const SCAN_STEPS_EN = ["Reading your pages…", "Checking it's study material…", "Extracting key concepts…", "Ordering them into a lesson…", "Preparing examples and pitfalls…"];
+
+let scanTimer = null;
+function startScanAnimation(stageId, captionId){
+    const stage = document.getElementById(stageId);
+    const caption = document.getElementById(captionId);
+    if(!stage) return;
+    stage.style.display = "flex";
+    const list = currentLang === "ar" ? SCAN_STEPS_AR : SCAN_STEPS_EN;
+    let i = 0;
+    if(caption) caption.textContent = list[0];
+    clearInterval(scanTimer);
+    scanTimer = setInterval(() => {
+        i = (i + 1) % list.length;
+        if(!caption) return;
+        caption.style.opacity = "0";
+        setTimeout(() => { caption.textContent = list[i]; caption.style.opacity = "1"; }, 200);
+    }, 2200);
+}
+function stopScanAnimation(stageId){
+    clearInterval(scanTimer);
+    scanTimer = null;
+    const stage = document.getElementById(stageId);
+    if(stage) stage.style.display = "none";
+}
+
+async function onFileExplainPicked(event){
+    const file = event.target.files && event.target.files[0];
+    if(!file) return;
+    const label = document.getElementById("filex-file-label");
+    const btn = document.getElementById("filex-analyze-btn");
+    label.textContent = "⏳ " + labT("نقرأ الملف…","Reading the file…");
+    btn.style.display = "none";
+    try{
+        const text = file.name.toLowerCase().endsWith(".pdf")
+            ? await extractPdfText(file)
+            : await file.text();
+        if(!text || text.trim().length < 80) throw new Error("too short");
+        fileExplainState = { text, name: file.name, data: null };
+        label.textContent = `📄 ${file.name} — ${labT(`${text.length.toLocaleString("en")} حرفاً جاهزة للفحص`, `${text.length.toLocaleString("en")} characters ready`)}`;
+        btn.style.display = "";
+    }catch(e){
+        console.error("[خُطى] تعذّرت قراءة الملف:", e);
+        fileExplainState = { text: "", name: "", data: null };
+        label.textContent = "❌ " + labT("تعذّرت القراءة — جرّب ملف txt أو PDF نصّي (غير مصوَّر)","Read failed — try a txt or text-based PDF");
+    }
+}
+
+// رسائل رفض واضحة لكل سبب يرجعه الخادم — لا نعرض رمز السبب الخام للطالب
+function fileRejectionMessage(reason, note){
+    const map = {
+        not_study:  labT("هذا الملف لا يبدو مادة دراسية 📚 — ارفع ملزمة أو محاضرة أو ملخص مادة.",
+                         "This doesn't look like study material 📚 — upload a lecture, summary, or course file."),
+        harmful:    labT("لا أستطيع شرح هذا الملف لأنه يحتوي محتوى غير مناسب أو بيانات شخصية حسّاسة.",
+                         "I can't explain this file — it contains unsuitable content or sensitive personal data."),
+        misleading: labT("محتوى هذا الملف يبدو غير دقيق علمياً، ولا أريد أن أبني عليه شرحاً يضلّلك.",
+                         "This file looks scientifically inaccurate — I won't build an explanation on it."),
+        unreadable: labT("النص المستخرج غير واضح — تأكد أن الـPDF نصّي وليس صوراً ممسوحة.",
+                         "The extracted text is unclear — make sure the PDF is text, not scanned images."),
+    };
+    return (map[reason] || labT("تعذّر قبول هذا الملف.","This file couldn't be accepted.")) + (note ? " " + note : "");
+}
+
+async function analyzeUploadedFile(){
+    if(!fileExplainState.text){ showToast(labT("ارفع ملفاً أولاً","Upload a file first")); return; }
+    const btn = document.getElementById("filex-analyze-btn");
+    const upload = document.getElementById("filex-upload");
+    const result = document.getElementById("filex-result");
+    btn.disabled = true;
+    upload.style.display = "none";
+    result.style.display = "none";
+    startScanAnimation("filex-scan", "filex-scan-caption");
+
+    try{
+        const reply = await callGeminiProxy("fileExplain", { text: fileExplainState.text });
+        const data = extractJson(reply);
+        stopScanAnimation("filex-scan");
+
+        if(!data || data.accepted !== true){
+            upload.style.display = "";
+            document.getElementById("filex-file-label").innerHTML =
+                `<span class="filex-rejected">⛔ ${escapeHtml(fileRejectionMessage(data && data.reject_reason, data && data.rejection_note))}</span>`;
+            document.getElementById("filex-analyze-btn").style.display = "none";
+            fileExplainState.text = "";
+            btn.disabled = false;
+            return;
+        }
+
+        fileExplainState.data = data;
+        renderFileExplanation(data);
+        result.style.display = "";
+        document.getElementById("filex-answers").innerHTML = "";
+    }catch(e){
+        console.error("[خُطى] فشل شرح الملف:", e);
+        stopScanAnimation("filex-scan");
+        upload.style.display = "";
+        const limitMsg = getAiLimitErrorMessage(e);
+        const label = document.getElementById("filex-file-label");
+        if(e.code === "AUTH_REQUIRED") label.innerHTML = buildAiAuthPromptHtml(limitMsg);
+        else label.textContent = limitMsg || labT("😕 تعذّر الشرح — حاول مرة أخرى","😕 Explanation failed — try again");
+    }
+    btn.disabled = false;
+}
+
+function renderFileExplanation(d){
+    const esc = escapeHtml;
+    const sections = Array.isArray(d.sections) ? d.sections : [];
+    const terms = Array.isArray(d.key_terms) ? d.key_terms : [];
+    const mistakes = Array.isArray(d.common_mistakes) ? d.common_mistakes : [];
+
+    let html = `<div class="filex-head">
+        <div class="filex-badge"><i class="fa-solid fa-circle-check"></i> ${labT("محتوى دراسي مقبول","Accepted study material")}</div>
+        <h3>${esc(d.subject || labT("ملفك","Your file"))}</h3>
+        ${d.level ? `<span class="filex-level">${esc(d.level)}</span>` : ""}
+        ${d.summary ? `<p class="filex-summary">${esc(d.summary)}</p>` : ""}
+    </div>`;
+
+    sections.forEach((s, i) => {
+        const pts = (Array.isArray(s.points) ? s.points : []).map(p => `<li>${esc(p)}</li>`).join("");
+        html += `<div class="filex-section" style="--i:${i}">
+            <h4><span class="filex-num">${i + 1}</span> ${esc(s.title || "")}</h4>
+            ${pts ? `<ul>${pts}</ul>` : ""}
+            ${s.example ? `<div class="filex-example"><b>${labT("مثال","Example")}:</b> ${esc(s.example)}</div>` : ""}
+        </div>`;
+    });
+
+    if(terms.length){
+        html += `<div class="filex-block"><h4><i class="fa-solid fa-book"></i> ${labT("مصطلحات مهمة","Key terms")}</h4><dl class="filex-terms">` +
+            terms.map(t => `<dt>${esc(t.term || "")}</dt><dd>${esc(t.meaning || "")}</dd>`).join("") + `</dl></div>`;
+    }
+    if(mistakes.length){
+        html += `<div class="filex-block filex-warn"><h4><i class="fa-solid fa-triangle-exclamation"></i> ${labT("أخطاء شائعة","Common mistakes")}</h4><ul>` +
+            mistakes.map(m => `<li>${esc(m)}</li>`).join("") + `</ul></div>`;
+    }
+    if(d.study_tip){
+        html += `<div class="filex-block filex-tip"><h4><i class="fa-solid fa-lightbulb"></i> ${labT("نصيحة للمذاكرة","Study tip")}</h4><p>${esc(d.study_tip)}</p></div>`;
+    }
+    document.getElementById("filex-result-body").innerHTML = html;
+}
+
+async function askAboutFile(){
+    const input = document.getElementById("filex-question");
+    const q = input.value.trim();
+    if(!q) return;
+    if(!fileExplainState.text){ showToast(labT("ارفع ملفاً أولاً","Upload a file first")); return; }
+    const box = document.getElementById("filex-answers");
+    input.value = "";
+
+    const row = document.createElement("div");
+    row.className = "filex-qa";
+    row.innerHTML = `<div class="filex-q">${escapeHtml(q)}</div><div class="filex-a filex-a-loading"><span class="board-chalk-dot"></span>${labT("المعلّم يراجع ملفك…","Checking your file…")}</div>`;
+    box.appendChild(row);
+    box.scrollTop = box.scrollHeight;
+
+    try{
+        const reply = await callGeminiProxy("fileQA", { text: q, fileText: fileExplainState.text });
+        row.querySelector(".filex-a").className = "filex-a";
+        row.querySelector(".filex-a").textContent = reply;
+    }catch(e){
+        console.error("[خُطى] فشل سؤال الملف:", e);
+        const a = row.querySelector(".filex-a");
+        a.className = "filex-a";
+        const limitMsg = getAiLimitErrorMessage(e);
+        if(e.code === "AUTH_REQUIRED") a.innerHTML = buildAiAuthPromptHtml(limitMsg);
+        else a.textContent = limitMsg || labT("😕 تعذّرت الإجابة — حاول مرة أخرى","😕 Couldn't answer — try again");
+    }
+    box.scrollTop = box.scrollHeight;
+}
+
+function resetFileExplain(){
+    fileExplainState = { text: "", name: "", data: null };
+    document.getElementById("filex-input").value = "";
+    document.getElementById("filex-file-label").textContent = "";
+    document.getElementById("filex-analyze-btn").style.display = "none";
+    document.getElementById("filex-result").style.display = "none";
+    document.getElementById("filex-answers").innerHTML = "";
+    document.getElementById("filex-upload").style.display = "";
+}
+
 async function generateCustomExam(){
     const qCount = parseInt(document.getElementById("customexam-qcount").value) || 10;
     const hasQ = !!customExamFiles.quant, hasV = !!customExamFiles.verbal;
@@ -840,7 +1036,10 @@ async function generateCustomExam(){
     const btn = document.getElementById("customexam-generate-btn");
     const status = document.getElementById("customexam-status");
     btn.disabled = true;
-    status.innerHTML = `<span class="board-chalk-dot"></span>${labT("الذكاء يقرأ ملفاتك ويؤلّف الأسئلة… (قد يستغرق حتى دقيقة)","AI is reading your files and writing questions…")}`;
+    status.textContent = "";
+    // نفس الأنيميشن المستخدم في "اشرح ملفي" — الانتظار هنا قد يبلغ دقيقة،
+    // فالحركة تُطمئن الطالب أن العمل جارٍ بدل شاشة ساكنة
+    startScanAnimation("customexam-scan", "customexam-scan-caption");
     const pool = { quant:[], verbal:[] };
     try{
         const jobs = [];
@@ -865,10 +1064,12 @@ async function generateCustomExam(){
         const total = pool.quant.length + pool.verbal.length;
         if(total === 0) throw new Error("no valid questions");
         localStorage.setItem("khuta_custom_exam_pool", JSON.stringify(pool));
+        stopScanAnimation("customexam-scan");
         status.innerHTML = `✅ ${labT(`جاهز! تولّد ${total} سؤالاً (${pool.quant.length} كمي، ${pool.verbal.length} لفظي)`, `Ready! ${total} questions generated`)}`;
         document.getElementById("customexam-start-btn").style.display = "inline-flex";
     }catch(e){
         console.error("[خُطى] فشل توليد الاختبار:", e);
+        stopScanAnimation("customexam-scan");
         const limitMsg = getAiLimitErrorMessage(e);
         if(e.code === "AUTH_REQUIRED"){
             status.innerHTML = buildAiAuthPromptHtml(limitMsg);
