@@ -466,8 +466,28 @@ function closeKhutaBoard(){
     stopBoardPlayback();
     labOverlayClose("khuta-board-overlay");
 }
+
+/* ⚠️ مخرجان احتياطيان للسبورة — أُضيفا بعد بلاغ حقيقي: على هاتف ضيّق دُفع زر
+   الإغلاق خارج الشاشة فحُبس الطالب داخل السبورة بلا أي وسيلة للخروج. أُصلح
+   سبب الدفع في CSS، لكن نضيف هنا مخرجين لا يعتمدان على التخطيط إطلاقاً كي
+   لا تتكرر الحالة مهما تغيّر العرض مستقبلاً:
+   1) مفتاح Escape.
+   2) النقر على الخلفية المعتمة خارج نافذة السبورة. */
+document.addEventListener("keydown", (e) => {
+    if(e.key !== "Escape") return;
+    const ov = document.getElementById("khuta-board-overlay");
+    if(ov && ov.style.display !== "none") closeKhutaBoard();
+});
+document.addEventListener("click", (e) => {
+    // الخلفية نفسها فقط — لا أي عنصر داخل النافذة
+    if(e.target && e.target.id === "khuta-board-overlay") closeKhutaBoard();
+});
 function switchBoardTab(tab){
     document.querySelectorAll(".board-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    // التبويب النشط قد يكون خارج الجزء المرئي من الصف على الهاتف — نجلبه
+    // للعرض تلقائياً كي يرى الطالب دائماً أين هو
+    const activeTab = document.querySelector(`.board-tab[data-tab="${tab}"]`);
+    if(activeTab && activeTab.scrollIntoView) activeTab.scrollIntoView({ block:"nearest", inline:"nearest", behavior:"smooth" });
     document.getElementById("board-tab-ai").classList.toggle("active", tab === "ai");
     document.getElementById("board-tab-file").classList.toggle("active", tab === "file");
     document.getElementById("board-tab-pad").classList.toggle("active", tab === "pad");
