@@ -941,6 +941,7 @@
         <div class="lab-window-head">
             <div class="board-tabs">
                 <button type="button" class="board-tab active" data-tab="ai" onclick="switchBoardTab('ai')"><i class="fa-solid fa-chalkboard-user"></i> سبورة المعلّم الذكي</button>
+                <button type="button" class="board-tab" data-tab="file" onclick="switchBoardTab('file')"><i class="fa-solid fa-file-lines"></i> <span data-i18n="filex.tab">اشرح ملفي</span></button>
                 <button type="button" class="board-tab" data-tab="pad" onclick="switchBoardTab('pad')"><i class="fa-solid fa-pen-ruler"></i> دفتري</button>
                 <button type="button" class="board-tab" data-tab="chats" onclick="switchBoardTab('chats')"><i class="fa-solid fa-comments"></i> محادثاتي</button>
             </div>
@@ -962,6 +963,50 @@
             <div class="board-controls">
                 <button type="button" id="board-play-btn" class="btn btn-sm btn-outline" onclick="toggleBoardPlayback()" disabled><i class="fa-solid fa-play"></i> تشغيل</button>
                 <button type="button" id="board-replay-btn" class="btn btn-sm btn-outline" onclick="playBoardFromStart()" disabled><i class="fa-solid fa-rotate-left"></i> إعادة</button>
+            </div>
+        </div>
+
+        <!-- ===== اشرح ملفي: يرفع الطالب ملفه فيُفحَص ثم يُشرح بالكامل ===== -->
+        <div id="board-tab-file" class="board-pane">
+            <div class="filex-layout">
+                <div class="filex-upload" id="filex-upload">
+                    <label class="filex-drop" id="filex-drop">
+                        <input type="file" id="filex-input" accept=".txt,.md,.pdf,text/plain,application/pdf" style="display:none;" onchange="onFileExplainPicked(event)">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                        <b data-i18n="filex.pick">ارفع ملف مادتك</b>
+                        <span data-i18n="filex.formats">ملف نصّي أو PDF نصّي (غير مصوَّر) — حتى 40 صفحة</span>
+                    </label>
+                    <p class="hint" id="filex-file-label"></p>
+                    <button type="button" id="filex-analyze-btn" class="btn btn-block" style="display:none;" onclick="analyzeUploadedFile()">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="filex.analyze">افحص واشرح لي الملف</span>
+                    </button>
+                    <p class="hint" style="margin-top:10px;" data-i18n="filex.safetyNote">يُقبل المحتوى الدراسي الحقيقي فقط (مادة، ملزمة، محاضرة، بنك أسئلة). أي ملف خارج ذلك سيُرفض تلقائياً.</p>
+                </div>
+
+                <!-- شاشة الفحص المتحركة -->
+                <div class="scan-stage" id="filex-scan" style="display:none;">
+                    <div class="scan-doc">
+                        <span class="scan-line l1"></span><span class="scan-line l2"></span>
+                        <span class="scan-line l3"></span><span class="scan-line l4"></span>
+                        <span class="scan-line l5"></span><span class="scan-line l6"></span>
+                        <div class="scan-beam"></div>
+                    </div>
+                    <div class="scan-caption" id="filex-scan-caption">نقرأ ملفك…</div>
+                    <div class="scan-steps" id="filex-scan-steps"></div>
+                </div>
+
+                <!-- نتيجة الشرح -->
+                <div class="filex-result" id="filex-result" style="display:none;">
+                    <div id="filex-result-body"></div>
+                    <div class="filex-ask-row">
+                        <input type="text" id="filex-question" placeholder="اسأل أي شيء عن ملفك…" data-i18n-ph="filex.askPh" onkeydown="if(event.key==='Enter') askAboutFile()">
+                        <button type="button" class="btn btn-sm" onclick="askAboutFile()"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                    <div id="filex-answers" class="filex-answers"></div>
+                    <button type="button" class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="resetFileExplain()">
+                        <i class="fa-solid fa-rotate-left"></i> <span data-i18n="filex.another">ارفع ملفاً آخر</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1636,6 +1681,16 @@
                     </label>
                     <button type="button" id="customexam-generate-btn" class="btn btn-sm" onclick="generateCustomExam()"><i class="fa-solid fa-wand-magic-sparkles"></i> ولّد الاختبار</button>
                     <button type="button" id="customexam-start-btn" class="btn btn-sm btn-outline" style="display:none;" onclick="startCustomExam()"><i class="fa-solid fa-play"></i> ابدأ اختبار ملفاتك</button>
+                </div>
+                <!-- نفس شاشة الفحص المتحركة المستخدمة في "اشرح ملفي" -->
+                <div class="scan-stage" id="customexam-scan" style="display:none;">
+                    <div class="scan-doc">
+                        <span class="scan-line l1"></span><span class="scan-line l2"></span>
+                        <span class="scan-line l3"></span><span class="scan-line l4"></span>
+                        <span class="scan-line l5"></span><span class="scan-line l6"></span>
+                        <div class="scan-beam"></div>
+                    </div>
+                    <div class="scan-caption" id="customexam-scan-caption">نقرأ ملفك…</div>
                 </div>
                 <div id="customexam-status" class="card-sub" style="margin-top:10px;"></div>
             </div>
