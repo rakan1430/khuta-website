@@ -9,10 +9,28 @@
    sonyaloy9@gmail.com (وتحقق من الأرشيف/Spam) وابحث عن رسالة من Formspree
    واضغط رابط التأكيد فيها. قبل هذه الخطوة لن تصل أي رسائل مهما كان الكود.
    ============================================================ */
+// أقل فاصل مسموح بين ملاحظتين من نفس المتصفح — يمنع إغراق صندوق المطوّر
+// بالضغط المتكرر (سهواً أو عمداً) دون إزعاج طالب يرسل ملاحظة واحدة صادقة
+const FEEDBACK_COOLDOWN_MS = 60 * 1000;
+
 async function sendFeedback(){
     const textEl = document.getElementById("feedback-text");
     const text = textEl.value.trim();
     if(!text){ showToast(t("feedback.empty")); return; }
+
+    const last = parseInt(localStorage.getItem("khuta_feedback_last") || "0", 10);
+    const waited = Date.now() - last;
+    if(last && waited < FEEDBACK_COOLDOWN_MS){
+        const secs = Math.ceil((FEEDBACK_COOLDOWN_MS - waited) / 1000);
+        showToast(labT(`أرسلت ملاحظة للتو — انتظر ${secs} ثانية قبل التالية 🙏`,
+                       `You just sent one — wait ${secs}s before the next 🙏`));
+        return;
+    }
+    // نصوص قصيرة جداً غالباً ضغط عابر لا ملاحظة حقيقية
+    if(text.length < 10){
+        showToast(labT("اكتب ملاحظة أوضح قليلاً كي أفهمها 🙏","Please write a bit more detail 🙏"));
+        return;
+    }
 
     const btn = document.getElementById("feedback-send-btn");
     const name = `${localStorage.getItem("khuta_name")||""} ${localStorage.getItem("khuta_last")||""}`.trim() || "طالب خُطى";
@@ -28,7 +46,10 @@ async function sendFeedback(){
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + (currentLang==='ar' ? 'جارٍ الإرسال...' : 'Sending...');
 
-    const payload = { name, message: text, app: "خُطى — ملاحظة طالب", _subject: "ملاحظة جديدة من تطبيق خُطى" };
+    // نمرّر حقل المصيدة كما هو: إن كان مملوءاً فالمرسِل روبوت، ويتجاهله
+    // Formspree تلقائياً. الطالب الحقيقي لا يراه فيبقى فارغاً دائماً.
+    const gotcha = (document.getElementById("feedback-gotcha") || {}).value || "";
+    const payload = { name, message: text, app: "خُطى — ملاحظة طالب", _subject: "ملاحظة جديدة من تطبيق خُطى", _gotcha: gotcha };
     let success = false;
 
     try{
@@ -37,6 +58,7 @@ async function sendFeedback(){
         const res = await fetch(FEEDBACK_ENDPOINT, { method:"POST", headers:{ "Accept":"application/json" }, body: formData });
         if(res.ok){
             success = true;
+            localStorage.setItem("khuta_feedback_last", String(Date.now()));
         } else {
             const bodyText = await res.text().catch(() => "");
             console.error("[خُطى] Formspree رفض الطلب — الحالة:", res.status, "التفاصيل:", bodyText);
