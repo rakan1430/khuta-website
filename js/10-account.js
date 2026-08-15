@@ -336,13 +336,16 @@ function usernameToEmail(username){
 async function resolveUsernameEmail(username){
     if(!sb) return usernameToEmail(username);
     try{
-        // مطابقة غير حساسة لحالة الأحرف عمداً: user_data.username يُخزَّن
-        // بحالة الأحرف الأصلية كما كتبها الطالب، لكن تسجيل الدخول كان دائماً
-        // غير حساس لحالة الأحرف ضمنياً (usernameToEmail تصغّر الأحرف قبل بناء
-        // البريد المصطنع) — .ilike تحافظ على هذا السلوك بالضبط فلا ينكسر
-        // الدخول لأي حساب قائم بسبب اختلاف طفيف في حالة الأحرف
-        const { data } = await sb.from("username_lookup").select("email").ilike("username", username.trim()).maybeSingle();
-        if(data && data.email) return data.email;
+        // ⚠️ عبر دالة محمية لا بقراءة الجدول مباشرة: سياسة القراءة العامة على
+        // username_lookup كانت تسمح لأي شخص بسحب الجدول كاملاً — كل أسماء
+        // المستخدمين ومعرّفاتهم وبريدهم الحقيقي. أُلغيت السياسة، وصار التحويل
+        // عبر resolve_username_email التي تُرجع البريد وحده لاسم واحد مطابق.
+        //
+        // وكان الاستدعاء السابق يمرّر مدخل الطالب مباشرة إلى .ilike()، فأي "%"
+        // يكتبه يعمل كمحرف بدل يطابق صفوفاً ليست له — الدالة تستعمل مساواة
+        // تامة غير حساسة لحالة الأحرف، فتحفظ سلوك الدخول القائم وتُلغي ذلك.
+        const { data } = await sb.rpc("resolve_username_email", { p_username: username.trim() });
+        if(data) return data;
     }catch(e){ /* الجدول قد لا يكون منشأً بعد على مواقع لم تُشغّل الترحيل — نتجاهل بصمت */ }
     return usernameToEmail(username);
 }

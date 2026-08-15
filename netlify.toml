@@ -25,6 +25,27 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    # ============================================================
+    # Content-Security-Policy — طبقة حماية إضافية ضد XSS وتسريب البيانات
+    # ------------------------------------------------------------
+    # ⚠️ صدق تام حول حدودها هنا: 'unsafe-inline' في script-src إجباري حالياً
+    # لأن الواجهة تعتمد 213 معالج onclick داخل HTML و421 نمط style مضمّن.
+    # وجودها يعني أن هذه السياسة لا تمنع تنفيذ سكربت مُحقَن داخل الصفحة —
+    # إزالتها تتطلب نقل كل المعالجات إلى addEventListener، وهو تعديل واسع
+    # يستحق عمله وحده بحذر (مخطَّط، غير منفَّذ بعد).
+    #
+    # ما تمنعه هذه السياسة فعلياً رغم ذلك، وهو مكسب حقيقي لا شكلي:
+    # - connect-src: يمنع تسريب أي بيانات مسروقة إلى خادم مهاجم — لو نجح XSS
+    #   فلن يستطيع إرسال ما جمعه إلا لنطاقاتنا المسرودة أدناه.
+    # - script-src بنطاقات محددة: يمنع تحميل سكربت من أي مصدر غريب.
+    # - object-src 'none' وbase-uri 'self': يمنعان حقن <base> والإضافات.
+    # - form-action 'self': يمنع اختطاف النماذج لإرسالها لموقع مهاجم.
+    #
+    # ⚠️ كل نطاق أدناه مستخرج من فحص فعلي للكود — حذف أي منها يعطّل ميزة:
+    #   jsdelivr = مكتبة Supabase | cdnjs = Font Awesome وpdf.js
+    #   fonts.googleapis/gstatic = الخطوط | supabase.co = القاعدة (https+wss)
+    #   raw.githubusercontent = بيانات الجامعات والدورات | formspree = الملاحظات
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob:; connect-src 'self' https://squhkiwjwwyrgufkaujf.supabase.co wss://squhkiwjwwyrgufkaujf.supabase.co https://raw.githubusercontent.com https://formspree.io; worker-src 'self' blob: https://cdnjs.cloudflare.com; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
 
 # ============================================================
 # تخزين مؤقّت للملفات — عُدِّل بعد ٣ حوادث متتالية سببها بالضبط أن متصفحاً
