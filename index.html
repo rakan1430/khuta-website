@@ -168,7 +168,7 @@
             <button type="button" class="btn btn-sm acc-btn" style="width:100%;" onclick="sendPasswordReset()"><span data-i18n="account.sendResetLink">إرسال رابط إعادة التعيين</span></button>
         </div>
 
-        <button type="button" class="btn-ghost" style="width:100%; margin-top:18px; justify-content:center; font-weight:700;" onclick="continueAsGuest()">
+        <button type="button" class="btn-ghost guest-cta" style="width:100%; margin-top:18px; justify-content:center; font-weight:700;" onclick="continueAsGuest()">
             <span data-i18n="login.guest">المتابعة كضيف بدون حساب</span> <i class="fa-solid fa-arrow-left rtl-flip"></i>
         </button>
     </div>
@@ -274,7 +274,7 @@
                         <span class="wiz-step-emoji">🧮</span>
                         <div><h3 data-i18n="wiz.foundTitle">مصدرك لتأسيس الكمي</h3><p data-i18n="wiz.foundDesc">اختر من أين تبدأ أساسياتك في القسم الكمي</p></div>
                     </div>
-                    <h4 style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-layer-group" style="color:var(--gold);"></i> <span data-i18n="setup.foundTitle">القسم الكمي — التأسيس</span></h4>
+                    <h4 style="margin-bottom:10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-layer-group" style="color:var(--gold-text);"></i> <span data-i18n="setup.foundTitle">القسم الكمي — التأسيس</span></h4>
         <div class="path-options" id="found-options">
             <label class="path-card selected" onclick="toggleSelection(this,'radio')">
                 <input type="radio" name="quant_found" value="moasser" checked>
@@ -310,7 +310,7 @@
                         <span class="wiz-step-emoji">💪</span>
                         <div><h3 data-i18n="wiz.trainTitle">مصادر تدريبك الكمي</h3><p data-i18n="wiz.trainDesc">اختر بنكاً واحداً أو أكثر — يمكنك الجمع بينها</p></div>
                     </div>
-                    <h4 style="margin:22px 0 10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-dumbbell" style="color:var(--gold);"></i> <span data-i18n="setup.trainTitle">القسم الكمي — التدريب (اختر ما يناسبك)</span></h4>
+                    <h4 style="margin:22px 0 10px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-dumbbell" style="color:var(--gold-text);"></i> <span data-i18n="setup.trainTitle">القسم الكمي — التدريب (اختر ما يناسبك)</span></h4>
         <div class="path-options">
             <label class="path-card">
                 <input type="checkbox" id="train_monsif" value="monsif" onchange="syncCheckboxCard(this)">
@@ -373,7 +373,7 @@
             <span style="font-weight:700; color:var(--rose);" data-i18n="setup.nightReview">إضافة كتيّب «مراجعة ليلة الامتحان» من المعاصر إلى الجدول</span>
         </label>
                     <div class="divider"></div>
-                    <h4 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-arrow-right-arrow-left" style="color:var(--gold);"></i> <span data-i18n="setup.sectionOrderTitle">ترتيب الجلسة</span></h4>
+                    <h4 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-arrow-right-arrow-left" style="color:var(--gold-text);"></i> <span data-i18n="setup.sectionOrderTitle">ترتيب الجلسة</span></h4>
         <p class="hint" style="margin-bottom:12px;" data-i18n="setup.sectionOrderDesc">يُقسَّم وقتك اليومي بين الكمي واللفظي تلقائياً — اختر أيهما تبدأ به دائماً، وسينتقل المؤقت للآخر تلقائياً عند انتهاء وقت الأول.</p>
         <div class="path-options" id="section-order-options">
             <label class="path-card selected" onclick="toggleSelection(this,'radio')">
@@ -472,7 +472,7 @@
                         <span class="wiz-step-emoji">☕</span>
                         <div><h3 data-i18n="wiz.breaksTitle">استراحتك الذكية</h3><p data-i18n="wiz.breaksDesc">كل ساعة مذاكرة متواصلة، تبدأ استراحة تلقائية بالمدة التي تحددها</p></div>
                     </div>
-                    <h4 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-mug-hot" style="color:var(--gold);"></i> <span data-i18n="setup.breaksTitle">إعدادات الاستراحة الذكية</span></h4>
+                    <h4 style="margin-bottom:6px; display:flex; align-items:center; gap:8px;"><i class="fa-solid fa-mug-hot" style="color:var(--gold-text);"></i> <span data-i18n="setup.breaksTitle">إعدادات الاستراحة الذكية</span></h4>
         <p class="hint" style="margin-bottom:12px;" data-i18n="setup.breaksDesc">كل ساعة مذاكرة متواصلة، تبدأ استراحة تلقائية بالمدة التي تحددها هنا (ثابتة طوال جلساتك).</p>
         <div class="input-row">
             <div class="form-group">
@@ -724,7 +724,7 @@
     <div class="wizard-card" style="max-width:420px; text-align:center;">
         <h2 style="margin-bottom:6px;"><i class="fa-solid fa-signal"></i> المتصلون الآن</h2>
         <p class="card-sub" style="margin-bottom:14px;">عدد حي عبر Realtime Presence — يتحدّث تلقائياً كل ثانية.</p>
-        <div id="live-users-count" style="font-size:56px; font-weight:800; color:var(--gold); font-family:var(--font-mono);">—</div>
+        <div id="live-users-count" style="font-size:56px; font-weight:800; color:var(--gold-text); font-family:var(--font-mono);">—</div>
         <p class="hint" style="margin-top:10px;">يشمل هذا العدد الحسابات المجهولة (زوّار لم يسجّلوا دخولاً) التي فتحت قسم المجتمع.</p>
         <button type="button" class="btn btn-sm" style="margin-top:14px;" onclick="closeLiveUsersPanel()">إغلاق</button>
     </div>
@@ -734,7 +734,7 @@
     <div class="wizard-card" style="max-width:420px; text-align:center;">
         <h2 style="margin-bottom:6px;"><i class="fa-solid fa-eye"></i> زيارات الموقع اليوم</h2>
         <p class="card-sub" style="margin-bottom:14px;">تشمل كل الزيارات — بحساب أو كضيف — وتتحدّث كل 5 ثوانٍ تلقائياً.</p>
-        <div id="visit-today-count" style="font-size:56px; font-weight:800; color:var(--gold); font-family:var(--font-mono);">—</div>
+        <div id="visit-today-count" style="font-size:56px; font-weight:800; color:var(--gold-text); font-family:var(--font-mono);">—</div>
         <p class="card-sub" style="margin-top:4px;">زيارة اليوم</p>
         <div style="margin-top:16px; padding:12px 14px; background:var(--bg-alt); border-radius:12px; font-size:13px;">
             <span style="color:var(--text-3);">آخر زيارة: </span><b id="visit-last-time">—</b>
@@ -824,7 +824,7 @@
 
 <div id="exam-results-overlay" class="overlay-screen" style="display:none; z-index:6200;">
     <div class="wizard-card" style="max-width:520px; text-align:center;">
-        <h2 style="margin-bottom:6px;"><i class="fa-solid fa-chart-pie" style="color:var(--gold);"></i> <span data-i18n="examsim.resultsTitle">نتيجتك</span></h2>
+        <h2 style="margin-bottom:6px;"><i class="fa-solid fa-chart-pie" style="color:var(--gold-text);"></i> <span data-i18n="examsim.resultsTitle">نتيجتك</span></h2>
         <div id="exam-results-content" role="status" aria-live="polite"></div>
         <div style="display:flex; gap:10px; margin-top:18px;">
             <button type="button" class="btn btn-outline" style="flex:1;" onclick="reviewExamAnswers()"><i class="fa-solid fa-eye"></i> <span data-i18n="examsim.review">مراجعة الإجابات</span></button>
@@ -1148,7 +1148,7 @@
                     </div>
                 </div>
                 <div class="gamify-widget" title="نقاط الخبرة">
-                    <i class="fa-solid fa-star" style="color:var(--gold);"></i>
+                    <i class="fa-solid fa-star" style="color:var(--gold-text);"></i>
                     <div><b id="xp-widget-value">0 XP</b><span id="xp-widget-level">مستكشف</span></div>
                 </div>
                 <div class="gamify-widget" title="سلسلة المذاكرة">
@@ -1188,7 +1188,7 @@
                 </button>
             </div>
             <div id="dashboard-customizer-panel" class="card" style="display:none; margin-bottom:18px; background:var(--bg-alt); border:1.5px dashed var(--border);">
-                <h2 style="margin-bottom:4px; font-size:16px;"><i class="fa-solid fa-sliders" style="color:var(--gold);"></i> <span data-i18n="dash.customizeTitle">تخصيص لوحتك</span></h2>
+                <h2 style="margin-bottom:4px; font-size:16px;"><i class="fa-solid fa-sliders" style="color:var(--gold-text);"></i> <span data-i18n="dash.customizeTitle">تخصيص لوحتك</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="dash.customizeDesc">فعّل أو أطفئ أي بطاقة وشاهدها تظهر/تختفي مباشرة في لوحتك أسفل، ورتّبها بأسهم أعلى/أسفل على كل بطاقة.</p>
                 <div id="dashboard-customizer-list" style="display:flex; flex-direction:column; gap:8px;"></div>
                 <button type="button" class="btn btn-outline btn-sm" style="margin-top:14px;" onclick="resetDashboardCustomization()"><i class="fa-solid fa-rotate-left"></i> <span data-i18n="dash.resetDefault">إعادة الضبط الافتراضي</span></button>
@@ -1242,7 +1242,7 @@
 
                 <div class="overview-lower-row" id="dash-overview-lower-row">
                     <div class="card ov-heatmap-card" id="dash-card-overview-heatmap">
-                        <h2 style="margin-bottom:2px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold);"></i> <span data-i18n="overview.activityTitle">نشاطك اليومي</span></h2>
+                        <h2 style="margin-bottom:2px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold-text);"></i> <span data-i18n="overview.activityTitle">نشاطك اليومي</span></h2>
                         <p class="card-sub" style="margin-bottom:14px;" data-i18n="overview.activitySub">كل مربع يمثّل يوماً — كلما اغمّق اللون زادت دقائق مذاكرتك فيه</p>
                         <div class="ov-heatmap-scroll">
                             <div id="ov-heatmap-grid" class="ov-heatmap-grid"></div>
@@ -1255,18 +1255,18 @@
                             <span class="ov-heat-swatch" data-level="3"></span>
                             <span class="ov-heat-swatch" data-level="4"></span>
                             <span data-i18n="overview.more">أكثر</span>
-                            <span id="ov-heatmap-streak-note" style="margin-inline-start:auto; font-weight:700; color:var(--gold);"></span>
+                            <span id="ov-heatmap-streak-note" style="margin-inline-start:auto; font-weight:700; color:var(--gold-text);"></span>
                         </div>
                     </div>
 
                     <div class="ov-sidebar-col">
                         <div class="card ov-quests-card" id="dash-card-overview-quests">
-                            <h2 style="margin-bottom:2px; font-size:15.5px;"><i class="fa-solid fa-list-check" style="color:var(--gold);"></i> <span data-i18n="overview.questsTitle">مهام اليوم</span> <span id="today-routine-pill" class="today-routine-pill" style="display:none;"></span></h2>
+                            <h2 style="margin-bottom:2px; font-size:15.5px;"><i class="fa-solid fa-list-check" style="color:var(--gold-text);"></i> <span data-i18n="overview.questsTitle">مهام اليوم</span> <span id="today-routine-pill" class="today-routine-pill" style="display:none;"></span></h2>
                             <p class="card-sub" style="margin-bottom:12px;" data-i18n="overview.questsSub">لمحة سريعة — عدّلها من جدولك الكامل أدناه</p>
                             <div id="ov-quests-list"></div>
                         </div>
                         <div class="card ov-leaderboard-card" id="dash-card-overview-leaderboard">
-                            <h2 style="margin-bottom:12px; font-size:15.5px;"><i class="fa-solid fa-ranking-star" style="color:var(--gold);"></i> <span data-i18n="overview.leaderboardTitle">لوحة الصدارة</span></h2>
+                            <h2 style="margin-bottom:12px; font-size:15.5px;"><i class="fa-solid fa-ranking-star" style="color:var(--gold-text);"></i> <span data-i18n="overview.leaderboardTitle">لوحة الصدارة</span></h2>
                             <div id="ov-leaderboard-mini"></div>
                         </div>
                     </div>
@@ -1307,9 +1307,9 @@
             <div class="card" id="dash-card-table">
                 <div class="card-head">
                     <div>
-                        <h2><i class="fa-solid fa-list-check" style="color:var(--gold);"></i> <span data-i18n="table.title">جدول مهامك المخصص</span></h2>
+                        <h2><i class="fa-solid fa-list-check" style="color:var(--gold-text);"></i> <span data-i18n="table.title">جدول مهامك المخصص</span></h2>
                         <div class="card-sub" data-i18n="table.sub">تُحسب الكميات تلقائياً بناءً على مدة خطتك</div>
-                        <div id="today-scale-note" class="card-sub" style="display:none; color:var(--gold); font-weight:700; margin-top:8px; line-height:1.8; background:rgba(201,150,46,0.08); border-radius:12px; padding:10px 14px;"></div>
+                        <div id="today-scale-note" class="card-sub" style="display:none; color:var(--gold-text); font-weight:700; margin-top:8px; line-height:1.8; background:rgba(201,150,46,0.08); border-radius:12px; padding:10px 14px;"></div>
                     </div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap;">
                         <button type="button" class="btn btn-outline btn-sm" onclick="openSetupOverlay()">
@@ -1393,13 +1393,13 @@
             </div>
 
             <div class="card" id="dash-card-badges" style="display:none;">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold-text);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
                 <p class="card-sub" data-i18n="badges.sub">تحفيزية بحتة — لا علاقة لها بنسبة تقدمك الفعلية في الخطة</p>
                 <div class="badges-row" id="badges-grid-dashboard"></div>
             </div>
 
             <div class="card" id="dash-card-community" style="display:none;">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-users" style="color:var(--gold);"></i> <span data-i18n="nav.community">المجتمع</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-users" style="color:var(--gold-text);"></i> <span data-i18n="nav.community">المجتمع</span></h2>
                 <p class="card-sub" data-i18n="dash.communityDesc">نظرة سريعة — تفاصيل أكثر في صفحة المجتمع الكاملة</p>
                 <div style="display:flex; align-items:center; gap:14px; margin-top:14px; padding:14px 16px; background:var(--bg-alt); border-radius:14px;">
                     <div class="ic" style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,var(--teal),#38B897); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px;"><i class="fa-solid fa-user-group"></i></div>
@@ -1425,7 +1425,7 @@
             <div class="card">
                 <div class="card-head">
                     <div>
-                        <h2><i class="fa-solid fa-calculator" style="color:var(--gold);"></i> <span data-i18n="calc.title">حاسبة الموزونة</span></h2>
+                        <h2><i class="fa-solid fa-calculator" style="color:var(--gold-text);"></i> <span data-i18n="calc.title">حاسبة الموزونة</span></h2>
                         <div class="card-sub" data-i18n="calc.sub">مطابقة لصيغ أغلب الجامعات السعودية — راجع بوابة القبول الموحد للتأكيد</div>
                     </div>
                 </div>
@@ -1469,7 +1469,7 @@
 
                 <div id="calc-result-box" style="display:none; margin-top:22px; text-align:center; padding:26px; border-radius:20px; background:linear-gradient(135deg, rgba(201,150,46,.12), rgba(28,138,114,.08)); border:1px solid var(--border);">
                     <div class="card-sub" data-i18n="calc.yourScore">نسبتك الموزونة</div>
-                    <h1 id="calc-result" style="font-size:52px; color:var(--gold); margin:6px 0;">0.00%</h1>
+                    <h1 id="calc-result" style="font-size:52px; color:var(--gold-text); margin:6px 0;">0.00%</h1>
                     <div id="calc-competitiveness" class="card-sub"></div>
                 </div>
             </div>
@@ -1479,7 +1479,7 @@
                 <div class="card">
                     <div class="card-head">
                         <div>
-                            <h2><i class="fa-solid fa-graduation-cap" style="color:var(--gold);"></i> <span data-i18n="gpa.title">حاسبة المعدل التراكمي للثانوي</span></h2>
+                            <h2><i class="fa-solid fa-graduation-cap" style="color:var(--gold-text);"></i> <span data-i18n="gpa.title">حاسبة المعدل التراكمي للثانوي</span></h2>
                             <div class="card-sub" data-i18n="gpa.sub">أضف موادك ودرجاتها وعدد ساعاتها المعتمدة لحساب معدلك المرجّح</div>
                         </div>
                     </div>
@@ -1530,7 +1530,7 @@
                     <button type="button" class="btn btn-block" style="margin-top:14px;" onclick="calcGpa()"><i class="fa-solid fa-equals"></i> <span data-i18n="gpa.calc">احسب المعدل</span></button>
                     <div id="gpa-result-box" style="display:none; margin-top:22px; text-align:center; padding:26px; border-radius:20px; background:linear-gradient(135deg, rgba(201,150,46,.12), rgba(28,138,114,.08)); border:1px solid var(--border);">
                         <div class="card-sub" data-i18n="gpa.yourAvg">معدلك المرجّح</div>
-                        <h1 id="gpa-result" style="font-size:52px; color:var(--gold); margin:6px 0;">0.00%</h1>
+                        <h1 id="gpa-result" style="font-size:52px; color:var(--gold-text); margin:6px 0;">0.00%</h1>
                         <div id="gpa-grade-result" class="card-sub"></div>
                         <button type="button" class="btn btn-teal btn-sm" style="margin-top:14px;" onclick="saveYearAverage()"><i class="fa-solid fa-bookmark"></i> <span data-i18n="gpa.saveYear">حفظ هذا كمعدل السنة المحددة أعلاه</span></button>
                     </div>
@@ -1539,7 +1539,7 @@
                 <div class="card">
                     <div class="card-head">
                         <div>
-                            <h2><i class="fa-solid fa-bolt" style="color:var(--gold);"></i> <span data-i18n="gpa.quickTitle">إدخال سريع (إن كانت نسبك جاهزة)</span></h2>
+                            <h2><i class="fa-solid fa-bolt" style="color:var(--gold-text);"></i> <span data-i18n="gpa.quickTitle">إدخال سريع (إن كانت نسبك جاهزة)</span></h2>
                             <div class="card-sub" data-i18n="gpa.quickSub">تعرف نسبتك في كل سنة مسبقاً؟ أدخلها مباشرة هنا بدل حاسبة المواد أعلاه</div>
                         </div>
                     </div>
@@ -1554,7 +1554,7 @@
                 <div class="card">
                     <div class="card-head">
                         <div>
-                            <h2><i class="fa-solid fa-percent" style="color:var(--gold);"></i> <span data-i18n="gpa.finalTitle">النسبة النهائية للثانوية</span></h2>
+                            <h2><i class="fa-solid fa-percent" style="color:var(--gold-text);"></i> <span data-i18n="gpa.finalTitle">النسبة النهائية للثانوية</span></h2>
                             <div class="card-sub" data-i18n="gpa.finalSub">تُحسب من معدلات السنوات الثلاث المحفوظة، مرجّحة حسب وزن كل سنة (20% + 40% + 40% افتراضياً)</div>
                         </div>
                     </div>
@@ -1566,7 +1566,7 @@
                     <button type="button" class="btn btn-block" style="margin-top:14px;" onclick="calcFinalHighSchoolPct()"><i class="fa-solid fa-equals"></i> <span data-i18n="gpa.calcFinal">احسب النسبة النهائية</span></button>
                     <div id="gpa-final-box" style="display:none; margin-top:18px; text-align:center; padding:22px; border-radius:18px; background:linear-gradient(135deg, rgba(201,150,46,.12), rgba(28,138,114,.08)); border:1px solid var(--border);">
                         <div class="card-sub" data-i18n="gpa.finalResultLabel">نسبتك النهائية في الثانوية</div>
-                        <h1 id="gpa-final-result" style="font-size:48px; color:var(--gold); margin:6px 0;">0.00%</h1>
+                        <h1 id="gpa-final-result" style="font-size:48px; color:var(--gold-text); margin:6px 0;">0.00%</h1>
                     </div>
                 </div>
             </div>
@@ -1578,7 +1578,7 @@
             <div class="card">
                 <div class="card-head">
                     <div>
-                        <h2><i class="fa-solid fa-link" style="color:var(--gold);"></i> <span data-i18n="links.title">مصادرك بضغطة واحدة</span></h2>
+                        <h2><i class="fa-solid fa-link" style="color:var(--gold-text);"></i> <span data-i18n="links.title">مصادرك بضغطة واحدة</span></h2>
                         <div class="card-sub" data-i18n="links.sub">روابط مباشرة ومحدثة لكل مصدر تعتمده في خطتك</div>
                     </div>
                 </div>
@@ -1641,7 +1641,7 @@
         <!-- ===================== الاختبارات المحاكية (خلف علم تفعيل) ===================== -->
         <section id="view-examsim" class="view-section">
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-clipboard-question" style="color:var(--gold);"></i> <span data-i18n="examsim.title">اختبارات محاكية</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-clipboard-question" style="color:var(--gold-text);"></i> <span data-i18n="examsim.title">اختبارات محاكية</span></h2>
                 <p class="card-sub" style="margin-bottom:20px;" data-i18n="examsim.sub">تدرّب بنمط مطابق تماماً لاختبار قياس الفعلي — بوقت أو بدون وقت.</p>
                 <div class="path-options" id="examsim-type-options" style="margin-bottom:16px;">
                     <label class="path-card selected" onclick="toggleSelection(this,'radio')"><input type="radio" name="examsim_type" value="full" checked hidden><b data-i18n="examsim.full">اختبار قدرات كامل</b></label>
@@ -1656,7 +1656,7 @@
             </div>
 
             <div class="card" id="customexam-card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-file-import" style="color:var(--gold);"></i> اختبار محاكٍ من ملفاتك 📄</h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-file-import" style="color:var(--gold-text);"></i> اختبار محاكٍ من ملفاتك 📄</h2>
                 <p class="card-sub" style="margin-bottom:16px;">ارفع ملف الكمي و/أو اللفظي (txt أو pdf نصّي)، وسيقرأه الذكاء الاصطناعي ويؤلّف لك اختباراً محاكياً من محتواك أنت — بأسلوب أسئلة قياس</p>
                 <div class="customexam-uploads">
                     <label class="customexam-drop">
@@ -1696,7 +1696,7 @@
             </div>
 
             <div class="card" id="exam-history-card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--gold);"></i> اختباراتك السابقة</h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-clock-rotate-left" style="color:var(--gold-text);"></i> اختباراتك السابقة</h2>
                 <p class="card-sub" style="margin-bottom:14px;">كل محاولة تُسجَّل هنا تلقائياً: درجتك، وتفصيل الأسئلة التي أخطأت فيها لتراجعها</p>
                 <div id="exam-history-list"></div>
             </div>
@@ -1707,7 +1707,7 @@
             <div class="card">
                 <div class="card-head">
                     <div>
-                        <h2><i class="fa-solid fa-chalkboard-user" style="color:var(--gold);"></i> <span data-i18n="tutors.title">مدرّسون خصوصيون</span></h2>
+                        <h2><i class="fa-solid fa-chalkboard-user" style="color:var(--gold-text);"></i> <span data-i18n="tutors.title">مدرّسون خصوصيون</span></h2>
                         <p class="card-sub" data-i18n="tutors.sub">مُقيَّمون من طلاب حقيقيين — بالتواصل معنا فقط يُضاف أي مدرّس</p>
                     </div>
                     <button type="button" id="tutors-admin-add-btn" class="btn btn-sm" style="display:none;" onclick="openAddTutorForm()"><i class="fa-solid fa-plus"></i> <span data-i18n="tutors.add">إضافة مدرّس</span></button>
@@ -1718,7 +1718,7 @@
 
         <section id="view-profile" class="view-section">
             <div class="card">
-                <h2 style="margin-bottom:18px;"><i class="fa-solid fa-user" style="color:var(--gold);"></i> <span data-i18n="profile.title">الملف الشخصي</span></h2>
+                <h2 style="margin-bottom:18px;"><i class="fa-solid fa-user" style="color:var(--gold-text);"></i> <span data-i18n="profile.title">الملف الشخصي</span></h2>
                 <div class="profile-head">
                     <div class="avatar-wrap" id="avatar-wrap">
                         <img id="avatar-img" src="" alt="avatar" style="display:none;">
@@ -1778,7 +1778,7 @@
             </div>
 
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold);"></i> <span data-i18n="stats.title">إحصائياتك</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold-text);"></i> <span data-i18n="stats.title">إحصائياتك</span></h2>
                 <p class="card-sub" data-i18n="stats.sub">نظرة عامة على مذاكرتك الفعلية حتى الآن</p>
                 <div class="input-row" style="grid-template-columns:repeat(2,1fr); margin-top:12px;">
                     <div class="weight-chip"><b id="stat-total-hours">0</b><span data-i18n="stats.totalHours">إجمالي الساعات</span></div>
@@ -1791,13 +1791,13 @@
             </div>
 
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold-text);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
                 <p class="card-sub" data-i18n="badges.sub">تحفيزية بحتة — لا علاقة لها بنسبة تقدمك الفعلية في الخطة</p>
                 <div class="badges-row" id="badges-grid"></div>
 
                 <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; padding:14px 16px; background:var(--bg-alt); border-radius:14px;">
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <i class="fa-solid fa-shield-halved" style="color:var(--gold); font-size:20px;"></i>
+                        <i class="fa-solid fa-shield-halved" style="color:var(--gold-text); font-size:20px;"></i>
                         <div>
                             <div style="font-weight:700; font-size:13.5px;" data-i18n="shield.title">دروع حماية السلسلة</div>
                             <div class="card-sub" data-i18n="shield.sub">يحمي درع سلسلتك تلقائياً أول يوم تفوّته — لديك: <span id="shield-count-display">0</span></div>
@@ -1808,9 +1808,14 @@
             </div>
 
             <div class="card feedback-box">
-                <h2 style="margin-bottom:6px;"><i class="fa-solid fa-comment-dots" style="color:var(--gold);"></i> <span data-i18n="feedback.title">ملاحظاتك تصلني مباشرة</span></h2>
+                <h2 style="margin-bottom:6px;"><i class="fa-solid fa-comment-dots" style="color:var(--gold-text);"></i> <span data-i18n="feedback.title">ملاحظاتك تصلني مباشرة</span></h2>
                 <p class="card-sub" style="margin-bottom:16px;" data-i18n="feedback.sub">اكتب اقتراحك أو المشكلة التي واجهتك — تُرسل بضغطة واحدة دون أي خطوات إضافية</p>
                 <textarea id="feedback-text" placeholder="مثال: أتمنى إضافة..." data-i18n-ph="feedback.placeholder"></textarea>
+                <!-- ⚠️ مصيدة السبام (honeypot): حقل مخفي عن الطالب تماماً، لكن الروبوتات
+                     الآلية تملأ كل حقل تجده. Formspree يدعم اسم "_gotcha" أصلاً ويتجاهل
+                     أي رسالة يصل فيها هذا الحقل مملوءاً، بصمت ودون إزعاج المرسِل الحقيقي.
+                     الإخفاء بـCSS لا بـtype=hidden عمداً: الروبوتات تتجاهل المخفية صراحةً. -->
+                <input type="text" name="_gotcha" id="feedback-gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp-field">
                 <button type="button" id="feedback-send-btn" class="btn btn-teal" onclick="sendFeedback()"><i class="fa-solid fa-paper-plane"></i> <span data-i18n="feedback.send">إرسال الملاحظة</span></button>
                 <div id="feedback-success" style="display:none; align-items:center; gap:12px; margin-top:14px; padding:14px 16px; border-radius:14px; background:var(--teal-soft); color:var(--teal);">
                     <i class="fa-solid fa-circle-check" style="font-size:20px;"></i>
@@ -1822,7 +1827,7 @@
             </div>
 
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus" style="color:var(--gold);"></i> <span data-i18n="referral.title">ادعُ صديقاً</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus" style="color:var(--gold-text);"></i> <span data-i18n="referral.title">ادعُ صديقاً</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="referral.desc">كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.</p>
                 <button type="button" class="btn btn-block" onclick="shareReferralLink()"><i class="fa-solid fa-share-nodes"></i> <span data-i18n="referral.share">مشاركة رابط الدعوة</span></button>
             </div>
@@ -1838,13 +1843,13 @@
         <!-- ===================== الإعدادات ===================== -->
         <section id="view-settings" class="view-section">
             <div class="card settings-hero">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-gear" style="color:var(--gold);"></i> <span data-i18n="settings.title">الإعدادات</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-gear" style="color:var(--gold-text);"></i> <span data-i18n="settings.title">الإعدادات</span></h2>
                 <p class="card-sub" data-i18n="settings.sub">كل تفضيلاتك في مكان واحد، مرتّبة حسب الغرض</p>
             </div>
 
             <h3 class="settings-group-head"><i class="fa-solid fa-palette"></i> <span><b data-i18n="settings.grpLook">المظهر والعرض</b><em data-i18n="settings.grpLookSub">الوضع، لون التطبيق، وحجم الخط</em></span></h3>
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-circle-half-stroke" style="color:var(--gold);"></i> <span data-i18n="settings.modeTitle">الوضع الليلي</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-circle-half-stroke" style="color:var(--gold-text);"></i> <span data-i18n="settings.modeTitle">الوضع الليلي</span></h2>
                 <p class="card-sub" data-i18n="settings.modeSub">فاتح للنهار، وداكن مريح للعين في مذاكرة الليل</p>
                 <div class="lang-switch" style="margin-top:12px;">
                     <button type="button" id="settings-mode-light-btn" onclick="setThemeMode('light')"><i class="fa-solid fa-sun"></i> <span data-i18n="settings.modeLight">فاتح</span></button>
@@ -1852,7 +1857,7 @@
                 </div>
             </div>
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-palette" style="color:var(--gold);"></i> <span data-i18n="theme.title">لون التطبيق</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-palette" style="color:var(--gold-text);"></i> <span data-i18n="theme.title">لون التطبيق</span></h2>
                 <p class="card-sub" data-i18n="theme.sub">اختر اللون الذي يناسب ذوقك</p>
                 <div class="theme-swatches">
                     <div class="theme-swatch" data-accent="" style="background:#C9962E;" onclick="setAccent('')" title="ذهبي (افتراضي)" role="button" tabindex="0" aria-label="ذهبي (افتراضي)"><i class="fa-solid fa-check" style="display:none;"></i></div>
@@ -1876,7 +1881,7 @@
 
             <h3 class="settings-group-head"><i class="fa-solid fa-language"></i> <span><b data-i18n="settings.grpLang">اللغة</b><em data-i18n="settings.grpLangSub">لغة عرض الموقع بالكامل</em></span></h3>
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-language" style="color:var(--gold);"></i> <span data-i18n="lang.title">لغة الموقع</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-language" style="color:var(--gold-text);"></i> <span data-i18n="lang.title">لغة الموقع</span></h2>
                 <p class="card-sub" data-i18n="lang.sub">اختر لغة عرض الموقع</p>
                 <div class="lang-switch" style="margin-top:10px;">
                     <button id="lang-ar-btn" class="active" onclick="setLang('ar')">العربية</button>
@@ -1886,7 +1891,7 @@
 
             <h3 class="settings-group-head"><i class="fa-solid fa-cloud-arrow-up"></i> <span><b data-i18n="settings.grpAccount">الحساب والمزامنة</b><em data-i18n="settings.grpAccountSub">الدخول، المزامنة بين أجهزتك، وكلمة المرور</em></span></h3>
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-cloud-arrow-up" style="color:var(--gold);"></i> <span data-i18n="account.title">الحساب والمزامنة</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-cloud-arrow-up" style="color:var(--gold-text);"></i> <span data-i18n="account.title">الحساب والمزامنة</span></h2>
                 <p class="card-sub" data-i18n="account.sub">استخدم خُطى كضيف تماماً بدون حساب — أنشئ حساباً فقط إن أردت حفظ تقدمك ونقله لجهاز آخر</p>
 
                 <div id="account-guest-box" style="margin-top:16px;">
@@ -1951,7 +1956,7 @@
 
             <h3 class="settings-group-head"><i class="fa-solid fa-bell"></i> <span><b data-i18n="settings.grpNotif">الإشعارات والتذكير</b><em data-i18n="settings.grpNotifSub">تذكيرك بجلستك اليومية</em></span></h3>
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-bell" style="color:var(--gold);"></i> <span data-i18n="push.title">التذكير اليومي</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-bell" style="color:var(--gold-text);"></i> <span data-i18n="push.title">التذكير اليومي</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="push.desc">إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.</p>
                 <button type="button" class="btn btn-block" onclick="subscribeToPushNotifications()"><i class="fa-solid fa-bell"></i> <span data-i18n="push.enable">فعّل التذكير اليومي</span></button>
             </div>
@@ -1973,7 +1978,7 @@
 
             <h3 class="settings-group-head"><i class="fa-solid fa-mobile-screen-button"></i> <span><b data-i18n="settings.grpApp">التطبيق والبيانات</b><em data-i18n="settings.grpAppSub">التثبيت، العمل بدون إنترنت، النسخة، ونسخك الاحتياطية</em></span></h3>
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-mobile-screen-button" style="color:var(--gold);"></i> <span data-i18n="settings.appTitle">تطبيق خُطى على جهازك</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-mobile-screen-button" style="color:var(--gold-text);"></i> <span data-i18n="settings.appTitle">تطبيق خُطى على جهازك</span></h2>
                 <p class="card-sub" data-i18n="settings.appSub">ثبّت خُطى كتطبيق مستقل يفتح بضغطة واحدة من شاشتك الرئيسية — ويعمل حتى بدون إنترنت</p>
 
                 <div id="settings-install-box" style="margin-top:16px;">
@@ -1993,7 +1998,7 @@
                 <p class="hint" style="margin-top:14px;" data-i18n="settings.offlineNote">بدون إنترنت يعمل: الجدول، الموقّت، الحاسبة، وكل بياناتك المحفوظة على جهازك. ويحتاج اتصالاً: تسجيل الدخول والمزامنة، المجتمع، والذكاء الاصطناعي.</p>
             </div>
             <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-floppy-disk" style="color:var(--gold);"></i> <span data-i18n="settings.dataTitle">نسخة احتياطية من بياناتك</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-floppy-disk" style="color:var(--gold-text);"></i> <span data-i18n="settings.dataTitle">نسخة احتياطية من بياناتك</span></h2>
                 <p class="card-sub" data-i18n="settings.dataSub">خُطى يحفظ تقدّمك داخل متصفحك أنت. نزّل نسخة احتياطية تحتفظ بها، أو استعدها إن غيّرت جهازك أو مسحت بيانات المتصفح.</p>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
                     <button type="button" class="btn btn-outline btn-sm" onclick="exportKhutaBackup()"><i class="fa-solid fa-file-arrow-down"></i> <span data-i18n="settings.dataExport">تنزيل نسخة احتياطية</span></button>
@@ -2006,7 +2011,7 @@
         <!-- ===================== دليل التخصصات ===================== -->
         <section id="view-specialties" class="view-section">
             <div class="card">
-                <h2><i class="fa-solid fa-book-open-reader" style="color:var(--gold);"></i> <span data-i18n="spec.title">دليل التخصصات الذكي</span></h2>
+                <h2><i class="fa-solid fa-book-open-reader" style="color:var(--gold-text);"></i> <span data-i18n="spec.title">دليل التخصصات الذكي</span></h2>
                 <p class="card-sub" data-i18n="spec.sub">نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة</p>
                 <div class="form-group" style="margin-top:14px;">
                     <input type="text" id="spec-search" placeholder="ابحث عن تخصص..." data-i18n-ph="spec.search" oninput="renderSpecialties()">
@@ -2020,12 +2025,12 @@
             <div class="card">
                 <div class="card-head">
                     <div>
-                        <h2><i class="fa-solid fa-fire-flame-curved" style="color:var(--gold);"></i> <span data-i18n="room.title">غرفة المذاكرة</span></h2>
+                        <h2><i class="fa-solid fa-fire-flame-curved" style="color:var(--gold-text);"></i> <span data-i18n="room.title">غرفة المذاكرة</span></h2>
                         <div class="card-sub" data-i18n="room.sub">لست وحدك — بدون شات، فقط إحساس بالرفقة</div>
                     </div>
                 </div>
                 <div style="text-align:center; padding:20px 0;">
-                    <div style="font-family:var(--font-display); font-size:52px; color:var(--gold);" id="room-count">—</div>
+                    <div style="font-family:var(--font-display); font-size:52px; color:var(--gold-text);" id="room-count">—</div>
                     <div class="card-sub" data-i18n="room.studying">طالب يذاكر الآن معك</div>
                 </div>
             </div>
@@ -2033,7 +2038,7 @@
             <div class="card">
                 <div class="card-head">
                     <div>
-                        <h2><i class="fa-solid fa-ranking-star" style="color:var(--gold);"></i> <span data-i18n="lb.title">لوحة الصدارة الأسبوعية</span></h2>
+                        <h2><i class="fa-solid fa-ranking-star" style="color:var(--gold-text);"></i> <span data-i18n="lb.title">لوحة الصدارة الأسبوعية</span></h2>
                         <div class="card-sub" data-i18n="lb.sub">اختياري بالكامل — شارك نقاطك التحفيزية إن أردت</div>
                     </div>
                 </div>
@@ -2047,7 +2052,7 @@
             <div class="card">
                 <div class="card-head">
                     <div>
-                        <h2><i class="fa-solid fa-note-sticky" style="color:var(--gold);"></i> <span data-i18n="forum.title">حائط الأسئلة السريعة</span></h2>
+                        <h2><i class="fa-solid fa-note-sticky" style="color:var(--gold-text);"></i> <span data-i18n="forum.title">حائط الأسئلة السريعة</span></h2>
                         <div class="card-sub" data-i18n="forum.sub">اسأل، وأجب على زملائك</div>
                     </div>
                 </div>
@@ -2061,7 +2066,7 @@
             <div class="card">
                 <div class="card-head">
                     <div>
-                        <h2><i class="fa-solid fa-share-nodes" style="color:var(--gold);"></i> <span data-i18n="tpl.title">قوالب الخطط من الطلاب</span></h2>
+                        <h2><i class="fa-solid fa-share-nodes" style="color:var(--gold-text);"></i> <span data-i18n="tpl.title">قوالب الخطط من الطلاب</span></h2>
                         <div class="card-sub" data-i18n="tpl.sub">استفد من خطط طلاب آخرين، أو شارك خطتك الحالية ليستفيد منها غيرك</div>
                     </div>
                 </div>
