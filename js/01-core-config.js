@@ -176,31 +176,26 @@ async function checkAdminStatus(){
 }
 
 /* ============================================================
-   📌 إصدار بيانات GitHub المثبَّت  (اقرأ هذا قبل تحديث أي ملف بيانات)
+   📂 بيانات الموقع القابلة للتحديث من GitHub
    ------------------------------------------------------------
-   بيانات الجامعات والدورات تُجلب من مستودع rakan1430/my-website-data على
-   GitHub. كنّا نجلبها سابقاً من "آخر نسخة" (refs/heads/main)، أي أن أي تعديل
-   على GitHub كان ينعكس على الموقع فوراً. هذا مريح، لكنه يعني أيضاً أن أي
-   تعديل خاطئ — أو أي شخص يحصل على صلاحية الكتابة في ذلك المستودع — يغيّر ما
-   يراه كل الطلاب مباشرة دون مراجعة.
+   كل ملفات البيانات في مستودع rakan1430/my-website-data. أي تعديل يُحفظ هناك
+   يظهر على الموقع مباشرة عند أول تحديث للصفحة — بلا لمس الكود وبلا إعادة نشر.
+   هذا مقصود: الشخص الذي يحدّث البيانات ليس مبرمجاً.
 
-   لذلك أصبحنا نثبّت الجلب على "لقطة" محدّدة من المستودع (رقم الالتزام/commit
-   أدناه). الموقع سيقرأ دائماً هذه اللقطة بالذات.
-
-   ⚠️ الأثر المهم: تعديل ملفات JSON على GitHub لن يظهر في الموقع تلقائياً بعد
-   الآن. لتحديث البيانات صار عليك خطوتان:
-     1) عدّل الملف على GitHub في my-website-data واحفظه كالمعتاد.
-     2) افتح صفحة المستودع، انسخ رقم آخر commit (سلسلة 40 حرفاً)، والصقه في
-        REMOTE_DATA_REF أدناه بدل الرقم الحالي، ثم احفظ — سينشر Netlify تلقائياً.
-   الرقم الحالي يقابل لقطة المستودع بتاريخ التثبيت.
+   ما الذي يحمي الموقع إذاً من ملف مكسور أو خاطئ؟ طبقتان، كلتاهما تلقائيتان:
+     1) فحص آلي على GitHub نفسه (.github/workflows في مستودع البيانات) يرفض أي
+        حفظ فيه خطأ صياغة أو حقل ناقص أو أوزان لا تساوي 100.
+     2) فحص ثانٍ هنا في المتصفح قبل استعمال أي بيانات (validateRemote* أدناه):
+        أي ملف لا يجتاز الفحص يُتجاهَل بالكامل ويستمر الموقع بالبيانات المدمجة
+        في الكود. لا شاشة بيضاء ولا حسابات خاطئة مهما كان الملف سيئاً.
+   وأي نص يأتي من هذه الملفات يُهرَّب قبل عرضه، فلا يمكن أن يتحوّل إلى كود.
    ============================================================ */
-const REMOTE_DATA_REF = "1fed7bb8084b51add83ab0b085f66b9fdaabdcae";
-const REMOTE_DATA_BASE = `https://raw.githubusercontent.com/rakan1430/my-website-data/${REMOTE_DATA_REF}/`;
+const REMOTE_DATA_BASE = "https://raw.githubusercontent.com/rakan1430/my-website-data/main/";
 
-/* اختياري: رابط JSON خارجي (مستضاف على GitHub) يحوي مصفوفة جامعات محدّثة.
-   إن ضبطته، سيحاول التطبيق جلبه عند التشغيل ودمجه فوق القائمة المدمجة أدناه.
-   لتحديثه: عدّل الملف على GitHub ثم حدّث REMOTE_DATA_REF أعلاه. */
-const REMOTE_UNIVERSITIES_URL = REMOTE_DATA_BASE + "%D8%A7%D9%84%D8%AC%D8%A7%D9%85%D8%B9%D8%A7%D8%AA%20%D9%88%D8%AA%D8%AE%D8%B5%D9%8A%D8%B5%D9%87%D8%A7.json";
+/* أسماء الملفات بالعربية مُرمَّزة (encodeURIComponent) لأن الروابط لا تقبل
+   المسافات والحروف العربية كما هي. لا تعدّلها يدوياً — إن غيّرت اسم ملف على
+   GitHub، غيّر الاسم العربي في السطر المناسب أدناه وسيُرمَّز تلقائياً. */
+const REMOTE_UNIVERSITIES_URL = REMOTE_DATA_BASE + encodeURIComponent("الجامعات وتخصيصها.json");
 
 /* ============================================================
    ⭐ هيكل تحديث تجميعات المصادر (إيهاب / المنصف / المفكر / المعاصر / أينشتاين)
@@ -211,12 +206,11 @@ const REMOTE_UNIVERSITIES_URL = REMOTE_DATA_BASE + "%D8%A7%D9%84%D8%AC%D8%A7%D9%
    في "الحساب الذكي" (تقدير الوقت اللازم لكل مصدر) — لا تحتاج لتعديل أي
    مكان آخر في الكود، كل شيء يقرأ من هنا تلقائياً.
 
-   لتحديث هذه الأرقام من GitHub بدل تعديل الكود هنا:
-   1) عدّل ملف "الدورات وحسبتها.json" في مستودع my-website-data واحفظه.
-   2) حدّث REMOTE_DATA_REF في الأعلى برقم آخر commit — بدون هذه الخطوة الثانية
-      سيبقى الموقع يقرأ اللقطة القديمة ولن تظهر تعديلاتك.
+   الأرقام أدناه نسخة احتياطية فقط. المصدر الحيّ هو ملف "الدورات وحسبتها.json"
+   في مستودع my-website-data: عدّله واحفظه، ويظهر التغيير على الموقع مباشرة.
+   الأرقام هنا تُستعمل فقط لو تعذّر جلب الملف أو كان محتواه غير صالح.
    ============================================================ */
-const REMOTE_CONTENT_URL = REMOTE_DATA_BASE + "%D8%A7%D9%84%D8%AF%D9%88%D8%B1%D8%A7%D8%AA%20%D9%88%D8%AD%D8%B3%D8%A8%D8%AA%D9%87%D8%A7.json";
+const REMOTE_CONTENT_URL = REMOTE_DATA_BASE + encodeURIComponent("الدورات وحسبتها.json");
 
 const CONTENT_CONFIG = {
     // تاريخ آخر مرة حدّثت فيها هذا الملف — لعرضه للطالب فقط، لا يؤثر على أي حساب
@@ -262,17 +256,60 @@ function getContent(){
     return window.__REMOTE_CONTENT__ || CONTENT_CONFIG;
 }
 
+/* ============================================================
+   🛡️ فحص البيانات القادمة من GitHub قبل استعمالها
+   ------------------------------------------------------------
+   القاعدة: لا نثق بأي ملف خارجي. الملف يُستعمل فقط إن اجتاز الفحص كاملاً،
+   وإلا يُتجاهل ونستمر بالبيانات المدمجة في الكود. النتيجة: مهما أخطأ من
+   يحدّث البيانات، لا يمكنه كسر الموقع ولا إظهار حسابات خاطئة للطلاب.
+   ============================================================ */
+const isPosNum = v => typeof v === "number" && isFinite(v) && v > 0;
+const isText = v => typeof v === "string" && v.trim().length > 0;
+
+// يسجّل سبب الرفض في الطرفية فقط — ليعرف من يصلح الملف أين المشكلة بالضبط
+function rejectRemote(file, why){
+    console.warn(`[خُطى] تم تجاهل "${file}" من GitHub والاستمرار بالبيانات المدمجة. السبب: ${why}`);
+    return false;
+}
+
+// أرقام الدورات: كل مفتاح موجود يجب أن تكون أرقامه موجبة، وإلا انهارت
+// حسابات الجدول اليومي (قسمة على صفر أو كميات سالبة)
+function validateRemoteContent(json){
+    if(!json || typeof json !== "object" || Array.isArray(json))
+        return rejectRemote("الدورات وحسبتها.json", "الملف ليس كائن JSON صالحاً");
+    const numericFields = {
+        ehab: ["totalSections", "minutesPerSection"],
+        monsif: ["totalBanks", "minutesPerBank"],
+        mufakkirSections: ["total", "minutesPerSection"],
+        mufakkirRepeated: ["total", "minutesPer10Questions"],
+        moasserFoundation: ["days", "pagesPerDay"],
+        moasserTraining: ["totalBanks", "minutesPerBank"],
+        einstein: ["totalVideos", "minutesPerVideo"],
+    };
+    for(const [group, fields] of Object.entries(numericFields)){
+        if(json[group] === undefined) continue;            // مفتاح غائب = نأخذ المدمج، لا بأس
+        if(typeof json[group] !== "object" || json[group] === null)
+            return rejectRemote("الدورات وحسبتها.json", `القسم "${group}" ليس كائناً`);
+        for(const f of fields){
+            if(json[group][f] !== undefined && !isPosNum(json[group][f]))
+                return rejectRemote("الدورات وحسبتها.json", `"${group}.${f}" يجب أن يكون رقماً أكبر من صفر`);
+        }
+    }
+    return true;
+}
+
 async function tryLoadRemoteContent(){
     if(!REMOTE_CONTENT_URL) return;
     try{
         const res = await fetch(REMOTE_CONTENT_URL, {cache:"no-store"});
         if(!res.ok) return;
         const json = await res.json();
-        if(json && typeof json === "object"){
-            window.__REMOTE_CONTENT__ = Object.assign({}, CONTENT_CONFIG, json);
-            buildScheduleTable();
-            applyContentNumbers();
-        }
-    }catch(e){ /* تجاهل بصمت — نستمر بالأرقام المدمجة محلياً */ }
+        if(!validateRemoteContent(json)) return;
+        window.__REMOTE_CONTENT__ = Object.assign({}, CONTENT_CONFIG, json);
+        buildScheduleTable();
+        applyContentNumbers();
+    }catch(e){
+        console.warn("[خُطى] تعذّر قراءة \"الدورات وحسبتها.json\" (خطأ صياغة JSON غالباً) — نستمر بالأرقام المدمجة.", e);
+    }
 }
 
