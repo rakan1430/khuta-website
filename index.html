@@ -34,7 +34,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@500;600;700;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- integrity = بصمة الملف. لو تغيّر محتوى الملف على خادم cdnjs ولو بحرف واحد
+     (اختراق أو تلاعب) سيرفض المتصفح تحميله بدل تنفيذه. البصمة مرتبطة بهذا
+     الإصدار تحديداً: عند تحديث رقم الإصدار في الرابط يجب توليد بصمة جديدة. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0"
+      crossorigin="anonymous" referrerpolicy="no-referrer">
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -2094,7 +2099,11 @@
      (Supply-chain) — عنوان "@2" العائم قد يخدم كوداً مختلفاً دون أي تغيير
      في هذا الملف لو تغيّر أحدث إصدار من 2.x على npm، بينما هذا التثبيت
      يضمن تحميل نفس الكود المُراجَع دائماً حتى تُحدَّث النسخة هنا يدوياً. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"></script>
+<!-- integrity: نفس الفكرة أعلاه. البصمة تخصّ 2.112.3 بالذات — عند ترقية النسخة
+     يجب توليد بصمة جديدة وإلا رفض المتصفح الملف وعمل الموقع كضيف فقط. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"
+        integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!-- ⚠️ app.js (‏9676 سطراً) قُسّم إلى الأجزاء أدناه لتسهيل التعديل والمراجعة على
      GitHub. التقسيم ميكانيكي بحت: القطع تمّ عند حدود المستوى الأعلى فقط مع
      الحفاظ على الترتيب الأصلي حرفياً، وتم التحقق آلياً أن دمج هذه الملفات

@@ -23,6 +23,12 @@ let sb = null;
 try{
     if(window.supabase && typeof window.supabase.createClient === "function"){
         sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+        // مكتبة Supabase لم تُحمَّل أصلاً. الموقع سيعمل كضيف (كل شيء محلي) لكن
+        // الحساب والمزامنة والمجتمع ستُعطَّل. السبب الأرجح: بصمة integrity في
+        // index.html لم تعد تطابق الملف على cdn.jsdelivr.net (يحدث عند ترقية
+        // رقم النسخة دون توليد بصمة جديدة) — أو انقطاع الشبكة عن الـCDN.
+        console.error("[خُطى] مكتبة Supabase لم تُحمَّل — تحقّق من وسم integrity في index.html. الموقع يعمل الآن بوضع الضيف فقط.");
     }
 }catch(e){ console.error("[خُطى] تعذّر تهيئة Supabase:", e); }
 
