@@ -270,10 +270,13 @@ function editMobileCustomTask(id){
     buildScheduleTable();
 }
 
+// نهرّب أيضاً علامتَي التنصيص لأن كثيراً من المواضع تضع النتيجة داخل خاصية
+// HTML مثل value="..." — بدونها يستطيع نصٌّ فيه علامة تنصيص أن يخرج من الخاصية.
+// التهريب آمن في سياق النص العادي كذلك، فالمتصفح يعيد عرض &quot; كعلامة تنصيص.
 function escapeHtml(str){
     const div = document.createElement("div");
     div.textContent = str;
-    return div.innerHTML;
+    return div.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 function renderStatusBadge(el, status){
