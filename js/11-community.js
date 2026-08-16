@@ -662,19 +662,19 @@ async function tryLoadRemoteCurriculum(){
    [{"id":"...", "icon":"fa-...", "track":"science",
      "ar":{"name":"...","desc":"...","career":"...","note":"...","branches":["...","..."],"universities":["..."]},
      "en":{...}}, ...]
-   يمكنك إما استبدال القائمة كاملة أو (الأفضل) نسخ التنسيق وإضافة تخصصات جديدة. */
-const REMOTE_SPECIALTIES_URL = "";
+   يمكنك إما استبدال القائمة كاملة أو (الأفضل) نسخ التنسيق وإضافة تخصصات جديدة.
+   الملف على GitHub اسمه "تعديل التخصصات.json" — تعديله يظهر على الموقع مباشرة. */
+const REMOTE_SPECIALTIES_URL = REMOTE_DATA_BASE + encodeURIComponent("تعديل التخصصات.json");
 
 /* ============================================================
    36) بنك أسئلة الاختبار المحاكي
    ------------------------------------------------------------
-   ⚠️ الأسئلة أدناه أمثلة توضيحية فقط لاختبار عمل النظام — وليست الأسئلة
-   الحقيقية. لإضافة البنك الحقيقي: ارفع ملفاً بنفس اسم/بنية exam-questions.json
-   (المرفق كمرجع) على نفس مستودع GitHub الذي تستخدمه للجامعات والدورات،
-   وضع رابطه الخام في REMOTE_EXAM_QUESTIONS_URL أدناه — سيحل محل هذه
-   الأمثلة تلقائياً دون أي تعديل آخر على الكود.
+   البنك الحقيقي في ملف "بنك الأسئلة.json" في مستودع my-website-data، ويحلّ
+   محل الأمثلة أدناه تلقائياً. لإضافة أسئلة: افتح ذلك الملف على GitHub وأضف
+   أسئلة بنفس الشكل، ثم احفظ — تظهر على الموقع مباشرة.
+   الأسئلة أدناه نسخة احتياطية فقط، تُستعمل لو تعذّر جلب الملف أو كان معطوباً.
    ============================================================ */
-const REMOTE_EXAM_QUESTIONS_URL = "";
+const REMOTE_EXAM_QUESTIONS_URL = REMOTE_DATA_BASE + encodeURIComponent("بنك الأسئلة.json");
 
 const EXAM_QUESTIONS_LOCAL = {
     quant: [
@@ -709,16 +709,49 @@ function getExamQuestions(){
     };
 }
 
+/* سؤال صالح = نص + خيارات (2 فأكثر، كلها نصوص) + correct يشير إلى خيار موجود.
+   correct يبدأ من 0: أي أن 0 = الخيار الأول، و1 = الثاني… وهذا أكثر خطأ متوقّع
+   ممن يضيف أسئلة، ولو مرّ لصُحّحت إجابة الطالب الصحيحة على أنها خاطئة. */
+function questionRejectionReason(q, i, kind){
+    const at = `${kind}[${i}]`;
+    if(!q || typeof q !== "object") return `${at}: ليس كائناً`;
+    if(!isText(q.text)) return `${at}: بلا نص سؤال ("text")`;
+    if(!Array.isArray(q.choices) || q.choices.length < 2) return `${at}: يحتاج خيارين على الأقل`;
+    if(!q.choices.every(isText)) return `${at}: أحد الخيارات فارغ أو ليس نصاً`;
+    if(!Number.isInteger(q.correct) || q.correct < 0 || q.correct >= q.choices.length)
+        return `${at}: "correct" يجب أن يكون رقماً بين 0 و${q.choices.length - 1} (0 = الخيار الأول)`;
+    return null;
+}
+
+function filterValidQuestions(arr, kind, problems){
+    if(!Array.isArray(arr)) return [];
+    return arr.filter((q, i) => {
+        const why = questionRejectionReason(q, i, kind);
+        if(why){ problems.push(why); return false; }
+        return true;
+    });
+}
+
 async function tryLoadRemoteExamQuestions(){
     if(!REMOTE_EXAM_QUESTIONS_URL) return;
     try{
         const res = await fetch(REMOTE_EXAM_QUESTIONS_URL, {cache:"no-store"});
         if(!res.ok) return;
         const json = await res.json();
-        if(json && (json.quant || json.verbal)){
-            window.__REMOTE_EXAM_QUESTIONS__ = json;
-        }
-    }catch(e){ /* تجاهل بصمت — نستمر بالأمثلة المدمجة محلياً */ }
+        if(!json || typeof json !== "object" || (!json.quant && !json.verbal))
+            return rejectRemote("بنك الأسئلة.json", 'الملف يجب أن يحوي "quant" و/أو "verbal"');
+
+        const problems = [];
+        const quant = filterValidQuestions(json.quant, "quant", problems);
+        const verbal = filterValidQuestions(json.verbal, "verbal", problems);
+        if(problems.length) console.warn(`[خُطى] استُبعد ${problems.length} سؤالاً من بنك GitHub:\n  - ` + problems.join("\n  - "));
+        if(!quant.length && !verbal.length)
+            return rejectRemote("بنك الأسئلة.json", "لم يجتز أي سؤال الفحص");
+
+        window.__REMOTE_EXAM_QUESTIONS__ = { quant, verbal };
+    }catch(e){
+        console.warn("[خُطى] تعذّر قراءة \"بنك الأسئلة.json\" (خطأ صياغة JSON غالباً) — نستمر بالأسئلة المدمجة.", e);
+    }
 }
 
 // يحمّل بنك الأسئلة المشترك من Supabase (قراءة عامة، لا حاجة لحساب) —
@@ -749,19 +782,36 @@ async function loadSharedExamQuestions(){
     }catch(e){ console.error("[خُطى] تعذّر تحميل بنك الأسئلة المشترك:", e); }
 }
 
+// تخصص صالح = له id واسم عربي واسم إنجليزي. الباقي اختياري ويُعرَض فارغاً بلا ضرر.
+function specialtyIsValid(s){
+    return s && typeof s === "object"
+        && isText(s.id)
+        && s.ar && isText(s.ar.name)
+        && s.en && isText(s.en.name);
+}
+
 async function tryLoadRemoteSpecialties(){
     if(!REMOTE_SPECIALTIES_URL) return;
     try{
         const res = await fetch(REMOTE_SPECIALTIES_URL, {cache:"no-store"});
         if(!res.ok) return;
         const json = await res.json();
-        if(Array.isArray(json) && json.length){
-            window.__REMOTE_SPECIALTIES__ = json;
-            renderSpecialties();
-        }
-    }catch(e){ console.error("[خُطى] تعذّر جلب دليل التخصصات من GitHub:", e); }
+        if(!Array.isArray(json) || !json.length)
+            return rejectRemote("تعديل التخصصات.json", "الملف ليس قائمة تخصصات غير فارغة");
+        const good = json.filter(specialtyIsValid);
+        const dropped = json.length - good.length;
+        if(dropped) console.warn(`[خُطى] استُبعد ${dropped} تخصصاً بلا "id" أو بلا اسم عربي/إنجليزي.`);
+        if(!good.length)
+            return rejectRemote("تعديل التخصصات.json", "لم يجتز أي تخصص الفحص");
+        window.__REMOTE_SPECIALTIES__ = good;
+        renderSpecialties();
+    }catch(e){
+        console.warn("[خُطى] تعذّر قراءة \"تعديل التخصصات.json\" (خطأ صياغة JSON غالباً) — نستمر بالدليل المدمج.", e);
+    }
 }
-function getSpecialties(){ return window.__REMOTE_SPECIALTIES__ || SPECIALTIES; }
+// دمج بالـid تماماً كالجامعات — انظر mergeById في js/04-utils.js لسبب اختيار
+// الدمج بدل الاستبدال. النتيجة: ملف GitHub لا يحتاج أن يكون قائمة كاملة.
+function getSpecialties(){ return mergeById(SPECIALTIES, window.__REMOTE_SPECIALTIES__); }
 
 /* ============================================================
    24) ترتيب بطاقات لوحة التحكم — تحريك بسيط بالأسهم بدل السحب والإفلات

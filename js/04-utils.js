@@ -208,9 +208,25 @@ function uniName(u){ return currentLang === "ar" ? u.name : u.nameEn; }
 function uniNote(u){ return currentLang === "ar" ? u.note : u.noteEn; }
 function uniCity(u){ return (currentLang === "ar" || !u.cityEn) ? u.city : u.cityEn; }
 
+/* يدمج قائمة خارجية فوق القائمة المدمجة بالكود، بمطابقة "id":
+     - عنصر بنفس الـid  → النسخة الخارجية تحلّ محل المدمجة (تعديل)
+     - عنصر بـid جديد   → يُضاف في النهاية (إضافة)
+     - عنصر غائب من الملف الخارجي → يبقى كما هو في الكود
+
+   لماذا دمج لا استبدال؟ لأن الاستبدال يجعل الحذف حادثاً صامتاً: ملف ناقص
+   (أو أحد يحذف سطراً بالخطأ) كان سيمحو عشرات العناصر من الموقع دون أي إنذار.
+   للإخفاء المتعمَّد استعمل "hidden": true بدل الحذف — صريح وقابل للتراجع. */
+function mergeById(builtIn, remote){
+    if(!Array.isArray(remote) || !remote.length) return builtIn.filter(x => !x.hidden);
+    const overrides = new Map(remote.filter(x => x && isText(x.id)).map(x => [x.id, x]));
+    const merged = builtIn.map(x => overrides.has(x.id) ? overrides.get(x.id) : x);
+    const known = new Set(builtIn.map(x => x.id));
+    for(const x of overrides.values()) if(!known.has(x.id)) merged.push(x);
+    return merged.filter(x => !x.hidden);
+}
+
 function getUniversitiesList(){
-    // يدمج قائمة الجامعات المدمجة مع أي بيانات خارجية محدّثة تم جلبها (إن وجدت)
-    return window.__REMOTE_UNIS__ && window.__REMOTE_UNIS__.length ? window.__REMOTE_UNIS__ : UNIVERSITIES;
+    return mergeById(UNIVERSITIES, window.__REMOTE_UNIS__);
 }
 
 async function tryLoadUniversitiesFromSupabase(){
@@ -231,17 +247,56 @@ async function tryLoadUniversitiesFromSupabase(){
     }catch(e){ console.error("[خُطى] تعذّر جلب الجامعات من Supabase:", e); }
 }
 
+/* يفحص جامعة واحدة. يعيد سبب الرفض نصاً، أو null إن كانت سليمة.
+   الأوزان تحديداً حرجة: مجموع خاطئ يعني نسبة قبول خاطئة تُعرض للطالب
+   ويبني عليها قراره — أخطر بكثير من ظهور خطأ واضح. */
+function uniRejectionReason(u, i){
+    if(!u || typeof u !== "object") return `العنصر رقم ${i + 1} ليس كائناً`;
+    if(!isText(u.id)) return `الجامعة رقم ${i + 1} بلا "id"`;
+    if(!isText(u.name)) return `"${u.id}" بلا "name"`;
+    // weights = null مقصود وشرعي: جامعات خاصة تعتمد نظام قبول خاص بها بلا
+    // معادلة أوزان (الواجهة تعرض لها ملاحظة بديلة). نعاملها كغياب الحقل تماماً.
+    if(u.weights !== undefined && u.weights !== null){
+        const w = u.weights;
+        if(typeof w !== "object" || Array.isArray(w)) return `"${u.id}": "weights" ليس كائناً`;
+        const parts = ["high", "qat", "tah", "step"].filter(k => w[k] !== undefined);
+        for(const k of parts){
+            if(typeof w[k] !== "number" || !isFinite(w[k]) || w[k] < 0)
+                return `"${u.id}": الوزن "${k}" ليس رقماً صالحاً`;
+        }
+        const sum = parts.reduce((a, k) => a + w[k], 0);
+        // نسمح بفارق ضئيل جداً تحسّباً لأرقام عشرية
+        if(Math.abs(sum - 100) > 0.01)
+            return `"${u.id}": مجموع الأوزان ${sum} وليس 100`;
+    }
+    return null;
+}
+
 async function tryLoadRemoteUniversities(){
     if(!REMOTE_UNIVERSITIES_URL) return;
     try{
         const res = await fetch(REMOTE_UNIVERSITIES_URL, {cache:"no-store"});
         if(!res.ok) return;
         const json = await res.json();
-        if(Array.isArray(json) && json.length){
-            window.__REMOTE_UNIS__ = json;
-            populateUniSelects();
-        }
-    }catch(e){ /* تجاهل بصمت — نستمر بالبيانات المدمجة محلياً */ }
+        if(!Array.isArray(json) || !json.length)
+            return rejectRemote("الجامعات وتخصيصها.json", "الملف ليس قائمة جامعات غير فارغة");
+
+        // نستبعد الجامعات المعطوبة فقط بدل رفض الملف كله — خطأ في جامعة واحدة
+        // لا يجب أن يُلغي تحديث الثلاثين الأخرى
+        const good = [], bad = [];
+        json.forEach((u, i) => {
+            const why = uniRejectionReason(u, i);
+            if(why) bad.push(why); else good.push(u);
+        });
+        if(bad.length) console.warn(`[خُطى] استُبعدت ${bad.length} جامعة من ملف GitHub:\n  - ` + bad.join("\n  - "));
+        if(!good.length)
+            return rejectRemote("الجامعات وتخصيصها.json", "لم تجتز أي جامعة الفحص");
+
+        window.__REMOTE_UNIS__ = good;
+        populateUniSelects();
+    }catch(e){
+        console.warn("[خُطى] تعذّر قراءة \"الجامعات وتخصيصها.json\" (خطأ صياغة JSON غالباً) — نستمر بالقائمة المدمجة.", e);
+    }
 }
 
 /* ============================================================
