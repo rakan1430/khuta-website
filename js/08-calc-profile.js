@@ -10,10 +10,24 @@ function populateUniSelects(){
     const calcPrev = calcSel.value;
     const goalPrev = goalSel.value;
 
-    calcSel.innerHTML = `<option value="custom">${currentLang==='ar'?'مخصص (أدخل الأوزان يدوياً)':'Custom (enter weights manually)'}</option>` +
-        list.map(u => `<option value="${u.id}">${uniName(u)} — ${uniCity(u)}</option>`).join("");
-    goalSel.innerHTML = `<option value="">${t("profile.noneOption")}</option>` +
-        list.map(u => `<option value="${u.id}">${uniName(u)}</option>`).join("");
+    // نبني الخيارات عبر DOM لا عبر innerHTML: أسماء الجامعات قد تأتي من ملف
+    // JSON خارجي على GitHub، وبناؤها كنص HTML يجعل أي محتوى فيه قابلاً للتنفيذ.
+    const fillSelect = (sel, firstLabel, firstValue, labelFor) => {
+        sel.textContent = "";
+        const first = document.createElement("option");
+        first.value = firstValue;
+        first.textContent = firstLabel;
+        sel.appendChild(first);
+        list.forEach(u => {
+            const opt = document.createElement("option");
+            opt.value = u.id;
+            opt.textContent = labelFor(u);
+            sel.appendChild(opt);
+        });
+    };
+    fillSelect(calcSel, currentLang==='ar'?'مخصص (أدخل الأوزان يدوياً)':'Custom (enter weights manually)', "custom",
+        u => `${uniName(u)} — ${uniCity(u)}`);
+    fillSelect(goalSel, t("profile.noneOption"), "", u => uniName(u));
 
     if(calcPrev) calcSel.value = calcPrev;
     if(goalPrev) goalSel.value = goalPrev;
@@ -79,22 +93,22 @@ function onUniChange(){
     box.innerHTML = `
         <div class="uni-detail-head">
             <div>
-                <h3 style="font-size:17px;">${uniName(uni)}</h3>
-                <div class="card-sub">${uniCity(uni)} · ${uni.type === "private" ? (currentLang==='ar'?'جامعة خاصة':'Private') : (currentLang==='ar'?'جامعة حكومية':'Public')}</div>
+                <h3 style="font-size:17px;">${escapeHtml(uniName(uni))}</h3>
+                <div class="card-sub">${escapeHtml(uniCity(uni))} · ${uni.type === "private" ? (currentLang==='ar'?'جامعة خاصة':'Private') : (currentLang==='ar'?'جامعة حكومية':'Public')}</div>
             </div>
             <span class="pill ${stepPillClass}"><i class="fa-solid fa-language"></i> ${stepPillText}</span>
         </div>
         ${uni.weights ? `
         <div class="uni-weights-row">
-            <div class="weight-chip"><b>${uni.weights.high}%</b><span>${t("calc.wHigh")}</span></div>
-            <div class="weight-chip"><b>${uni.weights.qat}%</b><span>${t("calc.wQat")}</span></div>
-            <div class="weight-chip"><b>${uni.weights.tah}%</b><span>${t("calc.wTah")}</span></div>
+            <div class="weight-chip"><b>${escapeHtml(uni.weights.high)}%</b><span>${t("calc.wHigh")}</span></div>
+            <div class="weight-chip"><b>${escapeHtml(uni.weights.qat)}%</b><span>${t("calc.wQat")}</span></div>
+            <div class="weight-chip"><b>${escapeHtml(uni.weights.tah)}%</b><span>${t("calc.wTah")}</span></div>
         </div>` : `<div class="uni-note" style="margin-top:8px;">${currentLang==='ar'?'هذه الجامعة تعتمد نظام قبول خاص بها؛ عدّل الأوزان يدوياً إن رغبت بتقدير تقريبي فقط.':'This university uses its own admission system; adjust weights manually only for a rough estimate.'}</div>`}
         <div>
             <div class="card-sub" style="margin-bottom:4px;">${currentLang==='ar'?'مستوى التنافسية المتوقع':'Expected competitiveness'}</div>
             <div class="competitiveness-bar">${[1,2,3,4,5].map(n => `<span class="${n<=compFilled?'on':''}"></span>`).join("")}</div>
         </div>
-        <div class="uni-note">${uniNote(uni)}</div>
+        <div class="uni-note">${escapeHtml(uniNote(uni) || "")}</div>
 
         <button type="button" class="btn btn-ghost btn-sm" style="padding:8px 4px; margin-top:6px;" onclick="toggleStepMajorsPanel(this)">
             <i class="fa-solid fa-chevron-down"></i> ${currentLang==='ar' ? 'عرض التخصصات التي تتطلب STEP والتي لا تتطلبه' : 'Show majors that require / don\'t require STEP'}
@@ -103,11 +117,11 @@ function onUniChange(){
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
                 <div>
                     <b style="color:var(--rose); font-size:12px;">${currentLang==='ar' ? 'غالباً تتطلب STEP' : 'Usually require STEP'}</b>
-                    <ul style="margin:6px 0 0; padding-inline-start:18px; font-size:12px; line-height:1.9;">${majorsYes.map(m => `<li>${m}</li>`).join("")}</ul>
+                    <ul style="margin:6px 0 0; padding-inline-start:18px; font-size:12px; line-height:1.9;">${majorsYes.map(m => `<li>${escapeHtml(m)}</li>`).join("")}</ul>
                 </div>
                 <div>
                     <b style="color:var(--teal); font-size:12px;">${currentLang==='ar' ? 'غالباً لا تتطلبه' : 'Usually don\'t require it'}</b>
-                    <ul style="margin:6px 0 0; padding-inline-start:18px; font-size:12px; line-height:1.9;">${majorsNo.map(m => `<li>${m}</li>`).join("")}</ul>
+                    <ul style="margin:6px 0 0; padding-inline-start:18px; font-size:12px; line-height:1.9;">${majorsNo.map(m => `<li>${escapeHtml(m)}</li>`).join("")}</ul>
                 </div>
             </div>
             <p style="opacity:.7; font-size:10.5px; margin-top:10px;">${currentLang==='ar' ? 'قائمة عامة تقريبية شائعة عبر أغلب الجامعات، وليست خاصة بكل كلية في هذه الجامعة تحديداً — تحقق من كليتك.' : 'A general common pattern across most universities, not specific to every college here — verify with your college.'}</p>
