@@ -176,6 +176,104 @@
         <button type="button" class="btn-ghost guest-cta" style="width:100%; margin-top:18px; justify-content:center; font-weight:700;" onclick="continueAsGuest()">
             <span data-i18n="login.guest">المتابعة كضيف بدون حساب</span> <i class="fa-solid fa-arrow-left rtl-flip"></i>
         </button>
+
+        <!-- بديل زر الضيف في نسخة المدرسة: من لا حساب له يقدّم طلباً للإدارة -->
+        <button type="button" class="btn-ghost guest-cta-alt" data-tenant-only="motaqadima" style="display:none; width:100%; margin-top:18px; justify-content:center; font-weight:700;" onclick="openAccountRequest()">
+            <i class="fa-solid fa-user-plus"></i> <span data-i18n="school.requestAccount">ليس لديك حساب؟ اطلب حساباً من المدرسة</span>
+        </button>
+    </div>
+</div>
+
+<!-- ===================== نسخة المدرسة: مسجَّل دخول لكن بلا عضوية ===================== -->
+<div id="school-gate-overlay" class="overlay-screen" style="display:none;">
+    <div class="wizard-card" style="max-width:460px; text-align:center;">
+        <div class="brand" style="font-size:44px; margin-bottom:6px;">خُطى<span class="dot">.</span></div>
+        <div style="font-size:44px; margin:10px 0;"><i class="fa-solid fa-user-clock" style="color:var(--gold-text);"></i></div>
+        <h3 style="margin-bottom:8px;" data-i18n="school.gateTitle">حسابك غير مُفعَّل بعد</h3>
+        <p class="card-sub" style="margin-bottom:20px;" data-i18n="school.gateBody">
+            دخولك تم بنجاح، لكن هذا الحساب غير مُسجَّل ضمن أعضاء المدرسة. إن كنت قد قدّمت طلباً فهو بانتظار موافقة الإدارة.
+        </p>
+        <button type="button" class="btn btn-block acc-btn" onclick="openAccountRequest()">
+            <i class="fa-solid fa-user-plus"></i> <span data-i18n="school.requestAccountShort">تقديم طلب حساب</span>
+        </button>
+        <button type="button" class="btn-ghost" style="width:100%; margin-top:10px; justify-content:center;" onclick="schoolGateSignOut()">
+            <span data-i18n="school.signOut">تسجيل الخروج</span>
+        </button>
+    </div>
+</div>
+
+<!-- ===================== نسخة المدرسة: نموذج طلب حساب ===================== -->
+<div id="account-request-overlay" class="overlay-screen" style="display:none;">
+    <div class="wizard-card" style="max-width:480px;">
+        <div id="areq-form">
+            <h3 style="margin-bottom:4px;" data-i18n="school.reqTitle">طلب حساب من المدرسة</h3>
+            <p class="card-sub" style="margin-bottom:18px;" data-i18n="school.reqSubtitle">
+                املأ بياناتك وسيصل الطلب لإدارة المدرسة مباشرة، وتُنشئ لك حساباً خاصاً بك.
+            </p>
+
+            <div class="form-group">
+                <label data-i18n="school.reqName">الاسم الكامل</label>
+                <input type="text" id="areq-name" maxlength="80" placeholder="محمد عبدالله">
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="school.reqRole">أنت</label>
+                <select id="areq-role" onchange="onRequestRoleChange()">
+                    <option value="student" data-i18n="school.roleStudent">طالب</option>
+                    <option value="teacher" data-i18n="school.roleTeacher">مدرّس</option>
+                </select>
+            </div>
+
+            <div id="areq-student-fields">
+                <div class="input-row">
+                    <div class="form-group">
+                        <label data-i18n="school.reqGrade">الصف</label>
+                        <select id="areq-grade">
+                            <option value="1" data-i18n="school.grade1">أول ثانوي</option>
+                            <option value="2" data-i18n="school.grade2">ثاني ثانوي</option>
+                            <option value="3" data-i18n="school.grade3">ثالث ثانوي</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="school.reqSection">الشعبة (اختياري)</label>
+                        <input type="text" id="areq-section" maxlength="20" placeholder="أ">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="school.reqContact">وسيلة تواصل (اختياري)</label>
+                <input type="text" id="areq-contact" maxlength="120" placeholder="05xxxxxxxx">
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="school.reqNote">ملاحظة للإدارة (اختياري)</label>
+                <textarea id="areq-note" rows="3" maxlength="400" placeholder="..."></textarea>
+            </div>
+
+            <!-- فخ للسيل الآلي: مخفي بصرياً لا بـdisplay:none كي تملأه البرامج -->
+            <input type="text" id="areq-trap" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp-field">
+
+            <div style="display:flex; gap:10px; margin-top:6px;">
+                <button type="button" id="areq-submit" class="btn acc-btn" style="flex:1;" onclick="submitAccountRequest()">
+                    <span data-i18n="school.reqSend">إرسال الطلب</span>
+                </button>
+                <button type="button" class="btn btn-outline acc-btn" style="flex:1;" onclick="closeAccountRequest()">
+                    <span data-i18n="common.cancel">إلغاء</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="areq-done" style="display:none; text-align:center;">
+            <div style="font-size:52px; margin-bottom:10px;"><i class="fa-solid fa-circle-check" style="color:var(--teal);"></i></div>
+            <h3 style="margin-bottom:8px;" data-i18n="school.reqDoneTitle">وصل طلبك للإدارة</h3>
+            <p class="card-sub" style="margin-bottom:20px;" data-i18n="school.reqDoneBody">
+                ستراجعه الإدارة وتنشئ لك حساباً. عُد لتسجيل الدخول بعد إبلاغك بتفعيل الحساب.
+            </p>
+            <button type="button" class="btn btn-block acc-btn" onclick="closeAccountRequest()">
+                <span data-i18n="common.ok">تمام</span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1098,11 +1196,12 @@
         <div class="brand">خُطى<span class="dot">.</span><small data-i18n="brand.tag">QUDRAT COMPANION</small></div>
         <nav style="display:flex; flex-direction:column; gap:8px;">
             <div class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i> <span data-i18n="nav.dashboard">الخطة والجدول</span></div>
-            <div class="nav-item" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i> <span data-i18n="nav.calculator">حساب الموزونة</span></div>
+            <div class="nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i> <span data-i18n="nav.calculator">حساب الموزونة</span></div>
             <div class="nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i> <span data-i18n="nav.links">الروابط المباشرة</span></div>
             <div class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
             <div class="nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i> <span data-i18n="nav.settings">الإعدادات</span></div>
-            <div class="nav-item" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
+            <div class="nav-item" data-school-role="admin" style="display:none;" data-tab="schooladmin" onclick="switchTab('schooladmin',this)" role="button" tabindex="0"><i class="fa-solid fa-school"></i> <span data-i18n="nav.schoolAdmin">إدارة المدرسة</span> <span id="admin-requests-count" class="pill" style="display:none;">0</span></div>
+            <div class="nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
             <div class="nav-item" data-tab="community" onclick="switchTab('community',this)" role="button" tabindex="0"><i class="fa-solid fa-users"></i> <span data-i18n="nav.community">المجتمع</span></div>
             <div class="nav-item nav-item-board" onclick="openKhutaBoard('ai', true)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.board">السبورة الذكية</span></div>
             <div class="nav-item" id="nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-clipboard-question"></i> <span data-i18n="nav.examSim">اختبارات محاكية</span></div>
@@ -1114,9 +1213,9 @@
 
     <nav class="mobile-nav">
         <div class="mobile-nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i><span data-i18n="nav.dashboardShort">الجدول</span></div>
-        <div class="mobile-nav-item" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i><span data-i18n="nav.calcShort">الموزونة</span></div>
+        <div class="mobile-nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i><span data-i18n="nav.calcShort">الموزونة</span></div>
         <div class="mobile-nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i><span data-i18n="nav.linksShort">المصادر</span></div>
-        <div class="mobile-nav-item" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i><span data-i18n="nav.specialtiesShort">التخصصات</span></div>
+        <div class="mobile-nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i><span data-i18n="nav.specialtiesShort">التخصصات</span></div>
         <div class="mobile-nav-item" data-tab="community" onclick="switchTab('community',this)" role="button" tabindex="0"><i class="fa-solid fa-users"></i><span data-i18n="nav.communityShort">المجتمع</span></div>
         <div class="mobile-nav-item nav-item-board" onclick="openKhutaBoard('ai', true)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i><span data-i18n="nav.boardShort">السبورة</span></div>
         <div class="mobile-nav-item" id="mobile-nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-clipboard-question"></i><span data-i18n="nav.examSimShort">اختبارات</span></div>
@@ -1846,6 +1945,32 @@
         </section>
 
         <!-- ===================== الإعدادات ===================== -->
+        <!-- ===================== إدارة المدرسة (المدير فقط) ===================== -->
+        <section id="view-schooladmin" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-school" style="color:var(--gold-text);"></i> <span data-i18n="school.adminTitle">إدارة المدرسة</span></h2>
+                <p class="card-sub" id="school-who"></p>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-inbox"></i> <span data-i18n="school.requestsTitle">طلبات الحسابات</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.requestsSub">طلبات وصلت من الموقع بانتظار قرارك.</p>
+                <div id="admin-requests-list"></div>
+                <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="loadAccountRequests()">
+                    <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span>
+                </button>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-users-gear"></i> <span data-i18n="school.membersTitle">المدرّسون والطلاب</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.membersSub">إيقاف العضو يمنع دخوله فوراً ويُبقي ملفاته وسجلّه — أأمن من الحذف.</p>
+                <div id="admin-members-list"></div>
+                <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="loadSchoolMembers()">
+                    <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span>
+                </button>
+            </div>
+        </section>
+
         <section id="view-settings" class="view-section">
             <div class="card settings-hero">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-gear" style="color:var(--gold-text);"></i> <span data-i18n="settings.title">الإعدادات</span></h2>
@@ -2130,5 +2255,6 @@
 <script src="js/10-account.js" defer></script>
 <script src="js/11-community.js" defer></script>
 <script src="js/12-ai.js" defer></script>
+<script src="js/13-school.js" defer></script>
 </body>
 </html>

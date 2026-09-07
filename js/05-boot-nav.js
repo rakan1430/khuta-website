@@ -60,7 +60,12 @@ window.onload = () => {
     function enterApp(){
         const session = getSession();
         const name = localStorage.getItem("khuta_name");
-        if(!session && !name){
+        // في نسخة بلا وضع ضيف (المدرسة) لا يكفي وجود اسم محفوظ في المتصفح
+        // للدخول — وهذا ليس تفصيلاً: أي زيارة سابقة تترك khuta_name، فلولا
+        // هذا الشرط لدخل أي شخص فتح الرابط مرة واحدة قبلاً بلا حساب إطلاقاً.
+        const mustHaveAccount = !hasFeature("guestMode");
+        const blocked = mustHaveAccount ? !session : (!session && !name);
+        if(blocked){
             document.getElementById("login-overlay").style.display = "flex";
         } else {
             document.getElementById("login-overlay").style.display = "none";
