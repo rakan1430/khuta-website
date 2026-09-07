@@ -10,8 +10,10 @@
    Authentication → Providers → Anonymous Sign-ins (تفعيل) — يلزم لعمل
    ميزات المجتمع (لوحة الصدارة، غرفة المذاكرة، الحائط) حتى للزوار بدون حساب.
    ============================================================ */
-const SUPABASE_URL = "https://squhkiwjwwyrgufkaujf.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_4BW-zO8Z5yxFXPHZnhl99A_rWFb2k84";
+/* تأتي من js/00-tenant.js حسب العنوان الذي فُتح منه الموقع: خُطى لها قاعدتها،
+   وكل مدرسة لها قاعدتها المنفصلة تماماً. لا تكتب العناوين هنا مباشرة. */
+const SUPABASE_URL = TENANT.supabaseUrl;
+const SUPABASE_ANON_KEY = TENANT.supabaseKey;
 const USERNAME_EMAIL_DOMAIN = "gmail.com"; // نُستخدم كنطاق بريد وهمي داخلي فقط (الطالب لن يراه ولا نرسل له بريداً حقيقياً أبداً).
 // لماذا gmail.com تحديداً؟ Supabase يتحقق من أن نطاق البريد له سجلات DNS/MX حقيقية (وليس فقط
 // شكل النص)، فأي نطاق وهمي غير مسجّل فعلياً (مثل khuta.local أو khuta-users.com) سيُرفض

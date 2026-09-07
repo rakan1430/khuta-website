@@ -7,7 +7,7 @@
    لتفادي أي احتمال لعرض بيانات قديمة مخزَّنة مؤقتاً.
    ============================================================ */
 // ارفع رقم النسخة مع أي تغيير في قائمة الملفات أدناه.
-const CACHE_NAME = "khuta-shell-v2";
+const CACHE_NAME = "khuta-shell-v3";
 // app.js قُسّم إلى js/*.js فصار لا بد من سردها بالاسم هنا.
 //
 // ملاحظة للمطوّر: لست مضطراً لتذكّر تحديث هذه القائمة. لو أضفت ملفاً جديداً
@@ -17,6 +17,7 @@ const CACHE_NAME = "khuta-shell-v2";
 const SHELL_FILES = [
   "./", "./index.html", "./styles.css", "./manifest.json",
   "./icon-192.png", "./icon-512.png",
+  "./js/00-tenant.js",
   "./js/01-core-config.js",
   "./js/02-universities.js",
   "./js/03-i18n.js",
