@@ -1,0 +1,413 @@
+-- ============================================================
+-- خُطى للمدارس — البنية الأساسية
+-- ============================================================
+-- مصمَّمة لأكثر من مدرسة من البداية (جدول schools)، لأن التوسّع لمدارس
+-- أخرى كان جزءاً من الفكرة. مدرسة واحدة اليوم لا تكلّف شيئاً إضافياً.
+
+create extension if not exists pgcrypto;
+
+-- ─────────────── المدارس ───────────────
+create table if not exists schools (
+    id          uuid primary key default gen_random_uuid(),
+    slug        text unique not null,          -- يطابق معرّف النسخة في js/00-tenant.js
+    name_ar     text not null,
+    name_en     text,
+    created_at  timestamptz not null default now()
+);
+
+-- ─────────────── الأعضاء وأدوارهم ───────────────
+-- الدور مخزَّن في قاعدة البيانات لا في المتصفح: لو زوّر أحد الواجهة وادّعى
+-- أنه مدير، فسياسات RLS أدناه هي التي ترفضه، لا إخفاء الأزرار.
+do $$ begin
+    create type school_role as enum ('admin', 'teacher', 'student');
+exception when duplicate_object then null; end $$;
+
+create table if not exists school_members (
+    id           uuid primary key default gen_random_uuid(),
+    school_id    uuid not null references schools(id) on delete cascade,
+    uid          uuid not null references auth.users(id) on delete cascade,
+    role         school_role not null default 'student',
+    full_name    text not null,
+    -- للطالب: صفّه. للمدرّس: يبقى فارغاً (يُربط بالفصول عبر class_teachers)
+    grade        text,
+    section      text,
+    active       boolean not null default true,
+    created_at   timestamptz not null default now(),
+    unique (school_id, uid)
+);
+create index if not exists idx_members_school_role on school_members(school_id, role);
+create index if not exists idx_members_uid on school_members(uid);
+
+-- ─────────────── الفصول ───────────────
+create table if not exists classes (
+    id          uuid primary key default gen_random_uuid(),
+    school_id   uuid not null references schools(id) on delete cascade,
+    name        text not null,                 -- مثال: "أول ثانوي - أ"
+    grade       text not null,                 -- 1 / 2 / 3
+    section     text,                          -- أ / ب / ج
+    created_at  timestamptz not null default now()
+);
+
+-- أي مدرّس يدرّس أي فصل وأي مادة
+create table if not exists class_teachers (
+    id          uuid primary key default gen_random_uuid(),
+    class_id    uuid not null references classes(id) on delete cascade,
+    teacher_id  uuid not null references school_members(id) on delete cascade,
+    subject     text not null,
+    unique (class_id, teacher_id, subject)
+);
+
+-- ─────────────── ملفات المدرّس ───────────────
+-- المدرّس يرفع من الجوال أو الحاسب، ويجدها على السبورة بعد تسجيل دخوله.
+create table if not exists teacher_files (
+    id           uuid primary key default gen_random_uuid(),
+    school_id    uuid not null references schools(id) on delete cascade,
+    owner_id     uuid not null references school_members(id) on delete cascade,
+    title        text not null,
+    subject      text,
+    grade        text,
+    -- مسار الملف داخل Supabase Storage. الكتب الوزارية لا تُرفع هنا إطلاقاً
+    -- بل تُوضع في external_url (روابط عين الرسمية) — لا تخزين ولا حقوق نشر.
+    storage_path text,
+    external_url text,
+    size_bytes   bigint,
+    -- هل يراه طلاب فصوله أم هو خاص بالمدرّس على السبورة فقط؟
+    shared       boolean not null default true,
+    created_at   timestamptz not null default now(),
+    constraint file_has_a_source check (storage_path is not null or external_url is not null)
+);
+create index if not exists idx_files_owner on teacher_files(owner_id);
+create index if not exists idx_files_school on teacher_files(school_id, grade);
+
+-- ─────────────── الروابط المباشرة لكل مدرّس ───────────────
+create table if not exists teacher_links (
+    id          uuid primary key default gen_random_uuid(),
+    school_id   uuid not null references schools(id) on delete cascade,
+    owner_id    uuid not null references school_members(id) on delete cascade,
+    label       text not null,
+    url         text not null,
+    icon        text,
+    sort_order  int not null default 0,
+    shared      boolean not null default true,
+    created_at  timestamptz not null default now(),
+    -- نمنع javascript: و data: من الوصول أصلاً إلى قاعدة البيانات
+    constraint link_is_http check (url ~* '^https?://')
+);
+create index if not exists idx_links_owner on teacher_links(owner_id, sort_order);
+
+-- ─────────────── الجدول الدراسي ───────────────
+create table if not exists timetable (
+    id          uuid primary key default gen_random_uuid(),
+    school_id   uuid not null references schools(id) on delete cascade,
+    class_id    uuid not null references classes(id) on delete cascade,
+    teacher_id  uuid references school_members(id) on delete set null,
+    weekday     smallint not null check (weekday between 0 and 6),  -- 0 = الأحد
+    period_no   smallint not null check (period_no between 1 and 12),
+    subject     text not null,
+    room        text,
+    unique (class_id, weekday, period_no)
+);
+create index if not exists idx_timetable_class on timetable(class_id, weekday);
+
+-- ─────────────── اختبارات المدرّس ───────────────
+create table if not exists teacher_exams (
+    id          uuid primary key default gen_random_uuid(),
+    school_id   uuid not null references schools(id) on delete cascade,
+    owner_id    uuid not null references school_members(id) on delete cascade,
+    title       text not null,
+    subject     text,
+    grade       text,
+    questions   jsonb not null default '[]'::jsonb,
+    published   boolean not null default false,
+    created_at  timestamptz not null default now()
+);
+
+create table if not exists exam_assignments (
+    id          uuid primary key default gen_random_uuid(),
+    exam_id     uuid not null references teacher_exams(id) on delete cascade,
+    class_id    uuid not null references classes(id) on delete cascade,
+    due_at      timestamptz,
+    unique (exam_id, class_id)
+);
+
+create table if not exists exam_attempts (
+    id          uuid primary key default gen_random_uuid(),
+    exam_id     uuid not null references teacher_exams(id) on delete cascade,
+    student_id  uuid not null references school_members(id) on delete cascade,
+    score       numeric,
+    total       int,
+    answers     jsonb,
+    finished_at timestamptz,
+    created_at  timestamptz not null default now()
+);
+create index if not exists idx_attempts_exam on exam_attempts(exam_id);
+
+-- ============================================================
+-- دوال مساعدة  (SECURITY DEFINER لتفادي التكرار اللانهائي في RLS)
+-- ============================================================
+-- سياسة على school_members تقرأ school_members ستستدعي نفسها بلا نهاية.
+-- الدالة تكسر الحلقة لأنها تعمل بصلاحية المالك فتتجاوز RLS.
+
+create or replace function my_member_id(p_school uuid)
+returns uuid language sql stable security definer set search_path = public as $$
+    select id from school_members
+    where school_id = p_school and uid = auth.uid() and active limit 1;
+$$;
+
+create or replace function my_role(p_school uuid)
+returns school_role language sql stable security definer set search_path = public as $$
+    select role from school_members
+    where school_id = p_school and uid = auth.uid() and active limit 1;
+$$;
+
+create or replace function is_school_admin(p_school uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+    select exists (
+        select 1 from school_members
+        where school_id = p_school and uid = auth.uid() and role = 'admin' and active
+    );
+$$;
+
+-- هل الطالب الحالي في هذا الفصل؟ (لعرض ملفات مدرّسيه واختباراته)
+create or replace function my_class_ids(p_school uuid)
+returns setof uuid language sql stable security definer set search_path = public as $$
+    select c.id from classes c
+    join school_members m on m.school_id = c.school_id
+    where c.school_id = p_school and m.uid = auth.uid() and m.active
+      and m.role = 'student' and c.grade = m.grade
+      and (m.section is null or c.section is null or c.section = m.section);
+$$;
+
+-- الفصول التي يدرّسها المدرّس الحالي
+create or replace function my_taught_class_ids(p_school uuid)
+returns setof uuid language sql stable security definer set search_path = public as $$
+    select ct.class_id from class_teachers ct
+    join school_members m on m.id = ct.teacher_id
+    where m.school_id = p_school and m.uid = auth.uid() and m.active;
+$$;
+
+-- ============================================================
+-- تفعيل RLS  — الافتراضي: ممنوع، ثم نسمح صراحةً
+-- ============================================================
+alter table schools          enable row level security;
+alter table school_members   enable row level security;
+alter table classes          enable row level security;
+alter table class_teachers   enable row level security;
+alter table teacher_files    enable row level security;
+alter table teacher_links    enable row level security;
+alter table timetable        enable row level security;
+alter table teacher_exams    enable row level security;
+alter table exam_assignments enable row level security;
+alter table exam_attempts    enable row level security;
+
+-- ─────────────── schools ───────────────
+drop policy if exists schools_read on schools;
+create policy schools_read on schools for select to authenticated
+    using (exists (select 1 from school_members m
+                   where m.school_id = schools.id and m.uid = auth.uid() and m.active));
+
+-- ─────────────── school_members ───────────────
+-- كل عضو يرى نفسه. المدير يرى ويدير كل أعضاء مدرسته.
+-- المدرّس يرى طلاب فصوله فقط — لا كل طلاب المدرسة.
+drop policy if exists members_read_self on school_members;
+create policy members_read_self on school_members for select to authenticated
+    using (uid = auth.uid());
+
+drop policy if exists members_read_admin on school_members;
+create policy members_read_admin on school_members for select to authenticated
+    using (is_school_admin(school_id));
+
+drop policy if exists members_read_teacher on school_members;
+create policy members_read_teacher on school_members for select to authenticated
+    using (
+        my_role(school_id) = 'teacher' and role = 'student'
+        and exists (select 1 from classes c
+                    where c.id in (select my_taught_class_ids(school_id))
+                      and c.grade = school_members.grade
+                      and (c.section is null or school_members.section is null
+                           or c.section = school_members.section))
+    );
+
+drop policy if exists members_write_admin on school_members;
+create policy members_write_admin on school_members for all to authenticated
+    using (is_school_admin(school_id)) with check (is_school_admin(school_id));
+
+-- ─────────────── classes / class_teachers ───────────────
+drop policy if exists classes_read on classes;
+create policy classes_read on classes for select to authenticated
+    using (my_member_id(school_id) is not null);
+
+drop policy if exists classes_write_admin on classes;
+create policy classes_write_admin on classes for all to authenticated
+    using (is_school_admin(school_id)) with check (is_school_admin(school_id));
+
+drop policy if exists ct_read on class_teachers;
+create policy ct_read on class_teachers for select to authenticated
+    using (exists (select 1 from classes c
+                   where c.id = class_teachers.class_id
+                     and my_member_id(c.school_id) is not null));
+
+drop policy if exists ct_write_admin on class_teachers;
+create policy ct_write_admin on class_teachers for all to authenticated
+    using (exists (select 1 from classes c
+                   where c.id = class_teachers.class_id and is_school_admin(c.school_id)))
+    with check (exists (select 1 from classes c
+                   where c.id = class_teachers.class_id and is_school_admin(c.school_id)));
+
+-- ─────────────── ملفات وروابط المدرّس ───────────────
+-- المالك يتحكم بملفاته كاملاً؛ المدير يرى كل شيء؛ الطالب يرى المشترَك فقط
+-- من مدرّسي صفّه.
+drop policy if exists files_owner_all on teacher_files;
+create policy files_owner_all on teacher_files for all to authenticated
+    using (owner_id = my_member_id(school_id))
+    with check (owner_id = my_member_id(school_id));
+
+drop policy if exists files_admin_read on teacher_files;
+create policy files_admin_read on teacher_files for select to authenticated
+    using (is_school_admin(school_id));
+
+drop policy if exists files_student_read on teacher_files;
+create policy files_student_read on teacher_files for select to authenticated
+    using (
+        shared and my_role(school_id) = 'student'
+        and exists (
+            select 1 from class_teachers ct
+            where ct.teacher_id = teacher_files.owner_id
+              and ct.class_id in (select my_class_ids(school_id))
+        )
+    );
+
+drop policy if exists links_owner_all on teacher_links;
+create policy links_owner_all on teacher_links for all to authenticated
+    using (owner_id = my_member_id(school_id))
+    with check (owner_id = my_member_id(school_id));
+
+drop policy if exists links_admin_read on teacher_links;
+create policy links_admin_read on teacher_links for select to authenticated
+    using (is_school_admin(school_id));
+
+drop policy if exists links_student_read on teacher_links;
+create policy links_student_read on teacher_links for select to authenticated
+    using (
+        shared and my_role(school_id) = 'student'
+        and exists (
+            select 1 from class_teachers ct
+            where ct.teacher_id = teacher_links.owner_id
+              and ct.class_id in (select my_class_ids(school_id))
+        )
+    );
+
+-- ─────────────── الجدول الدراسي ───────────────
+drop policy if exists timetable_read on timetable;
+create policy timetable_read on timetable for select to authenticated
+    using (my_member_id(school_id) is not null);
+
+drop policy if exists timetable_write_admin on timetable;
+create policy timetable_write_admin on timetable for all to authenticated
+    using (is_school_admin(school_id)) with check (is_school_admin(school_id));
+
+-- ─────────────── الاختبارات ───────────────
+drop policy if exists exams_owner_all on teacher_exams;
+create policy exams_owner_all on teacher_exams for all to authenticated
+    using (owner_id = my_member_id(school_id))
+    with check (owner_id = my_member_id(school_id));
+
+drop policy if exists exams_admin_read on teacher_exams;
+create policy exams_admin_read on teacher_exams for select to authenticated
+    using (is_school_admin(school_id));
+
+-- الطالب يرى الاختبار المنشور المُسنَد لفصله فقط.
+drop policy if exists exams_student_read on teacher_exams;
+create policy exams_student_read on teacher_exams for select to authenticated
+    using (
+        published and my_role(school_id) = 'student'
+        and exists (select 1 from exam_assignments a
+                    where a.exam_id = teacher_exams.id
+                      and a.class_id in (select my_class_ids(school_id)))
+    );
+
+drop policy if exists assign_read on exam_assignments;
+create policy assign_read on exam_assignments for select to authenticated
+    using (exists (select 1 from teacher_exams e
+                   where e.id = exam_assignments.exam_id
+                     and my_member_id(e.school_id) is not null));
+
+drop policy if exists assign_write_owner on exam_assignments;
+create policy assign_write_owner on exam_assignments for all to authenticated
+    using (exists (select 1 from teacher_exams e
+                   where e.id = exam_assignments.exam_id
+                     and e.owner_id = my_member_id(e.school_id)))
+    with check (exists (select 1 from teacher_exams e
+                   where e.id = exam_assignments.exam_id
+                     and e.owner_id = my_member_id(e.school_id)));
+
+-- محاولات الطلاب: الطالب يكتب محاولته ويرى نتيجته هو فقط.
+-- صاحب الاختبار يرى كل المحاولات عليه.
+drop policy if exists attempts_student_own on exam_attempts;
+create policy attempts_student_own on exam_attempts for select to authenticated
+    using (exists (select 1 from teacher_exams e
+                   where e.id = exam_attempts.exam_id
+                     and student_id = my_member_id(e.school_id)));
+
+drop policy if exists attempts_student_insert on exam_attempts;
+create policy attempts_student_insert on exam_attempts for insert to authenticated
+    with check (exists (select 1 from teacher_exams e
+                        where e.id = exam_attempts.exam_id
+                          and student_id = my_member_id(e.school_id)));
+
+drop policy if exists attempts_owner_read on exam_attempts;
+create policy attempts_owner_read on exam_attempts for select to authenticated
+    using (exists (select 1 from teacher_exams e
+                   where e.id = exam_attempts.exam_id
+                     and e.owner_id = my_member_id(e.school_id)));
+
+-- ============================================================
+-- مخزن ملفات المدرّسين (Supabase Storage)
+-- ============================================================
+-- المخزن خاص (public=false): كل تحميل يمرّ بفحص صلاحية، ولا يكفي معرفة
+-- الرابط. حد 25 ميجا للملف يمنع رفع كتاب ضخم يستهلك الحصة المجانية.
+-- الكتب الوزارية لا تُرفع هنا إطلاقاً — تُحفظ كروابط عين في external_url.
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('teacher-files','teacher-files', false, 26214400,
+        array['application/pdf','image/png','image/jpeg','image/webp',
+              'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+on conflict (id) do update
+  set file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types, public = false;
+
+-- مسار كل ملف: <school_id>/<member_id>/<filename>
+-- الجزء الثاني هو معرّف العضو، فنقارنه بعضوية من يطلب الرفع.
+drop policy if exists tf_owner_write on storage.objects;
+create policy tf_owner_write on storage.objects for insert to authenticated
+  with check (
+    bucket_id = 'teacher-files'
+    and (storage.foldername(name))[2] in (
+      select m.id::text from school_members m
+      where m.uid = auth.uid() and m.active and m.role in ('teacher','admin')));
+
+drop policy if exists tf_owner_modify on storage.objects;
+create policy tf_owner_modify on storage.objects for update to authenticated
+  using (bucket_id='teacher-files' and (storage.foldername(name))[2] in (
+      select m.id::text from school_members m where m.uid = auth.uid() and m.active));
+
+drop policy if exists tf_owner_delete on storage.objects;
+create policy tf_owner_delete on storage.objects for delete to authenticated
+  using (bucket_id='teacher-files' and (storage.foldername(name))[2] in (
+      select m.id::text from school_members m where m.uid = auth.uid() and m.active));
+
+-- القراءة تُفوَّض لجدول teacher_files: سياسات ذلك الجدول تُطبَّق داخل هذا
+-- الاستعلام الفرعي أيضاً، فمن لا يرى صف الملف لا يرى الملف نفسه. تُحقّق من
+-- هذا عملياً لا نظرياً: طالب من صف آخر أعاد 0، وطالب الصف نفسه أعاد 1.
+drop policy if exists tf_read on storage.objects;
+create policy tf_read on storage.objects for select to authenticated
+  using (bucket_id = 'teacher-files'
+         and exists (select 1 from teacher_files f where f.storage_path = storage.objects.name));
+
+-- ============================================================
+-- بذرة أولى
+-- ============================================================
+insert into schools (slug, name_ar, name_en)
+values ('motaqadima', 'مدارس المتقدمة — فرع الملقا', 'Al-Motaqadima Schools - Al-Malqa')
+on conflict (slug) do nothing;
