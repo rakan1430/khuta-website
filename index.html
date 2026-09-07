@@ -1178,12 +1178,12 @@
 
 <!-- ===================== خططي والروتين الأسبوعي ===================== -->
 <!-- ===================== مساعد الأسئلة الشائعة ===================== -->
-<button type="button" id="chatbot-fab" class="chatbot-fab" onclick="toggleChatbot()" title="مساعد خُطى الذكي">
+<button type="button" id="chatbot-fab" class="chatbot-fab" data-feature="ai" onclick="toggleChatbot()" title="مساعد خُطى الذكي">
     <span class="fab-icon-wrap"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
     <span class="fab-label"><b data-i18n="fab.title">اسأل مساعدك</b><span data-i18n="fab.subtitle">ذكاء اصطناعي حقيقي</span></span>
     <span class="fab-sparkle">✨</span>
 </button>
-<div id="chatbot-panel" class="chatbot-panel" style="display:none;">
+<div id="chatbot-panel" class="chatbot-panel" data-feature="ai" style="display:none;">
     <div class="chatbot-head">
         <div class="chatbot-head-top">
             <div class="chatbot-head-titles">
@@ -1270,11 +1270,11 @@
                         <div id="notif-panel-list" class="notif-panel-list"></div>
                     </div>
                 </div>
-                <div class="gamify-widget" title="نقاط الخبرة">
+                <div class="gamify-widget" data-feature="gat" title="نقاط الخبرة">
                     <i class="fa-solid fa-star" style="color:var(--gold-text);"></i>
                     <div><b id="xp-widget-value">0 XP</b><span id="xp-widget-level">مستكشف</span></div>
                 </div>
-                <div class="gamify-widget" title="سلسلة المذاكرة">
+                <div class="gamify-widget" data-feature="gat" title="سلسلة المذاكرة">
                     <i class="fa-solid fa-fire" style="color:var(--rose);"></i>
                     <div><b id="streak-widget-value">0</b><span data-i18n="streak.label">يوم متتالي 🔥</span></div>
                 </div>
@@ -1973,7 +1973,8 @@
 
             <div class="card">
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-folder-open"></i> <span data-i18n="school.filesTitle">الملفات</span></h3>
-                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.filesSub">ارفع ملفاتك من أي جهاز، وستجدها هنا على السبورة بعد تسجيل دخولك.</p>
+                <p class="card-sub" style="margin-bottom:14px;" data-school-role="teacher,admin" data-i18n="school.filesSub">ارفع ملفاتك من أي جهاز، وستجدها هنا على السبورة بعد تسجيل دخولك.</p>
+                <p class="card-sub" style="margin-bottom:14px; display:none;" data-school-role="student" data-i18n="school.filesSubStudent">ملفات معلّميك ومراجعهم. اضغط "فتح" لعرض الملف.</p>
 
                 <div data-school-role="teacher,admin" style="display:none;">
                     <div class="input-row">
@@ -2007,9 +2008,10 @@
             </div>
 
             <div class="card">
-                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-link"></i> <span data-i18n="school.linksTitle">روابطي المباشرة</span>
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-link"></i> <span data-i18n="school.linksTitle">الروابط المباشرة</span>
                     <span class="pill" id="tlinks-count" data-school-role="teacher,admin" style="display:none;">0 / 9</span></h3>
-                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.linksSub">أي رابط: منصة، ملف PDF، عرض تقديمي… تفتحه بضغطة على السبورة. الحد 9 روابط.</p>
+                <p class="card-sub" style="margin-bottom:14px;" data-school-role="teacher,admin" data-i18n="school.linksSub">أي رابط: منصة، ملف PDF، عرض تقديمي… تفتحه بضغطة على السبورة. الحد 9 روابط.</p>
+                <p class="card-sub" style="margin-bottom:14px; display:none;" data-school-role="student" data-i18n="school.linksSubStudent">الروابط التي خصّصها لك معلّموك.</p>
 
                 <div data-school-role="teacher,admin" style="display:none;">
                     <div class="input-row">
@@ -2070,7 +2072,8 @@
 
             <div class="card">
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-clipboard-question"></i> <span data-i18n="school.examsTitle">الاختبارات</span></h3>
-                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.examsSub">أنشئ اختباراً وأرسله لفصلك وقت ما تشاء.</p>
+                <p class="card-sub" style="margin-bottom:14px;" data-school-role="teacher,admin" data-i18n="school.examsSub">أنشئ اختباراً وأرسله لفصلك وقت ما تشاء.</p>
+                <p class="card-sub" style="margin-bottom:14px; display:none;" data-school-role="student" data-i18n="school.examsSubStudent">الاختبارات التي أرسلها لك معلّموك.</p>
 
                 <div data-school-role="teacher,admin" style="display:none;">
                     <div class="input-row">

@@ -35,6 +35,7 @@ const TENANTS = {
             school: false,      // أقسام المدرسة (إدارة، مدرّسون، فصول)
             guestMode: true,    // الدخول كضيف بلا حساب
             passwordAuth: true, // الدخول باسم مستخدم وكلمة مرور
+            ai: true,           // مساعد الذكاء الاصطناعي والسبورة
         },
     },
 
@@ -60,6 +61,10 @@ const TENANTS = {
             // تنتهي على الإدارة. حساب Google يملكه الطالب أصلاً، والإدارة
             // تضيفه بعدها. والمدرّس يربط بريده الشخصي بحسابه بنفس الطريقة.
             passwordAuth: false,
+            // الذكاء الاصطناعي مؤجَّل للنسخ القادمة باتفاق. وحتى لو أردناه
+            // اليوم لما عمل: وسيط gemini يتحقق من جلسة قاعدة خُطى لا قاعدة
+            // المدرسة، فكان سيفشل بيد مدرّس أمام صفّه.
+            ai: false,
         },
     },
 };
@@ -138,8 +143,17 @@ function currentLangIsEn(){
     catch(e){ return false; }
 }
 
-if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", applyTenantChrome);
-} else {
+/* ⚠️ التوقيت هنا حسّاس، وقد أخطأنا فيه فعلاً:
+   كل ملفات السكربت تحمل defer، ومعناه أنها تُنفَّذ بعد انتهاء تحليل الصفحة —
+   أي أن document.readyState يكون "interactive" لا "loading" لحظة تنفيذ هذا
+   الملف. فحص "loading" كان يفشل دائماً، فتُستدعى الدالة فوراً وهذا الملف هو
+   الأول، أي قبل تعريف I18N في js/03-i18n.js. النتيجة: سطر التعريف تحت الشعار
+   يبقى نصّ خُطى في نسخة المدرسة (اكتُشف بالصورة لا بالاختبار).
+
+   الصحيح: ننتظر DOMContentLoaded دائماً ما لم يكن التحميل قد اكتمل فعلاً،
+   لأن هذا الحدث لا يقع إلا بعد تنفيذ كل ملفات defer. */
+if(document.readyState === "complete"){
     applyTenantChrome();
+} else {
+    document.addEventListener("DOMContentLoaded", applyTenantChrome);
 }
