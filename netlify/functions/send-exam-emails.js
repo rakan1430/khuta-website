@@ -111,6 +111,22 @@ exports.handler = async function(){
                 continue;
             }
 
+            // ⚠️ حجز الصف قبل الإرسال لا بعده.
+            // السبب: نفس المستودع يُنشر على أكثر من موقع (خُطى ونسخة المدرسة)،
+            // فقد تعمل نسختان من هذه الدالة في اللحظة نفسها، تقرأ كلتاهما نفس
+            // الصف غير المرسَل وترسلان — فيصل الطالب رسالتان. الشرط
+            // sent_at=is.null يجعل أول من يصل يفوز، والثانية لا تجد شيئاً.
+            const claim = await sbFetch(base, key, `exam_notifications?id=eq.${r.id}&sent_at=is.null`, {
+                method: "PATCH",
+                headers: { Prefer: "return=representation" },
+                body: JSON.stringify({ sent_at: new Date().toISOString() }),
+            });
+            const claimed = claim.ok ? await claim.json().catch(() => []) : [];
+            if(!Array.isArray(claimed) || claimed.length === 0){
+                skipped++;   // حجزها تشغيل آخر — ليست حالة خطأ
+                continue;
+            }
+
             let ok = false, errText = null;
             try{
                 const mail = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -127,13 +143,16 @@ exports.handler = async function(){
                 if(!ok) errText = (await mail.text()).slice(0, 200);
             }catch(e){ errText = String(e && e.message || e).slice(0, 200); }
 
-            // نُعلّم الصف في الحالتين: النجاح بوقت الإرسال، والفشل بسببه.
-            // ترك الفاشل بلا علامة يعني إعادة محاولته كل تشغيلة بلا نهاية.
-            await sbFetch(base, key, `exam_notifications?id=eq.${r.id}`, {
-                method: "PATCH",
-                headers: { Prefer: "return=minimal" },
-                body: JSON.stringify({ sent_at: new Date().toISOString(), error: ok ? null : (errText || "send_failed") }),
-            });
+            // sent_at مضبوط أصلاً من الحجز أعلاه؛ نسجّل هنا سبب الفشل فقط.
+            // نترك sent_at كما هو حتى لو فشل الإرسال: إعادة المحاولة إلى الأبد
+            // على بريد خاطئ تعني تكراراً بلا نهاية، والسبب مسجَّل للمراجعة.
+            if(!ok){
+                await sbFetch(base, key, `exam_notifications?id=eq.${r.id}`, {
+                    method: "PATCH",
+                    headers: { Prefer: "return=minimal" },
+                    body: JSON.stringify({ error: errText || "send_failed" }),
+                });
+            }
             if(ok) sent++; else failed++;
         }
 
