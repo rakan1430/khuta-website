@@ -136,17 +136,17 @@
             <button type="button" class="btn btn-outline btn-block acc-btn" onclick="signInWithGoogle()"><i class="fa-brands fa-google"></i> <span data-i18n="login.google">المتابعة بحساب Google</span></button>
         </div>
 
-        <div style="display:flex; align-items:center; gap:10px; margin:16px 0; color:var(--text-3); font-size:12px;">
+        <div data-feature="passwordAuth" style="display:flex; align-items:center; gap:10px; margin:16px 0; color:var(--text-3); font-size:12px;">
             <div style="flex:1; height:1px; background:var(--border);"></div>
             <span data-i18n="login.or">أو</span>
             <div style="flex:1; height:1px; background:var(--border);"></div>
         </div>
 
-        <div class="input-row">
+        <div class="input-row" data-feature="passwordAuth">
             <div class="form-group"><label data-i18n="account.username">اسم المستخدم</label><input type="text" id="login-username" placeholder="Rewo"></div>
             <div class="form-group"><label data-i18n="account.password">كلمة المرور</label><input type="password" id="login-password" placeholder="••••••"></div>
         </div>
-        <div class="form-group" id="login-password2-group" style="display:none;">
+        <div class="form-group" id="login-password2-group" data-feature="passwordAuth" style="display:none;">
             <label data-i18n="account.password2">تأكيد كلمة المرور</label><input type="password" id="login-password2" placeholder="••••••">
             <label data-i18n="account.realEmailOptional" style="margin-top:10px; display:block;">بريدك الإلكتروني (اختياري)</label>
             <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email">
@@ -162,12 +162,12 @@
                 <span role="button" tabindex="0" class="link-inline" onclick="openLegalModal('privacy')" data-i18n="legal.privacyLink">سياسة الخصوصية</span>
             </p>
         </div>
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div data-feature="passwordAuth" style="display:flex; gap:10px; flex-wrap:wrap;">
             <button type="button" class="btn acc-btn" style="flex:1;" onclick="loginScreenSignIn()"><span data-i18n="account.signin">تسجيل الدخول</span></button>
             <button type="button" class="btn btn-outline acc-btn" style="flex:1;" onclick="toggleLoginSignupMode()"><span data-i18n="account.signup" id="login-signup-toggle-label">إنشاء حساب جديد</span></button>
         </div>
-        <button type="button" class="btn-ghost" style="width:100%; margin-top:10px; justify-content:center; font-size:12.5px;" onclick="toggleForgotPasswordForm()"><span data-i18n="account.forgotPass">نسيت كلمة المرور؟</span></button>
-        <div id="forgot-password-form" style="display:none; margin-top:10px; padding:14px 16px; background:var(--bg-alt); border-radius:14px;">
+        <button type="button" class="btn-ghost" data-feature="passwordAuth" style="width:100%; margin-top:10px; justify-content:center; font-size:12.5px;" onclick="toggleForgotPasswordForm()"><span data-i18n="account.forgotPass">نسيت كلمة المرور؟</span></button>
+        <div id="forgot-password-form" data-feature="passwordAuth" style="display:none; margin-top:10px; padding:14px 16px; background:var(--bg-alt); border-radius:14px;">
             <p class="hint" style="margin-bottom:8px;" data-i18n="account.forgotPassDesc">اكتب اسم مستخدمك. يعمل هذا فقط إن كنت قد ربطت بريداً حقيقياً بحسابك (عند التسجيل أو لاحقاً من الملف الشخصي).</p>
             <div class="form-group"><input type="text" id="forgot-username-input" placeholder="Rewo" autocomplete="username"></div>
             <button type="button" class="btn btn-sm acc-btn" style="width:100%;" onclick="sendPasswordReset()"><span data-i18n="account.sendResetLink">إرسال رابط إعادة التعيين</span></button>
@@ -199,6 +199,24 @@
         <button type="button" class="btn-ghost" style="width:100%; margin-top:10px; justify-content:center;" onclick="schoolGateSignOut()">
             <span data-i18n="school.signOut">تسجيل الخروج</span>
         </button>
+    </div>
+</div>
+
+<!-- ===================== نسخة المدرسة: ملاحظة على يوم ===================== -->
+<div id="day-note-overlay" class="overlay-screen" style="display:none;">
+    <div class="wizard-card" style="max-width:420px;">
+        <h3 style="margin-bottom:4px;"><i class="fa-solid fa-note-sticky"></i> <span data-i18n="school.noteTitle">ملاحظتي على هذا اليوم</span></h3>
+        <p class="card-sub" style="margin-bottom:14px;"><span data-i18n="school.noteDate">التاريخ</span>: <b id="dnote-date"></b></p>
+        <div class="form-group">
+            <textarea id="dnote-text" rows="3" maxlength="300" placeholder="..."></textarea>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm" style="flex:1;" onclick="saveDayNote('note')"><i class="fa-solid fa-pen"></i> <span data-i18n="school.noteAdd">ملاحظة</span></button>
+            <button type="button" class="btn btn-sm" style="flex:1;" onclick="saveDayNote('reminder')"><i class="fa-solid fa-bell"></i> <span data-i18n="school.noteRemind">تذكير</span></button>
+            <button type="button" class="btn btn-sm" style="flex:1;" onclick="saveDayNote('highlight')"><i class="fa-solid fa-star"></i> <span data-i18n="school.noteMark">تمييز اليوم</span></button>
+        </div>
+        <button type="button" class="btn-ghost" style="width:100%; margin-top:12px; justify-content:center;" onclick="closeDayNote()">
+            <span data-i18n="common.cancel">إلغاء</span></button>
     </div>
 </div>
 
@@ -1200,6 +1218,7 @@
             <div class="nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i> <span data-i18n="nav.links">الروابط المباشرة</span></div>
             <div class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
             <div class="nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i> <span data-i18n="nav.settings">الإعدادات</span></div>
+            <div class="nav-item" data-school-role="admin,teacher,student" style="display:none;" data-tab="schoolwork" onclick="switchTab(&#39;schoolwork&#39;,this)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.schoolWork">مساحتي</span></div>
             <div class="nav-item" data-school-role="admin" style="display:none;" data-tab="schooladmin" onclick="switchTab('schooladmin',this)" role="button" tabindex="0"><i class="fa-solid fa-school"></i> <span data-i18n="nav.schoolAdmin">إدارة المدرسة</span> <span id="admin-requests-count" class="pill" style="display:none;">0</span></div>
             <div class="nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
             <div class="nav-item" data-tab="community" onclick="switchTab('community',this)" role="button" tabindex="0"><i class="fa-solid fa-users"></i> <span data-i18n="nav.community">المجتمع</span></div>
@@ -1945,6 +1964,145 @@
         </section>
 
         <!-- ===================== الإعدادات ===================== -->
+        <!-- ===================== مساحة المدرسة: ملفات وروابط وجدول واختبارات ===================== -->
+        <section id="view-schoolwork" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chalkboard-user" style="color:var(--gold-text);"></i> <span data-i18n="school.workTitle">مساحتي</span></h2>
+                <p class="card-sub" id="school-who-2"></p>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-folder-open"></i> <span data-i18n="school.filesTitle">الملفات</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.filesSub">ارفع ملفاتك من أي جهاز، وستجدها هنا على السبورة بعد تسجيل دخولك.</p>
+
+                <div data-school-role="teacher,admin" style="display:none;">
+                    <div class="input-row">
+                        <div class="form-group"><label data-i18n="school.fileTitle">عنوان الملف</label><input type="text" id="tfile-title" maxlength="120" placeholder="ملزمة الفصل الأول"></div>
+                        <div class="form-group"><label data-i18n="school.fileSubject">المادة</label><input type="text" id="tfile-subject" maxlength="60" placeholder="الرياضيات"></div>
+                    </div>
+                    <div class="input-row">
+                        <div class="form-group"><label data-i18n="school.fileGrade">الصف</label>
+                            <select id="tfile-grade">
+                                <option value="" data-i18n="school.allGrades">كل الصفوف</option>
+                                <option value="1" data-i18n="school.grade1">أول ثانوي</option>
+                                <option value="2" data-i18n="school.grade2">ثاني ثانوي</option>
+                                <option value="3" data-i18n="school.grade3">ثالث ثانوي</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label data-i18n="school.fileUpload">اختر ملفاً (25 ميجا كحد أقصى)</label><input type="file" id="tfile-input" accept=".pdf,.png,.jpg,.jpeg,.webp,.pptx,.docx"></div>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="school.fileOrLink">أو الصق رابطاً بدل الرفع (مثل رابط كتاب من منصة عين)</label>
+                        <input type="url" id="tfile-url" placeholder="https://ien.edu.sa/...">
+                    </div>
+                    <label class="consent-row"><input type="checkbox" id="tfile-shared" checked>
+                        <span data-i18n="school.fileShared">يظهر لطلاب فصولي (أزل العلامة ليبقى خاصاً بي على السبورة)</span></label>
+                    <button type="button" id="tfile-submit" class="btn acc-btn" style="margin-top:12px;" onclick="uploadTeacherFile()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> <span data-i18n="school.fileAdd">إضافة</span>
+                    </button>
+                    <hr style="border:none; border-top:1px solid var(--border); margin:18px 0;">
+                </div>
+
+                <div id="tfiles-list"></div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-link"></i> <span data-i18n="school.linksTitle">روابطي المباشرة</span>
+                    <span class="pill" id="tlinks-count" data-school-role="teacher,admin" style="display:none;">0 / 9</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.linksSub">أي رابط: منصة، ملف PDF، عرض تقديمي… تفتحه بضغطة على السبورة. الحد 9 روابط.</p>
+
+                <div data-school-role="teacher,admin" style="display:none;">
+                    <div class="input-row">
+                        <div class="form-group"><label data-i18n="school.linkLabel">اسم الرابط</label><input type="text" id="tlink-label" maxlength="60" placeholder="منصة مدرستي"></div>
+                        <div class="form-group"><label data-i18n="school.linkUrl">العنوان</label><input type="url" id="tlink-url" placeholder="https://..."></div>
+                    </div>
+                    <div class="input-row">
+                        <div class="form-group"><label data-i18n="school.linkIcon">أيقونة (اختياري)</label><input type="text" id="tlink-icon" maxlength="40" placeholder="fa-book"></div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <label class="consent-row" style="margin:0;"><input type="checkbox" id="tlink-shared" checked>
+                                <span data-i18n="school.linkShared">يظهر لطلابي</span></label>
+                        </div>
+                    </div>
+                    <button type="button" id="tlink-submit" class="btn acc-btn" style="margin-top:6px;" onclick="addTeacherLink()">
+                        <i class="fa-solid fa-plus"></i> <span data-i18n="school.linkAdd">إضافة رابط</span>
+                    </button>
+                    <hr style="border:none; border-top:1px solid var(--border); margin:18px 0;">
+                </div>
+
+                <div id="tlinks-list"></div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-table-list"></i> <span data-i18n="school.ttTitle">الجدول الدراسي</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.ttSub">اضغط أيقونة الملاحظة على أي يوم لتضيف تذكيراً أو تمييزاً خاصاً بك — لا يراه غيرك.</p>
+
+                <div data-school-role="teacher,admin" style="display:none;">
+                    <div class="input-row">
+                        <div class="form-group"><label data-i18n="school.ttClass">الفصل</label><select id="tt-class" onchange="loadTimetable()"></select></div>
+                        <div class="form-group"><label data-i18n="school.ttDay">اليوم</label>
+                            <select id="tt-weekday">
+                                <option value="0" data-i18n="school.sun">الأحد</option>
+                                <option value="1" data-i18n="school.mon">الاثنين</option>
+                                <option value="2" data-i18n="school.tue">الثلاثاء</option>
+                                <option value="3" data-i18n="school.wed">الأربعاء</option>
+                                <option value="4" data-i18n="school.thu">الخميس</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="form-group"><label data-i18n="school.ttPeriod">الحصة</label>
+                            <select id="tt-period">
+                                <option>1</option><option>2</option><option>3</option><option>4</option>
+                                <option>5</option><option>6</option><option>7</option><option>8</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label data-i18n="school.ttSubject">المادة</label><input type="text" id="tt-subject" maxlength="60" placeholder="الرياضيات"></div>
+                    </div>
+                    <div class="form-group"><label data-i18n="school.ttRoom">القاعة (اختياري)</label><input type="text" id="tt-room" maxlength="40" placeholder="ب-12"></div>
+                    <button type="button" id="tt-add" class="btn acc-btn" onclick="addPeriod()">
+                        <i class="fa-solid fa-plus"></i> <span data-i18n="school.ttAdd">إضافة حصة</span>
+                    </button>
+                    <hr style="border:none; border-top:1px solid var(--border); margin:18px 0;">
+                </div>
+
+                <div id="tt-grid" class="tt-grid"></div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-clipboard-question"></i> <span data-i18n="school.examsTitle">الاختبارات</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.examsSub">أنشئ اختباراً وأرسله لفصلك وقت ما تشاء.</p>
+
+                <div data-school-role="teacher,admin" style="display:none;">
+                    <div class="input-row">
+                        <div class="form-group"><label data-i18n="school.examTitle">عنوان الاختبار</label><input type="text" id="exam-title" maxlength="120" placeholder="اختبار الفصل الأول"></div>
+                        <div class="form-group"><label data-i18n="school.examSubject">المادة</label><input type="text" id="exam-subject" maxlength="60" placeholder="الرياضيات"></div>
+                    </div>
+                    <div class="input-row">
+                        <div class="form-group"><label data-i18n="school.examGrade">الصف</label>
+                            <select id="exam-grade">
+                                <option value="1" data-i18n="school.grade1">أول ثانوي</option>
+                                <option value="2" data-i18n="school.grade2">ثاني ثانوي</option>
+                                <option value="3" data-i18n="school.grade3">ثالث ثانوي</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label data-i18n="school.examClass">الفصل الموجَّه له</label><select id="exam-class"></select></div>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="school.examRaw">الأسئلة — سطر لكل سؤال</label>
+                        <textarea id="exam-raw" rows="6" placeholder="ما ناتج ٥ + ٧؟ | ١٠ | ١٢ | ١٤ | ١٦ | 2"></textarea>
+                        <p class="hint" data-i18n="school.examRawHint">الشكل: نص السؤال | خيار | خيار | خيار | خيار | رقم الإجابة الصحيحة (يبدأ من ١)</p>
+                    </div>
+                    <div id="exam-parse-errors" class="uni-note" style="display:none; margin-bottom:12px;"></div>
+                    <button type="button" id="exam-create" class="btn acc-btn" onclick="createExam()">
+                        <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="school.examSave">حفظ الاختبار</span>
+                    </button>
+                    <hr style="border:none; border-top:1px solid var(--border); margin:18px 0;">
+                </div>
+
+                <div id="sexams-list"></div>
+            </div>
+        </section>
+
         <!-- ===================== إدارة المدرسة (المدير فقط) ===================== -->
         <section id="view-schooladmin" class="view-section">
             <div class="card settings-hero">
@@ -2256,5 +2414,6 @@
 <script src="js/11-community.js" defer></script>
 <script src="js/12-ai.js" defer></script>
 <script src="js/13-school.js" defer></script>
+<script src="js/14-school-work.js" defer></script>
 </body>
 </html>

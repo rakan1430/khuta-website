@@ -474,3 +474,111 @@ returns uuid language sql stable security definer set search_path = public as $$
     select id from schools where slug = p_slug limit 1;
 $$;
 grant execute on function school_id_by_slug(text) to anon, authenticated;
+
+-- ============================================================
+-- حدّ الروابط · ملاحظات الأيام · صلاحية المدرّس على الجدول · طابور البريد
+-- ============================================================
+
+-- 9 روابط لكل مدرّس. بمُشغِّل لا بقيد check، لأن القيد لا يعدّ صفوفاً أخرى.
+-- في القاعدة لا في الواجهة: إخفاء الزر لا يمنع من يرسل الطلب مباشرة.
+create or replace function enforce_links_limit()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+    select count(*) into n from teacher_links where owner_id = new.owner_id;
+    if n >= 9 then
+        raise exception 'LINKS_LIMIT_REACHED' using hint = 'أقصى عدد للروابط المباشرة هو 9';
+    end if;
+    return new;
+end $$;
+
+drop trigger if exists trg_links_limit on teacher_links;
+create trigger trg_links_limit before insert on teacher_links
+for each row execute function enforce_links_limit();
+
+-- الطالب لا يعدّل جدوله (تضعه الإدارة أو المدرّس) لكنه يضيف فوقه ما يخصّه.
+do $$ begin
+    create type note_kind as enum ('note','highlight','reminder');
+exception when duplicate_object then null; end $$;
+
+create table if not exists day_notes (
+    id         uuid primary key default gen_random_uuid(),
+    school_id  uuid not null references schools(id) on delete cascade,
+    owner_id   uuid not null references school_members(id) on delete cascade,
+    on_date    date not null,
+    kind       note_kind not null default 'note',
+    text       text,
+    color      text,
+    remind_at  timestamptz,
+    created_at timestamptz not null default now(),
+    constraint note_text_len check (text is null or char_length(text) <= 300),
+    constraint note_color_ok check (color is null or color ~ '^#[0-9a-fA-F]{6}$'),
+    constraint note_needs_text check (kind = 'highlight' or (text is not null and char_length(btrim(text)) > 0))
+);
+create index if not exists idx_notes_owner_date on day_notes(owner_id, on_date);
+alter table day_notes enable row level security;
+
+-- خاصة بصاحبها وحده: لا المدرّس ولا المدير يقرؤها (مُتحقَّق عملياً).
+drop policy if exists notes_owner_all on day_notes;
+create policy notes_owner_all on day_notes for all to authenticated
+    using (owner_id = my_member_id(school_id))
+    with check (owner_id = my_member_id(school_id));
+
+-- المدرّس يدير جدول فصوله التي يدرّسها فقط (كانت الكتابة للمدير وحده).
+drop policy if exists timetable_write_teacher on timetable;
+create policy timetable_write_teacher on timetable for all to authenticated
+    using (my_role(school_id) = 'teacher' and class_id in (select my_taught_class_ids(school_id)))
+    with check (my_role(school_id) = 'teacher' and class_id in (select my_taught_class_ids(school_id)));
+
+-- طابور بريد يقرأه خادم مُجدوَل. لا نرسل من المتصفح إطلاقاً: الإرسال يحتاج
+-- مفتاح خدمة يقرأ بريد الطلاب، ووضعه في المتصفح يسلّمه لكل زائر.
+create table if not exists exam_notifications (
+    id          uuid primary key default gen_random_uuid(),
+    exam_id     uuid not null references teacher_exams(id) on delete cascade,
+    student_id  uuid not null references school_members(id) on delete cascade,
+    email       text,
+    sent_at     timestamptz,
+    error       text,
+    created_at  timestamptz not null default now(),
+    unique (exam_id, student_id)      -- إعادة الإرسال لا تضاعف الرسائل
+);
+create index if not exists idx_notif_unsent on exam_notifications(sent_at) where sent_at is null;
+alter table exam_notifications enable row level security;
+
+drop policy if exists notif_owner_read on exam_notifications;
+create policy notif_owner_read on exam_notifications for select to authenticated
+    using (exists (select 1 from teacher_exams e
+                   where e.id = exam_notifications.exam_id
+                     and e.owner_id = my_member_id(e.school_id)));
+
+-- يضع طلاب الفصل في الطابور. SECURITY DEFINER لأنه يقرأ auth.users (البريد)،
+-- لكنه يتحقق أولاً أن المُنادي صاحب الاختبار — بلا ذلك يستطيع أي عضو إغراق
+-- طلاب أي فصل برسائل.
+create or replace function enqueue_exam_notifications(p_exam uuid, p_class uuid)
+returns int language plpgsql security definer set search_path = public as $$
+declare v_school uuid; v_owner uuid; v_me uuid; n int := 0;
+begin
+    select school_id, owner_id into v_school, v_owner from teacher_exams where id = p_exam;
+    if v_school is null then raise exception 'EXAM_NOT_FOUND'; end if;
+    v_me := my_member_id(v_school);
+    if v_me is null or v_me <> v_owner then raise exception 'NOT_EXAM_OWNER'; end if;
+    if not exists (select 1 from classes c where c.id = p_class and c.school_id = v_school) then
+        raise exception 'CLASS_NOT_IN_SCHOOL';
+    end if;
+
+    insert into exam_notifications (exam_id, student_id, email)
+    select p_exam, m.id, u.email
+    from school_members m
+    join classes c on c.id = p_class
+    left join auth.users u on u.id = m.uid
+    where m.school_id = v_school and m.role = 'student' and m.active
+      and m.grade = c.grade
+      and (m.section is null or c.section is null or m.section = c.section)
+    on conflict (exam_id, student_id) do nothing;
+
+    get diagnostics n = row_count;
+    return n;
+end $$;
+
+revoke all on function enqueue_exam_notifications(uuid, uuid) from public, anon;
+grant execute on function enqueue_exam_notifications(uuid, uuid) to authenticated;
