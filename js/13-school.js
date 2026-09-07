@@ -315,11 +315,15 @@ function applySchoolRoleUI(){
         const allowed = (el.getAttribute("data-school-role") || "").split(/[\s,]+/).filter(Boolean);
         el.style.display = (role && allowed.includes(role)) ? "" : "none";
     });
-    const who = document.getElementById("school-who");
-    if(who && schoolCtx){
-        who.textContent = `${schoolCtx.fullName} — ${schoolRoleLabel(schoolCtx.role)}`;
+    if(schoolCtx){
+        const label = `${schoolCtx.fullName} — ${schoolRoleLabel(schoolCtx.role)}`;
+        ["school-who","school-who-2"].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.textContent = label;
+        });
     }
     if(role === "admin"){ loadAccountRequests(); loadSchoolMembers(); }
+    if(typeof loadSchoolWorkspace === "function") loadSchoolWorkspace();
 }
 
 /* يُستدعى من مسار الإقلاع بعد اكتمال تسجيل الدخول */
@@ -332,15 +336,6 @@ async function initSchoolAfterLogin(){
 }
 
 /* ============================================================
-   ⚠️ آخر سطر في آخر ملف — صرف أحداث المصادقة المؤجَّلة
-   ------------------------------------------------------------
-   كان هذا السطر في نهاية js/12-ai.js حين كان آخر ملف. نُقل هنا لأن هذا صار
-   آخر ملف يُحمَّل. السبب نفسه الذي جعله آخر سطر أصلاً: أي حدث تسجيل دخول
-   يصل قبل تنفيذ كل الملفات يُحفظ في طابور، ولا يُعالَج إلا بعد اكتمال كل
-   التعريفات — ومنها دوال المدرسة أعلاه. لو صُرف قبلها لارتفع خطأ
-   "initSchoolAfterLogin is not defined" وسقطت معالجة الدخول بالكامل،
-   وهو بالضبط الخلل الذي وقع في الإنتاج سابقاً بعد تقسيم app.js.
-
-   ➡️ إن أضفت ملف سكربت جديداً بعد هذا الملف، انقل هذا السطر إلى نهايته.
+   ملاحظة ترتيب: صرف أحداث المصادقة كان هنا حين كان هذا آخر ملف، ثم انتقل
+   إلى js/14-school-work.js لأنه صار الأخير. القاعدة ثابتة: الصرف في آخر ملف.
    ============================================================ */
-if(typeof flushPendingAuthEvents === "function") flushPendingAuthEvents();

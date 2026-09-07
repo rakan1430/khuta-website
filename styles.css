@@ -2991,3 +2991,63 @@ body.dark-mode .chatbot-board-btn{
 }
 /* الفخ المخفي مستثنى — تكبيره يجعله مرئياً ويفسد غرضه */
 [data-tenant="motaqadima"] .hp-field{ min-height: 0; }
+
+/* ── نسخة المدارس: الملفات والروابط والجدول ── */
+.sfile-row, .slink-row{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; flex-wrap: wrap;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+}
+.sfile-row:last-child, .slink-row:last-child{ border-bottom: none; }
+.sfile-main{ display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+.sfile-main i{ color: var(--gold-text); font-size: 18px; flex-shrink: 0; }
+.sfile-main b{ word-break: break-word; }
+.sfile-actions{ display: flex; gap: 8px; flex-shrink: 0; }
+
+.slink-open{
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: var(--text-1); font-weight: 600;
+    flex: 1; min-width: 0;
+}
+.slink-open i{ color: var(--gold-text); flex-shrink: 0; }
+.slink-open span{ overflow-wrap: anywhere; }
+
+/* الجدول: أعمدة على الشاشات الواسعة، ومكدَّس على الجوال بلا تمرير أفقي */
+.tt-grid{
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+}
+.tt-day{
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+.tt-day.is-marked{ border-width: 2px; }
+.tt-day-head{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 8px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.tt-period{
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0; font-size: 13px;
+}
+.tt-no{
+    background: var(--gold-soft, var(--border));
+    color: var(--text-1);
+    border-radius: 8px;
+    min-width: 26px; height: 26px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; flex-shrink: 0;
+}
+.tt-subject{ flex: 1; overflow-wrap: anywhere; }
+.tt-note{
+    display: flex; align-items: center; gap: 8px;
+    margin-top: 8px; padding: 7px 10px;
+    background: var(--card); border: 1px dashed var(--border);
+    border-radius: 10px; font-size: 12.5px;
+}
+.tt-note span{ flex: 1; overflow-wrap: anywhere; }
+.tt-note i{ color: var(--gold-text); flex-shrink: 0; }
