@@ -96,3 +96,44 @@ function hasFeature(name){ return !!(TENANT.features && TENANT.features[name]); 
         document.title = full;
     }catch(e){ /* لا شيء حرج هنا — الموقع يعمل بلا هذه اللمسة */ }
 })();
+
+/* لمسات الهوية التي تحتاج DOM جاهزاً. الشكل والتصميم يبقيان كما هما تماماً —
+   نغيّر النصّ فقط ونُظهر/نخفي ما لا يخصّ هذه النسخة. */
+function applyTenantChrome(){
+    try{
+        // سطر التعريف تحت الشعار في شاشة الدخول.
+        // نستبدل قيمة المفتاح داخل قاموس الترجمة نفسه بدل تعديل النص مباشرة:
+        // لو كتبنا النص في العنصر لأعاده أول تبديل لغة إلى نصّ خُطى. بهذه
+        // الطريقة يبقى تبديل اللغة يعمل ويعرض السطر الصحيح لكل نسخة.
+        if(TENANT.taglineAr && typeof I18N !== "undefined"){
+            if(I18N.ar) I18N.ar["login.tagline"] = TENANT.taglineAr;
+            if(I18N.en) I18N.en["login.tagline"] = TENANT.taglineEn || TENANT.taglineAr;
+            const tagline = document.querySelector('[data-i18n="login.tagline"]');
+            if(tagline) tagline.textContent = currentLangIsEn() ? I18N.en["login.tagline"] : I18N.ar["login.tagline"];
+        }
+        // بلا وضع ضيف: نُخفي الزر ونُظهر بديله (طلب حساب من المدرسة)
+        const guestBtns = document.querySelectorAll(".guest-cta");
+        const needAccount = !TENANT.features || !TENANT.features.guestMode;
+        guestBtns.forEach(b => { b.style.display = needAccount ? "none" : ""; });
+        document.querySelectorAll("[data-tenant-only]").forEach(el => {
+            el.style.display = el.getAttribute("data-tenant-only") === TENANT.id ? "" : "none";
+        });
+        // عناصر تخصّ ميزة بعينها: تختفي في النسخ التي لا تملكها.
+        // مثال: حاسبة الموزونة ودليل التخصصات لا معنى لهما داخل مدرسة.
+        document.querySelectorAll("[data-feature]").forEach(el => {
+            if(!hasFeature(el.getAttribute("data-feature"))) el.style.display = "none";
+        });
+    }catch(e){ console.warn("[خُطى] تعذّر تطبيق هوية النسخة:", e); }
+}
+
+// currentLang يُعرَّف في ملف لاحق، فنقرأه بحذر تفادياً لخطأ ترتيب التحميل
+function currentLangIsEn(){
+    try{ return typeof currentLang !== "undefined" && currentLang === "en"; }
+    catch(e){ return false; }
+}
+
+if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", applyTenantChrome);
+} else {
+    applyTenantChrome();
+}

@@ -326,6 +326,17 @@ async function signInWithGoogle(){
     if(error) showToast(currentLang==='ar' ? "تعذّر الدخول عبر Google — تأكد أن المزوّد مفعّل في Supabase" : "Google sign-in failed — check the provider is enabled in Supabase");
 }
 function finishLoginBoot(){
+    // نسخة المدرسة: نتحقق من العضوية والدور قبل أي شيء. من ليس عضواً يرى
+    // شاشة توضيح لا واجهة فارغة. ومعالج الخطة أدناه يخصّ القدرات فلا يُفتح هنا.
+    if(hasFeature("school")){
+        if(typeof initSchoolAfterLogin === "function") initSchoolAfterLogin();
+        updateShortBreakLabel();
+        initDashboardReorder();
+        applyDashboardCardVisibility();
+        applyFeatureFlags();
+        initOverlayScrollLock();
+        return;
+    }
     if(!localStorage.getItem("khuta_plan_days")){
         document.getElementById("setup-overlay").style.display = "flex";
     } else {

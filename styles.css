@@ -2931,3 +2931,63 @@ body.dark-mode .chatbot-board-btn{
     overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; opacity:0;
     pointer-events:none;
 }
+
+/* ============================================================
+   نسخة المدارس — بطاقات الطلبات والأعضاء
+   ------------------------------------------------------------
+   تستعمل نفس متغيّرات الهوية (--card, --border, --gold-text…) فتتبع الوضع
+   الفاتح والداكن تلقائياً بلا أي قاعدة إضافية، ولا تختلف عن بقية الموقع.
+   ============================================================ */
+.areq-card{
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+}
+.areq-head{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; flex-wrap: wrap; margin-bottom: 6px;
+}
+.areq-head .pill{ margin-inline-start: 8px; }
+.areq-actions{
+    display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+}
+/* على السبورة الذكية اللمس بالإصبع لا بالفأرة — 44px هو أقل مقاس يوصى به */
+.areq-actions .btn{ min-height: 44px; }
+
+.member-row{
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; flex-wrap: wrap;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+}
+.member-row:last-child{ border-bottom: none; }
+.member-row.is-off{ opacity: .55; }
+.member-row .btn{ min-height: 40px; }
+
+/* ============================================================
+   نسخة المدارس — مقاسات لمس مريحة على السبورة الذكية
+   ------------------------------------------------------------
+   الهوية والألوان والخطوط كما هي حرفياً؛ الفرق الوحيد هو ارتفاع أهداف اللمس.
+   السبب عملي بحت: أزرار خُطى بين 35 و36 بكسل، وهي ممتازة للفأرة لكنها دون
+   الحد الموصى به للمس (44px). الموقع هنا يُفتح بالإصبع على سبورة في فصل
+   أمام طلاب — زر يُخطئه المدرّس مرتين أمام الصف مشكلة حقيقية.
+
+   ⚠️ محصور في نسخة المدرسة عمداً: خُطى لم تتغيّر ولا بكسل واحد.
+   ============================================================ */
+[data-tenant="motaqadima"] .btn,
+[data-tenant="motaqadima"] .btn-ghost,
+[data-tenant="motaqadima"] .acc-btn{
+    min-height: 44px;
+}
+[data-tenant="motaqadima"] .btn-sm{
+    min-height: 40px;   /* الأزرار الثانوية داخل البطاقات */
+}
+[data-tenant="motaqadima"] input,
+[data-tenant="motaqadima"] select,
+[data-tenant="motaqadima"] textarea{
+    min-height: 44px;
+}
+/* الفخ المخفي مستثنى — تكبيره يجعله مرئياً ويفسد غرضه */
+[data-tenant="motaqadima"] .hp-field{ min-height: 0; }

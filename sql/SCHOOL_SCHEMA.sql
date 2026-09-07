@@ -411,3 +411,66 @@ create policy tf_read on storage.objects for select to authenticated
 insert into schools (slug, name_ar, name_en)
 values ('motaqadima', 'مدارس المتقدمة — فرع الملقا', 'Al-Motaqadima Schools - Al-Malqa')
 on conflict (slug) do nothing;
+
+-- ============================================================
+-- طلبات الحسابات — لمن لا حساب له
+-- ============================================================
+-- لا وضع ضيف في نسخة المدرسة، فمن يفتح الموقع بلا حساب يحتاج طريقاً ما.
+-- هذا هو: يملأ نموذجاً فيصل للإدارة، وهي تنشئ له حساباً.
+
+do $$ begin
+    create type request_status as enum ('pending','approved','rejected');
+exception when duplicate_object then null; end $$;
+
+create table if not exists account_requests (
+    id          uuid primary key default gen_random_uuid(),
+    school_id   uuid not null references schools(id) on delete cascade,
+    full_name   text not null,
+    role_wanted school_role not null,
+    grade       text,
+    section     text,
+    contact     text,
+    note        text,
+    status      request_status not null default 'pending',
+    reviewed_by uuid references school_members(id) on delete set null,
+    reviewed_at timestamptz,
+    created_at  timestamptz not null default now(),
+    -- حدود طول تمنع إغراق الجدول بنصوص ضخمة من نموذج مفتوح للعامة
+    constraint req_name_len    check (char_length(full_name) between 3 and 80),
+    constraint req_contact_len check (contact is null or char_length(contact) <= 120),
+    constraint req_note_len    check (note is null or char_length(note) <= 400),
+    constraint req_grade_len   check (grade is null or char_length(grade) <= 20),
+    constraint req_section_len check (section is null or char_length(section) <= 20),
+    -- لا أحد يطلب أن يكون مديراً من نموذج عام. هذا القيد هو ما يمنع الترقية
+    -- الذاتية فعلياً، لا اختيارات القائمة في الواجهة.
+    constraint req_not_admin   check (role_wanted <> 'admin')
+);
+create index if not exists idx_requests_pending on account_requests(school_id, status, created_at desc);
+
+alter table account_requests enable row level security;
+
+-- الإرسال مفتوح لمن لا حساب له (هذا غرض الجدول)، لكن الإدخال وحده:
+-- لا قراءة ولا تعديل ولا حذف، فلا يرى أحد طلبات غيره ولا يعتمد طلبه بنفسه.
+drop policy if exists reqs_public_insert on account_requests;
+create policy reqs_public_insert on account_requests for insert to anon, authenticated
+    with check (status = 'pending' and reviewed_by is null and reviewed_at is null);
+
+drop policy if exists reqs_admin_read on account_requests;
+create policy reqs_admin_read on account_requests for select to authenticated
+    using (is_school_admin(school_id));
+
+drop policy if exists reqs_admin_update on account_requests;
+create policy reqs_admin_update on account_requests for update to authenticated
+    using (is_school_admin(school_id)) with check (is_school_admin(school_id));
+
+drop policy if exists reqs_admin_delete on account_requests;
+create policy reqs_admin_delete on account_requests for delete to authenticated
+    using (is_school_admin(school_id));
+
+-- معرّف المدرسة يُقرأ بلا حساب: الموقع يحتاجه قبل الدخول ليعرف لأي مدرسة
+-- يُرسل الطلب. لا يكشف شيئاً حساساً — اسم المدرسة معروف أصلاً.
+create or replace function school_id_by_slug(p_slug text)
+returns uuid language sql stable security definer set search_path = public as $$
+    select id from schools where slug = p_slug limit 1;
+$$;
+grant execute on function school_id_by_slug(text) to anon, authenticated;
