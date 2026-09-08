@@ -181,6 +181,75 @@
         <button type="button" class="btn-ghost guest-cta-alt" data-tenant-only="motaqadima" style="display:none; width:100%; margin-top:18px; justify-content:center; font-weight:700;" onclick="openAccountRequest()">
             <i class="fa-solid fa-user-plus"></i> <span data-i18n="school.requestAccount">ليس لديك حساب؟ اطلب حساباً من المدرسة</span>
         </button>
+
+        <!-- دخول السبورة برمز QR — للمعلّمين، ولا يظهر لمستخدمي خُطى العاديين
+             (يُظهره js/17-qr-login.js حين تكون الصفحة مدخل مدرسة) -->
+        <button type="button" id="qr-login-entry" class="btn-ghost" style="display:none; width:100%; margin-top:10px; justify-content:center; font-weight:700;" onclick="openQrLogin()">
+            <i class="fa-solid fa-qrcode"></i> <span data-i18n="qr.entry">الدخول برمز QR (للمعلّمين)</span>
+        </button>
+    </div>
+</div>
+
+<!-- ===================== نافذة رمز QR على السبورة ===================== -->
+<div id="qr-login-modal" class="overlay-screen" style="display:none;">
+    <div class="wizard-card" style="max-width:400px; text-align:center;">
+        <h3 style="margin-bottom:4px;" data-i18n="qr.title">الدخول برمز QR</h3>
+        <p class="card-sub" style="margin-bottom:16px;" data-i18n="qr.sub">امسح الرمز بكاميرا جوّالك، سجّل دخولك بحساب Google، ثم اكتب الرقم أدناه.</p>
+
+        <div style="background:#fff; border-radius:16px; padding:10px; display:inline-block; line-height:0;">
+            <canvas id="qr-login-canvas" width="260" height="260" aria-label="رمز الدخول"></canvas>
+        </div>
+
+        <div style="margin-top:16px;">
+            <div style="font-size:12px; color:var(--text-3); margin-bottom:4px;" data-i18n="qr.pairLabel">رقم المطابقة</div>
+            <div id="qr-login-code" style="font-family:'IBM Plex Mono',monospace; font-size:34px; font-weight:700; letter-spacing:8px; color:var(--gold-text);">····</div>
+        </div>
+
+        <p id="qr-login-status" class="hint" style="margin-top:12px;"></p>
+        <p id="qr-login-countdown" class="hint" style="margin-top:2px; font-size:11.5px;"></p>
+
+        <!-- ⚠️ الرقم ليس زينة: هو ما يمنع أن يعرض طالبٌ رمزَ جهازِه على
+             المعلّم فيوافق عليه ظنّاً أنه رمز السبورة. -->
+        <p class="hint" style="margin-top:10px; font-size:11.5px;" data-i18n="qr.warnMatch">
+            لا توافق إلا على رقم تراه على هذه الشاشة نفسها.
+        </p>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+            <button type="button" id="qr-login-renew" class="btn btn-outline acc-btn" style="flex:1; display:none;" onclick="qrRegenerate()">
+                <i class="fa-solid fa-rotate"></i> <span data-i18n="qr.renew">رمز جديد</span>
+            </button>
+            <button type="button" class="btn btn-outline acc-btn" style="flex:1;" onclick="closeQrLogin()"><span data-i18n="qr.close">إغلاق</span></button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== موافقة المعلّم من جوّاله ===================== -->
+<!-- تظهر حين يُفتح الموقع من رابط داخل رمز QR (?screen=…) -->
+<div id="qr-approve-panel" class="overlay-screen" style="display:none;">
+    <div class="wizard-card" style="max-width:400px; text-align:center;">
+        <div style="font-size:40px; margin-bottom:8px;"><i class="fa-solid fa-desktop" style="color:var(--gold-text);"></i></div>
+        <h3 style="margin-bottom:6px;" data-i18n="qr.approveTitle">فتح حسابك على شاشة الفصل</h3>
+        <p class="card-sub" style="margin-bottom:16px;" data-i18n="qr.approveSub">
+            هذه الموافقة تفتح حسابك على السبورة بصلاحية عرض فقط. حذف الملفات وإرسال الاختبارات وتعديل الجدول تبقى محتاجة دخولك بحساب Google على جهازك.
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+            <button type="button" class="btn btn-outline btn-block acc-btn" onclick="signInWithGoogle()">
+                <i class="fa-brands fa-google"></i> <span data-i18n="qr.approveGoogle">الدخول بحساب Google</span>
+            </button>
+        </div>
+
+        <div class="form-group">
+            <label data-i18n="qr.approveCodeLabel">الرقم المعروض على الشاشة</label>
+            <input type="text" id="qr-approve-code" inputmode="numeric" maxlength="4" placeholder="0000"
+                   style="text-align:center; font-family:'IBM Plex Mono',monospace; font-size:26px; letter-spacing:8px;">
+        </div>
+
+        <p id="qr-approve-msg" class="hint" style="margin-bottom:12px;"></p>
+
+        <button type="button" id="qr-approve-btn" class="btn btn-block acc-btn" onclick="submitQrApproval()">
+            <i class="fa-solid fa-check"></i> <span data-i18n="qr.approveBtn">تأكيد الفتح</span>
+        </button>
     </div>
 </div>
 
@@ -2419,5 +2488,7 @@
 <script src="js/13-school.js" defer></script>
 <script src="js/14-school-work.js" defer></script>
 <script src="js/15-demo.js" defer></script>
+<script src="js/16-qr.js" defer></script>
+<script src="js/17-qr-login.js" defer></script>
 </body>
 </html>

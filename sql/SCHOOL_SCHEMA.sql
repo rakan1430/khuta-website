@@ -582,3 +582,86 @@ end $$;
 
 revoke all on function enqueue_exam_notifications(uuid, uuid) from public, anon;
 grant execute on function enqueue_exam_notifications(uuid, uuid) to authenticated;
+
+
+/* ============================================================
+   الصلاحية المتدرّجة: ما الذي تكفي فيه كلمة المرور، وما الذي يحتاج Google
+   ------------------------------------------------------------
+   المشكلة: المعلّم على السبورة أمام صفّه لا يريد كتابة بيانات Google في كل
+   حصة، فيدخل دخولاً سريعاً. لكن ما يُكتب على شاشة يراها الصف كله قد يلتقطه
+   طالب. فالدخول السريع "محدود": يعرض ولا يعدّل.
+
+   ⚠️ الفرض هنا في قاعدة البيانات لا في الواجهة. إخفاء الأزرار تحسين شكلي
+   فقط — من يفتح أدوات المطوّر يتجاوزه في ثوانٍ. الحماية الحقيقية أن
+   السياسات نفسها ترفض.
+
+   كيف نعرف طريقة الدخول؟ Supabase يضع في الرمز حقل amr يسرد طرق المصادقة
+   المستعملة فعلاً ("oauth" لـGoogle و"password" لكلمة المرور)، وهو موقَّع
+   من الخادم فلا يستطيع المتصفح تزويره.
+   ============================================================ */
+
+create or replace function google_verified(p_hours int default 12)
+returns boolean language sql stable set search_path = public as $$
+    select coalesce(
+        (select max((e->>'timestamp')::bigint)
+         from jsonb_array_elements(coalesce(auth.jwt() -> 'amr', '[]'::jsonb)) e
+         where e->>'method' = 'oauth')
+        > (extract(epoch from now())::bigint - (p_hours * 3600)), false);
+$$;
+
+/* google_verified() شرطٌ في سياسات الكتابة على: teacher_files, teacher_links,
+   teacher_exams, exam_assignments, timetable (كتابة المعلّم), school_members
+   (كتابة الإدارة). أما سياسات SELECT فمفتوحة للجلسة المحدودة عمداً — لأن
+   الغرض من الدخول السريع هو العرض. */
+
+
+/* ============================================================
+   دخول السبورة برمز QR
+   ------------------------------------------------------------
+   المعلّم يمسح رمزاً على السبورة بجوّاله، يوافق بحساب Google، فتفتح السبورة.
+
+   ✅ من مسح الرمز من الطلاب لا يكسب شيئاً: الموافقة تتطلّب حساب Google
+      الخاص بالمعلّم، ولا يعرفه إلا هو.
+
+   ⚠️ لكن اتجاهين آخرين للهجوم لا تغطّيهما تلك الملاحظة:
+
+   (١) أن يولّد الطالب رمزاً على جهازه هو ثم يعرضه على المعلّم قائلاً
+       "امسح هذا" — فيوافق المعلّم بحسن نيّة فتفتح شاشةُ الطالب على حسابه.
+       العلاج: pair_code من أربع خانات يُعرض على الشاشة ويُكتب في الجوال.
+       فالموافقة تصير مرتبطة بشاشة بعينها لا برمز مجرّد.
+
+   (٢) أن يصوّر طالبٌ الرمز — وهو معروض على سبورة أمام الصف كله — فيفكّ
+       ترميزه ويسبق السبورة إلى الجلسة.
+       العلاج: ما يدخل الرمز هو sha256(السرّ) فقط. السرّ لا يغادر ذاكرة
+       متصفح السبورة، والمطالبة تتحقق sha256(المُرسَل) = المخزَّن.
+
+   ⚠️ والجلسة الناتجة محدودة كالدخول السريع: لا "oauth" في amr، فالأفعال
+   الحسّاسة تبقى ممنوعة — لأن الشاشة تظل مفتوحة في الفصل بعد انصراف المعلّم.
+   ============================================================ */
+
+create table if not exists screen_login_requests (
+    id          uuid primary key default gen_random_uuid(),
+    public_id   text not null unique,          -- sha256(secret) سداسي عشري
+    pair_code   text not null,                 -- أربع خانات، تُعرض على الشاشة
+    school_id   uuid references schools(id) on delete cascade,
+    approved_by uuid references school_members(id) on delete cascade,
+    approved_at timestamptz,
+    consumed_at timestamptz,                   -- الاستعمال مرة واحدة
+    expires_at  timestamptz not null,
+    created_at  timestamptz not null default now()
+);
+
+alter table screen_login_requests enable row level security;
+/* ⚠️ بلا أي سياسة SELECT عمداً: لا أحد يقرأ هذا الجدول مباشرةً إطلاقاً،
+   ولا يُوصَل إليه إلا عبر الدوال الأربع أدناه. */
+
+/* screen_login_start(public_id)  → (out_pair_code, out_expires_at)  [anon]
+   screen_login_peek(public_id)   → (out_expires_at, out_already_approved) [anon]
+       ⚠️ لا تُعيد pair_code أبداً: الجوال يملك public_id من الرمز، فلو
+       أعادته لملأه تلقائياً وسقطت فائدة المطابقة اليدوية كلها.
+   screen_login_approve(public_id, pair_code) → boolean  [authenticated]
+       تشترط google_verified() ودور teacher/admin وتطابق الرقم.
+   screen_login_claim(secret) → صف العضو  [service_role فقط]
+       ⚠️ EXECUTE مسحوبة من PUBLIC لا من anon/authenticated وحدهما —
+       Postgres يمنح PUBLIC تلقائياً وهما يرثان منه. (كشف هذا اختبارُ أمان
+       نجح فيه anon في المطالبة رغم سحب الصلاحية منه صراحةً.) */
