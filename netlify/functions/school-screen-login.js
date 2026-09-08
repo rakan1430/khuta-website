@@ -12,13 +12,17 @@
    الحسّاسة (حذف ملف، إرسال اختبار، تعديل جدول) تماماً كالدخول السريع
    باسم مستخدم وكلمة مرور. العرض متاح، والعبث ممنوع.
 
-   ⚠️ متغيّرات البيئة اللازمة على Netlify:
-     SCHOOL_SUPABASE_URL               رابط مشروع Supabase الذي يحوي جداول المدرسة
-     SCHOOL_SUPABASE_SERVICE_ROLE_KEY  مفتاح service_role لذلك المشروع
-   بدونهما تردّ الدالة بخطأ واضح ولا تُسقط النشر.
+   ⚠️ لا تحتاج ضبط أي متغيّر بيئة جديد.
+   جداول المدرسة تعيش في مشروع خُطى نفسه، فنستعمل نفس الثابت الذي تستعمله
+   بقية الدوال (send-email و send-reminders و unsubscribe) ونفس المفتاح
+   SUPABASE_SERVICE_ROLE_KEY المضبوط على الموقع أصلاً لكل السياقات.
+   ومتغيّرا SCHOOL_* مقبولان تجاوزاً لو أردت يوماً فصل المدرسة في مشروع آخر.
 
    ⚠️ بلا أي حزم npm، كبقية دوال المشروع (fetch الأصلي فقط).
    ============================================================ */
+
+// نفس الثابت المستعمل في بقية الدوال — مشروع واحد لخُطى والمدرسة معاً
+const DEFAULT_SUPABASE_URL = "https://squhkiwjwwyrgufkaujf.supabase.co";
 
 function env(name){
     const v = process.env[name];
@@ -36,10 +40,10 @@ exports.handler = async (event) => {
         return json(405, { error: "METHOD_NOT_ALLOWED" });
     }
 
-    const base = env("SCHOOL_SUPABASE_URL");
-    const key  = env("SCHOOL_SUPABASE_SERVICE_ROLE_KEY");
-    if(!base || !key){
-        console.error("school-screen-login: متغيّرات البيئة ناقصة");
+    const base = env("SCHOOL_SUPABASE_URL") || DEFAULT_SUPABASE_URL;
+    const key  = env("SCHOOL_SUPABASE_SERVICE_ROLE_KEY") || env("SUPABASE_SERVICE_ROLE_KEY");
+    if(!key){
+        console.error("school-screen-login: SUPABASE_SERVICE_ROLE_KEY غير مضبوط");
         return json(503, { error: "NOT_CONFIGURED" });
     }
 

@@ -7,20 +7,17 @@
    لماذا خادم لا متصفح؟ لأن الإرسال يحتاج مفتاح خدمة يقرأ بريد الطلاب من
    auth.users ومفتاح Brevo. أي منهما في كود المتصفح يعني تسليمه لكل زائر.
 
-   ⚠️ متغيّرات البيئة اللازمة على Netlify (Site settings → Environment):
-     SCHOOL_SUPABASE_URL               رابط مشروع Supabase الذي يحوي جداول المدرسة
-     SCHOOL_SUPABASE_SERVICE_ROLE_KEY  مفتاح service_role لذلك المشروع
-     BREVO_API_KEY                     موجود أصلاً لخُطى، ويُعاد استخدامه
-   بدون أولَين تتوقف الدالة بهدوء وتشرح السبب في السجل — ولا تُسقط النشر.
+   ⚠️ لا تحتاج ضبط أي متغيّر بيئة جديد.
+   جداول المدرسة تعيش في مشروع خُطى نفسه، فنستعمل نفس الثابت الذي تستعمله
+   بقية الدوال (send-email و send-reminders و unsubscribe) ونفس المفتاحين
+   SUPABASE_SERVICE_ROLE_KEY و BREVO_API_KEY المضبوطَين على الموقع أصلاً.
+   ومتغيّرا SCHOOL_* مقبولان تجاوزاً لو أردت يوماً فصل المدرسة في مشروع آخر.
 
-   ⚠️⚠️ تنبيه يخصّ الإعداد الحالي — اقرأه قبل النشر:
-   كان للمدارس مشروع Supabase منفصل (gwbhwshxvlagmoonhfha)، ثم دُمج كل شيء
-   في مشروع خُطى نفسه (squhkiwjwwyrgufkaujf). فقيمة SCHOOL_SUPABASE_URL
-   المضبوطة على موقع motaqadima-khuta ما زالت تشير إلى المشروع القديم
-   الفارغ. والنتيجة أن هذه الدالة ستعمل بلا خطأ ظاهر وتجد الطابور فارغاً
-   دائماً، فلا يصل بريد أحداً ولا يشتكي شيء في السجل.
-   ➡️ عند فتح رصيد Netlify: صحّح SCHOOL_SUPABASE_URL إلى مشروع خُطى، وضع
-      مفتاح service_role الخاص به، ثم احذف المشروع القديم أو أوقفه.
+   ⚠️ ملاحظة تاريخية تشرح سبب وجود اسمَي SCHOOL_*: كان للمدارس مشروع منفصل
+   (gwbhwshxvlagmoonhfha) ثم دُمج كل شيء في مشروع خُطى. ولو بقيت الدالة
+   تشترط SCHOOL_SUPABASE_URL لكان نسيانُه عطلاً صامتاً تماماً: تعمل الدالة
+   بلا خطأ، وتجد الطابور فارغاً دائماً، فلا يصل بريد أحداً ولا يشتكي السجل.
+   الافتراض الصحيح يزيل هذا الخطر من أصله.
 
    ⚠️ بلا أي حزم npm عمداً، كبقية دوال هذا المشروع (fetch الأصلي فقط).
    ============================================================ */
@@ -28,6 +25,9 @@
 const SENDER_EMAIL = "khutaa.platform@gmail.com";
 const SENDER_NAME  = "خُطى";
 const BATCH_LIMIT  = 40;   // سقف لكل تشغيلة — يحمي حصة Brevo المجانية
+
+// نفس الثابت المستعمل في بقية الدوال — مشروع واحد لخُطى والمدرسة معاً
+const DEFAULT_SUPABASE_URL = "https://squhkiwjwwyrgufkaujf.supabase.co";
 
 function env(name){
     const v = process.env[name];
@@ -71,14 +71,13 @@ function buildEmail(studentName, examTitle, subject, schoolName){
 }
 
 exports.handler = async function(){
-    const base = env("SCHOOL_SUPABASE_URL");
-    const key  = env("SCHOOL_SUPABASE_SERVICE_ROLE_KEY");
+    const base = env("SCHOOL_SUPABASE_URL") || DEFAULT_SUPABASE_URL;
+    const key  = env("SCHOOL_SUPABASE_SERVICE_ROLE_KEY") || env("SUPABASE_SERVICE_ROLE_KEY");
     const brevo = env("BREVO_API_KEY");
 
     // إعداد ناقص ليس خطأً برمجياً: نخرج بهدوء ونقول ما الناقص بالضبط
     const missing = [
-        !base  && "SCHOOL_SUPABASE_URL",
-        !key   && "SCHOOL_SUPABASE_SERVICE_ROLE_KEY",
+        !key   && "SUPABASE_SERVICE_ROLE_KEY",
         !brevo && "BREVO_API_KEY",
     ].filter(Boolean);
     if(missing.length){
