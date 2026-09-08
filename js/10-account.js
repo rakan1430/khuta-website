@@ -325,18 +325,37 @@ async function signInWithGoogle(){
     const { error } = await sb.auth.signInWithOAuth({ provider:"google", options:{ redirectTo: window.location.href.split("#")[0] } });
     if(error) showToast(currentLang==='ar' ? "تعذّر الدخول عبر Google — تأكد أن المزوّد مفعّل في Supabase" : "Google sign-in failed — check the provider is enabled in Supabase");
 }
+/* ============================================================
+   ⚠️ إصلاح شكوى حقيقية: بعد تسجيل الدخول كان الطالب مضطراً لتحديث الصفحة
+   يدوياً حتى تظهر بياناته المحفوظة في قاعدة البيانات.
+   ------------------------------------------------------------
+   السبب أن مسار الدخول كان يجلب البيانات ويحفظها محلياً، لكنه لا يُعيد رسم
+   الأقسام التي رُسمت قبل الدخول ببيانات فارغة. تحديث الصفحة كان يُعيد
+   الرسم صدفةً لا قصداً.
+
+   هذه الدالة تُعيد رسم كل ما يعتمد على بيانات الحساب دفعة واحدة، وتُستدعى
+   من كل مسارات الدخول. كل استدعاء محاط بحمايته لأن بعض الأقسام قد لا تكون
+   مفعّلة (أعلام الميزات)، ولا يجوز أن يُسقط فشل قسمٍ بقيةَ الشاشة.
+   ============================================================ */
+function refreshAllViewsAfterLogin(){
+    const steps = [
+        "updateWelcomeText", "renderAccountUI", "loadProfileForm",
+        "buildScheduleTable", "renderProgress", "renderGamification",
+        "applyDashboardCardVisibility", "updateExamCountdownWidget",
+        "renderLeaderboard", "renderForumPosts",
+    ];
+    steps.forEach(name => {
+        try{ if(typeof window[name] === "function") window[name](); }
+        catch(e){ console.warn("[خُطى] تعذّر تحديث " + name + " بعد الدخول:", e); }
+    });
+    // قسم المدرسة يُحمَّل بعد معرفة العضوية (طلب شبكة)، فله مساره الخاص
+    try{ if(typeof initSchoolAfterLogin === "function") initSchoolAfterLogin(); }
+    catch(e){ console.warn("[خُطى] تعذّر تحديث قسم المدرسة بعد الدخول:", e); }
+}
+
 function finishLoginBoot(){
-    // نسخة المدرسة: نتحقق من العضوية والدور قبل أي شيء. من ليس عضواً يرى
-    // شاشة توضيح لا واجهة فارغة. ومعالج الخطة أدناه يخصّ القدرات فلا يُفتح هنا.
-    if(hasFeature("school")){
-        if(typeof initSchoolAfterLogin === "function") initSchoolAfterLogin();
-        updateShortBreakLabel();
-        initDashboardReorder();
-        applyDashboardCardVisibility();
-        applyFeatureFlags();
-        initOverlayScrollLock();
-        return;
-    }
+    // يُعيد رسم كل ما يعتمد على بيانات الحساب فور الدخول — بلا تحديث يدوي.
+    refreshAllViewsAfterLogin();
     if(!localStorage.getItem("khuta_plan_days")){
         document.getElementById("setup-overlay").style.display = "flex";
     } else {

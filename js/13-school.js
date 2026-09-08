@@ -26,28 +26,36 @@ async function getSchoolId(){
     return schoolIdCache;
 }
 
-/* يُستدعى بعد كل تسجيل دخول ناجح. يحدد: هل هذا الشخص عضو في المدرسة؟ وبأي دور؟ */
+/* يُستدعى بعد كل تسجيل دخول ناجح — في خُطى نفسها، لا في نسخة منفصلة.
+   يسأل قاعدة البيانات: هل هذا الحساب عضو في مدرسة؟ الغالبية العظمى من
+   مستخدمي خُطى ليسوا كذلك، فيعود بصفر ولا يتغيّر شيء في تجربتهم إطلاقاً. */
 async function loadSchoolContext(){
-    if(!hasFeature("school") || !sb) return null;
+    if(!sb) return null;
     schoolCtx = null;
     try{
         const { data: { user } } = await sb.auth.getUser();
         if(!user || user.is_anonymous) return null;
-        const { data, error } = await sb
-            .from("school_members")
-            .select("id, school_id, role, full_name, grade, section")
-            .eq("uid", user.id)
-            .eq("active", true)
-            .maybeSingle();
+
+        // الإدارة تضيف بريد Google قبل أن يسجّل صاحبه دخوله أصلاً. هذه
+        // الدالة تربط الحساب بالسجل المطابق للبريد عند أول دخول، فيصبح
+        // "أضافه المدير" أمراً واقعاً دون أي خطوة إضافية من الطالب.
+        try{ await sb.rpc("link_my_school_account"); }catch(e){}
+
+        const { data, error } = await sb.rpc("my_school_membership");
         if(error) throw error;
-        if(!data) return null;
+        const row = Array.isArray(data) ? data[0] : data;
+        if(!row) return null;
         schoolCtx = {
-            schoolId: data.school_id, memberId: data.id, role: data.role,
-            fullName: data.full_name, grade: data.grade, section: data.section,
+            schoolId: row.school_id, memberId: row.member_id, role: row.role,
+            fullName: row.full_name, grade: row.grade, section: row.section,
+            schoolName: row.school_name,
         };
     }catch(e){ console.warn("[خُطى] تعذّر تحميل عضوية المدرسة:", e); }
     return schoolCtx;
 }
+
+// هل هذا الحساب عضو مدرسة؟ تستعملها الواجهة لتقرر إظهار قسم المدرسة.
+function isSchoolMember(){ return !!schoolCtx; }
 
 /* ============================================================
    بوابة الدخول: لا أحد يدخل بلا عضوية
@@ -309,12 +317,24 @@ async function toggleMemberActive(id, makeActive){
    إظهار الأقسام حسب الدور
    ============================================================ */
 function applySchoolRoleUI(){
-    if(!hasFeature("school")) return;
     const role = schoolCtx ? schoolCtx.role : null;
+    // عنصر التنقل لقسم المدرسة يظهر فقط لعضو مدرسة — وهو الشرط الوحيد.
+    document.querySelectorAll("[data-school-member]").forEach(el => {
+        el.style.display = role ? "" : "none";
+    });
+    // المعلم والإدارة لا يحتاجان أقسام القدرات (التخصصات والموزونة)،
+    // فنخفيها عنهما ونُبقيها للطالب لأنه طالب خُطى أيضاً.
+    const hideGat = role === "teacher" || role === "admin";
+    document.querySelectorAll('[data-feature="gat"]').forEach(el => {
+        if(hideGat) el.style.display = "none";
+    });
     document.querySelectorAll("[data-school-role]").forEach(el => {
         const allowed = (el.getAttribute("data-school-role") || "").split(/[\s,]+/).filter(Boolean);
         el.style.display = (role && allowed.includes(role)) ? "" : "none";
     });
+    // شارة عدد الطلبات تُخفى مع عنصرها، لكن لا تُظهَر إلا إن كان فيها رقم
+    const badge = document.getElementById("admin-requests-count");
+    if(badge && !role) badge.style.display = "none";
     if(schoolCtx){
         const label = `${schoolCtx.fullName} — ${schoolRoleLabel(schoolCtx.role)}`;
         ["school-who","school-who-2"].forEach(id => {
@@ -328,11 +348,13 @@ function applySchoolRoleUI(){
 
 /* يُستدعى من مسار الإقلاع بعد اكتمال تسجيل الدخول */
 async function initSchoolAfterLogin(){
-    if(!hasFeature("school")) return;
     const ctx = await loadSchoolContext();
-    if(!ctx){ showSchoolGate(); return; }
-    hideSchoolGate();
     applySchoolRoleUI();
+    // ليس عضواً؟ هذا هو الوضع الطبيعي لمستخدم خُطى — لا شاشة ولا رسالة،
+    // يكمل تجربته المعتادة كأن قسم المدرسة غير موجود.
+    if(!ctx) return;
+    hideSchoolGate();
+    if(typeof loadSchoolWorkspace === "function") loadSchoolWorkspace();
 }
 
 /* ============================================================

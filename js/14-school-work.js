@@ -341,44 +341,82 @@ function dateOfWeekday(wd){
     return d.toISOString().slice(0,10);
 }
 
+/* شبكة الجدول: الحصص صفوف والأيام أعمدة — الشكل الذي يعرفه أي طالب أو
+   معلّم في مدرسة سعودية، لا قائمة أيام متتابعة. أيام الدراسة الأحد إلى
+   الخميس، والحصص مرقّمة من 1 إلى آخر حصة مستعملة فعلاً (لا نرسم حصصاً
+   فارغة إلى 8 بلا داعٍ). */
 function renderTimetable(rows, notes){
     const box = document.getElementById("tt-grid");
     if(!box) return;
     const canEdit = schoolCtx && schoolCtx.role !== "student";
-    const byDay = {};
-    rows.forEach(r => { (byDay[r.weekday] = byDay[r.weekday] || []).push(r); });
+
+    const byCell = {};
+    let maxPeriod = 0;
+    rows.forEach(r => {
+        byCell[r.weekday + ":" + r.period_no] = r;
+        if(r.period_no > maxPeriod) maxPeriod = r.period_no;
+    });
+    if(!maxPeriod) maxPeriod = 6;
+
     const notesByDate = {};
     notes.forEach(n => { (notesByDate[n.on_date] = notesByDate[n.on_date] || []).push(n); });
 
-    box.innerHTML = SCHOOL_DAYS.map(wd => {
+    const todayWd = new Date().getDay();
+
+    // رأس الجدول: خانة الحصة ثم الأيام
+    let head = `<div class="tt-cell tt-corner">${currentLang==='ar'?'الحصة':'Period'}</div>`;
+    SCHOOL_DAYS.forEach(wd => {
         const iso = dateOfWeekday(wd);
         const dayNotes = notesByDate[iso] || [];
-        const highlight = dayNotes.find(n => n.kind === "highlight");
-        const periods = (byDay[wd] || []).sort((a,b) => a.period_no - b.period_no);
-        return `
-        <div class="tt-day${highlight ? " is-marked" : ""}"${highlight && highlight.color ? ` style="border-color:${escapeHtml(highlight.color)};"` : ""}>
-            <div class="tt-day-head">
-                <b>${escapeHtml(weekdayName(wd))}</b>
-                <button type="button" class="btn btn-ghost btn-sm" onclick="openDayNote('${escapeHtml(iso)}')" title="${currentLang==='ar'?'ملاحظاتي':'My notes'}">
-                    <i class="fa-solid fa-note-sticky"></i>${dayNotes.length ? ` <span class="pill">${dayNotes.length}</span>` : ""}
-                </button>
+        const marked = dayNotes.some(n => n.kind === "highlight");
+        head += `
+        <div class="tt-cell tt-dayhead${marked ? " is-marked" : ""}${wd === todayWd ? " is-today" : ""}">
+            <span class="tt-dayname">${escapeHtml(weekdayName(wd))}</span>
+            <button type="button" class="tt-notebtn" onclick="openDayNote('${escapeHtml(iso)}')"
+                    title="${currentLang==='ar'?'ملاحظاتي على هذا اليوم':'My notes'}">
+                <i class="fa-solid fa-note-sticky"></i>${dayNotes.length ? `<b>${dayNotes.length}</b>` : ""}
+            </button>
+        </div>`;
+    });
+
+    let body = "";
+    for(let p = 1; p <= maxPeriod; p++){
+        body += `<div class="tt-cell tt-periodno">${p}</div>`;
+        SCHOOL_DAYS.forEach(wd => {
+            const cell = byCell[wd + ":" + p];
+            if(!cell){
+                body += `<div class="tt-cell tt-empty${wd === todayWd ? " is-today" : ""}"></div>`;
+                return;
+            }
+            body += `
+            <div class="tt-cell tt-slot${wd === todayWd ? " is-today" : ""}">
+                <span class="tt-subj">${escapeHtml(cell.subject)}</span>
+                ${cell.room ? `<span class="tt-room">${escapeHtml(cell.room)}</span>` : ""}
+                ${canEdit ? `<button type="button" class="tt-del" onclick="deletePeriod('${escapeHtml(cell.id)}')"
+                        aria-label="${currentLang==='ar'?'حذف':'Delete'}"><i class="fa-solid fa-xmark"></i></button>` : ""}
+            </div>`;
+        });
+    }
+
+    // ملاحظات الأيام أسفل الشبكة: مكانها الطبيعي، وتُبقي الشبكة نظيفة
+    const allNotes = notes.filter(n => n.kind !== "highlight");
+    const notesHtml = allNotes.length ? `
+        <div class="tt-notes">
+            <div class="card-sub" style="margin-bottom:8px;">
+                <i class="fa-solid fa-note-sticky"></i>
+                ${currentLang==='ar'?'ملاحظاتي (لا يراها غيري)':'My notes (private to me)'}
             </div>
-            ${periods.length ? periods.map(p => `
-                <div class="tt-period">
-                    <span class="tt-no">${escapeHtml(String(p.period_no))}</span>
-                    <span class="tt-subject">${escapeHtml(p.subject)}</span>
-                    ${p.room ? `<span class="card-sub">${escapeHtml(p.room)}</span>` : ""}
-                    ${canEdit ? `<button type="button" class="btn btn-ghost btn-sm" onclick="deletePeriod('${escapeHtml(p.id)}')" aria-label="${currentLang==='ar'?'حذف':'Delete'}"><i class="fa-solid fa-xmark"></i></button>` : ""}
-                </div>`).join("")
-              : `<p class="card-sub" style="padding:6px 2px;">${currentLang==='ar'?'لا حصص':'No periods'}</p>`}
-            ${dayNotes.filter(n => n.kind !== "highlight").map(n => `
+            ${allNotes.map(n => `
                 <div class="tt-note">
                     <i class="fa-solid ${n.kind === "reminder" ? "fa-bell" : "fa-pen"}"></i>
                     <span>${escapeHtml(n.text || "")}</span>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="deleteDayNote('${escapeHtml(n.id)}')" aria-label="${currentLang==='ar'?'حذف':'Delete'}"><i class="fa-solid fa-xmark"></i></button>
+                    <span class="card-sub">${escapeHtml(n.on_date)}</span>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="deleteDayNote('${escapeHtml(n.id)}')"
+                            aria-label="${currentLang==='ar'?'حذف':'Delete'}"><i class="fa-solid fa-xmark"></i></button>
                 </div>`).join("")}
-        </div>`;
-    }).join("");
+        </div>` : "";
+
+    box.innerHTML = `<div class="tt-table" style="--tt-cols:${SCHOOL_DAYS.length + 1};">${head}${body}</div>${notesHtml}`;
 }
 
 async function addPeriod(){

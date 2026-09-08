@@ -70,8 +70,8 @@ ar:{
 "nav.settings":"الإعدادات","nav.settingsShort":"الإعدادات",
 /* ── نسخة المدارس ── */
 "nav.schoolAdmin":"إدارة المدرسة",
-"nav.schoolWork":"مساحتي",
-"school.workTitle":"مساحتي",
+"nav.schoolWork":"منصة المدرسة",
+"school.workTitle":"منصة المدرسة",
 "school.filesSubStudent":"ملفات معلّميك ومراجعهم. اضغط \"فتح\" لعرض الملف.",
 "school.linksSubStudent":"الروابط التي خصّصها لك معلّموك.",
 "school.examsSubStudent":"الاختبارات التي أرسلها لك معلّموك.",
@@ -320,8 +320,8 @@ en:{
 "nav.settings":"Settings","nav.settingsShort":"Settings",
 /* ── Schools edition ── */
 "nav.schoolAdmin":"School admin",
-"nav.schoolWork":"My space",
-"school.workTitle":"My space",
+"nav.schoolWork":"School platform",
+"school.workTitle":"School platform",
 "school.filesSubStudent":"Your teachers' files and references. Tap \"Open\" to view.",
 "school.linksSubStudent":"Links your teachers set up for you.",
 "school.examsSubStudent":"Exams your teachers sent you.",

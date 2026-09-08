@@ -1,8 +1,12 @@
 /* ============================================================
    00) هوية النسخة (Tenant) — يُحمَّل قبل كل شيء
    ------------------------------------------------------------
-   نفس الكود يخدم أكثر من موقع. الموقع يعرف "من هو" من عنوان الرابط الذي
-   فُتح منه، ثم يختار من هنا: اسمه، وقاعدة بياناته، والأقسام التي تظهر فيه.
+   منصة واحدة وقاعدة بيانات واحدة. ما يختلف بين العنوانين هو المدخل فقط:
+   خُطى مدخل الطلاب العام، وبوابة المدرسة مدخل تقديم المعلمين ودخول الإدارة.
+
+   ⚠️ أقسام المدرسة لا تظهر بالعنوان إطلاقاً — بل لمن أضافته إدارة المدرسة
+   في قاعدة البيانات، أياً كان العنوان الذي دخل منه. مستخدم خُطى العادي لا
+   يرى منها شيئاً (مُتحقَّق: صفر صفوف في كل جداول المدرسة).
 
    لماذا هكذا ولماذا لا ننسخ المشروع؟
    لأن نسخة ثانية من 16 ألف سطر تعني إصلاح كل خلل مرتين، وخلال أسابيع
@@ -19,52 +23,43 @@
    لا في إخفاء المفتاح. لا تضع هنا أبداً مفتاح service_role.
    ============================================================ */
 
+const SUPABASE_SHARED = {
+    url: "https://squhkiwjwwyrgufkaujf.supabase.co",
+    key: "sb_publishable_4BW-zO8Z5yxFXPHZnhl99A_rWFb2k84",
+};
+
 const TENANTS = {
-    /* النسخة الأصلية: منصة القدرات العامة للطلاب */
+    /* المنصة كما يراها أي زائر: خُطى للقدرات، بلا أي أثر للمدرسة */
     khuta: {
         id: "khuta",
-        brandAr: "خُطى",
-        brandEn: "Khuta",
-        taglineAr: "",
-        taglineEn: "",
-        supabaseUrl: "https://squhkiwjwwyrgufkaujf.supabase.co",
-        supabaseKey: "sb_publishable_4BW-zO8Z5yxFXPHZnhl99A_rWFb2k84",
+        brandAr: "خُطى", brandEn: "Khuta",
+        taglineAr: "", taglineEn: "",
+        supabaseUrl: SUPABASE_SHARED.url,
+        supabaseKey: SUPABASE_SHARED.key,
         features: {
-            gat: true,          // الحاسبة والجدول والتخصصات — كل ما يخص القدرات
-            community: true,    // المجتمع ولوحة الصدارة وغرفة المذاكرة
-            school: false,      // أقسام المدرسة (إدارة، مدرّسون، فصول)
-            guestMode: true,    // الدخول كضيف بلا حساب
-            passwordAuth: true, // الدخول باسم مستخدم وكلمة مرور
-            ai: true,           // مساعد الذكاء الاصطناعي والسبورة
+            gat: true, community: true, guestMode: true, passwordAuth: true, ai: true,
+            // ⚠️ ليست ميزة نسخة بعد اليوم: أقسام المدرسة تظهر لمن أضافته
+            // الإدارة فقط، ويحدَّد ذلك بعد تسجيل الدخول من عضويته في
+            // قاعدة البيانات — لا من عنوان الموقع. انظر js/13-school.js.
+            school: false,
         },
     },
 
-    /* نسخة مدارس المتقدمة — منصة مدرسية تُفتح على السبورة الذكية في الفصل */
+    /* بوابة المدرسة: نفس المنصة ونفس القاعدة، لكنها مدخل مخصّص —
+       منه يقدّم المعلم طلبه، ومنه تدخل الإدارة بحسابها. */
     motaqadima: {
         id: "motaqadima",
-        brandAr: "خُطى",
-        brandEn: "Khuta",
-        taglineAr: "نسخة خاصة لمدارس المتقدمة",
-        taglineEn: "Al-Motaqadima Schools Edition",
+        brandAr: "خُطى", brandEn: "Khuta",
+        taglineAr: "بوابة مدارس المتقدمة",
+        taglineEn: "Al-Motaqadima Schools Portal",
+        schoolSlug: "motaqadima",
         schoolName: "مدارس المتقدمة — فرع الملقا",
-        supabaseUrl: "https://gwbhwshxvlagmoonhfha.supabase.co",
-        supabaseKey: "sb_publishable_ZKiYq12OrHtyQC56nZR_Lg_OqJuynBH",
+        supabaseUrl: SUPABASE_SHARED.url,
+        supabaseKey: SUPABASE_SHARED.key,
         features: {
-            gat: false,
-            community: true,
-            school: true,
-            // المدرسة منصة رسمية: لا أحد يدخل بلا هوية، فالإدارة تحتاج أن
-            // تعرف من رفع ماذا ومن دخل الاختبار. لذلك لا وضع ضيف هنا.
-            guestMode: false,
-            // الدخول ببريد Google وحده. سببه عملي لا شكلي: كلمات المرور في
-            // مدرسة تعني نسيانها وتسريبها بين الطلاب وطلبات إعادة تعيين لا
-            // تنتهي على الإدارة. حساب Google يملكه الطالب أصلاً، والإدارة
-            // تضيفه بعدها. والمدرّس يربط بريده الشخصي بحسابه بنفس الطريقة.
-            passwordAuth: false,
-            // الذكاء الاصطناعي مؤجَّل للنسخ القادمة باتفاق. وحتى لو أردناه
-            // اليوم لما عمل: وسيط gemini يتحقق من جلسة قاعدة خُطى لا قاعدة
-            // المدرسة، فكان سيفشل بيد مدرّس أمام صفّه.
-            ai: false,
+            gat: false, community: false, school: false,
+            guestMode: false, passwordAuth: true, ai: false,
+            portal: true,   // شاشة البوابة: تقديم معلم + دخول إدارة
         },
     },
 };

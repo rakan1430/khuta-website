@@ -1218,8 +1218,8 @@
             <div class="nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i> <span data-i18n="nav.links">الروابط المباشرة</span></div>
             <div class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
             <div class="nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i> <span data-i18n="nav.settings">الإعدادات</span></div>
-            <div class="nav-item" data-school-role="admin,teacher,student" style="display:none;" data-tab="schoolwork" onclick="switchTab(&#39;schoolwork&#39;,this)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.schoolWork">مساحتي</span></div>
-            <div class="nav-item" data-school-role="admin" style="display:none;" data-tab="schooladmin" onclick="switchTab('schooladmin',this)" role="button" tabindex="0"><i class="fa-solid fa-school"></i> <span data-i18n="nav.schoolAdmin">إدارة المدرسة</span> <span id="admin-requests-count" class="pill" style="display:none;">0</span></div>
+            <div class="nav-item" data-school-member style="display:none;" data-tab="schoolwork" onclick="switchTab(&#39;schoolwork&#39;,this)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.schoolWork">منصة المدرسة</span></div>
+            <div class="nav-item" data-school-role="admin" data-school-member style="display:none;" data-tab="schooladmin" onclick="switchTab('schooladmin',this)" role="button" tabindex="0"><i class="fa-solid fa-school"></i> <span data-i18n="nav.schoolAdmin">إدارة المدرسة</span> <span id="admin-requests-count" class="pill" style="display:none;">0</span></div>
             <div class="nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
             <div class="nav-item" data-tab="community" onclick="switchTab('community',this)" role="button" tabindex="0"><i class="fa-solid fa-users"></i> <span data-i18n="nav.community">المجتمع</span></div>
             <div class="nav-item nav-item-board" onclick="openKhutaBoard('ai', true)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.board">السبورة الذكية</span></div>
@@ -1967,7 +1967,7 @@
         <!-- ===================== مساحة المدرسة: ملفات وروابط وجدول واختبارات ===================== -->
         <section id="view-schoolwork" class="view-section">
             <div class="card settings-hero">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chalkboard-user" style="color:var(--gold-text);"></i> <span data-i18n="school.workTitle">مساحتي</span></h2>
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chalkboard-user" style="color:var(--gold-text);"></i> <span data-i18n="school.workTitle">منصة المدرسة</span></h2>
                 <p class="card-sub" id="school-who-2"></p>
             </div>
 
