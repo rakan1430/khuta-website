@@ -3056,3 +3056,33 @@ body.dark-mode .chatbot-board-btn{
 }
 .tt-note span{ flex: 1; overflow-wrap: anywhere; }
 .tt-note i{ color: var(--gold-text); flex-shrink: 0; }
+
+/* ── شريط وضع العرض التجريبي (روابط المعاينة فقط) ── */
+.demo-bar{
+    position: fixed; inset-block-end: 0; inset-inline: 0; z-index: 9998;
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; flex-wrap: wrap;
+    padding: 10px 16px;
+    background: var(--card);
+    border-block-start: 2px solid var(--gold-text);
+    box-shadow: 0 -6px 20px rgba(0,0,0,.10);
+    font-size: 13px;
+}
+.demo-tag{ font-weight: 800; color: var(--gold-text); }
+.demo-hint{ color: var(--text-3); }
+.demo-roles{ display: flex; gap: 8px; }
+.demo-role-btn{
+    min-height: 40px; padding: 8px 18px;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: var(--bg-alt); color: var(--text-1);
+    font-family: inherit; font-weight: 700; font-size: 13px; cursor: pointer;
+}
+.demo-role-btn.is-on{ background: var(--gold-text); color: #fff; border-color: var(--gold-text); }
+/* نُفسح للشريط كي لا يغطي آخر بطاقة، ونرفع تنقّل الجوال فوقه */
+body.has-demo-bar{ padding-block-end: 76px; }
+body.has-demo-bar .mobile-nav{ inset-block-end: 68px; }
+@media (max-width: 600px){
+    .demo-bar{ gap: 8px; padding: 8px 10px; font-size: 12px; }
+    .demo-hint{ display: none; }   /* المساحة للأزرار على الجوال */
+    body.has-demo-bar{ padding-block-end: 130px; }
+}

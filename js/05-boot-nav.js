@@ -58,6 +58,10 @@ window.onload = () => {
     }
 
     function enterApp(){
+        // وضع العرض التجريبي يتولّى الواجهة بنفسه (روابط المعاينة فقط).
+        // بدون هذا الحارس يُعيد الإقلاع إظهار شاشة الدخول فوق العرض، لأن
+        // enterApp تعمل بعد اكتمال جلب البيانات — أي بعد بدء العرض بثوانٍ.
+        if(typeof isDemoMode === "function" && isDemoMode()) return;
         const session = getSession();
         const name = localStorage.getItem("khuta_name");
         // في نسخة بلا وضع ضيف (المدرسة) لا يكفي وجود اسم محفوظ في المتصفح

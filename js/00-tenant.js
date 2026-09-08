@@ -78,13 +78,21 @@ const HOSTNAME_MAP = [
 function detectTenantId(){
     const host = (location.hostname || "").toLowerCase();
 
-    // على جهاز التطوير فقط نسمح بتبديل النسخة من الرابط (?tenant=motaqadima)
-    // حتى نختبر النسختين بلا نشر. ممنوع على المواقع الحقيقية كي لا يفتح أحد
-    // نسخة المدرسة من عنوان خُطى فيظن أنها منصته.
+    // تبديل النسخة من الرابط (?tenant=motaqadima) مسموح في موضعين فقط:
+    // جهاز التطوير، وروابط المعاينة من Netlify. وروابط المعاينة تُعرف بوجود
+    // "--" في اسم النطاق، وهي علامة لا توجد في العنوان الحقيقي لأي موقع.
+    //
+    // ممنوع على المواقع الحقيقية عمداً: لولا ذلك لفتح أي شخص نسخة المدرسة من
+    // عنوان خُطى فظنّها منصته، أو العكس.
     const isLocal = host === "localhost" || host === "127.0.0.1" || host === "";
-    if(isLocal){
-        const q = new URLSearchParams(location.search).get("tenant");
+    const isPreview = host.endsWith(".netlify.app") && host.includes("--");
+    if(isLocal || isPreview){
+        const params = new URLSearchParams(location.search);
+        const q = params.get("tenant");
         if(q && TENANTS[q]) return q;
+        // وضع العرض التجريبي يخصّ المدارس، فيكفي ?demo=1 بلا تحديد النسخة —
+        // رابط أقصر يسهل كتابته على شاشة أمام الحضور.
+        if(params.get("demo") === "1") return "motaqadima";
     }
 
     for(const [needle, id] of HOSTNAME_MAP){
