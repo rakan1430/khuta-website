@@ -285,14 +285,30 @@ async function loadSchoolClasses(){
         schoolClasses = data || [];
     }catch(e){ console.warn("[خُطى] تعذّر تحميل الفصول:", e); schoolClasses = []; }
 
+    /* ⚠️ حالة "لا فصول" كانت تُنتج قائمة فارغة تماماً بلا أي تفسير — يضغط
+       المعلّم "إضافة حصة" فلا يحدث شيء ولا يفهم لماذا. وهذا ما وصفه المالك
+       بأن اختيار الفصل "معطّل". الآن تقول القائمة سبب فراغها. */
     ["tt-class","exam-class"].forEach(id => {
         const sel = document.getElementById(id);
         if(!sel) return;
         const prev = sel.value;
         sel.textContent = "";
+        if(!schoolClasses.length){
+            const o = document.createElement("option");
+            o.value = "";
+            o.textContent = currentLang==='ar'
+                ? "— لا فصول بعد، تنشئها الإدارة —"
+                : "— no classes yet, the admin creates them —";
+            sel.appendChild(o);
+            sel.disabled = true;
+            return;
+        }
+        sel.disabled = false;
         schoolClasses.forEach(c => {
             const o = document.createElement("option");
-            o.value = c.id; o.textContent = c.name;
+            o.value = c.id;
+            // الاسم وحده يلتبس حين تتشابه الأسماء بين المراحل
+            o.textContent = c.section ? `${c.name} (${c.section})` : c.name;
             sel.appendChild(o);
         });
         if(prev) sel.value = prev;

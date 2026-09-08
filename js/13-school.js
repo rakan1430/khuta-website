@@ -360,9 +360,14 @@ async function loadSchoolMembers(){
                     <span class="pill">${escapeHtml(schoolRoleLabel(m.role))}</span>
                     ${m.grade ? `<span class="card-sub"> · ${escapeHtml(m.grade)}${m.section ? "/" + escapeHtml(m.section) : ""}</span>` : ""}
                 </div>
-                <button type="button" class="btn btn-ghost btn-sm" onclick="toggleMemberActive('${escapeHtml(m.id)}', ${m.active ? "false" : "true"})">
-                    ${m.active ? (currentLang==='ar'?'إيقاف':'Disable') : (currentLang==='ar'?'تفعيل':'Enable')}
-                </button>
+                <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    ${m.role !== "admin" ? `<button type="button" class="btn btn-outline btn-sm"
+                        onclick="openAssignClass('${escapeHtml(m.id)}', ${JSON.stringify(m.full_name)}, '${escapeHtml(m.role)}')">
+                        <i class="fa-solid fa-chalkboard"></i> ${currentLang==='ar'?'الفصول':'Classes'}</button>` : ""}
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="toggleMemberActive('${escapeHtml(m.id)}', ${m.active ? "false" : "true"})">
+                        ${m.active ? (currentLang==='ar'?'إيقاف':'Disable') : (currentLang==='ar'?'تفعيل':'Enable')}
+                    </button>
+                </div>
             </div>`).join("");
     }catch(e){
         console.error("[خُطى] تعذّر تحميل الأعضاء:", e);
@@ -393,6 +398,9 @@ async function toggleMemberActive(id, makeActive){
    ============================================================ */
 function applySchoolRoleUI(){
     const role = schoolCtx ? schoolCtx.role : null;
+    /* ⚠️ هذا الصنف يشغّل مقاسات اللمس المكبَّرة (44px) لأعضاء المدرسة.
+       كانت مشروطة بعنوان النسخة، فماتت حين وحّدنا المنصّتين. */
+    document.body.classList.toggle("is-school", !!role);
     // عنصر التنقل لقسم المدرسة يظهر فقط لعضو مدرسة — وهو الشرط الوحيد.
     document.querySelectorAll("[data-school-member]").forEach(el => {
         el.style.display = role ? "" : "none";
@@ -417,7 +425,10 @@ function applySchoolRoleUI(){
             if(el) el.textContent = label;
         });
     }
-    if(role === "admin"){ loadAccountRequests(); loadSchoolMembers(); }
+    if(role === "admin"){
+        loadAccountRequests(); loadSchoolMembers();
+        if(typeof loadAdminClasses === "function") loadAdminClasses();
+    }
     // شريط "جلسة محدودة" يشرح للمعلّم لماذا لا تعمل بعض الأزرار — والمنع
     // نفسه في قاعدة البيانات لا هنا.
     if(typeof applyLimitedSessionUI === "function"){

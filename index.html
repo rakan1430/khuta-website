@@ -2013,7 +2013,9 @@
                     <div class="weight-chip"><b id="stat-pace">—</b><span data-i18n="stats.pace">متوسط الوقت لكل درس</span></div>
                 </div>
                 <div id="stat-week-compare" style="margin-top:16px; padding:14px 16px; background:var(--bg-alt); border-radius:14px; font-size:13px; line-height:2;"></div>
-                <button type="button" id="btn-deep-report" class="btn btn-outline btn-block" style="margin-top:12px;" onclick="handleDeepReportClick()"></button>
+                <!-- ⚠️ نصّ مبدئي مقصود: refreshDeepReportButton يملؤه لاحقاً، وقبل ذلك كان
+                     الزر يظهر فارغاً تماماً بلا نص ولا أيقونة لمن يصل القسم قبل تشغيلها. -->
+                <button type="button" id="btn-deep-report" class="btn btn-outline btn-block" style="margin-top:12px;" onclick="handleDeepReportClick()"><i class="fa-solid fa-chart-column"></i> <span data-i18n="dash.deepReport">التقرير المتعمّق</span></button>
             </div>
 
             <div class="card">
@@ -2309,6 +2311,41 @@
                 </button>
             </div>
 
+            <!-- ⚠️ الفصول أساس كل شيء: الجدول الدراسي، ورؤية الطالب لملفات
+                 معلّميه، واستهداف الاختبارات. بلا فصل لا يعمل أيٌّ منها. -->
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-chalkboard"></i> <span data-i18n="school.classesTitle">الفصول</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.classesSub">
+                    أنشئ فصول المدرسة أولاً. بدونها لا يعمل الجدول الدراسي، ولا يرى الطالب ملفات معلّميه، ولا يجد المعلّم فصلاً يرسل له اختباراً.
+                </p>
+                <div class="input-row">
+                    <div class="form-group">
+                        <label data-i18n="school.classGrade">المرحلة</label>
+                        <select id="class-grade">
+                            <option value="1" data-i18n="school.grade1">أول ثانوي</option>
+                            <option value="2" data-i18n="school.grade2">ثاني ثانوي</option>
+                            <option value="3" data-i18n="school.grade3">ثالث ثانوي</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="school.classSection">الشعبة (إجبارية)</label>
+                        <input type="text" id="class-section" maxlength="10" placeholder="أ">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="school.classNameOpt">اسم الفصل (اختياري)</label>
+                    <input type="text" id="class-name" maxlength="40" placeholder="يُكوَّن تلقائياً: أول ثانوي / أ">
+                </div>
+                <button type="button" id="class-add-btn" class="btn acc-btn" onclick="addSchoolClass()">
+                    <i class="fa-solid fa-plus"></i> <span data-i18n="school.classAdd">إضافة فصل</span>
+                </button>
+                <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
+                <div id="admin-classes-list"></div>
+                <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="loadAdminClasses()">
+                    <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span>
+                </button>
+            </div>
+
             <div class="card">
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-users-gear"></i> <span data-i18n="school.membersTitle">المدرّسون والطلاب</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.membersSub">إيقاف العضو يمنع دخوله فوراً ويُبقي ملفاته وسجلّه — أأمن من الحذف.</p>
@@ -2318,6 +2355,34 @@
                 </button>
             </div>
         </section>
+
+        <!-- ===================== إسناد عضو إلى فصل ===================== -->
+        <div id="assign-class-modal" class="overlay-screen" style="display:none;">
+            <div class="wizard-card" style="max-width:460px;">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-link"></i> <span data-i18n="school.assignTitle">إسناد إلى فصل</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;"><b id="assign-class-who"></b></p>
+
+                <div class="form-group">
+                    <label data-i18n="school.assignPick">الفصل</label>
+                    <select id="member-class-select"></select>
+                </div>
+                <div class="form-group" id="assign-subject-group">
+                    <label data-i18n="school.assignSubject">المادة (للمعلّم)</label>
+                    <input type="text" id="assign-subject" maxlength="40" placeholder="رياضيات">
+                </div>
+                <button type="button" id="assign-class-btn" class="btn btn-block acc-btn" onclick="assignMemberToClass()">
+                    <i class="fa-solid fa-plus"></i> <span data-i18n="school.assignAdd">إسناد</span>
+                </button>
+
+                <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
+                <p class="card-sub" style="margin-bottom:8px;" data-i18n="school.assignCurrent">الفصول المسنَدة حالياً</p>
+                <div id="assign-class-current"></div>
+
+                <button type="button" class="btn btn-outline btn-block acc-btn" style="margin-top:14px;" onclick="closeAssignClass()">
+                    <span data-i18n="qr.close">إغلاق</span>
+                </button>
+            </div>
+        </div>
 
         <section id="view-settings" class="view-section">
             <div class="card settings-hero">
@@ -2611,6 +2676,7 @@
 <script src="js/18-exam-builder.js" defer></script>
 <script src="js/19-exam-send.js" defer></script>
 <script src="js/20-entry.js" defer></script>
+<script src="js/21-classes.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

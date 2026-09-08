@@ -86,7 +86,9 @@ h3{ font-size:16px; line-height:var(--lh-title); font-weight:700; }
     --surface-raised:#1E2A46;
     --text-1:#F3EFE6;
     --text-2:#B9C0D4;
-    --text-3:#7C87A3;
+    /* ⚠️ رُفع من #7C87A3: قياس فعلي أعطى 4.33 فوق خلفية البطاقات في الوضع
+       الداكن — دون حدّ WCAG AA (4.5). هذه القيمة تعطي 5.13 هناك. */
+    --text-3:#8A94AE;
     --border:#293552;
     --accent: var(--gold-soft);
     --gold-text: var(--gold-soft); /* على الداكن التباين ممتاز أصلاً */
@@ -2981,21 +2983,48 @@ body.dark-mode .chatbot-board-btn{
 
    ⚠️ محصور في نسخة المدرسة عمداً: خُطى لم تتغيّر ولا بكسل واحد.
    ============================================================ */
-[data-tenant="motaqadima"] .btn,
-[data-tenant="motaqadima"] .btn-ghost,
-[data-tenant="motaqadima"] .acc-btn{
+/* ⚠️ كانت هذه القواعد مشروطة بـ[data-tenant="motaqadima"]، وقد صارت ميّتة
+   تماماً بعد أن وحّدنا المنصّتين: السمة تساوي الآن "khuta" على كل الروابط،
+   فلم تُطبَّق ولا قاعدة منها. أي أن كل عمل مقاسات اللمس على السبورة كان
+   معطَّلاً بلا أن يظهر خطأ — الأزرار عادت 34-35 بكسل على شاشة تُلمس بالإصبع.
+   (كشفه فحص بصري آلي قاس ارتفاع كل زر فعلياً، لا مراجعة للكود.)
+
+   ➡️ صارت مشروطة بعضوية المدرسة (body.is-school يضعها applySchoolRoleUI)
+      وبأقسام المدرسة نفسها — فتسري حيث يجب مهما كان العنوان. */
+body.is-school .btn,
+body.is-school .btn-ghost,
+body.is-school .acc-btn,
+#view-schoolwork .btn,
+#view-schoolwork .btn-ghost,
+#view-schoolwork .acc-btn,
+#view-schooladmin .btn,
+#view-schooladmin .btn-ghost,
+#view-schooladmin .acc-btn{
     min-height: 44px;
 }
-[data-tenant="motaqadima"] .btn-sm{
-    min-height: 40px;   /* الأزرار الثانوية داخل البطاقات */
+body.is-school .btn-sm,
+#view-schoolwork .btn-sm,
+#view-schooladmin .btn-sm{
+    min-height: 44px;   /* حتى الثانوية تُلمس بالإصبع على السبورة */
 }
-[data-tenant="motaqadima"] input,
-[data-tenant="motaqadima"] select,
-[data-tenant="motaqadima"] textarea{
+body.is-school input,
+body.is-school select,
+body.is-school textarea,
+#view-schoolwork input,
+#view-schoolwork select,
+#view-schoolwork textarea,
+#view-schooladmin input,
+#view-schooladmin select,
+#view-schooladmin textarea{
     min-height: 44px;
 }
-/* الفخ المخفي مستثنى — تكبيره يجعله مرئياً ويفسد غرضه */
-[data-tenant="motaqadima"] .hp-field{ min-height: 0; }
+/* الفخ المخفي وصناديق الاختيار مستثناة — تكبيرها يفسد شكلها أو يكشفها */
+body.is-school .hp-field,
+#view-schoolwork .hp-field{ min-height: 0; }
+body.is-school input[type="checkbox"],
+body.is-school input[type="radio"],
+#view-schoolwork input[type="checkbox"],
+#view-schooladmin input[type="checkbox"]{ min-height: 0; }
 
 /* ── نسخة المدارس: الملفات والروابط والجدول ── */
 .sfile-row, .slink-row{
@@ -3250,4 +3279,36 @@ body.has-demo-bar .mobile-nav{ inset-block-end: 68px; }
 .limited-bar span{ flex:1; min-width:200px; }
 @media (max-width: 600px){
     .limited-bar{ font-size:12px; padding:8px 12px; }
+}
+
+/* ============================================================
+   تصحيحات تباين ومقاسات لمس — من فحص بصري آلي
+   ------------------------------------------------------------
+   قِيست النسب فعلياً على الخلفية المركّبة لكل عنصر في الوضعين الفاتح
+   والداكن وبأربعة مقاسات شاشة. المذكور هنا ما رسب دون حدّ WCAG AA
+   (٤٫٥ للنص العادي، ٣ للكبير).
+
+   ⚠️ لم يُمسّ اللون الذهبي الأساسي ولا هوية خُطى: كل ما هنا ألوان ثانوية
+   (نص خافت، شارات) لا يلحظ أحد تغيّرها، لكن يلحظ من يقرؤها فرقاً.
+   ============================================================ */
+
+/* شارة "لم يبدأ" ونسبة التقدّم: نص خافت فوق خلفية بديلة = 4.36 فقط.
+   ⚠️ أول إصلاح لهما كان لوناً ثابتاً (#5E5748) — ونجح في الوضع الفاتح
+   وكسر الداكن: نص غامق فوق خلفية غامقة = 2.57، أسوأ من الأصل. كشفه إعادة
+   تشغيل الفحص بعد الإصلاح لا قبله.
+   ➡️ الصواب متغيّر يتبع الوضع: --text-2 يقلب نفسه بين الفاتح والداكن. */
+.status-badge.status-notstarted{ color:var(--text-2); }
+.progress-pct{ color:var(--text-2); }
+
+/* شارة "قريباً": أبيض فوق الوردي = 4.32 عند حجم 10px. */
+.badge-soon{ background:#C93A4F; }                          /* 4.32 → 5.00 */
+
+/* ⚠️ زرّ الشمس/القمر: 56×28 بكسل — أقل من الحدّ الموصى به للمس (44px)،
+   وهو أكثر زر يُضغط على سبورة الفصل. نوسّع مساحة اللمس دون تكبير شكله:
+   الحشوة تزيد الهدف والشكل الداخلي كما هو. */
+.daynight-toggle{ padding:8px 0; min-height:44px; }
+
+/* رابط البريد في التذييل كان ارتفاعه 14px — يصعب لمسه */
+.footer a[href^="mailto:"], a[href^="mailto:"]{
+    display:inline-block; padding-block:6px; min-height:28px;
 }
