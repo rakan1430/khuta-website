@@ -126,6 +126,17 @@
 </div>
 
 
+<!-- ===================== شريط الجلسة المحدودة ===================== -->
+<!-- ⚠️ توضيح لا حماية: المنع الفعلي في سياسات قاعدة البيانات. هذا الشريط
+     يمنع الحيرة فقط — بدونه يضغط المعلّم "حذف" فلا يحدث شيء ولا يفهم لماذا. -->
+<div id="limited-session-bar" class="limited-bar" style="display:none;">
+    <i class="fa-solid fa-shield-halved"></i>
+    <span data-i18n="school.limitedBar">دخول سريع: العرض متاح. الحذف وإرسال الاختبارات وتعديل الجدول تحتاج تأكيد هويتك.</span>
+    <button type="button" class="btn btn-sm acc-btn" onclick="confirmWithGoogle()">
+        <i class="fa-brands fa-google"></i> <span data-i18n="school.confirmGoogle">تأكيد بحساب Google</span>
+    </button>
+</div>
+
 <!-- ===================== شاشة الترحيب ===================== -->
 <div id="login-overlay" class="overlay-screen">
     <div class="wizard-card" style="max-width:460px;">
@@ -181,6 +192,13 @@
         <button type="button" class="btn-ghost guest-cta-alt" data-tenant-only="motaqadima" style="display:none; width:100%; margin-top:18px; justify-content:center; font-weight:700;" onclick="openAccountRequest()">
             <i class="fa-solid fa-user-plus"></i> <span data-i18n="school.requestAccount">ليس لديك حساب؟ اطلب حساباً من المدرسة</span>
         </button>
+
+        <!-- يظهر فقط من رابط الإدارة غير المعلَن -->
+        <div id="admin-entry-box" style="display:none; margin-top:16px; padding:12px 14px; background:var(--bg-alt); border-radius:14px; text-align:center;">
+            <i class="fa-solid fa-user-shield" style="color:var(--gold-text);"></i>
+            <b style="display:block; margin-top:4px;" data-i18n="school.adminEntry">مدخل إدارة المدرسة</b>
+            <p class="hint" style="margin:4px 0 0;" data-i18n="school.adminEntryNote">سجّل دخولك ببيانات الحساب الإداري الذي زُوِّدت به.</p>
+        </div>
 
         <!-- دخول السبورة برمز QR — للمعلّمين، ولا يظهر لمستخدمي خُطى العاديين
              (يُظهره js/17-qr-login.js حين تكون الصفحة مدخل مدرسة) -->
@@ -300,6 +318,7 @@
 
             <div class="form-group">
                 <label data-i18n="school.reqName">الاسم الكامل</label>
+                <p id="areq-entry-note" class="hint" style="display:none; margin-bottom:10px; font-weight:700; color:var(--gold-text);"></p>
                 <input type="text" id="areq-name" maxlength="80" placeholder="محمد عبدالله">
             </div>
 
@@ -2191,6 +2210,34 @@
 
                 <div id="sexams-list"></div>
             </div>
+
+            <!-- ===================== الدخول السريع للمعلّم ===================== -->
+            <div class="card" data-school-role="teacher,admin" style="display:none;">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-bolt"></i> <span data-i18n="school.quickTitle">الدخول السريع على السبورة</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.quickSub">
+                    اضبط كلمة مرور لحسابك نفسه لتدخل بها بسرعة على سبورة الفصل بدل كتابة بيانات Google كل حصة.
+                </p>
+
+                <!-- ⚠️ الصراحة هنا مقصودة: المعلّم يجب أن يعرف حدود ما يضبطه
+                     قبل أن يضبطه، لا أن يكتشفها حين يضغط "حذف" فلا يحدث شيء. -->
+                <div class="uni-note" style="margin-bottom:14px;">
+                    <b data-i18n="school.quickWarnTitle">ما الذي يتيحه هذا الدخول؟</b>
+                    <p style="margin:6px 0 0;" data-i18n="school.quickWarnBody">
+                        العرض فقط: الملفات والروابط والجدول والاختبارات. أما حذف ملف أو رابط، أو إرسال اختبار،
+                        أو تعديل الجدول — فتبقى محتاجة تأكيد هويتك بحساب Google. والسبب أن كلمة المرور تُكتب على
+                        شاشة يراها الصف كله، فقد يلتقطها طالب.
+                    </p>
+                </div>
+
+                <div class="input-row">
+                    <div class="form-group"><label data-i18n="school.quickPass">كلمة المرور الجديدة</label><input type="password" id="quick-pass" autocomplete="new-password" placeholder="••••••••"></div>
+                    <div class="form-group"><label data-i18n="school.quickPass2">تأكيدها</label><input type="password" id="quick-pass2" autocomplete="new-password" placeholder="••••••••"></div>
+                </div>
+                <p id="quick-login-msg" class="hint" style="margin-bottom:10px;"></p>
+                <button type="button" id="quick-login-save" class="btn acc-btn" onclick="setupQuickLogin()">
+                    <i class="fa-solid fa-key"></i> <span data-i18n="school.quickSave">حفظ كلمة المرور</span>
+                </button>
+            </div>
         </section>
 
         <!-- ===================== إرسال الاختبار: فصول / مراحل / طلاب ===================== -->
@@ -2548,6 +2595,7 @@
 <script src="js/17-qr-login.js" defer></script>
 <script src="js/18-exam-builder.js" defer></script>
 <script src="js/19-exam-send.js" defer></script>
+<script src="js/20-entry.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

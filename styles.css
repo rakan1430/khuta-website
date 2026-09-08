@@ -3237,3 +3237,17 @@ body.has-demo-bar .mobile-nav{ inset-block-end: 68px; }
     .exq-tab{ font-size:12px; padding:8px 4px; }
     .exq-img img{ max-height:150px; }
 }
+
+/* شريط الجلسة المحدودة — يعلو الصفحة كلها لأن رسالته تخصّ كل قسم فيها */
+.limited-bar{
+    position:sticky; inset-block-start:0; z-index:60;
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:10px 16px; font-size:13px; font-weight:600;
+    background:color-mix(in srgb, var(--gold-text) 12%, var(--bg));
+    border-block-end:1px solid var(--border); color:var(--text);
+}
+.limited-bar i{ color:var(--gold-text); }
+.limited-bar span{ flex:1; min-width:200px; }
+@media (max-width: 600px){
+    .limited-bar{ font-size:12px; padding:8px 12px; }
+}

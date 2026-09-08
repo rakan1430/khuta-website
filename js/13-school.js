@@ -343,6 +343,11 @@ function applySchoolRoleUI(){
         });
     }
     if(role === "admin"){ loadAccountRequests(); loadSchoolMembers(); }
+    // شريط "جلسة محدودة" يشرح للمعلّم لماذا لا تعمل بعض الأزرار — والمنع
+    // نفسه في قاعدة البيانات لا هنا.
+    if(typeof applyLimitedSessionUI === "function"){
+        applyLimitedSessionUI().catch(e => console.warn("[خُطى] تعذّر فحص نوع الجلسة:", e));
+    }
     if(typeof loadSchoolWorkspace === "function") loadSchoolWorkspace();
 }
 
