@@ -131,8 +131,28 @@ function dismissIntro(){
     if(introFinishFn) introFinishFn();
 }
 
+/* ⚠️ شاشة التعريف تُقرَّر قبل أن نعرف من الداخل — لا دور ولا حساب بعد.
+   فكانت تظهر في أسوأ اللحظات: على جوّال المعلّم وهو يكتب رمز التحقق لفتح
+   السبورة (عشر ثوانٍ تحجب الحقل)، وعلى السبورة نفسها أمام الصف، وللإدارة.
+   وهي أصلاً موجَّهة لطالب جديد في خُطى: القدرات والحاسبة الموزونة والمجتمع.
+
+   العنوان وحده يكفي للتمييز قبل أي تسجيل دخول: من فتح رابط موافقة QR أو
+   طلب انضمام معلّم أو السبورة أو رابط ملف — فهو في منتصف مهمة، لا زائر
+   جديد يُعرَّف بالموقع. ونعلّمها مشاهَدة في هذه الحالات عمداً: قطعُ مهمة
+   قائمة أسوأ بكثير من تفويت مقدّمة تعريفية. */
+function introWouldInterrupt(){
+    try{
+        const q = new URLSearchParams(location.search);
+        return ["screen", "apply", "board", "panel", "f", "demo"].some(k => q.get(k));
+    }catch(e){ return false; }
+}
+
 function showIntroIfFirstVisit(onDone){
     if(localStorage.getItem(INTRO_SEEN_KEY)){ onDone(); return; }
+    if(introWouldInterrupt()){
+        localStorage.setItem(INTRO_SEEN_KEY, "1");
+        onDone(); return;
+    }
     localStorage.setItem(INTRO_SEEN_KEY, "1"); // يُعلَّم كمُشاهَد فوراً — لن يظهر مجدداً حتى لو أُغلقت الصفحة أثناءه
     const overlay = document.getElementById("intro-overlay");
     if(!overlay){ onDone(); return; }

@@ -401,6 +401,17 @@ function applySchoolRoleUI(){
     /* ⚠️ هذا الصنف يشغّل مقاسات اللمس المكبَّرة (44px) لأعضاء المدرسة.
        كانت مشروطة بعنوان النسخة، فماتت حين وحّدنا المنصّتين. */
     document.body.classList.toggle("is-school", !!role);
+
+    /* شاشة تعريف خُطى موجَّهة لطالب جديد. فحين يتبيّن أن الحساب معلّم أو
+       إدارة نعلّمها مشاهَدة على هذا الجهاز فلا تظهر لهم لاحقاً — والحالة
+       الشائعة أن متصفّح السبورة نظيف، فتُستقبل الإدارة بمقدّمة عن القدرات.
+       ⚠️ الطالب مستثنى عمداً: التعريف يخصّه هو، مدرسياً كان أو غير مدرسي. */
+    if(role === "teacher" || role === "admin"){
+        try{
+            localStorage.setItem("khuta_intro_seen", "1");
+            if(typeof dismissIntro === "function") dismissIntro();
+        }catch(e){}
+    }
     // عنصر التنقل لقسم المدرسة يظهر فقط لعضو مدرسة — وهو الشرط الوحيد.
     document.querySelectorAll("[data-school-member]").forEach(el => {
         el.style.display = role ? "" : "none";
