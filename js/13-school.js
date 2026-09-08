@@ -16,11 +16,21 @@ let schoolIdCache = null;
 
 /* معرّف المدرسة يُقرأ قبل تسجيل الدخول (لنعرف لأي مدرسة يُرسَل الطلب).
    عبر دالة SECURITY DEFINER لأن جدول schools نفسه محمي بـRLS. */
+/* ⚠️ هنا كان العطل الذي أوقف الاختبار كلّه: الدالة كانت تشترط
+   hasFeature("school") وتبحث بـTENANT.id — وقيمته على الرابط العادي "khuta"
+   لا "motaqadima". فلا تجد مدرسة أبداً، فتظهر "تعذّر تحديد المدرسة" مهما
+   فعل المستخدم، ولا يستطيع أحد تقديم طلب إطلاقاً.
+
+   السبب الأعمق: كُتبت أيام كانت المدرسة نسخةً منفصلة لها عنوانها الخاص، ثم
+   صرنا منصة واحدة ولم تُحدَّث معها. والدالة الجديدة في قاعدة البيانات تُرجع
+   المدرسة الوحيدة حين لا يُمرَّر slug — وهو حال منصتنا اليوم. */
 async function getSchoolId(){
     if(schoolIdCache) return schoolIdCache;
-    if(!sb || !hasFeature("school")) return null;
+    if(!sb) return null;
     try{
-        const { data } = await sb.rpc("school_id_by_slug", { p_slug: TENANT.id });
+        const slug = (typeof TENANT !== "undefined" && TENANT && TENANT.schoolSlug) ? TENANT.schoolSlug : null;
+        const { data, error } = await sb.rpc("school_for_request", { p_slug: slug });
+        if(error) throw error;
         schoolIdCache = data || null;
     }catch(e){ console.warn("[خُطى] تعذّر تحديد المدرسة:", e); }
     return schoolIdCache;
@@ -105,6 +115,42 @@ function openAccountRequest(){
     const roleEl = document.getElementById("areq-role");
     if(roleEl) roleEl.value = "student";
     onRequestRoleChange();
+    fillRequestIdentity();
+}
+
+/* ⚠️ البريد لا يُكتب باليد بل يُقرأ من حساب Google الذي دخل به صاحب الطلب.
+   السبب ليس الراحة: الإدارة حين توافق تُنشئ العضوية على هذا البريد، ودالة
+   link_my_school_account تربط الحساب بالعضوية حين يتطابق البريد. فحرفٌ واحد
+   خاطئ في الكتابة اليدوية يعني موافقةً تبدو ناجحة تماماً، ثم لا يرى صاحبها
+   شيئاً أبداً ولا أحد يعرف السبب. القراءة من الحساب تمنع هذا من أصله.
+
+   ولهذا نشترط تسجيل الدخول أولاً — وهو ما طلبه المالك نصاً: "المفترض أن
+   المعلم أو الطالب سيكون أولاً لديه إيميل Google على الموقع، بعدها يدخل
+   على هذه الصفحة". */
+async function fillRequestIdentity(){
+    const emailEl = document.getElementById("areq-email");
+    const warnEl  = document.getElementById("areq-signin-warn");
+    const formEl  = document.getElementById("areq-fields");
+    const btn     = document.getElementById("areq-submit");
+    if(!emailEl) return;
+
+    let user = null;
+    try{
+        if(sb){ const { data } = await sb.auth.getUser(); user = data && data.user; }
+    }catch(e){ console.warn("[خُطى] تعذّر قراءة الحساب:", e); }
+
+    const signedIn = !!(user && !user.is_anonymous && user.email);
+    emailEl.value = signedIn ? user.email : "";
+    if(warnEl) warnEl.style.display = signedIn ? "none" : "block";
+    if(formEl) formEl.style.display = signedIn ? "block" : "none";
+    if(btn){ btn.disabled = !signedIn; btn.style.opacity = signedIn ? "" : ".5"; }
+
+    // الاسم المعروض في حساب Google بداية معقولة يوفّر على صاحب الطلب الكتابة
+    const nameEl = document.getElementById("areq-name");
+    if(signedIn && nameEl && !nameEl.value){
+        const meta = user.user_metadata || {};
+        nameEl.value = meta.full_name || meta.name || "";
+    }
 }
 
 function closeAccountRequest(){
@@ -132,6 +178,19 @@ async function submitAccountRequest(){
     const trap = document.getElementById("areq-trap");
     if(trap && trap.value){ closeAccountRequest(); return; }
 
+    // ⚠️ البريد من الحساب لا من الحقل: الحقل للعرض فقط ولا يُوثق به
+    let email = null;
+    try{
+        const { data } = await sb.auth.getUser();
+        email = data && data.user && !data.user.is_anonymous ? data.user.email : null;
+    }catch(e){}
+    if(!email){
+        showToast(currentLang==='ar'
+            ? "سجّل دخولك بحساب Google أولاً ثم أرسل الطلب"
+            : "Sign in with Google first, then send the request");
+        return;
+    }
+
     const schoolId = await getSchoolId();
     if(!schoolId){
         showToast(currentLang==='ar' ? "تعذّر تحديد المدرسة — حدّث الصفحة" : "Could not identify the school");
@@ -142,6 +201,7 @@ async function submitAccountRequest(){
     const payload = {
         school_id: schoolId,
         full_name: name,
+        email,
         role_wanted: role === "teacher" ? "teacher" : "student",
         grade: role === "student" ? (document.getElementById("areq-grade").value || null) : null,
         section: role === "student" ? ((document.getElementById("areq-section").value || "").trim() || null) : null,
@@ -152,6 +212,10 @@ async function submitAccountRequest(){
     const btn = document.getElementById("areq-submit");
     if(btn){ btn.disabled = true; btn.style.opacity = ".6"; }
     try{
+        // ⚠️ لا تُضِف ‎.select()‎ هنا أبداً. صاحب الطلب ليس إدارياً، فلا سياسة
+        // قراءة تسمح له برؤية صفّه — و‎.select()‎ يجعل الإدراج يطلب الصفَّ بعد
+        // كتابته فيُرفض كاملاً برسالة "new row violates row-level security"
+        // تبدو كأن الإدراج نفسه ممنوع. (وقعتُ فيها في اختباري قبل أن أفهمها.)
         const { error } = await sb.from("account_requests").insert(payload);
         if(error) throw error;
         document.getElementById("areq-form").style.display = "none";
@@ -180,7 +244,7 @@ async function loadAccountRequests(){
     try{
         const { data, error } = await sb
             .from("account_requests")
-            .select("id, full_name, role_wanted, grade, section, contact, note, status, created_at")
+            .select("id, full_name, email, role_wanted, grade, section, contact, note, status, created_at")
             .eq("school_id", schoolCtx.schoolId)
             .eq("status", "pending")
             .order("created_at", { ascending: false })
@@ -209,6 +273,10 @@ async function loadAccountRequests(){
                     </div>
                     <span class="card-sub">${escapeHtml(when)}</span>
                 </div>
+                <!-- ⚠️ البريد معروض عمداً: عليه تُنشأ العضوية، فيجب أن تراه
+                     الإدارة قبل الموافقة لا بعدها. -->
+                <div class="card-sub" style="direction:ltr; text-align:start; font-family:'IBM Plex Mono',monospace; font-size:12px;">
+                    ${r.email ? escapeHtml(r.email) : (currentLang==='ar'?'⚠️ بلا بريد — لا يمكن قبوله':'⚠️ no email')}</div>
                 <div class="card-sub">${currentLang==='ar'?'الصف':'Class'}: ${cls}
                     ${r.contact ? ` · ${currentLang==='ar'?'للتواصل':'Contact'}: ${escapeHtml(r.contact)}` : ""}</div>
                 ${r.note ? `<div class="uni-note" style="margin-top:6px;">${escapeHtml(r.note)}</div>` : ""}
@@ -232,17 +300,24 @@ async function loadAccountRequests(){
    وهذه الخطوة تسجّل الموافقة وتحدّد الدور والصف مسبقاً. */
 async function approveRequest(id){
     if(!schoolCtx || schoolCtx.role !== "admin" || !sb) return;
-    if(!confirm(currentLang==='ar' ? "قبول هذا الطلب؟" : "Approve this request?")) return;
+    if(!confirm(currentLang==='ar' ? "قبول هذا الطلب وإنشاء العضوية؟" : "Approve and create the membership?")) return;
     try{
-        const { error } = await sb.from("account_requests")
-            .update({ status:"approved", reviewed_by: schoolCtx.memberId, reviewed_at: new Date().toISOString() })
-            .eq("id", id);
+        // ⚠️ دالة واحدة تُنشئ العضوية وتعلّم الطلب معاً. كان الكود هنا يعلّم
+        // الطلب فقط بلا إنشاء عضوية، فتظهر "تم القبول ✅" ولا يصير صاحبه
+        // عضواً أبداً — نجاح كاذب لا يشتكي منه شيء.
+        const { error } = await sb.rpc("approve_account_request", { p_id: id });
         if(error) throw error;
-        showToast(currentLang==='ar' ? "تم القبول ✅" : "Approved ✅");
+        showToast(currentLang==='ar' ? "تم القبول وأُنشئت العضوية ✅" : "Approved, membership created ✅");
         loadAccountRequests();
+        if(typeof loadSchoolMembers === "function") loadSchoolMembers();
     }catch(e){
         console.error("[خُطى] تعذّر قبول الطلب:", e);
-        showToast(currentLang==='ar' ? "تعذّر تنفيذ العملية" : "Action failed");
+        const raw = (e && e.message) || "";
+        showToast(
+            raw.includes("NEEDS_GOOGLE")          ? (currentLang==='ar' ? "أكّد هويتك بحساب Google أولاً" : "Confirm with Google first") :
+            raw.includes("REQUEST_HAS_NO_EMAIL")  ? (currentLang==='ar' ? "الطلب بلا بريد — اطلب من صاحبه إعادة إرساله بعد تسجيل الدخول" : "Request has no email") :
+            raw.includes("ALREADY_REVIEWED")      ? (currentLang==='ar' ? "هذا الطلب رُوجع من قبل" : "Already reviewed") :
+            (currentLang==='ar' ? "تعذّر تنفيذ العملية" : "Action failed"));
     }
 }
 

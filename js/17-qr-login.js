@@ -37,13 +37,13 @@ let qrPollTimer = null;
 let qrTickTimer = null;
 let qrDeadline = 0;
 
-/** هل هذه الصفحة مدخل مدرسة؟ رمز QR لا يعني مستخدمي خُطى العاديين. */
-function isSchoolEntry(){
-    try{
-        if(typeof TENANT !== "undefined" && TENANT && TENANT.features && TENANT.features.portal) return true;
-        return new URLSearchParams(location.search).get("board") === "1";
-    }catch(e){ return false; }
-}
+/* ⚠️ كان زر رمز QR مخفياً إلا على رابط ‎?board=1، وكان ذلك خطأ من وجهين:
+   (١) طلب المالك أن يكون متاحاً للجميع: "يمكن لأي طالب… أن يسجّل عن طريق
+       هاتفه بشكل طبيعي دون قيود. التقييد يكون في حال كان المسجّل معلّماً".
+   (٢) والأسوأ أن الزر كان داخل شاشة الدخول، وهي تُخفى تلقائياً لمن له جلسة
+       قائمة — فمن فتح ‎?board=1 وهو مسجَّل دخوله رأى الشاشة تومض وتختفي ولم
+       يرَ الزر أبداً. وهذا ما وصفه المالك بـ"يفتح ويغلق على طول".
+   فصار الزر ظاهراً لكل من يرى شاشة الدخول، والتقييد كلّه في قاعدة البيانات. */
 
 /** سرّ عشوائي من مصدر التعمية في المتصفح — لا Math.random هنا. */
 function qrNewSecret(){
@@ -297,9 +297,8 @@ async function submitQrApproval(){
 
 /* ---------- الإقلاع ---------- */
 function initQrLoginUi(){
-    // زر "الدخول برمز QR" لا يُعرض لمستخدمي خُطى العاديين
     const entry = document.getElementById("qr-login-entry");
-    if(entry && isSchoolEntry()) entry.style.display = "flex";
+    if(entry) entry.style.display = "flex";   // متاح للجميع
     initQrApprovalPage();
 }
 

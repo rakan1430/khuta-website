@@ -193,17 +193,10 @@
             <i class="fa-solid fa-user-plus"></i> <span data-i18n="school.requestAccount">ليس لديك حساب؟ اطلب حساباً من المدرسة</span>
         </button>
 
-        <!-- يظهر فقط من رابط الإدارة غير المعلَن -->
-        <div id="admin-entry-box" style="display:none; margin-top:16px; padding:12px 14px; background:var(--bg-alt); border-radius:14px; text-align:center;">
-            <i class="fa-solid fa-user-shield" style="color:var(--gold-text);"></i>
-            <b style="display:block; margin-top:4px;" data-i18n="school.adminEntry">مدخل إدارة المدرسة</b>
-            <p class="hint" style="margin:4px 0 0;" data-i18n="school.adminEntryNote">سجّل دخولك ببيانات الحساب الإداري الذي زُوِّدت به.</p>
-        </div>
-
         <!-- دخول السبورة برمز QR — للمعلّمين، ولا يظهر لمستخدمي خُطى العاديين
              (يُظهره js/17-qr-login.js حين تكون الصفحة مدخل مدرسة) -->
-        <button type="button" id="qr-login-entry" class="btn-ghost" style="display:none; width:100%; margin-top:10px; justify-content:center; font-weight:700;" onclick="openQrLogin()">
-            <i class="fa-solid fa-qrcode"></i> <span data-i18n="qr.entry">الدخول برمز QR (للمعلّمين)</span>
+        <button type="button" id="qr-login-entry" class="btn-ghost" style="width:100%; margin-top:10px; justify-content:center; font-weight:700;" onclick="openQrLogin()">
+            <i class="fa-solid fa-qrcode"></i> <span data-i18n="qr.entry">الدخول برمز QR من جوّالك</span>
         </button>
     </div>
 </div>
@@ -316,9 +309,30 @@
                 املأ بياناتك وسيصل الطلب لإدارة المدرسة مباشرة، وتُنشئ لك حساباً خاصاً بك.
             </p>
 
+            <p id="areq-entry-note" class="hint" style="display:none; margin-bottom:10px; font-weight:700; color:var(--gold-text);"></p>
+
+            <!-- ⚠️ لا طلب بلا حساب: الإدارة توافق على بريد، والنظام يربط الحساب
+                 بالعضوية حين يتطابق البريد. فلو كُتب باليد وأخطأ حرفاً واحداً
+                 لبدت الموافقة ناجحة ولم يرَ صاحبها شيئاً أبداً. -->
+            <div id="areq-signin-warn" style="display:none; padding:14px 16px; background:var(--bg-alt); border-radius:14px; text-align:center; margin-bottom:14px;">
+                <i class="fa-brands fa-google" style="font-size:22px; color:var(--gold-text);"></i>
+                <p style="margin:8px 0 12px; font-weight:700;" data-i18n="school.reqNeedSignin">سجّل دخولك بحساب Google أولاً</p>
+                <p class="hint" style="margin-bottom:12px;" data-i18n="school.reqNeedSigninWhy">نأخذ بريدك من حسابك مباشرةً، فتصل موافقة الإدارة إليك بلا خطأ في الكتابة.</p>
+                <button type="button" class="btn btn-block acc-btn" onclick="signInWithGoogle()">
+                    <i class="fa-brands fa-google"></i> <span data-i18n="login.google">المتابعة بحساب Google</span>
+                </button>
+            </div>
+
+            <div id="areq-fields">
+            <div class="form-group">
+                <label data-i18n="school.reqEmail">بريدك (من حسابك — لا يُعدَّل)</label>
+                <input type="email" id="areq-email" readonly
+                       style="opacity:.75; cursor:not-allowed;" placeholder="you@gmail.com">
+                <p class="hint" data-i18n="school.reqEmailNote">على هذا البريد تُنشئ الإدارة حسابك، فتأكد أنه الحساب الذي ستستعمله.</p>
+            </div>
+
             <div class="form-group">
                 <label data-i18n="school.reqName">الاسم الكامل</label>
-                <p id="areq-entry-note" class="hint" style="display:none; margin-bottom:10px; font-weight:700; color:var(--gold-text);"></p>
                 <input type="text" id="areq-name" maxlength="80" placeholder="محمد عبدالله">
             </div>
 
@@ -359,6 +373,7 @@
 
             <!-- فخ للسيل الآلي: مخفي بصرياً لا بـdisplay:none كي تملأه البرامج -->
             <input type="text" id="areq-trap" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp-field">
+            </div><!-- /#areq-fields -->
 
             <div style="display:flex; gap:10px; margin-top:6px;">
                 <button type="button" id="areq-submit" class="btn acc-btn" style="flex:1;" onclick="submitAccountRequest()">
