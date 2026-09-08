@@ -337,6 +337,8 @@ async function rejectRequest(id){
     }
 }
 
+const schoolMembersCache = new Map();
+
 async function loadSchoolMembers(){
     const box = document.getElementById("admin-members-list");
     if(!box || !schoolCtx || schoolCtx.role !== "admin" || !sb) return;
@@ -353,6 +355,12 @@ async function loadSchoolMembers(){
             box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'لا يوجد أعضاء بعد.':'No members yet.'}</p>`;
             return;
         }
+        /* ⚠️ الاسم والدور يُقرآن من هنا لا من سمة onclick. السبب خطأ وقعتُ
+           فيه: كنت أمرّر الاسم بـJSON.stringify داخل سمة محاطة بعلامتَي
+           اقتباس مزدوجتين — فأنهت العلامةُ الأولى السمةَ وكسرت المعالج،
+           فصار الزر يبدو سليماً ولا يفعل شيئاً عند الضغط. */
+        schoolMembersCache.clear();
+        data.forEach(m => schoolMembersCache.set(m.id, m));
         box.innerHTML = data.map(m => `
             <div class="member-row${m.active ? "" : " is-off"}">
                 <div>
@@ -362,7 +370,7 @@ async function loadSchoolMembers(){
                 </div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
                     ${m.role !== "admin" ? `<button type="button" class="btn btn-outline btn-sm"
-                        onclick="openAssignClass('${escapeHtml(m.id)}', ${JSON.stringify(m.full_name)}, '${escapeHtml(m.role)}')">
+                        onclick="openAssignClass('${escapeHtml(m.id)}')">
                         <i class="fa-solid fa-chalkboard"></i> ${currentLang==='ar'?'الفصول':'Classes'}</button>` : ""}
                     <button type="button" class="btn btn-ghost btn-sm" onclick="toggleMemberActive('${escapeHtml(m.id)}', ${m.active ? "false" : "true"})">
                         ${m.active ? (currentLang==='ar'?'إيقاف':'Disable') : (currentLang==='ar'?'تفعيل':'Enable')}
@@ -444,6 +452,10 @@ function applySchoolRoleUI(){
     // نفسه في قاعدة البيانات لا هنا.
     if(typeof applyLimitedSessionUI === "function"){
         applyLimitedSessionUI().catch(e => console.warn("[خُطى] تعذّر فحص نوع الجلسة:", e));
+    }
+    // الصفحة الرئيسية تتبدّل للمعلّم والإدارة — انظر js/23-school-home.js
+    if(typeof applyStaffHome === "function"){
+        try{ applyStaffHome(); }catch(e){ console.warn("[خُطى] تعذّر تهيئة الصفحة الرئيسية:", e); }
     }
     if(typeof loadSchoolWorkspace === "function") loadSchoolWorkspace();
 }

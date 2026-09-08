@@ -117,7 +117,7 @@ async function addSchoolClass(){
         loadAdminClasses();
     }catch(e){
         console.error("[خُطى] تعذّر إضافة الفصل:", e);
-        showToast(schoolWriteError(e));
+        showSchoolError(e, currentLang==='ar'?'العملية':'the action');
     }finally{ schoolBusy(btn, false); }
 }
 
@@ -132,7 +132,7 @@ async function deleteSchoolClass(id){
         loadAdminClasses();
     }catch(e){
         console.error("[خُطى] تعذّر حذف الفصل:", e);
-        showToast(schoolWriteError(e));
+        showSchoolError(e, currentLang==='ar'?'العملية':'the action');
     }
 }
 
@@ -140,14 +140,20 @@ async function deleteSchoolClass(id){
 
 let assignTargetMember = null;
 
-async function openAssignClass(memberId, memberName, role){
+async function openAssignClass(memberId){
     if(!sb || !schoolCtx) return;
-    assignTargetMember = { id: memberId, name: memberName, role };
+    // الاسم والدور من الذاكرة لا من سمة onclick — انظر التعليق في 13-school.js
+    const m = (typeof schoolMembersCache !== "undefined") ? schoolMembersCache.get(memberId) : null;
+    if(!m){ showToast(currentLang==='ar' ? 'حدّث القائمة ثم أعد المحاولة' : 'Refresh the list first'); return; }
+    assignTargetMember = { id: memberId, name: m.full_name, role: m.role };
     const modal = document.getElementById("assign-class-modal");
     if(!modal) return;
     modal.style.display = "flex";
     const who = document.getElementById("assign-class-who");
-    if(who) who.textContent = memberName || "";
+    if(who) who.textContent = `${m.full_name} — ${schoolRoleLabel(m.role)}`;
+    // المادة تخصّ المعلّم وحده — إظهارها للطالب يربك ويطلب ما لا لزوم له
+    const subjGroup = document.getElementById("assign-subject-group");
+    if(subjGroup) subjGroup.style.display = (m.role === "teacher") ? "block" : "none";
 
     if(!adminClasses.length) await loadAdminClasses(); else fillClassPickers();
     await renderAssignedClasses();
@@ -218,7 +224,7 @@ async function assignMemberToClass(){
         loadAdminClasses();
     }catch(e){
         console.error("[خُطى] تعذّر الإسناد:", e);
-        showToast(schoolWriteError(e));
+        showSchoolError(e, currentLang==='ar'?'العملية':'the action');
     }finally{ schoolBusy(btn, false); }
 }
 
@@ -234,20 +240,6 @@ async function unassignClass(classId){
         loadAdminClasses();
     }catch(e){
         console.error("[خُطى] تعذّر إلغاء الإسناد:", e);
-        showToast(schoolWriteError(e));
+        showSchoolError(e, currentLang==='ar'?'العملية':'the action');
     }
-}
-
-/** رسالة خطأ مفهومة بدل "تعذّر" المبهمة — أكثر أخطاء الكتابة سببها الجلسة المحدودة. */
-function schoolWriteError(e){
-    const raw = (e && (e.message || e.hint)) || "";
-    if(/google|amr|row-level|policy|42501/i.test(raw)){
-        return currentLang==='ar'
-            ? 'هذه العملية تتطلّب تأكيد هويتك بحساب Google — اضغط "تأكيد بحساب Google" في الأعلى.'
-            : 'This action requires confirming with Google.';
-    }
-    if(/duplicate|23505/i.test(raw)){
-        return currentLang==='ar' ? 'موجود مسبقاً' : 'Already exists';
-    }
-    return currentLang==='ar' ? 'تعذّر تنفيذ العملية' : 'Action failed';
 }

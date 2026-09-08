@@ -93,7 +93,7 @@ async function openTeacherFile(id){
         window.open(signed.signedUrl, "_blank", "noopener");
     }catch(e){
         console.error("[خُطى] تعذّر فتح الملف:", e);
-        showToast(currentLang==='ar'?'تعذّر فتح الملف':'Could not open the file');
+        showSchoolError(e, currentLang==='ar'?'فتح الملف':'opening the file');
     }
 }
 
@@ -149,7 +149,7 @@ async function uploadTeacherFile(){
         loadTeacherFiles();
     }catch(e){
         console.error("[خُطى] تعذّر الرفع:", e);
-        showToast(currentLang==='ar'?'تعذّر الرفع — تحقق من نوع الملف وحجمه':'Upload failed — check file type and size');
+        showSchoolError(e, currentLang==='ar'?'رفع الملف':'the upload');
     }finally{ schoolBusy(btn, false); }
 }
 
@@ -169,7 +169,7 @@ async function deleteTeacherFile(id){
         loadTeacherFiles();
     }catch(e){
         console.error("[خُطى] تعذّر الحذف:", e);
-        showToast(currentLang==='ar'?'تعذّر الحذف':'Delete failed');
+        showSchoolError(e, currentLang==='ar'?'الحذف':'the delete');
     }
 }
 
@@ -264,7 +264,7 @@ async function deleteTeacherLink(id){
         loadTeacherLinks();
     }catch(e){
         console.error("[خُطى] تعذّر حذف الرابط:", e);
-        showToast(currentLang==='ar'?'تعذّر الحذف':'Delete failed');
+        showSchoolError(e, currentLang==='ar'?'الحذف':'the delete');
     }
 }
 
@@ -477,7 +477,7 @@ async function deletePeriod(id){
         loadTimetable();
     }catch(e){
         console.error("[خُطى] تعذّر حذف الحصة:", e);
-        showToast(currentLang==='ar'?'تعذّر الحذف':'Delete failed');
+        showSchoolError(e, currentLang==='ar'?'الحذف':'the delete');
     }
 }
 
@@ -529,7 +529,7 @@ async function saveDayNote(kind){
         loadTimetable();
     }catch(e){
         console.error("[خُطى] تعذّر حفظ الملاحظة:", e);
-        showToast(currentLang==='ar'?'تعذّر الحفظ':'Could not save');
+        showSchoolError(e, currentLang==='ar'?'الحفظ':'the save');
     }
 }
 
@@ -621,78 +621,13 @@ function parseExamQuestions(raw){
     return { questions: out, problems };
 }
 
-async function createExam(){
-    if(!sb || !schoolCtx || schoolCtx.role === "student") return;
-    const title = (document.getElementById("exam-title").value || "").trim();
-    if(title.length < 2){ showToast(currentLang==='ar'?'اكتب عنوان الاختبار':'Enter a title'); return; }
-    const { questions, problems } = parseExamQuestions(document.getElementById("exam-raw").value);
-    const errBox = document.getElementById("exam-parse-errors");
-    if(errBox){
-        errBox.innerHTML = problems.length
-            ? `<b>${currentLang==='ar'?'أسطر لم تُقبل:':'Rejected lines:'}</b><br>` + problems.map(escapeHtml).join("<br>")
-            : "";
-        errBox.style.display = problems.length ? "block" : "none";
-    }
-    if(!questions.length){ showToast(currentLang==='ar'?'لم يُقبل أي سؤال':'No valid questions'); return; }
-
-    const btn = document.getElementById("exam-create");
-    schoolBusy(btn, true);
-    try{
-        const { error } = await sb.from("teacher_exams").insert({
-            school_id: schoolCtx.schoolId,
-            owner_id: schoolCtx.memberId,
-            title,
-            subject: (document.getElementById("exam-subject").value || "").trim() || null,
-            grade: document.getElementById("exam-grade").value || null,
-            questions,
-            published: false,
-        });
-        if(error) throw error;
-        document.getElementById("exam-title").value = "";
-        document.getElementById("exam-raw").value = "";
-        showToast(currentLang==='ar' ? `حُفظ ${questions.length} سؤالاً ✅` : `Saved ${questions.length} questions ✅`);
-        loadTeacherExams();
-    }catch(e){
-        console.error("[خُطى] تعذّر إنشاء الاختبار:", e);
-        showToast(currentLang==='ar'?'تعذّر الحفظ':'Could not save');
-    }finally{ schoolBusy(btn, false); }
-}
-
-/* النشر = إسناد الاختبار لفصل + وضع الطلاب في طابور الإشعارات.
-   البريد نفسه يرسله خادم مُجدوَل، لا المتصفح. */
-async function publishExam(id){
-    if(!sb || !schoolCtx) return;
-    if(!schoolClasses.length) await loadSchoolClasses();
-    const sel = document.getElementById("exam-class");
-    let classId = sel && sel.value;
-    if(!classId && schoolClasses.length === 1) classId = schoolClasses[0].id;
-    if(!classId){ showToast(currentLang==='ar'?'اختر الفصل أولاً':'Pick a class first'); return; }
-    if(!confirm(currentLang==='ar' ? "إرسال الاختبار لهذا الفصل الآن؟" : "Send this exam to the class now?")) return;
-
-    try{
-        const { error: aErr } = await sb.from("exam_assignments").insert({ exam_id:id, class_id:classId });
-        if(aErr && aErr.code !== "23505") throw aErr;   // 23505 = مُسنَد مسبقاً، ليس خطأً
-        const { error: pErr } = await sb.from("teacher_exams").update({ published:true }).eq("id", id);
-        if(pErr) throw pErr;
-
-        // طابور البريد. الإسناد نجح أصلاً والطلاب يرون الاختبار في الموقع،
-        // فلا نُفشل العملية كلها لو تعثّر الطابور — نخبر المدرّس فقط.
-        let queued = 0, mailFailed = false;
-        try{
-            const { data, error } = await sb.rpc("enqueue_exam_notifications", { p_exam:id, p_class:classId });
-            if(error) throw error;
-            queued = data || 0;
-        }catch(e){ mailFailed = true; console.warn("[خُطى] تعذّر وضع الإشعارات في الطابور:", e); }
-
-        showToast(mailFailed
-            ? (currentLang==='ar' ? 'أُرسل للفصل ✅ (تعذّر جدولة البريد)' : 'Sent ✅ (email queue failed)')
-            : (currentLang==='ar' ? `أُرسل للفصل ✅ وسيصل إشعار بريدي لـ${queued} طالباً` : `Sent ✅ — ${queued} students will be emailed`));
-        loadTeacherExams();
-    }catch(e){
-        console.error("[خُطى] تعذّر إرسال الاختبار:", e);
-        showToast(currentLang==='ar'?'تعذّر الإرسال':'Could not send');
-    }
-}
+/* ⚠️ حُذفت من هنا دالّتان ميّتتان: createExam و publishExam.
+   كانتا من نموذج الاختبارات القديم قبل المنشئ المرئي، ولم يعد يستدعيهما
+   شيء، وكانتا تشيران إلى عنصرَي exam-create و exam-class المحذوفين من
+   الصفحة. كودٌ ميت يشير إلى واجهة ميتة: لا يُنتج خطأً، لكنه يضلّل من يقرأ
+   الملف بعدنا فيظن أن هناك مسارين للحفظ والإرسال. البديل الحيّ:
+   saveExamDraft في js/18-exam-builder.js و openExamSend في js/19-exam-send.js.
+   (كشفه تدقيق آلي يقارن ما يستدعيه HTML بما هو معرَّف فعلاً.) */
 
 async function deleteExam(id){
     if(!sb || !schoolCtx) return;
@@ -703,7 +638,7 @@ async function deleteExam(id){
         loadTeacherExams();
     }catch(e){
         console.error("[خُطى] تعذّر حذف الاختبار:", e);
-        showToast(currentLang==='ar'?'تعذّر الحذف':'Delete failed');
+        showSchoolError(e, currentLang==='ar'?'الحذف':'the delete');
     }
 }
 
@@ -758,9 +693,24 @@ async function openFileFromShortCode(){
     }
 }
 
-/* يُستدعى عند فتح قسم المدرسة — يحمّل ما يخصّ الدور الحالي فقط */
+/* يُستدعى عند فتح قسم المدرسة — يحمّل ما يخصّ الدور الحالي فقط.
+
+   ⚠️⚠️ هنا كان العطل الذي أفرغ كل شيء بعد كل تحديث للصفحة، وهو أخطر ما
+   وُجد حتى الآن: كان الشرط `!hasFeature("school")`، وقيمتها **false** على
+   الرابط العادي منذ أن وحّدنا المنصّتين — بل التعليق في js/00-tenant.js
+   يقول صراحةً "ليست ميزة نسخة بعد اليوم"، ومع ذلك بقي الشرط هنا يقرؤها.
+
+   فكانت هذه الدالة تخرج فوراً في كل مرة، فلا تُحمَّل ملفات ولا روابط ولا
+   جدول ولا اختبارات. والذي خدع الجميع أن الإضافة كانت "تعمل": لأن
+   uploadTeacherFile تستدعي loadTeacherFiles مباشرةً بلا هذا الشرط، فيظهر
+   الملف فور رفعه — ثم يختفي عند أول تحديث لأن مسار الإقلاع يمرّ من هنا.
+
+   والبيانات لم تُفقد قط: فحصُ قاعدة البيانات أظهر الملفات والروابط
+   والاختبارات كلها سليمة محفوظة. العطل كان في القراءة لا في الكتابة.
+
+   ➡️ الشرط الصحيح هو العضوية وحدها: من كان عضواً حمّلنا له مساحته. */
 async function loadSchoolWorkspace(){
-    if(!hasFeature("school") || !schoolCtx) return;
+    if(!schoolCtx) return;
     await loadSchoolClasses();
     loadTeacherFiles();
     loadTeacherLinks();

@@ -189,7 +189,10 @@
         </button>
 
         <!-- بديل زر الضيف في نسخة المدرسة: من لا حساب له يقدّم طلباً للإدارة -->
-        <button type="button" class="btn-ghost guest-cta-alt" data-tenant-only="motaqadima" style="display:none; width:100%; margin-top:18px; justify-content:center; font-weight:700;" onclick="openAccountRequest()">
+        <!-- ⚠️ كان data-tenant-only="motaqadima" فلم يظهر هذا الزر أبداً بعد
+             توحيد المنصّتين: السمة صارت "khuta" على كل الروابط. فمن لا حساب
+             له لم يجد طريقاً لطلبه إطلاقاً. -->
+        <button type="button" class="btn-ghost" style="width:100%; margin-top:10px; justify-content:center; font-weight:700;" onclick="openAccountRequest()">
             <i class="fa-solid fa-user-plus"></i> <span data-i18n="school.requestAccount">ليس لديك حساب؟ اطلب حساباً من المدرسة</span>
         </button>
 
@@ -2677,6 +2680,8 @@
 <script src="js/19-exam-send.js" defer></script>
 <script src="js/20-entry.js" defer></script>
 <script src="js/21-classes.js" defer></script>
+<script src="js/22-errors.js" defer></script>
+<script src="js/23-school-home.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

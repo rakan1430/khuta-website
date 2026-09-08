@@ -226,7 +226,7 @@ function renderExamBuilder(){
             <div class="exq-img-row">
                 ${q.image
                     ? `<div class="exq-img" data-img-path="${escapeHtml(q.image)}">
-                           <img alt="${currentLang==='ar'?'صورة السؤال':'Question image'}">
+                           <img alt="${currentLang==='ar'?'صورة السؤال':'Question image'}" hidden>
                            <button type="button" class="exq-img-x" onclick="removeExamImage(${qi}, null)" title="${currentLang==='ar'?'إزالة الصورة':'Remove image'}"><i class="fa-solid fa-xmark"></i></button>
                        </div>`
                     : `<button type="button" class="btn btn-outline btn-sm" onclick="pickExamImage(${qi}, null)">
@@ -246,7 +246,7 @@ function renderExamBuilder(){
                                oninput="updateExamText(${qi}, ${ci}, this.value)">
                         ${c.image
                             ? `<div class="exq-img exq-img-sm" data-img-path="${escapeHtml(c.image)}">
-                                   <img alt="${currentLang==='ar'?'صورة الخيار':'Choice image'}">
+                                   <img alt="${currentLang==='ar'?'صورة الخيار':'Choice image'}" hidden>
                                    <button type="button" class="exq-img-x" onclick="removeExamImage(${qi}, ${ci})"><i class="fa-solid fa-xmark"></i></button>
                                </div>`
                             : `<button type="button" class="btn-ghost btn-sm" onclick="pickExamImage(${qi}, ${ci})"
@@ -281,8 +281,11 @@ async function hydrateExamImages(root){
     for(const node of nodes){
         const img = node.querySelector("img");
         if(!img) continue;
+        /* ⚠️ الصورة تبقى hidden حتى يصل رابطها الموقَّع. لولا ذلك لظهرت
+           <img> بلا src، وكروم يرسمها **مربّعاً أبيض بأيقونة مستند** —
+           وهو أحد مصادر "المربّع الأبيض" الذي لاحظه المالك. */
         const url = await examImageUrl(node.getAttribute("data-img-path"));
-        if(url) img.src = url;
+        if(url){ img.src = url; img.hidden = false; }
         else node.classList.add("exq-img-broken");
     }
 }
