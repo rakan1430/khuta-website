@@ -512,7 +512,7 @@ async function loadTeacherExams(){
                     <div>
                         <b>${escapeHtml(x.title)}</b>
                         <div class="card-sub">${escapeHtml(x.subject || "")} · ${n} ${currentLang==='ar'?'سؤالاً':'questions'}
-                            ${x.published ? `· <span style="color:var(--teal);">${currentLang==='ar'?'منشور':'published'}</span>`
+                            ${x.published ? `· <span style="color:var(--teal-text); font-weight:700;">${currentLang==='ar'?'منشور':'published'}</span>`
                                           : `· ${currentLang==='ar'?'مسودة':'draft'}`}</div>
                     </div>
                 </div>
