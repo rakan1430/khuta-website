@@ -34,7 +34,7 @@ async function loadTeacherFiles(){
         // فلا نضيف شرط المالك حتى يرى كلٌّ ما يحق له.
         const { data, error } = await sb
             .from("teacher_files")
-            .select("id, title, subject, grade, storage_path, external_url, size_bytes, shared, owner_id, created_at")
+            .select("id, title, subject, grade, storage_path, external_url, size_bytes, shared, owner_id, short_code, created_at")
             .order("created_at", { ascending:false })
             .limit(200);
         if(error) throw error;
@@ -58,6 +58,8 @@ async function loadTeacherFiles(){
                 <div class="sfile-actions">
                     <button type="button" class="btn btn-sm" onclick="openTeacherFile('${escapeHtml(f.id)}')">
                         <i class="fa-solid fa-up-right-from-square"></i> ${currentLang==='ar'?'فتح':'Open'}</button>
+                    ${mine && f.short_code ? `<button type="button" class="btn btn-outline btn-sm" title="${currentLang==='ar'?'نسخ الرابط المميّز':'Copy share link'}"
+                        onclick="copyFileLink('${escapeHtml(f.short_code)}')"><i class="fa-solid fa-link"></i></button>` : ""}
                     ${mine ? `<button type="button" class="btn btn-outline btn-sm" onclick="deleteTeacherFile('${escapeHtml(f.id)}')">
                         <i class="fa-solid fa-trash"></i></button>` : ""}
                 </div>
@@ -689,6 +691,57 @@ async function deleteExam(id){
     }
 }
 
+
+/* ============================================================
+   الرابط المميّز للملف
+   ------------------------------------------------------------
+   ⚠️ الرمز اختصار لا مفتاح: من يفتح الرابط يخضع لسياسات teacher_files
+   كاملةً. فلو أعطى المعلّم الرابط لمن لا يحق له، لم يفتح له شيء. الرابط
+   يوفّر البحث فقط، ولا يمنح صلاحية إطلاقاً.
+   ============================================================ */
+function fileShareUrl(code){
+    return `${location.origin}${location.pathname}?f=${encodeURIComponent(code)}`;
+}
+
+async function copyFileLink(code){
+    const url = fileShareUrl(code);
+    try{
+        await navigator.clipboard.writeText(url);
+        showToast(currentLang==='ar' ? 'نُسخ الرابط ✅' : 'Link copied ✅');
+    }catch(e){
+        // النسخ يفشل بلا HTTPS أو بلا إذن — نعرضه ليُنسخ يدوياً بدل صمت محيّر
+        window.prompt(currentLang==='ar' ? 'انسخ الرابط:' : 'Copy the link:', url);
+    }
+}
+
+/** يفتح الملف مباشرة إن فُتح الموقع برابط مميّز. */
+async function openFileFromShortCode(){
+    let code = null;
+    try{ code = new URLSearchParams(location.search).get("f"); }catch(e){ return; }
+    if(!code || !/^[a-z2-9]{4,16}$/i.test(code)) return;
+    if(!sb) return;
+
+    try{
+        const { data, error } = await sb.rpc("file_by_short_code", { p_code: code.toLowerCase() });
+        if(error) throw error;
+        const row = Array.isArray(data) ? data[0] : data;
+        if(!row){
+            // الرمز الخاطئ والملف الممنوع يبدوان واحداً عمداً: لا نكشف وجود
+            // ملف لمن لا يحق له رؤيته.
+            showToast(currentLang==='ar' ? 'الملف غير متاح لحسابك' : 'File not available for your account');
+            return;
+        }
+        if(row.external_url){ window.open(row.external_url, "_blank", "noopener"); return; }
+        const { data: signed, error: sErr } = await sb.storage
+            .from("teacher-files").createSignedUrl(row.storage_path, 300);
+        if(sErr) throw sErr;
+        window.open(signed.signedUrl, "_blank", "noopener");
+    }catch(e){
+        console.error("[خُطى] تعذّر فتح الملف بالرابط المميّز:", e);
+        showToast(currentLang==='ar' ? 'تعذّر فتح الملف' : 'Could not open the file');
+    }
+}
+
 /* يُستدعى عند فتح قسم المدرسة — يحمّل ما يخصّ الدور الحالي فقط */
 async function loadSchoolWorkspace(){
     if(!hasFeature("school") || !schoolCtx) return;
@@ -701,6 +754,7 @@ async function loadSchoolWorkspace(){
     if(schoolCtx.role !== "student" && typeof renderExamBuilder === "function"){
         try{ renderExamBuilder(); }catch(e){ console.warn("[خُطى] تعذّر رسم منشئ الاختبارات:", e); }
     }
+    openFileFromShortCode();
 }
 
 /* ملاحظة ترتيب: صرف أحداث المصادقة كان هنا حين كان هذا آخر ملف، ثم انتقل
