@@ -2157,15 +2157,33 @@
                                 <option value="3" data-i18n="school.grade3">ثالث ثانوي</option>
                             </select>
                         </div>
-                        <div class="form-group"><label data-i18n="school.examClass">الفصل الموجَّه له</label><select id="exam-class"></select></div>
+                        <div class="form-group"><label data-i18n="school.examDuration">المدة بالدقائق (اختياري)</label><input type="number" id="exam-duration" min="1" max="300" placeholder="45"></div>
                     </div>
-                    <div class="form-group">
-                        <label data-i18n="school.examRaw">الأسئلة — سطر لكل سؤال</label>
-                        <textarea id="exam-raw" rows="6" placeholder="ما ناتج ٥ + ٧؟ | ١٠ | ١٢ | ١٤ | ١٦ | 2"></textarea>
-                        <p class="hint" data-i18n="school.examRawHint">الشكل: نص السؤال | خيار | خيار | خيار | خيار | رقم الإجابة الصحيحة (يبدأ من ١)</p>
+
+                    <!-- المنشئ المرئي: كل سؤال بطاقة، ولكل سؤال وخيار صورة اختيارية -->
+                    <div class="exq-toolbar">
+                        <b data-i18n="school.examQuestions">الأسئلة</b>
+                        <span id="exam-builder-count" class="hint"></span>
                     </div>
-                    <div id="exam-parse-errors" class="uni-note" style="display:none; margin-bottom:12px;"></div>
-                    <button type="button" id="exam-create" class="btn acc-btn" onclick="createExam()">
+                    <div id="exam-builder"></div>
+                    <button type="button" class="btn btn-outline btn-block acc-btn" style="margin-top:10px;" onclick="addExamQuestion()">
+                        <i class="fa-solid fa-plus"></i> <span data-i18n="school.examAddQ">أضف سؤالاً</span>
+                    </button>
+
+                    <!-- الاستيراد السريع: لمن عنده أسئلة نصية جاهزة ولا يريد إدخالها واحداً واحداً -->
+                    <details class="exq-import">
+                        <summary data-i18n="school.examImport">استيراد سريع بلصق نصّي</summary>
+                        <div class="form-group" style="margin-top:10px;">
+                            <textarea id="exam-raw" rows="4" placeholder="ما ناتج ٥ + ٧؟ | ١٠ | ١٢ | ١٤ | ١٦ | 2"></textarea>
+                            <p class="hint" data-i18n="school.examRawHint">الشكل: نص السؤال | خيار | خيار | خيار | خيار | رقم الإجابة الصحيحة (يبدأ من ١)</p>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm acc-btn" onclick="importExamFromText()">
+                            <i class="fa-solid fa-file-import"></i> <span data-i18n="school.examImportBtn">أضِف للمسودّة</span>
+                        </button>
+                    </details>
+
+                    <div id="exam-parse-errors" class="uni-note" style="display:none; margin:12px 0;"></div>
+                    <button type="button" id="exam-save" class="btn acc-btn" style="margin-top:12px;" onclick="saveExamDraft()">
                         <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="school.examSave">حفظ الاختبار</span>
                     </button>
                     <hr style="border:none; border-top:1px solid var(--border); margin:18px 0;">
@@ -2174,6 +2192,44 @@
                 <div id="sexams-list"></div>
             </div>
         </section>
+
+        <!-- ===================== إرسال الاختبار: فصول / مراحل / طلاب ===================== -->
+        <div id="exam-send-modal" class="overlay-screen" style="display:none;">
+            <div class="wizard-card" style="max-width:520px;">
+                <h3 style="margin-bottom:4px;" data-i18n="school.sendTitle">إرسال الاختبار</h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.sendSub">اختر فصولاً أو مراحل أو طلاباً بأعيانهم. يمكنك الجمع بينها.</p>
+
+                <div class="exq-tabs">
+                    <button type="button" id="exam-send-tab-classes"  class="exq-tab is-active" onclick="setExamSendMode('classes')"><i class="fa-solid fa-users"></i> <span data-i18n="school.sendClasses">فصول</span></button>
+                    <button type="button" id="exam-send-tab-grades"   class="exq-tab" onclick="setExamSendMode('grades')"><i class="fa-solid fa-layer-group"></i> <span data-i18n="school.sendGrades">مراحل</span></button>
+                    <button type="button" id="exam-send-tab-students" class="exq-tab" onclick="setExamSendMode('students')"><i class="fa-solid fa-user"></i> <span data-i18n="school.sendStudents">طلاب</span></button>
+                </div>
+
+                <div id="exam-send-search-wrap" class="form-group" style="display:none; margin-top:12px;">
+                    <input type="text" id="exam-send-search" placeholder="ابحث باسم الطالب…" oninput="renderExamSend()">
+                </div>
+
+                <div id="exam-send-body" class="pick-list"></div>
+
+                <p id="exam-send-summary" class="hint" style="margin-top:10px;"></p>
+                <div style="display:flex; gap:10px; margin-top:12px;">
+                    <button type="button" id="exam-send-confirm" class="btn acc-btn" style="flex:1;" onclick="confirmExamSend()" disabled>
+                        <i class="fa-solid fa-paper-plane"></i> <span data-i18n="school.sendNow">إرسال</span>
+                    </button>
+                    <button type="button" class="btn btn-outline acc-btn" style="flex:1;" onclick="closeExamSend()"><span data-i18n="qr.close">إغلاق</span></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== نتائج الطلاب ومحاولاتهم ===================== -->
+        <div id="exam-results-modal" class="overlay-screen" style="display:none;">
+            <div class="wizard-card" style="max-width:560px;">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-chart-simple"></i> <span id="exam-results-title"></span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.resultsSub">أفضل نتيجة لكل طالب، وكل محاولاته بجانبها.</p>
+                <div id="exam-results-body" class="res-list"></div>
+                <button type="button" class="btn btn-outline btn-block acc-btn" style="margin-top:14px;" onclick="closeSchoolExamResults()"><span data-i18n="qr.close">إغلاق</span></button>
+            </div>
+        </div>
 
         <!-- ===================== إدارة المدرسة (المدير فقط) ===================== -->
         <section id="view-schooladmin" class="view-section">
@@ -2490,5 +2546,9 @@
 <script src="js/15-demo.js" defer></script>
 <script src="js/16-qr.js" defer></script>
 <script src="js/17-qr-login.js" defer></script>
+<script src="js/18-exam-builder.js" defer></script>
+<script src="js/19-exam-send.js" defer></script>
+<!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
+<script src="js/99-boot-flush.js" defer></script>
 </body>
 </html>

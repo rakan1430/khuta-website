@@ -3130,3 +3130,110 @@ body.has-demo-bar .mobile-nav{ inset-block-end: 68px; }
     .demo-hint{ display: none; }   /* المساحة للأزرار على الجوال */
     body.has-demo-bar{ padding-block-end: 130px; }
 }
+
+/* ============================================================
+   منشئ الاختبارات المرئي، ومنتقي المستهدفين، ولوحة النتائج
+   ------------------------------------------------------------
+   ⚠️ الأحجام هنا أكبر من المعتاد عمداً: هذه الشاشات تُستعمل على سبورة
+   ذكية تُلمس بالإصبع لا بالفأرة، فمساحة اللمس لا تقل عن ٤٤ بكسل.
+   ============================================================ */
+
+.exq-toolbar{ display:flex; align-items:center; justify-content:space-between; margin:6px 0 10px; }
+
+.exq-card{
+    border:1px solid var(--border); border-radius:16px; padding:14px;
+    background:var(--bg-alt); margin-bottom:12px;
+}
+.exq-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.exq-head-actions{ display:flex; gap:2px; }
+.exq-head-actions .btn-ghost{ min-width:38px; min-height:38px; justify-content:center; }
+
+.exq-text{ width:100%; resize:vertical; }
+.exq-img-row{ margin:8px 0; }
+
+.exq-img{ position:relative; display:inline-block; line-height:0; }
+.exq-img img{
+    max-width:100%; max-height:200px; border-radius:12px;
+    border:1px solid var(--border); background:#fff;
+}
+.exq-img-sm img{ max-height:64px; }
+.exq-img-broken::after{
+    content:"⚠"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:var(--bg); border:1px dashed var(--border); border-radius:12px;
+    min-width:64px; min-height:48px; font-size:20px; color:var(--text-3);
+}
+.exq-img-x{
+    position:absolute; inset-block-start:-8px; inset-inline-end:-8px;
+    width:28px; height:28px; border-radius:50%; border:1px solid var(--border);
+    background:var(--bg); color:var(--text-2); cursor:pointer; line-height:1;
+}
+.exq-img-x:hover{ color:var(--danger); }
+
+.exq-choices{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.exq-choice{
+    display:flex; align-items:center; gap:8px;
+    padding:6px 8px; border-radius:12px; border:1px solid transparent;
+}
+/* الإجابة الصحيحة تُميَّز بالإطار واللون معاً لا باللون وحده — من لا يميّز
+   الألوان يجب أن يرى الفرق أيضاً */
+.exq-choice.is-correct{ border-color:var(--teal-text); background:color-mix(in srgb, var(--teal-text) 8%, transparent); }
+.exq-choice-text{ flex:1; min-width:0; }
+.exq-radio{
+    background:none; border:none; cursor:pointer; font-size:20px; padding:6px;
+    color:var(--text-3); min-width:40px; min-height:40px;
+}
+.exq-choice.is-correct .exq-radio{ color:var(--teal-text); }
+
+.exq-foot{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:10px; }
+.exq-issue{ color:var(--gold-text); font-size:12px; font-weight:600; }
+
+.exq-import{ margin-top:14px; border:1px solid var(--border); border-radius:14px; padding:10px 14px; }
+.exq-import summary{ cursor:pointer; font-weight:700; font-size:13px; }
+
+/* ---------- تبويبات ومنتقي المستهدفين ---------- */
+.exq-tabs{ display:flex; gap:6px; }
+.exq-tab{
+    flex:1; padding:10px 8px; border-radius:12px; cursor:pointer;
+    border:1px solid var(--border); background:var(--bg); color:var(--text-2);
+    font-weight:700; font-size:13px; min-height:44px;
+}
+.exq-tab.is-active{ background:var(--gold-text); color:#fff; border-color:var(--gold-text); }
+
+.pick-list{ max-height:46vh; overflow-y:auto; margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+.pick-row{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:start;
+    padding:10px 12px; min-height:52px; cursor:pointer;
+    border:1px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text);
+}
+.pick-row.is-on{ border-color:var(--teal-text); background:color-mix(in srgb, var(--teal-text) 8%, transparent); }
+.pick-row i{ color:var(--text-3); font-size:16px; }
+.pick-row.is-on i{ color:var(--teal-text); }
+.pick-main{ display:flex; flex-direction:column; min-width:0; }
+.pick-main small{ color:var(--text-3); font-size:11.5px; }
+
+/* ---------- النتائج ---------- */
+.res-list{ max-height:50vh; overflow-y:auto; }
+.res-summary{ color:var(--text-3); font-size:12.5px; margin-bottom:10px; }
+.res-row{
+    display:grid; grid-template-columns:1fr auto; gap:6px 12px; align-items:center;
+    padding:10px 0; border-block-end:1px solid var(--border);
+}
+.res-who{ display:flex; flex-direction:column; min-width:0; }
+.res-who small{ color:var(--text-3); font-size:11.5px; }
+.res-score{ font-weight:800; font-size:17px; font-family:'IBM Plex Mono',monospace; }
+.res-attempts{ grid-column:1 / -1; display:flex; gap:6px; flex-wrap:wrap; }
+.res-chip{
+    display:inline-flex; flex-direction:column; align-items:center;
+    padding:4px 8px; border-radius:9px; border:1px solid var(--border);
+    font-size:12px; font-weight:700; font-family:'IBM Plex Mono',monospace;
+}
+.res-chip small{ font-family:inherit; font-size:9.5px; font-weight:500; color:var(--text-3); }
+.res-good{ color:var(--teal-text); }
+.res-mid{  color:var(--gold-text); }
+.res-low{  color:var(--danger); }
+.res-none{ color:var(--text-3); }
+
+@media (max-width: 600px){
+    .exq-tab{ font-size:12px; padding:8px 4px; }
+    .exq-img img{ max-height:150px; }
+}

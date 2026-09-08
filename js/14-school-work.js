@@ -527,6 +527,13 @@ async function deleteDayNote(id){
 /* ============================================================
    اختبارات المدرّس
    ============================================================ */
+/* ⚠️ عناوين الاختبارات يكتبها المعلّم، فلا تدخل داخل onclick إطلاقاً.
+   السبب دقيق ويسهل الوقوع فيه: escapeHtml يحوّل ' إلى &#39;، لكن متصفّح
+   HTML يفكّ هذا الترميز *قبل* أن يقرأ محرّك جافاسكربت السمة — فتعود '
+   علامةً حقيقية تكسر النص وتُنفّذ ما بعدها. (مُثبَت عملياً باختبار متصفح:
+   عنوان فيه ') نفّذ كود المهاجم.) فنمرّر المعرّف وحده ونقرأ العنوان من هنا. */
+const teacherExamTitles = new Map();
+
 async function loadTeacherExams(){
     const box = document.getElementById("sexams-list");
     if(!box || !schoolCtx || !sb) return;
@@ -540,6 +547,8 @@ async function loadTeacherExams(){
             box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'لا توجد اختبارات بعد.':'No exams yet.'}</p>`;
             return;
         }
+        teacherExamTitles.clear();
+        data.forEach(x => teacherExamTitles.set(x.id, x.title));
         box.innerHTML = data.map(x => {
             const n = Array.isArray(x.questions) ? x.questions.length : 0;
             const mine = x.owner_id === schoolCtx.memberId;
@@ -555,8 +564,12 @@ async function loadTeacherExams(){
                     </div>
                 </div>
                 ${mine ? `<div class="sfile-actions">
-                    ${!x.published ? `<button type="button" class="btn btn-sm" onclick="publishExam('${escapeHtml(x.id)}')">
-                        <i class="fa-solid fa-paper-plane"></i> ${currentLang==='ar'?'إرسال للفصل':'Send to class'}</button>` : ""}
+                    <button type="button" class="btn btn-sm" onclick="openExamSend('${escapeHtml(x.id)}')">
+                        <i class="fa-solid fa-paper-plane"></i> ${x.published
+                            ? (currentLang==='ar'?'إرسال لمزيد':'Send to more')
+                            : (currentLang==='ar'?'إرسال':'Send')}</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="openSchoolExamResults('${escapeHtml(x.id)}')">
+                        <i class="fa-solid fa-chart-simple"></i> ${currentLang==='ar'?'النتائج':'Results'}</button>
                     <button type="button" class="btn btn-outline btn-sm" onclick="deleteExam('${escapeHtml(x.id)}')"><i class="fa-solid fa-trash"></i></button>
                 </div>` : ""}
             </div>`;
@@ -684,6 +697,10 @@ async function loadSchoolWorkspace(){
     loadTeacherLinks();
     loadTimetable();
     loadTeacherExams();
+    // المنشئ المرئي يبدأ بسؤال فارغ جاهز — بطاقة فارغة أوضح من زر وحيد
+    if(schoolCtx.role !== "student" && typeof renderExamBuilder === "function"){
+        try{ renderExamBuilder(); }catch(e){ console.warn("[خُطى] تعذّر رسم منشئ الاختبارات:", e); }
+    }
 }
 
 /* ملاحظة ترتيب: صرف أحداث المصادقة كان هنا حين كان هذا آخر ملف، ثم انتقل
