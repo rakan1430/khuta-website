@@ -52,7 +52,7 @@ async function loadTeacherFiles(){
                     <i class="fa-solid ${f.external_url ? "fa-link" : "fa-file-pdf"}"></i>
                     <div>
                         <b>${escapeHtml(f.title)}</b>
-                        <div class="card-sub">${meta}${escapeHtml(size)}${f.shared ? "" : (currentLang==='ar'?' · خاص بي':' · private')}</div>
+                        <div class="card-sub">${meta}${escapeHtml(size)}${f.shared ? "" : (currentLang==='ar'?' · خاص بي':' · private')}${mine ? "" : schoolSourceLine(f.owner_id)}</div>
                     </div>
                 </div>
                 <div class="sfile-actions">
@@ -205,7 +205,9 @@ async function loadTeacherLinks(){
             <div class="slink-row">
                 <a class="slink-open" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">
                     <i class="fa-solid ${escapeHtml(l.icon || "fa-link")}"></i>
-                    <span>${escapeHtml(l.label)}</span>
+                    <span>${escapeHtml(l.label)}${l.owner_id === schoolCtx.memberId ? "" :
+                        (schoolStaffName(l.owner_id) ? `<small class="card-sub" style="display:block;">${
+                            currentLang==='ar'?'من':'from'} ${escapeHtml(schoolStaffName(l.owner_id))}</small>` : "")}</span>
                 </a>
                 ${l.owner_id === schoolCtx.memberId ? `
                 <button type="button" class="btn btn-ghost btn-sm" onclick="deleteTeacherLink('${escapeHtml(l.id)}')" aria-label="${currentLang==='ar'?'حذف':'Delete'}">
@@ -385,10 +387,12 @@ function renderTimetable(rows, notes){
     let head = `<div class="tt-cell tt-corner">${currentLang==='ar'?'الحصة':'Period'}</div>`;
     SCHOOL_DAYS.forEach(wd => {
         const iso = dateOfWeekday(wd);
-        const dayNotes = notesByDate[iso] || [];
-        const marked = dayNotes.some(n => n.kind === "highlight");
+        // ملاحظات اليوم كله وحدها هنا — ملاحظات الحصص تظهر على الحصص نفسها
+        const dayNotes = (notesByDate[iso] || []).filter(n => n.period_no === null || n.period_no === undefined);
+        const mark = dayNotes.find(n => n.kind === "highlight");
         head += `
-        <div class="tt-cell tt-dayhead${marked ? " is-marked" : ""}${wd === todayWd ? " is-today" : ""}">
+        <div class="tt-cell tt-dayhead${mark ? " is-marked" : ""}${wd === todayWd ? " is-today" : ""}"
+             ${mark && mark.color ? `style="background:${escapeHtml(mark.color)}; color:#fff;"` : ""}>
             <span class="tt-dayname">${escapeHtml(weekdayName(wd))}</span>
             <button type="button" class="tt-notebtn" onclick="openDayNote('${escapeHtml(iso)}')"
                     title="${currentLang==='ar'?'ملاحظاتي على هذا اليوم':'My notes'}">
@@ -406,10 +410,22 @@ function renderTimetable(rows, notes){
                 body += `<div class="tt-cell tt-empty${wd === todayWd ? " is-today" : ""}"></div>`;
                 return;
             }
+            /* ⚠️ الملاحظة على الحصّة نفسها لا على اليوم كله.
+               وصف المالك: «علامة التمييز والملاحظة لا يمكن وضعها على الحصص
+               ذاتها بل فقط على الأيام، وهذا غير جيد». وهو محق — من يريد
+               تذكير "تسليم الواجب" يريده على حصة الرياضيات لا على الأربعاء. */
+            const iso = dateOfWeekday(wd);
+            const slotNotes = (notesByDate[iso] || []).filter(n => Number(n.period_no) === p);
+            const slotMark = slotNotes.find(n => n.kind === "highlight" && n.color);
             body += `
-            <div class="tt-cell tt-slot${wd === todayWd ? " is-today" : ""}">
+            <div class="tt-cell tt-slot${wd === todayWd ? " is-today" : ""}${slotMark ? " is-marked" : ""}"
+                 ${slotMark ? `style="box-shadow: inset 4px 0 0 ${escapeHtml(slotMark.color)};"` : ""}>
                 <span class="tt-subj">${escapeHtml(cell.subject)}</span>
                 ${cell.room ? `<span class="tt-room">${escapeHtml(cell.room)}</span>` : ""}
+                <button type="button" class="tt-notebtn tt-slot-note" onclick="openDayNote('${escapeHtml(iso)}', ${p})"
+                        title="${currentLang==='ar'?'ملاحظة على هذه الحصة':'Note on this period'}">
+                    <i class="fa-solid fa-note-sticky"></i>${slotNotes.length ? `<b>${slotNotes.length}</b>` : ""}
+                </button>
                 ${canEdit ? `<button type="button" class="tt-del" onclick="deletePeriod('${escapeHtml(cell.id)}')"
                         aria-label="${currentLang==='ar'?'حذف':'Delete'}"><i class="fa-solid fa-xmark"></i></button>` : ""}
             </div>`;
@@ -428,7 +444,8 @@ function renderTimetable(rows, notes){
                 <div class="tt-note">
                     <i class="fa-solid ${n.kind === "reminder" ? "fa-bell" : "fa-pen"}"></i>
                     <span>${escapeHtml(n.text || "")}</span>
-                    <span class="card-sub">${escapeHtml(n.on_date)}</span>
+                    <span class="card-sub">${escapeHtml(n.on_date)}${n.period_no
+                        ? ` · ${currentLang==='ar' ? `الحصة ${n.period_no}` : `Period ${n.period_no}`}` : ""}</span>
                     <button type="button" class="btn btn-ghost btn-sm" onclick="deleteDayNote('${escapeHtml(n.id)}')"
                             aria-label="${currentLang==='ar'?'حذف':'Delete'}"><i class="fa-solid fa-xmark"></i></button>
                 </div>`).join("")}
@@ -486,21 +503,58 @@ async function loadDayNotes(){
     if(!sb || !schoolCtx) return [];
     try{
         const { data, error } = await sb.from("day_notes")
-            .select("id, on_date, kind, text, color").limit(300);
+            .select("id, on_date, period_no, kind, text, color").limit(300);
         if(error) throw error;
         return data || [];
     }catch(e){ console.warn("[خُطى] تعذّر تحميل الملاحظات:", e); return []; }
 }
 
 let dayNoteDate = null;
-function openDayNote(iso){
+let dayNotePeriod = null;   // رقم الحصة، أو null لملاحظة اليوم كله
+/* ألوان التمييز — طلبها المالك صراحةً: «أن يكون للطالب القدرة على بعض
+   التخصيص في جدوله، مثلاً وضع يوم محدّد بلون ويوم آخر بلون آخر». */
+const DAY_NOTE_COLORS = [
+    { c:"#C9A227", ar:"ذهبي",  en:"Gold"   },
+    { c:"#2E6BE0", ar:"أزرق",  en:"Blue"   },
+    { c:"#1E8449", ar:"أخضر",  en:"Green"  },
+    { c:"#C0392B", ar:"أحمر",  en:"Red"    },
+    { c:"#7C5CBF", ar:"بنفسجي",en:"Purple" },
+];
+let dayNoteColor = DAY_NOTE_COLORS[0].c;
+
+function pickDayNoteColor(c){
+    dayNoteColor = c;
+    document.querySelectorAll("#dnote-colors .dnote-color")
+        .forEach(el => el.classList.toggle("is-on", el.dataset.color === c));
+}
+
+function openDayNote(iso, periodNo){
     dayNoteDate = iso;
+    dayNotePeriod = (periodNo === undefined || periodNo === null) ? null : Number(periodNo);
     const ov = document.getElementById("day-note-overlay");
     if(!ov) return;
     const title = document.getElementById("dnote-date");
-    if(title) title.textContent = iso;
+    if(title){
+        title.textContent = dayNotePeriod
+            ? `${iso} — ${currentLang==='ar' ? `الحصة ${dayNotePeriod}` : `Period ${dayNotePeriod}`}`
+            : iso;
+    }
     const txt = document.getElementById("dnote-text");
     if(txt) txt.value = "";
+
+    // شريط الألوان يُبنى مرة واحدة ويُعاد استعماله
+    let colors = document.getElementById("dnote-colors");
+    if(!colors){
+        colors = document.createElement("div");
+        colors.id = "dnote-colors";
+        colors.className = "dnote-colors";
+        colors.innerHTML = DAY_NOTE_COLORS.map(k =>
+            `<button type="button" class="dnote-color" data-color="${k.c}" style="background:${k.c};"
+                     title="${currentLang==='ar'?k.ar:k.en}" aria-label="${currentLang==='ar'?k.ar:k.en}"
+                     onclick="pickDayNoteColor('${k.c}')"></button>`).join("");
+        if(txt && txt.parentElement) txt.parentElement.insertBefore(colors, txt.nextSibling);
+    }
+    pickDayNoteColor(dayNoteColor);
     ov.style.display = "flex";
 }
 function closeDayNote(){
@@ -519,9 +573,10 @@ async function saveDayNote(kind){
             school_id: schoolCtx.schoolId,
             owner_id: schoolCtx.memberId,
             on_date: dayNoteDate,
+            period_no: dayNotePeriod,          // null = اليوم كله، كالسابق تماماً
             kind,
             text: kind === "highlight" ? (txt || null) : txt,
-            color: kind === "highlight" ? "#C9A227" : null,
+            color: kind === "highlight" ? dayNoteColor : null,
         });
         if(error) throw error;
         closeDayNote();
@@ -578,9 +633,13 @@ async function loadTeacherExams(){
                         <b>${escapeHtml(x.title)}</b>
                         <div class="card-sub">${escapeHtml(x.subject || "")} · ${n} ${currentLang==='ar'?'سؤالاً':'questions'}
                             ${x.published ? `· <span style="color:var(--teal-text); font-weight:700;">${currentLang==='ar'?'منشور':'published'}</span>`
-                                          : `· ${currentLang==='ar'?'مسودة':'draft'}`}</div>
+                                          : `· ${currentLang==='ar'?'مسودة':'draft'}`}${schoolSourceLine(x.owner_id)}</div>
                     </div>
                 </div>
+                ${!mine ? `<div class="sfile-actions">
+                    <button type="button" class="btn btn-sm acc-btn" onclick="openStudentExam('${escapeHtml(x.id)}')">
+                        <i class="fa-solid fa-pen-to-square"></i> ${currentLang==='ar'?'ابدأ الاختبار':'Start'}</button>
+                </div>` : ""}
                 ${mine ? `<div class="sfile-actions">
                     <button type="button" class="btn btn-sm" onclick="openExamSend('${escapeHtml(x.id)}')">
                         <i class="fa-solid fa-paper-plane"></i> ${x.published
@@ -712,6 +771,9 @@ async function openFileFromShortCode(){
 async function loadSchoolWorkspace(){
     if(!schoolCtx) return;
     await loadSchoolClasses();
+    // ⚠️ الأسماء أولاً بـawait: القوائم تكتب "من: فلان" وهي ترسم، فلو جاءت
+    // الأسماء بعدها ظهر الطالب أمام ملفات بلا مصدر — وهي الشكوى نفسها.
+    if(typeof loadSchoolStaffNames === "function") await loadSchoolStaffNames();
     loadTeacherFiles();
     loadTeacherLinks();
     loadTimetable();

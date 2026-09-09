@@ -2745,9 +2745,18 @@ body.dark-mode .chatbot-board-btn{
     transform:translateX(-50%) translateY(24px); opacity:0;
     transition:opacity .3s var(--ease), transform .3s var(--ease);
     padding:14px 16px; border-radius:18px;
-    background:var(--surface-raised); border:1px solid var(--border); box-shadow:var(--shadow-lg);
+    /* ⚠️ القيمة الاحتياطية ليست زينة: هذا العنصر هو "المربّع الأبيض" الذي
+       شكا منه المالك. لو تعذّر حلّ ‎--surface-raised‎ لأي سبب (تنسيق قديم
+       عالق في ذاكرة المتصفح، أو تحميل ناقص) سقط إلى الأبيض في وضع داكن،
+       فظهر مربّعاً أبيض معلّقاً أسفل الشاشة بلا تفسير. */
+    background:var(--surface-raised, #1E2A46); border:1px solid var(--border, #293552);
+    box-shadow:var(--shadow-lg); color:var(--text-1, #F3EFE6);
 }
+/* والوضع الفاتح يصرّح بلونه هو أيضاً بدل الاعتماد على وراثة قد تنقطع */
+body:not(.dark-mode) .install-banner{ background:#FFFFFF; color:#1F2937; }
 .install-banner.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+/* ولا يظهر لحساب مدرسي إطلاقاً — حتى لو استُدعي إظهاره بالخطأ من أي مسار */
+body.is-school .install-banner{ display:none !important; }
 .install-banner-icon{
     width:40px; height:40px; border-radius:13px; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
@@ -3093,7 +3102,28 @@ body.is-school input[type="radio"],
     display: inline-flex; align-items: center; justify-content: center; gap: 3px;
     cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 800;
 }
-.tt-slot{ background: var(--card); border: 1px solid var(--border); }
+.tt-slot{ background: var(--card); border: 1px solid var(--border); position: relative; }
+
+/* ── ملاحظة على الحصة نفسها، لا على اليوم كله ──
+   زرّها يبقى باهتاً حتى يُلمس أو تكون عليه ملاحظة: الجدول أداةُ قراءة
+   سريعة أولاً، ولا يجوز أن يزدحم بأزرارٍ في كل خانة. */
+.tt-slot-note{
+    position: absolute; inset-block-end: 4px; inset-inline-start: 4px;
+    opacity: .35; transition: opacity .18s;
+}
+.tt-slot:hover .tt-slot-note,
+.tt-slot-note:focus-visible,
+.tt-slot-note:has(b){ opacity: 1; }
+.tt-slot.is-marked{ font-weight: 700; }
+
+/* ── ألوان تمييز الأيام والحصص (تخصيص الطالب لجدوله) ── */
+.dnote-colors{ display: flex; gap: 10px; margin: 12px 0 4px; flex-wrap: wrap; }
+.dnote-color{
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+    border: 2px solid var(--border); padding: 0; transition: .18s;
+}
+.dnote-color:hover{ transform: scale(1.12); }
+.dnote-color.is-on{ border-color: var(--text-1); box-shadow: 0 0 0 3px var(--bg-alt); }
 .tt-slot.is-today, .tt-empty.is-today, .tt-dayhead.is-today{
     outline: 2px solid var(--gold-soft, var(--gold-text));
     outline-offset: -2px;

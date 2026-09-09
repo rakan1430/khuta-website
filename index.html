@@ -188,13 +188,14 @@
             <span data-i18n="login.guest">المتابعة كضيف بدون حساب</span> <i class="fa-solid fa-arrow-left rtl-flip"></i>
         </button>
 
-        <!-- بديل زر الضيف في نسخة المدرسة: من لا حساب له يقدّم طلباً للإدارة -->
-        <!-- ⚠️ كان data-tenant-only="motaqadima" فلم يظهر هذا الزر أبداً بعد
-             توحيد المنصّتين: السمة صارت "khuta" على كل الروابط. فمن لا حساب
-             له لم يجد طريقاً لطلبه إطلاقاً. -->
-        <button type="button" class="btn-ghost" style="width:100%; margin-top:10px; justify-content:center; font-weight:700;" onclick="openAccountRequest()">
-            <i class="fa-solid fa-user-plus"></i> <span data-i18n="school.requestAccount">ليس لديك حساب؟ اطلب حساباً من المدرسة</span>
-        </button>
+        <!-- ⚠️ زرّ "اطلب حساباً من المدرسة" حُذف من هنا عمداً.
+             وصف المالك السبب بدقة: «الموقع سيكون عاماً، ليس مخصّصاً للمدرسة.
+             إذا كان الطالب من طلاب المدرسة سيكون لديه رابط أو امتداد آخر».
+             وهو محق: خُطى منصةٌ لكل طلاب المملكة، وذكرُ مدرسة بعينها في
+             شاشة دخولها يربك آلاف الطلاب الذين لا علاقة لهم بها، ويوحي
+             أن الموقع تابع لتلك المدرسة.
+             الباب لم يُغلق، بل صار مقصوداً: ‎?apply=teacher‎ للمعلّم
+             و‎?apply=student‎ للطالب — يفتحهما js/20-entry.js مباشرة. -->
 
         <!-- دخول السبورة برمز QR — للمعلّمين، ولا يظهر لمستخدمي خُطى العاديين
              (يُظهره js/17-qr-login.js حين تكون الصفحة مدخل مدرسة) -->
@@ -2720,6 +2721,7 @@
 <script src="js/21-classes.js" defer></script>
 <script src="js/22-errors.js" defer></script>
 <script src="js/23-school-home.js" defer></script>
+<script src="js/24-student-exam.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

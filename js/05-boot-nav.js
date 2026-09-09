@@ -946,6 +946,21 @@ async function installKhutaApp(){
 
 // يظهر مرة واحدة لكل متصفح ولا يعود أبداً بعد إغلاقه أو استخدامه. لا يعتمد على
 // beforeinstallprompt عمداً كي يصل لطلاب iOS أيضاً (لا يُطلَق الحدث عندهم إطلاقاً).
+/* ⚠️ هذا هو "المربّع الأبيض" الذي شكا منه المالك مراراً.
+   ------------------------------------------------------------
+   بحثتُ عنه طويلاً في أقسام المدرسة وهو ليس منها: إنه إعلان تثبيت التطبيق،
+   وهو العنصر الوحيد في كل ملف التنسيق المثبَّت أسفل الشاشة في وسطها
+   (‎position:fixed; left:50%; bottom:26px‎). والأيقونة التي بدت "مستنداً"
+   هي fa-mobile-screen-button — رسمُ جوّال يقرأه النظر مستنداً بهذا الحجم.
+
+   وثلاثة أشياء كانت خاطئة فيه:
+   ١) يظهر لطالب المدرسة وللمعلّم على سبورة الفصل — والسبورة جهاز مشترك
+      لا يُثبَّت عليه تطبيق، فالإعلان بلا معنى هناك ويغطّي آخر البطاقات.
+   ٢) يبقى معلّقاً إلى الأبد حتى يُغلقه أحد. ومن لا يعرف ما هو لا يغلقه —
+      فيبقى مربّعاً غامضاً في أسفل الشاشة كل يوم.
+   ٣) لا شيء يضمن لونه لو تعطّل تحميل التنسيق أو بقيت نسخة قديمة منه في
+      ذاكرة المتصفح — عندها يسقط ‎--surface-raised‎ إلى قيمة الجذر البيضاء
+      فيصير مربّعاً أبيض في وضع داكن. (عولج في styles.css أيضاً.) */
 function maybeAnnounceInstallOnce(){
     if(localStorage.getItem(INSTALL_ANNOUNCED_KEY) === "1") return;
     if(isRunningAsInstalledApp()){
@@ -956,8 +971,20 @@ function maybeAnnounceInstallOnce(){
     setTimeout(() => {
         const bar = document.getElementById("install-banner");
         if(!bar || localStorage.getItem(INSTALL_ANNOUNCED_KEY) === "1") return;
+
+        // حساب مدرسي؟ لا إعلان إطلاقاً — ونعلّمه مقروءاً فلا يعود
+        if(typeof schoolCtx !== "undefined" && schoolCtx){
+            localStorage.setItem(INSTALL_ANNOUNCED_KEY, "1");
+            return;
+        }
+
         bar.style.display = "flex";
         requestAnimationFrame(() => bar.classList.add("show"));
+
+        // ينصرف وحده بعد اثنتي عشرة ثانية — رأى الطالب الرسالة، ولا يبقى
+        // مربّعٌ غامض في أسفل شاشته لأنه لم يعرف أن عليه إغلاقه
+        clearTimeout(window.__khutaInstallAutoHide);
+        window.__khutaInstallAutoHide = setTimeout(dismissInstallBanner, 12000);
     }, 4000);
 }
 

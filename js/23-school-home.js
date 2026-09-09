@@ -26,8 +26,20 @@ const STUDENT_ONLY_CARDS = [
     "dash-card-community",
 ];
 
-/* وما يبقى مفيداً للمعلّم: جدوله، ومؤقّت الجلسة على السبورة */
-const STAFF_KEEP_CARDS = ["dash-card-table", "dash-card-timer"];
+/* ⚠️ "جدول مهامك المخصّص" خرج من هنا بعد ملاحظة المالك:
+   «لماذا يوجد بها جدول مهامك؟ ولماذا يحوي أشياء لا يحتاجها المعلّم أو المدير؟»
+   وهو محق — ذلك الجدول يُولَّد من خطة الطالب لاختبار القدرات (عدد الأيام،
+   الصفحات اليومية، المصادر). لا معنى له لمن لا يذاكر للقدرات أصلاً. */
+const STAFF_HIDE_CARDS = ["dash-card-table"];
+
+/* ويبقى المؤقّت وحده: المعلّم يشغّله على السبورة أمام الصف فعلاً */
+const STAFF_KEEP_CARDS = ["dash-card-timer"];
+
+/* أقسام رحلة الطالب في القدرات — لا تخصّ معلّماً ولا إدارة.
+   وصفها المالك بدقة: «يجب أن يكون الموقع مخصّصاً لكل شخص ولكل فرد».
+   ومنها بابان معطّلان أصلاً (التحصيلي وستيب "قريباً") — عرضُ وعدٍ لمنتج
+   لن يستعمله المعلّم أبداً يجعل المنصة تبدو وكأنها لم تُبنَ له. */
+const STUDENT_ONLY_TABS = ["calculator", "links", "specialties", "community", "examsim", "tutors"];
 
 function isSchoolStaff(){
     return !!(typeof schoolCtx !== "undefined" && schoolCtx &&
@@ -88,8 +100,45 @@ async function renderStaffHomeSummary(){
 }
 
 /** يبدّل لوحة الطالب إلى صفحة رئيسية تخصّ المعلّم/الإدارة. */
+/** يُخفي أو يُعيد عنصراً مع حفظ حالته الأصلية — كي يعود بلا أثر لو تبدّل الحساب. */
+function staffToggle(el, hide){
+    if(!el) return;
+    if(hide){
+        if(el.dataset.staffPrev === undefined) el.dataset.staffPrev = el.style.display || "";
+        el.style.display = "none";
+    }else if(el.dataset.staffPrev !== undefined){
+        el.style.display = el.dataset.staffPrev;
+        delete el.dataset.staffPrev;
+    }
+}
+
+/** يُخفي أقسام رحلة الطالب من القائمتين الجانبية والسفلية. */
+function applyStaffNav(staff){
+    STUDENT_ONLY_TABS.forEach(tab => {
+        document.querySelectorAll(`.nav-item[data-tab="${tab}"], .mobile-nav-item[data-tab="${tab}"]`)
+            .forEach(el => staffToggle(el, staff));
+    });
+
+    // "التحصيلي" و"ستيب" — بابان معطّلان بشارة "قريباً"، ولا id لهما،
+    // فنتعرّف عليهما بأنهما عناصر تنقّل معطّلة تحمل تلك الشارة
+    document.querySelectorAll(".nav-item.disabled").forEach(el => {
+        if(el.querySelector(".badge-soon")) staffToggle(el, staff);
+    });
+
+    // ⚠️ ولو كان المعلّم واقفاً على قسم أخفيناه للتوّ، لا نتركه أمام شاشة
+    // فارغة — نعيده إلى صفحته الرئيسية
+    if(staff){
+        const active = document.querySelector(".view-section.active");
+        if(active && STUDENT_ONLY_TABS.includes(active.id.replace("view-", ""))){
+            if(typeof switchTab === "function") switchTab("dashboard");
+        }
+    }
+}
+
 function applyStaffHome(){
     const staff = isSchoolStaff();
+    applyStaffNav(staff);
+    STAFF_HIDE_CARDS.forEach(id => staffToggle(document.getElementById(id), staff));
 
     STUDENT_ONLY_CARDS.forEach(id => {
         const el = document.getElementById(id);

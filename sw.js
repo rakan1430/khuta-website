@@ -7,7 +7,7 @@
    لتفادي أي احتمال لعرض بيانات قديمة مخزَّنة مؤقتاً.
    ============================================================ */
 // ارفع رقم النسخة مع أي تغيير في قائمة الملفات أدناه.
-const CACHE_NAME = "khuta-shell-v6";
+const CACHE_NAME = "khuta-shell-v7";
 // app.js قُسّم إلى js/*.js فصار لا بد من سردها بالاسم هنا.
 //
 // ملاحظة للمطوّر: لست مضطراً لتذكّر تحديث هذه القائمة. لو أضفت ملفاً جديداً
@@ -33,6 +33,16 @@ const SHELL_FILES = [
   "./js/13-school.js",
   "./js/14-school-work.js",
   "./js/15-demo.js",
+  "./js/16-qr.js",
+  "./js/17-qr-login.js",
+  "./js/18-exam-builder.js",
+  "./js/19-exam-send.js",
+  "./js/20-entry.js",
+  "./js/21-classes.js",
+  "./js/22-errors.js",
+  "./js/23-school-home.js",
+  "./js/24-student-exam.js",
+  "./js/99-boot-flush.js",
 ];
 
 self.addEventListener("install", (event) => {

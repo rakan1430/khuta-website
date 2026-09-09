@@ -23,26 +23,44 @@ function entryParam(name){
     catch(e){ return null; }
 }
 
-function isTeacherApplyEntry(){ return entryParam("apply") === "teacher"; }
+/* ⚠️ صار للمدخل دوران لا دور واحد، بعد ملاحظة المالك:
+   «الموقع سيكون عاماً، ليس مخصّصاً للمدرسة. إذا كان الطالب من طلاب المدرسة
+    سيكون لديه رابط أو امتداد آخر يطلب منه حساباً من المدرسة».
 
-/* ---------- مدخل المعلّم ---------- */
+   فحُذف زرّ الطلب من شاشة الدخول العامة (يراها كل طلاب المملكة، ولا معنى
+   لأن تذكر لهم مدرسةً بعينها)، وصار البابان رابطين تُوزّعهما المدرسة وحدها:
+       ‎…/?apply=teacher‎  → طلب انضمام معلّم
+       ‎…/?apply=student‎  → طلب حساب طالب في المدرسة
+   ومن دخل بلا هذين لا يرى شيئاً من المدرسة إطلاقاً. */
+function schoolApplyRole(){
+    const v = (entryParam("apply") || "").toLowerCase();
+    return (v === "teacher" || v === "student") ? v : null;
+}
+function isTeacherApplyEntry(){ return schoolApplyRole() === "teacher"; }
+
+/* ---------- مدخل طلبات المدرسة ---------- */
 
 function initTeacherApplyEntry(){
-    if(!isTeacherApplyEntry()) return;
-    // نفتح نموذج الطلب مباشرة على دور "معلّم" — لا نجعله يبحث عنه في قائمة
+    const role = schoolApplyRole();
+    if(!role) return;
+    // نفتح نموذج الطلب مباشرة على الدور المطلوب — لا نجعله يبحث عنه في قائمة
     setTimeout(() => {
         try{
             openAccountRequest();
             const roleEl = document.getElementById("areq-role");
-            if(roleEl){ roleEl.value = "teacher"; onRequestRoleChange(); }
+            if(roleEl){ roleEl.value = role; onRequestRoleChange(); }
             const head = document.getElementById("areq-entry-note");
             if(head){
                 head.style.display = "block";
                 head.textContent = currentLang === "ar"
-                    ? "طلب انضمام معلّم — تصل الإدارة إشعاراً به وتفعّله من لوحتها."
-                    : "Teacher application — the school administration will review it.";
+                    ? (role === "teacher"
+                        ? "طلب انضمام معلّم — تصل الإدارة إشعاراً به وتفعّله من لوحتها."
+                        : "طلب حساب طالب — تراجعه إدارة المدرسة وتفعّله من لوحتها.")
+                    : (role === "teacher"
+                        ? "Teacher application — the school administration will review it."
+                        : "Student account request — the school administration will review it.");
             }
-        }catch(e){ console.warn("[خُطى] تعذّر فتح نموذج طلب المعلّم:", e); }
+        }catch(e){ console.warn("[خُطى] تعذّر فتح نموذج الطلب:", e); }
     }, 600);
 }
 
