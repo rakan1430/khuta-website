@@ -275,32 +275,47 @@ function toggleForgotPasswordForm(){
     box.style.display = box.style.display === "none" ? "block" : "none";
 }
 
+/* ⚠️ التحويل من اسم مستخدم إلى بريد لم يعد يحدث في المتصفح إطلاقاً.
+   كان هذا المسار يقرأ بريد صاحب الاسم ثم يطلب الرسالة بنفسه — أي أن كتابة
+   اسم من لوحة المتصدّرين كانت تكشف بريد صاحبه في ردّ الشبكة. الآن نرسل
+   الاسم وحده إلى /.netlify/functions/password-reset، والخادم يحوّله بمفتاح
+   الخدمة ويطلب من Supabase إرسال الرسالة، ولا يُعيد لنا بريداً ولا يفرّق
+   ردّه بين حسابٍ موجود وآخر غير موجود. */
 async function sendPasswordReset(){
-    if(!sb){ showToast(currentLang==='ar' ? "خدمة الحساب غير متاحة حالياً" : "Account service unavailable"); return; }
-    const username = document.getElementById("forgot-username-input").value.trim();
+    const input = document.getElementById("forgot-username-input");
+    const username = input.value.trim();
     if(!username){
         showToast(currentLang==='ar' ? "أدخل اسم المستخدم" : "Enter your username");
         return;
     }
-    const resolvedEmail = await resolveUsernameEmail(username);
-    // إن كان البريد المُحلَّل مطابقاً تماماً للبريد المصطنع، فهذا يعني أن
-    // هذا الحساب لم يربط بريداً حقيقياً بعد (لا فرق هنا بين "حساب غير
-    // موجود" و"حساب موجود بلا بريد مرتبط" — عمداً، لعدم كشف أي حساب فعلي)
-    if(resolvedEmail === usernameToEmail(username)){
-        document.getElementById("forgot-username-input").value = "";
-        document.getElementById("forgot-password-form").style.display = "none";
+
+    let networkFailed = false;
+    try{
+        const res = await fetch("/.netlify/functions/password-reset", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username }),
+        });
+        if(!res.ok) networkFailed = true;
+    }catch(e){
+        console.error("[خُطى] تعذّر الوصول لخدمة استرجاع كلمة المرور:", e);
+        networkFailed = true;
+    }
+
+    if(networkFailed){
+        // خطأ شبكة/خدمة حقيقي — نقوله صراحةً بدل ادّعاء إرسالٍ لم يحدث
         showToast(currentLang==='ar'
-            ? "📧 إن وُجد هذا الحساب وربط بريداً حقيقياً من قبل، وصلته رسالة إعادة التعيين. إن لم يصلك شيء، سجّل الدخول واربط بريداً من ملفك الشخصي أولاً."
-            : "📧 If this account exists and previously linked a real email, a reset message was sent. If nothing arrives, sign in and link an email from your profile first.");
+            ? "⚠️ تعذّر الوصول لخدمة الاسترجاع الآن. تحقّق من اتصالك وحاول بعد قليل."
+            : "⚠️ Couldn't reach the recovery service. Check your connection and try again shortly.");
         return;
     }
-    const { error } = await sb.auth.resetPasswordForEmail(resolvedEmail, { redirectTo: window.location.href.split("#")[0] });
-    document.getElementById("forgot-username-input").value = "";
+
+    input.value = "";
     document.getElementById("forgot-password-form").style.display = "none";
+    // الرسالة نفسها في كل الحالات — لا يُستدلّ منها على وجود حساب من عدمه
     showToast(currentLang==='ar'
-        ? "📧 وصلتك رسالة إعادة تعيين كلمة المرور على بريدك المرتبط."
-        : "📧 A password reset message was sent to your linked email.");
-    if(error) console.error("[خُطى] استجابة resetPasswordForEmail:", error);
+        ? "📧 إن وُجد هذا الحساب وربط بريداً حقيقياً من قبل، وصلته رسالة إعادة التعيين. إن لم يصلك شيء، سجّل الدخول واربط بريداً من ملفك الشخصي أولاً."
+        : "📧 If this account exists and previously linked a real email, a reset message was sent. If nothing arrives, sign in and link an email from your profile first.");
 }
 
 function loginScreenSignIn(){
@@ -385,7 +400,7 @@ function usernameToEmail(username){
 // الدخول لكل الحسابات القديمة بلا استثناء، مع تفعيل الاسترجاع الحقيقي
 // تلقائياً لأي حساب دخل جدول username_lookup (كل حساب جديد، وأي حساب قديم
 // بعد أول تسجيل دخول ناجح له بفضل تعبئة الترحيل الرجعية)
-async function resolveUsernameEmail(username){
+async function resolveUsernameEmail(username, password){
     if(!sb) return usernameToEmail(username);
     try{
         // ⚠️ عبر دالة محمية لا بقراءة الجدول مباشرة: سياسة القراءة العامة على
@@ -396,7 +411,15 @@ async function resolveUsernameEmail(username){
         // وكان الاستدعاء السابق يمرّر مدخل الطالب مباشرة إلى .ilike()، فأي "%"
         // يكتبه يعمل كمحرف بدل يطابق صفوفاً ليست له — الدالة تستعمل مساواة
         // تامة غير حساسة لحالة الأحرف، فتحفظ سلوك الدخول القائم وتُلغي ذلك.
-        const { data } = await sb.rpc("resolve_username_email", { p_username: username.trim() });
+        /* ⚠️ كلمة المرور تُمرَّر عمداً: كانت الدالة تُرجع بريد أي مستخدم لمن
+           يعرف اسمه فقط — وأسماء المستخدمين معروضة علناً في لوحة المتصدّرين
+           والمجتمع. فمن يقرأ اللوحة كان يحصد بريد كل مستخدم في المنصة.
+           الآن لا يُرجَع البريد إلا لمن يعرف كلمة المرور أصلاً، فمن يعرفها
+           لا يكسب شيئاً جديداً ومن لا يعرفها لا يحصد شيئاً. */
+        const { data } = await sb.rpc("resolve_username_email", {
+            p_username: username.trim(),
+            p_password: password || "",
+        });
         if(data) return data;
     }catch(e){ /* الجدول قد لا يكون منشأً بعد على مواقع لم تُشغّل الترحيل — نتجاهل بصمت */ }
     return usernameToEmail(username);
@@ -700,7 +723,9 @@ async function signInWithCreds(userId, passId, fromLoginScreen){
 
     setAccountBusy(true);
     manualAuthInProgress = true;
-    const email = await resolveUsernameEmail(username);
+    // كلمة المرور تُمرَّر للتحويل نفسه: resolve_username_email لم تعد تُرجع
+    // بريد أحد لمجرّد معرفة اسمه (انظر شرحها في resolveUsernameEmail)
+    const email = await resolveUsernameEmail(username, pass);
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
     setAccountBusy(false);
 

@@ -255,7 +255,7 @@
 
         <div class="form-group">
             <label data-i18n="qr.approveCodeLabel">الرقم المعروض على الشاشة</label>
-            <input type="text" id="qr-approve-code" inputmode="numeric" maxlength="4" placeholder="0000"
+            <input type="text" id="qr-approve-code" inputmode="numeric" maxlength="6" placeholder="000000"
                    style="text-align:center; font-family:'IBM Plex Mono',monospace; font-size:26px; letter-spacing:8px;">
         </div>
 
@@ -2352,6 +2352,44 @@
             <div class="card">
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-users-gear"></i> <span data-i18n="school.membersTitle">المدرّسون والطلاب</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.membersSub">إيقاف العضو يمنع دخوله فوراً ويُبقي ملفاته وسجلّه — أأمن من الحذف.</p>
+
+                <!-- الفرز: بالدور والمرحلة والشعبة والاسم -->
+                <div class="member-filters">
+                    <select id="filter-role" onchange="setMemberFilter('role', this.value)" aria-label="الدور">
+                        <option value="" data-i18n="school.filterAllRoles">كل الأدوار</option>
+                        <option value="student" data-i18n="school.roleStudent">طالب</option>
+                        <option value="teacher" data-i18n="school.roleTeacher">مدرّس</option>
+                        <option value="admin" data-i18n="school.roleAdmin">إدارة</option>
+                    </select>
+                    <select id="filter-grade" onchange="setMemberFilter('grade', this.value)" aria-label="المرحلة">
+                        <option value="" data-i18n="school.filterAllGrades">كل المراحل</option>
+                        <option value="1" data-i18n="school.grade1">أول ثانوي</option>
+                        <option value="2" data-i18n="school.grade2">ثاني ثانوي</option>
+                        <option value="3" data-i18n="school.grade3">ثالث ثانوي</option>
+                    </select>
+                    <select id="filter-section" onchange="setMemberFilter('section', this.value)" aria-label="الشعبة"></select>
+                    <input type="text" id="filter-q" placeholder="ابحث بالاسم أو البريد…" oninput="setMemberFilter('q', this.value)">
+                </div>
+
+                <!-- شريط النقل الجماعي — يظهر عند تحديد طالب فأكثر -->
+                <div id="bulk-move-bar" class="bulk-bar" style="display:none;">
+                    <b id="bulk-move-count"></b>
+                    <select id="bulk-class-select" aria-label="الفصل المقصود"></select>
+                    <button type="button" id="bulk-move-btn" class="btn btn-sm acc-btn" onclick="bulkMoveStudents(true)">
+                        <i class="fa-solid fa-right-left"></i> <span data-i18n="school.bulkMove">نقل</span>
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm acc-btn" onclick="bulkMoveStudents(false)">
+                        <i class="fa-solid fa-plus"></i> <span data-i18n="school.bulkAdd">إسناد إضافي</span>
+                    </button>
+                    <button type="button" class="btn-ghost btn-sm" onclick="toggleAllStudents(false)">
+                        <span data-i18n="school.bulkClear">إلغاء التحديد</span>
+                    </button>
+                </div>
+                <label class="consent-row" style="margin-bottom:10px;">
+                    <input type="checkbox" onchange="toggleAllStudents(this.checked)">
+                    <span data-i18n="school.selectAll">تحديد كل الطلاب المعروضين</span>
+                </label>
+
                 <div id="admin-members-list"></div>
                 <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="loadSchoolMembers()">
                     <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span>

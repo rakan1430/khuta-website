@@ -45,6 +45,20 @@ function schoolError(e, action){
     }
 
     // ٤) قيود واضحة يفهمها المستخدم
+    /* حارس طلبات الحسابات (account_requests_guard في قاعدة البيانات) —
+       أُضيف لأن باب الطلبات العلني كان مفتوحاً بلا حدّ، فأي زائر يغرق قائمة
+       الإدارة بآلاف الطلبات. ورفضٌ بلا سبب مفهوم = شكوى "الموقع معطّل". */
+    if(/DUPLICATE_PENDING/i.test(raw))
+        return ar ? "لديك طلب قيد المراجعة بهذا البريد بالفعل. انتظر ردّ الإدارة — لا حاجة لإرساله مرة أخرى."
+                  : "You already have a pending request with this email. Please wait for the school's reply.";
+    if(/TOO_MANY_REQUESTS/i.test(raw))
+        return ar ? "وصلت المدرسة طلبات كثيرة في وقت قصير. أعد المحاولة بعد ساعة."
+                  : "Too many requests received recently. Please try again in an hour.";
+    if(/BAD_EMAIL/i.test(raw))
+        return ar ? "أدخل بريداً إلكترونياً صحيحاً — الإدارة تضيف الحساب بهذا البريد نفسه."
+                  : "Enter a valid email — the school adds your account using it.";
+    if(/BAD_NAME/i.test(raw))
+        return ar ? "أدخل اسمك الكامل (حرفان على الأقل)." : "Enter your full name (at least 2 characters).";
     if(/LINKS_LIMIT_REACHED/i.test(raw))   return ar ? "بلغتَ الحد: ٩ روابط مباشرة. احذف رابطاً لتضيف غيره." : "Limit reached: 9 links.";
     if(/duplicate key|23505/i.test(raw))   return ar ? "هذا العنصر مضاف مسبقاً." : "Already added.";
     if(/23514|violates check/i.test(raw))  return ar ? "بيانات غير مقبولة — راجع الحقول المطلوبة." : "Invalid data — check the fields.";

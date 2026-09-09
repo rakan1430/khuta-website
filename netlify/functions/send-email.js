@@ -153,6 +153,25 @@ function isRealEmail(email){
     return !SYNTHETIC_EMAIL_RE.test(email.trim().toLowerCase());
 }
 
+// اسم المخاطَبة في الرسالة — من حساب المستخدم المُتحقَّق منه وحده، لا من
+// جسم الطلب (اسمٌ يرسله المتصفح يعني أن أي أحد يكتب ما يشاء في رسالة باسم خُطى)
+async function getDisplayName(user){
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if(serviceKey && user && user.id){
+        try{
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/user_data?id=eq.${encodeURIComponent(user.id)}&select=username`, {
+                headers: { "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}` },
+            });
+            if(res.ok){
+                const rows = await res.json();
+                if(rows[0] && rows[0].username) return String(rows[0].username).slice(0, 60);
+            }
+        }catch(e){ console.error("[send-email] تعذّر جلب اسم المستخدم:", e); }
+    }
+    const meta = (user && user.user_metadata) || {};
+    return String(meta.full_name || meta.name || "بطل").slice(0, 60);
+}
+
 async function checkCooldown(userId){
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if(!serviceKey) return { allowed: true };
@@ -316,8 +335,14 @@ exports.handler = async function(event){
             }
             const examTypeLabel = payload.examTypeLabel === "verbal" ? "اختباراً لفظياً"
                 : payload.examTypeLabel === "quant" ? "اختباراً كمياً" : "اختباراً كاملاً";
-            const html = buildExamScoreEmail(username, score, total, examTypeLabel);
-            const upstream = await sendViaBrevo(apiKey, user.email, username, "نتيجتك في اختبار خُطى المحاكي 🎯", html);
+            /* ⚠️ خلل حقيقي: كان السطران التاليان يستعملان متغيّراً باسم
+               username لا وجود له في هذا الملف إطلاقاً — فيرمي Node خطأ
+               ReferenceError يبتلعه catch أدناه ويعيد 500. أي أن بريد نتيجة
+               الاختبار لم يصل طالباً واحداً منذ كُتب. نجلب الاسم من حساب
+               المستخدم المُتحقَّق منه نفسه (لا من جسم الطلب). */
+            const displayName = await getDisplayName(user);
+            const html = buildExamScoreEmail(displayName, score, total, examTypeLabel);
+            const upstream = await sendViaBrevo(apiKey, user.email, displayName, "نتيجتك في اختبار خُطى المحاكي 🎯", html);
             if(!upstream.ok){
                 const text = await upstream.text();
                 console.error("[send-email] فشل Brevo:", upstream.status, text);

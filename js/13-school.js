@@ -221,8 +221,10 @@ async function submitAccountRequest(){
         document.getElementById("areq-form").style.display = "none";
         document.getElementById("areq-done").style.display = "block";
     }catch(e){
-        console.error("[خُطى] تعذّر إرسال الطلب:", e);
-        showToast(currentLang==='ar' ? "تعذّر إرسال الطلب، حاول مرة أخرى" : "Could not send the request");
+        // ⚠️ كانت الرسالة هنا "حاول مرة أخرى" في كل الحالات — وهي أسوأ نصيحة
+        // ممكنة لمن رُفض طلبه لأنه مُرسَل مسبقاً: يعيد الإرسال بلا نهاية.
+        // schoolError يعرف أسباب حارس الطلبات ويقول لكلٍّ ما يفعله.
+        showSchoolError(e, currentLang==='ar' ? "إرسال الطلب" : "sending the request");
     }finally{
         if(btn){ btn.disabled = false; btn.style.opacity = ""; }
     }
@@ -346,27 +348,41 @@ async function loadSchoolMembers(){
     try{
         const { data, error } = await sb
             .from("school_members")
-            .select("id, full_name, role, grade, section, active")
+            .select("id, full_name, email, role, grade, section, active")
             .eq("school_id", schoolCtx.schoolId)
             .order("role").order("full_name")
             .limit(500);
         if(error) throw error;
-        if(!data || !data.length){
-            box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'لا يوجد أعضاء بعد.':'No members yet.'}</p>`;
-            return;
-        }
         /* ⚠️ الاسم والدور يُقرآن من هنا لا من سمة onclick. السبب خطأ وقعتُ
            فيه: كنت أمرّر الاسم بـJSON.stringify داخل سمة محاطة بعلامتَي
            اقتباس مزدوجتين — فأنهت العلامةُ الأولى السمةَ وكسرت المعالج،
            فصار الزر يبدو سليماً ولا يفعل شيئاً عند الضغط. */
         schoolMembersCache.clear();
-        data.forEach(m => schoolMembersCache.set(m.id, m));
-        box.innerHTML = data.map(m => `
+        (data || []).forEach(m => schoolMembersCache.set(m.id, m));
+
+        /* الفرز يُطبَّق هنا لا في الاستعلام: القائمة صغيرة والفرز فوري بلا
+           ذهاب للخادم عند كل ضغطة، والصلاحيات هي التي حدّدت ما وصل أصلاً. */
+        const shown = (typeof filterMembers === "function") ? filterMembers(data) : (data || []);
+        if(!shown.length){
+            box.innerHTML = `<p class="card-sub">${(data||[]).length
+                ? (currentLang==='ar'?'لا عضو يطابق الفرز الحالي.':'No member matches the filter.')
+                : (currentLang==='ar'?'لا يوجد أعضاء بعد.':'No members yet.')}</p>`;
+            if(typeof updateBulkBar === "function") updateBulkBar();
+            return;
+        }
+        box.innerHTML = shown.map(m => `
             <div class="member-row${m.active ? "" : " is-off"}">
-                <div>
+                <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                    ${m.role === "student" ? `<input type="checkbox" class="member-pick" value="${escapeHtml(m.id)}"
+                        ${selectedStudents.has(m.id) ? "checked" : ""}
+                        onchange="toggleStudentPick('${escapeHtml(m.id)}', this.checked)"
+                        style="width:20px; height:20px; flex-shrink:0;" aria-label="${currentLang==='ar'?'تحديد':'Select'}">` : ""}
+                  <div>
                     <b>${escapeHtml(m.full_name)}</b>
                     <span class="pill">${escapeHtml(schoolRoleLabel(m.role))}</span>
-                    ${m.grade ? `<span class="card-sub"> · ${escapeHtml(m.grade)}${m.section ? "/" + escapeHtml(m.section) : ""}</span>` : ""}
+                    ${m.grade ? `<span class="card-sub"> · ${escapeHtml(gradeText(m.grade))}${m.section ? " / " + escapeHtml(m.section) : ""}</span>` : ""}
+                    ${m.role === "student" && !m.section ? `<span class="card-sub" style="color:var(--gold-text);"> · ${currentLang==='ar'?'⚠️ بلا شعبة':'⚠️ no section'}</span>` : ""}
+                  </div>
                 </div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
                     ${m.role !== "admin" ? `<button type="button" class="btn btn-outline btn-sm"
@@ -377,6 +393,7 @@ async function loadSchoolMembers(){
                     </button>
                 </div>
             </div>`).join("");
+        if(typeof updateBulkBar === "function") updateBulkBar();
     }catch(e){
         console.error("[خُطى] تعذّر تحميل الأعضاء:", e);
         box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'تعذّر تحميل الأعضاء.':'Could not load members.'}</p>`;

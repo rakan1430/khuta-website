@@ -60,6 +60,7 @@ async function loadAdminClasses(){
         // كل قائمة فصول في الموقع تُملأ من هنا
         if(typeof loadSchoolClasses === "function") await loadSchoolClasses();
         fillClassPickers();
+        fillSectionFilter();
     }catch(e){
         console.error("[خُطى] تعذّر تحميل الفصول:", e);
         box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'تعذّر تحميل الفصول.':'Could not load classes.'}</p>`;
@@ -242,4 +243,114 @@ async function unassignClass(classId){
         console.error("[خُطى] تعذّر إلغاء الإسناد:", e);
         showSchoolError(e, currentLang==='ar'?'العملية':'the action');
     }
+}
+
+/* ============================================================
+   الفرز والنقل الجماعي
+   ------------------------------------------------------------
+   طلب المالك: "المطلوب القدرة على فرز الطلاب وشعبهم… ونقل طلاب من شعبة
+   لشعبة عند الحاجة… لا مانع من نقل جماعي أو تحديد عدد من الطلاب".
+
+   ⚠️ والنقل نفسه في قاعدة البيانات لا هنا: عمليتان (فكّ القديم وربط
+   الجديد) لو نُفّذتا من المتصفح واحدةً واحدةً وانقطع الاتصال في المنتصف
+   لبقي نصف الطلاب بلا فصل — لا يرون شيئاً ولا يعرف أحد لماذا.
+   ============================================================ */
+
+let memberFilter = { role:"", grade:"", section:"", q:"" };
+const selectedStudents = new Set();
+
+function setMemberFilter(key, value){
+    memberFilter[key] = value;
+    selectedStudents.clear();          // التحديد يخصّ قائمة بعينها
+    if(typeof loadSchoolMembers === "function") loadSchoolMembers();
+}
+
+/** يطبّق الفرز على قائمة الأعضاء قبل عرضها. */
+function filterMembers(list){
+    const f = memberFilter;
+    const q = (f.q || "").trim().toLowerCase();
+    return (list || []).filter(m => {
+        if(f.role && m.role !== f.role) return false;
+        if(f.grade && String(m.grade || "") !== f.grade) return false;
+        if(f.section && (m.section || "").trim().toLowerCase() !== f.section.trim().toLowerCase()) return false;
+        if(q && !(m.full_name || "").toLowerCase().includes(q)
+             && !(m.email || "").toLowerCase().includes(q)) return false;
+        return true;
+    });
+}
+
+function toggleStudentPick(id, on){
+    if(on) selectedStudents.add(id); else selectedStudents.delete(id);
+    updateBulkBar();
+}
+
+function toggleAllStudents(on){
+    document.querySelectorAll(".member-pick").forEach(cb => {
+        cb.checked = on;
+        if(on) selectedStudents.add(cb.value); else selectedStudents.delete(cb.value);
+    });
+    updateBulkBar();
+}
+
+function updateBulkBar(){
+    const bar = document.getElementById("bulk-move-bar");
+    const count = document.getElementById("bulk-move-count");
+    if(!bar) return;
+    bar.style.display = selectedStudents.size ? "flex" : "none";
+    if(count){
+        count.textContent = currentLang==='ar'
+            ? `${selectedStudents.size} طالباً محدَّداً`
+            : `${selectedStudents.size} selected`;
+    }
+    fillClassPickers();
+}
+
+/** ينقل المحدَّدين إلى فصل واحد. */
+async function bulkMoveStudents(replace){
+    if(!sb || !schoolCtx || schoolCtx.role !== "admin") return;
+    const sel = document.getElementById("bulk-class-select");
+    const classId = sel && sel.value;
+    if(!classId){ showToast(currentLang==='ar' ? 'اختر الفصل المقصود' : 'Pick a class'); return; }
+    if(!selectedStudents.size) return;
+
+    const ids = [...selectedStudents];
+    const cls = adminClasses.find(c => c.id === classId);
+    const label = cls ? classLabel(cls) : "";
+    if(!confirm(currentLang==='ar'
+        ? (replace ? `نقل ${ids.length} طالباً إلى "${label}"؟ سيُفكّ ارتباطهم بفصولهم الحالية.`
+                   : `إسناد ${ids.length} طالباً إلى "${label}" مع إبقاء فصولهم الحالية؟`)
+        : `Move ${ids.length} students?`)) return;
+
+    const btn = document.getElementById("bulk-move-btn");
+    schoolBusy(btn, true);
+    try{
+        const { error } = await sb.rpc("move_students_to_class", {
+            p_students: ids, p_class: classId, p_replace: !!replace,
+        });
+        if(error) throw error;
+        showToast(currentLang==='ar' ? `تم نقل ${ids.length} طالباً ✅` : `Moved ${ids.length} ✅`);
+        selectedStudents.clear();
+        loadSchoolMembers();
+        loadAdminClasses();
+    }catch(e){
+        showSchoolError(e, currentLang==='ar' ? 'نقل الطلاب' : 'moving students');
+    }finally{ schoolBusy(btn, false); }
+}
+
+/** يملأ قائمة الشعب في شريط الفرز من الفصول الموجودة فعلاً. */
+function fillSectionFilter(){
+    const sel = document.getElementById("filter-section");
+    if(!sel) return;
+    const prev = sel.value;
+    const sections = [...new Set(adminClasses.map(c => (c.section || "").trim()).filter(Boolean))].sort();
+    sel.textContent = "";
+    const any = document.createElement("option");
+    any.value = ""; any.textContent = currentLang==='ar' ? "كل الشعب" : "All sections";
+    sel.appendChild(any);
+    sections.forEach(s => {
+        const o = document.createElement("option");
+        o.value = s; o.textContent = s;
+        sel.appendChild(o);
+    });
+    if(prev) sel.value = prev;
 }
