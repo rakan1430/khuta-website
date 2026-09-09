@@ -42,7 +42,7 @@ async function loadTeacherFiles(){
             box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'لا توجد ملفات بعد.':'No files yet.'}</p>`;
             return;
         }
-        box.innerHTML = data.map(f => {
+        box.innerHTML = renderSchoolList(data, f => {
             const mine = f.owner_id === schoolCtx.memberId;
             const size = f.size_bytes ? ` · ${Math.max(1, Math.round(f.size_bytes/1024))} KB` : "";
             const meta = [f.subject, f.grade ? gradeLabel(f.grade) : null].filter(Boolean).map(escapeHtml).join(" · ");
@@ -64,7 +64,7 @@ async function loadTeacherFiles(){
                         <i class="fa-solid fa-trash"></i></button>` : ""}
                 </div>
             </div>`;
-        }).join("");
+        });
     }catch(e){
         console.error("[خُطى] تعذّر تحميل الملفات:", e);
         box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'تعذّر تحميل الملفات.':'Could not load files.'}</p>`;
@@ -201,7 +201,7 @@ async function loadTeacherLinks(){
             box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'لا توجد روابط بعد.':'No links yet.'}</p>`;
             return;
         }
-        box.innerHTML = data.map(l => `
+        box.innerHTML = renderSchoolList(data, l => `
             <div class="slink-row">
                 <a class="slink-open" href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">
                     <i class="fa-solid ${escapeHtml(l.icon || "fa-link")}"></i>
@@ -212,7 +212,7 @@ async function loadTeacherLinks(){
                 ${l.owner_id === schoolCtx.memberId ? `
                 <button type="button" class="btn btn-ghost btn-sm" onclick="deleteTeacherLink('${escapeHtml(l.id)}')" aria-label="${currentLang==='ar'?'حذف':'Delete'}">
                     <i class="fa-solid fa-trash"></i></button>` : ""}
-            </div>`).join("");
+            </div>`);
     }catch(e){
         console.error("[خُطى] تعذّر تحميل الروابط:", e);
         box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'تعذّر تحميل الروابط.':'Could not load links.'}</p>`;
@@ -636,7 +636,7 @@ async function loadTeacherExams(){
                 (at || []).forEach(a => myAttempts.set(a.exam_id, a));
             }catch(e){ console.warn("[خُطى] تعذّر جلب محاولاتي:", e); }
         }
-        box.innerHTML = data.map(x => {
+        box.innerHTML = renderSchoolList(data, x => {
             const n = Array.isArray(x.questions) ? x.questions.length : 0;
             const mine = x.owner_id === schoolCtx.memberId;
             /* ⚠️ خطأ أدخلتُه أنا في الدفعة السابقة: جعلتُ زرّ "ابدأ الاختبار"
@@ -685,7 +685,7 @@ async function loadTeacherExams(){
                     <button type="button" class="btn btn-outline btn-sm" onclick="deleteExam('${escapeHtml(x.id)}')"><i class="fa-solid fa-trash"></i></button>
                 </div>` : ""}
             </div>`;
-        }).join("");
+        });
     }catch(e){
         console.error("[خُطى] تعذّر تحميل الاختبارات:", e);
         box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'تعذّر تحميل الاختبارات.':'Could not load exams.'}</p>`;

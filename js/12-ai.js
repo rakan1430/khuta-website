@@ -39,14 +39,36 @@ function toggleChatbot(){
     }
     if(opening && !panel.dataset.inited){
         panel.dataset.inited = "1";
-        addChatbotMessage(currentLang==='ar' ? "أهلاً يا بطل! 👋 أقدر أحل وأشرح لك أي سؤال كمي أو لفظي، أو أدلّك على أي شي في خُطى — بس قلّي وش تبي." : "Hey champ! 👋 I can solve and explain any Quant or Verbal question, or guide you to anything in Khuta — just tell me what you need.", "bot");
+        /* ⚠️ الترحيب يخاطب طالب قدرات ("يا بطل… أي سؤال كمي أو لفظي").
+           والمعلّم ليس بطلاً يذاكر — ملاحظة المالك: "في المساعد الموجود على
+           الجانب تظهر أشياء تخص القدرات". فلكلٍّ ترحيبه. */
+        addChatbotMessage(aiIsStaff()
+            ? (currentLang==='ar'
+                ? "أهلاً بك 👋 أقدر أشرح أي مسألة على السبورة أمام طلابك، أو أساعدك في صياغة سؤال اختبار، أو أدلّك على أي شيء في منصة المدرسة."
+                : "Hello 👋 I can explain any problem on the board for your class, help you word an exam question, or guide you around the school platform.")
+            : (currentLang==='ar'
+                ? "أهلاً يا بطل! 👋 أقدر أحل وأشرح لك أي سؤال كمي أو لفظي، أو أدلّك على أي شي في خُطى — بس قلّي وش تبي."
+                : "Hey champ! 👋 I can solve and explain any Quant or Verbal question, or guide you to anything in Khuta — just tell me what you need."), "bot");
         renderChatbotSuggestions();
     }
 }
 
+/** هل صاحب الجلسة معلّم أو إدارة؟ (تُستعمل لتبديل نصوص المساعد والسبورة) */
+function aiIsStaff(){
+    return !!(typeof schoolCtx !== "undefined" && schoolCtx &&
+              (schoolCtx.role === "teacher" || schoolCtx.role === "admin"));
+}
+
 function renderChatbotSuggestions(){
     const box = document.getElementById("chatbot-suggestions");
-    const picks = currentLang === "ar" ? ["كم قسم في إيهاب؟","ما هو STEP؟","كيف أحسب موزونتي؟"] : ["How many Ehab sections?","What is STEP?","How do I calculate my score?"];
+    // اقتراحات المعلّم من عمله هو، لا من رحلة طالب يذاكر للقدرات
+    const picks = aiIsStaff()
+        ? (currentLang === "ar"
+            ? ["اشرح هذه المسألة على السبورة","صُغ لي سؤال اختيار من متعدد","كيف أرسل اختباراً لفصل؟"]
+            : ["Explain this on the board","Draft a multiple-choice question","How do I send an exam to a class?"])
+        : (currentLang === "ar"
+            ? ["كم قسم في إيهاب؟","ما هو STEP؟","كيف أحسب موزونتي؟"]
+            : ["How many Ehab sections?","What is STEP?","How do I calculate my score?"]);
     box.innerHTML = picks.map(p => `<button type="button" onclick="askChatbot('${p.replace(/'/g,"\\'")}')">${p}</button>`).join("");
 }
 
@@ -455,7 +477,16 @@ let boardState = { steps:[], idx:0, playing:false, playTimer:null, typeTimer:nul
 function openKhutaBoard(tab, fullMode){
     labOverlayOpen("khuta-board-overlay");
     document.querySelector(".board-window").classList.toggle("full-mode", !!fullMode);
-    switchBoardTab(tab || "ai");
+    /* المعلّم يفتح السبورة ليكتب مسألته بيده أمام صفّه — لا ليسأل الذكاء عن
+       سؤال قدرات. فتبويب "دفتري" هو مقصده، ما لم يطلب تبويباً بعينه.
+       (وطلب المالك "سبورة يكتب عليها ويحفظ" موجود هنا أصلاً: ألوان وممحاة
+       وتراجع وحفظ باسم — فلم يُبنَ من جديد.) */
+    const wantsPad = !tab && typeof isSchoolStaff === "function" && isSchoolStaff();
+    switchBoardTab(wantsPad ? "pad" : (tab || "ai"));
+    if(typeof applyStaffBoardText === "function"){
+        try{ applyStaffBoardText(typeof isSchoolStaff === "function" && isSchoolStaff()); }
+        catch(e){ /* النصوص لا يجوز أن تُسقط فتح السبورة */ }
+    }
     initStudentCanvas(); // آمنة الاستدعاء المتكرر — تُهيّئ مستمعي الرسم مرة واحدة فقط
     renderSavedBoardsList();
     // في الوضع الكامل تُعرض اللوحتان معاً على الكمبيوتر، فنقيس مساحة الرسم

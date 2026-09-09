@@ -196,6 +196,7 @@ function applyStaffHome(){
     const staff = isSchoolStaff();
     applyStaffNav(staff);
     applyStaffProfileAndFocus(staff);
+    applyStaffBoardText(staff);
     STAFF_HIDE_CARDS.forEach(id => staffToggle(document.getElementById(id), staff));
 
     STUDENT_ONLY_CARDS.forEach(id => {
@@ -241,3 +242,55 @@ function applyStaffHome(){
         if(el && staff && el.style.display === "none") el.style.display = "";
     });
 }
+
+/* ============================================================
+   نصوص السبورة الذكية للمعلّم
+   ------------------------------------------------------------
+   ملاحظة المالك: «عند فتح السبورة حالياً من حساب معلّم أو حتى مدير تظهر
+   له بعض النصوص التي توضح أشياء تخص القدرات».
+
+   وهو محق: كل نصوص السبورة مكتوبة لطالب يذاكر ("اكتب سؤال قدرات كمي أو
+   لفظي"، "وسيشرحه المعلّم خطوة بخطوة كأنك في فصل حقيقي"). والمعلّم هو
+   المعلّم — يخاطبه النصّ وكأنه تلميذ.
+
+   ⚠️ وما طلبه المالك من "سبورة يكتب عليها مسألته ويحفظها" موجود أصلاً:
+   تبويب "دفتري" فيه لوحة رسم بألوان وممحاة وتراجع وحفظ باسم. فلا نبنيه
+   من جديد، بل نجعله التبويب الافتراضي للمعلّم لأنه ما جاء من أجله.
+   ============================================================ */
+const STAFF_BOARD_TEXT = [
+    { sel: ".board-full-hint",
+      ar: "🧑‍🏫 اشرح أي مسألة على السبورة أمام صفّك، أو اكتبها بخطّ يدك في \"دفتري\" واحفظها لحصص قادمة.",
+      en: "Explain any problem on the board for your class, or write it by hand in \"My pad\" and save it." },
+    { sel: "#board-ai-input", attr: "placeholder",
+      ar: "اكتب مسألة أو مفهوماً ليُشرح على السبورة أمام طلابك…",
+      en: "Type a problem or concept to explain on the board…" },
+    { sel: ".board-empty",
+      ar: "🧑‍🏫 اكتب مسألة بالأعلى لتُشرح هنا خطوة بخطوة — أو افتح \"دفتري\" واكتبها بخطّ يدك.",
+      en: "Type a problem above to have it explained step by step — or open \"My pad\" and write it by hand." },
+    { sel: '.board-tab[data-tab="ai"] .tab-label-full',
+      ar: "شرح على السبورة", en: "Board explainer" },
+    { sel: "#pad-text-input", attr: "placeholder",
+      ar: "اكتب هنا أي شيء: معادلة، مسألة، ملاحظة للصف… (يُحفظ مع اللوحة)",
+      en: "Anything: an equation, a problem, a note for the class… (saved with the board)" },
+];
+
+function applyStaffBoardText(staff){
+    STAFF_BOARD_TEXT.forEach(item => {
+        document.querySelectorAll(item.sel).forEach(el => {
+            const key = item.attr || "text";
+            const store = "staffPrev_" + key;
+            if(staff){
+                if(el.dataset[store] === undefined){
+                    el.dataset[store] = item.attr ? (el.getAttribute(item.attr) || "") : el.textContent;
+                }
+                const val = currentLang === "ar" ? item.ar : item.en;
+                if(item.attr) el.setAttribute(item.attr, val); else el.textContent = val;
+            }else if(el.dataset[store] !== undefined){
+                if(item.attr) el.setAttribute(item.attr, el.dataset[store]);
+                else el.textContent = el.dataset[store];
+                delete el.dataset[store];
+            }
+        });
+    });
+}
+

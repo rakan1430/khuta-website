@@ -1299,6 +1299,14 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
     /* الشريط الجانبي يبقى فعلياً على يسار الشاشة دائماً بمعزل عن اتجاه
        الصفحة (مطابقةً لمنصة قياس)، لذا نُثبّت الاتجاه هنا ونعيد rtl داخلياً */
     direction:ltr; height:100%; display:grid; grid-template-columns:300px 1fr;
+    /* ⚠️ هنا كان "الاختبار المحشور في الزاوية" الذي وصفه المالك.
+       الغلاف يُفتح بـdisplay:flex من جافاسكربت، وهذا العنصر عنصرُ مرونة
+       بلا عرض — فينكمش إلى عرض محتواه (٧٥٧ من ١٩٢٠ بكسل) بدل أن يملأ
+       الشاشة. والصفحة rtl، فينزوي المنكمش إلى أقصى اليمين ويُترك على
+       يساره سوادٌ واسع. قِسته فعلياً: grid-template-columns حُسبت
+       ‎300px 456px‎ بدل ‎300px 1620px‎.
+       ولم يكن العيب في مقاسات الأسئلة إطلاقاً — بل في سطر عرضٍ ناقص. */
+    width:100%; flex:1 1 auto; min-width:0;
 }
 .exam-sidebar{
     direction:rtl; text-align:right; background:var(--bg-alt); border-inline-end:1px solid var(--border);
@@ -1360,7 +1368,23 @@ html[dir="rtl"] .btn-expand-focus{ left:auto; right:0; }
 .exam-fontsize-controls button:hover{ border-color:var(--gold); color:var(--gold-text); }
 .exam-question-number{ font-weight:700; color:var(--text-1); font-size:15px; }
 .exam-question-scroll{ flex:1; min-height:0; overflow-y:auto; }
-.exam-question-area{ padding:32px 40px 20px; max-width:900px; }
+/* ⚠️ سبب "الاختبار المحشور في زاوية" الذي وصفه المالك.
+   كان: max-width:900px بلا توسيط. والاتجاه هنا rtl، فالعمود المحدود
+   يلتصق بحافة البداية — أي أقصى اليمين — ويُترك على يساره فراغ أسود واسع
+   على أي شاشة أعرض من ٩٠٠ بكسل. لم يكن العيب في المقاس بل في غياب
+   margin-inline:auto، وهو سطر واحد لم يُكتب. */
+.exam-question-area{
+    padding:32px 40px 20px;
+    max-width:min(980px, 100%);
+    margin-inline:auto;
+}
+/* والتذييل يتبع نفس العمود كي يبقى زرّ "حفظ والتالي" تحت السؤال لا في
+   أقصى الشاشة — لولاه لبدا الاختبار قطعتين لا صفحةً واحدة */
+.exam-question-footer{
+    max-width:min(1060px, 100%);
+    margin-inline:auto;
+    width:100%;
+}
 .exam-mcq-title{ font-size:17px; margin-bottom:6px; }
 .exam-mcq-instructions{ font-size:12.5px; color:var(--text-3); margin-bottom:22px; line-height:1.8; }
 .exam-question-text{ font-size:16px; font-weight:700; line-height:2; margin-bottom:24px; }
@@ -3472,3 +3496,15 @@ body.is-school-student .nav-item[data-tab="schoolwork"] i{ color: var(--gold-tex
 body.is-school-student .nav-item[data-tab="schoolwork"]::after{
     content: "•"; color: var(--gold-text); margin-inline-start: auto; font-size: 18px; line-height: 1;
 }
+
+/* ── عنوان مجموعة المعلّم في قوائم الطالب ── */
+.school-group-head{
+    display: flex; align-items: center; gap: 9px;
+    margin: 18px 0 8px; padding: 8px 12px;
+    background: var(--bg-alt); border-inline-start: 3px solid var(--gold-text);
+    border-radius: 10px; font-size: 13px; color: var(--text-2);
+}
+.school-group-head:first-child{ margin-top: 0; }
+.school-group-head i{ color: var(--gold-text); }
+.school-group-head b{ color: var(--text-1); font-weight: 800; }
+.school-group-head .pill{ margin-inline-start: auto; }

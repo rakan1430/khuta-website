@@ -285,3 +285,48 @@ function schoolSourceLine(memberId){
     return ` · <span style="color:var(--gold-text); font-weight:700;">${
         currentLang === "ar" ? "من" : "from"} ${escapeHtml(name)}</span>`;
 }
+
+/* ============================================================
+   تقسيم ما يصل الطالب حسب معلّمه
+   ------------------------------------------------------------
+   وصف المالك: «ربما يكون لدى الطالب أكثر من ملف لكن لا يعرف كل ملف من أي
+   معلّم… يكون مقسّماً بشكل أفضل من الحالي».
+
+   وسطر "من فلان" تحت كل عنصر لم يكن كافياً: حين تجتمع ملفات ثلاثة معلّمين
+   في قائمة واحدة يظل الطالب يقرأ سطراً سطراً ليجد ملف معلّم الرياضيات.
+   فالتقسيم بعنوانٍ لكل معلّم يجعلها نظرةً واحدة.
+
+   ⚠️ ولا يُطبَّق إلا على الطالب: المعلّم يرى ملفاته هو، فتقسيمها باسمه
+   عنوانٌ فوق قائمة كلها له — ضجيج لا فائدة فيه.
+   ============================================================ */
+function groupByTeacher(rows, renderRow){
+    const groups = new Map();
+    rows.forEach(r => {
+        const key = r.owner_id || "";
+        if(!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(r);
+    });
+    // المعلّم المعروف الاسم أولاً، ثم المجهول في النهاية
+    const keys = [...groups.keys()].sort((a, b) => {
+        const na = schoolStaffName(a), nb = schoolStaffName(b);
+        if(!na && nb) return 1;
+        if(na && !nb) return -1;
+        return na.localeCompare(nb, "ar");
+    });
+    return keys.map(k => {
+        const name = schoolStaffName(k);
+        const head = `<div class="school-group-head">
+            <i class="fa-solid fa-chalkboard-user"></i>
+            <b>${name ? escapeHtml(name) : (currentLang==='ar' ? "المدرسة" : "School")}</b>
+            <span class="pill">${groups.get(k).length}</span>
+        </div>`;
+        return head + groups.get(k).map(renderRow).join("");
+    }).join("");
+}
+
+/** يقسّم للطالب ويترك القائمة كما هي لغيره. */
+function renderSchoolList(rows, renderRow){
+    const isStudent = typeof schoolCtx !== "undefined" && schoolCtx && schoolCtx.role === "student";
+    const many = new Set(rows.map(r => r.owner_id)).size > 1;
+    return (isStudent && many) ? groupByTeacher(rows, renderRow) : rows.map(renderRow).join("");
+}
