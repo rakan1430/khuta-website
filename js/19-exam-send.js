@@ -37,9 +37,96 @@ async function openExamSend(examId){
     if(!modal) return;
     modal.style.display = "flex";
 
+    resetExamSendSettings();
     if(!schoolClasses.length) await loadSchoolClasses();
     await loadExamStudents();
+    await loadExamSendSettings(examId);
     renderExamSend();
+}
+
+/* ============================================================
+   إعدادات الإرسال: الموعد، وكشف الإجابات، والمؤقّت
+   ------------------------------------------------------------
+   ⚠️ ولماذا هنا لا في بناء الاختبار؟ لأن الموعد صفةُ الإرسال لا صفةُ
+   الاختبار: نفس الاختبار قد يُرسل لفصلٍ اليوم ولفصلٍ غاب أسبوعاً بعده،
+   ولكلٍّ موعده. ولهذا يسكن due_at في exam_assignments لا في teacher_exams.
+
+   ⚠️ وأما timed و reveal_mode فصفتا الاختبار نفسه — فإن أُعيد إرساله
+   بإعدادٍ مختلف، غلب الأخيرُ على الجميع. ولهذا نقرأ الإعداد الحالي
+   ونعرضه للمعلّم بدل أن نُصفّره عند كل فتح، كي يرى ما سيغيّره.
+
+   ⚠️ والافتراض «بعد موعد التسليم» عن قصد: «فور التسليم» يعني أن أول
+   مسلِّم في الصف يصوّر الإجابات ويرسلها لبقيّة زملائه قبل أن يبدأوا.
+   ============================================================ */
+
+function resetExamSendSettings(){
+    const due = document.getElementById("exam-send-due");
+    if(due) due.value = "";
+    const reveal = document.getElementById("exam-send-reveal");
+    if(reveal) reveal.value = "after_due";
+    const timed = document.getElementById("exam-send-timed");
+    if(timed) timed.checked = false;
+    const dur = document.getElementById("exam-send-duration");
+    if(dur) dur.value = "30";
+    toggleExamSendTimer(false);
+}
+
+function toggleExamSendTimer(on){
+    const wrap = document.getElementById("exam-send-duration-wrap");
+    if(wrap) wrap.style.display = on ? "block" : "none";
+}
+
+async function loadExamSendSettings(examId){
+    if(!sb || !examId) return;
+    try{
+        const { data, error } = await sb.from("teacher_exams")
+            .select("timed, duration_min, reveal_mode").eq("id", examId).maybeSingle();
+        if(error) throw error;
+        if(!data) return;
+        const reveal = document.getElementById("exam-send-reveal");
+        if(reveal && data.reveal_mode) reveal.value = data.reveal_mode;
+        const timed = document.getElementById("exam-send-timed");
+        if(timed) timed.checked = !!data.timed;
+        const dur = document.getElementById("exam-send-duration");
+        if(dur && data.duration_min) dur.value = String(data.duration_min);
+        toggleExamSendTimer(!!data.timed);
+    }catch(e){
+        // لا نُفشل الإرسال لأجل إعدادٍ لم يُقرأ — تبقى القيم الافتراضية
+        console.warn("[خُطى] تعذّر قراءة إعدادات الاختبار:", e);
+    }
+}
+
+/** ما أدخله المعلّم، أو خطأً مفهوماً إن كان الإدخال غير صالح. */
+function readExamSendSettings(){
+    const dueEl = document.getElementById("exam-send-due");
+    const raw = (dueEl && dueEl.value || "").trim();
+    let dueAt = null;
+    if(raw){
+        /* ⚠️ datetime-local بلا منطقة زمنية، وnew Date يقرؤه بتوقيت متصفّح
+           المعلّم — وهو المطلوب: المعلّم في الرياض يكتب توقيت الرياض. */
+        const d = new Date(raw);
+        if(isNaN(d.getTime())){
+            return { error: currentLang==='ar' ? 'موعد التسليم غير صالح' : 'Invalid due date' };
+        }
+        dueAt = d.toISOString();
+    }
+
+    const timed = !!(document.getElementById("exam-send-timed") || {}).checked;
+    let duration = null;
+    if(timed){
+        duration = parseInt((document.getElementById("exam-send-duration") || {}).value, 10);
+        if(!duration || duration < 1 || duration > 300){
+            return { error: currentLang==='ar'
+                ? 'اكتب مدّة بين ١ و٣٠٠ دقيقة، أو أطفئ المؤقّت'
+                : 'Enter 1–300 minutes, or turn the timer off' };
+        }
+    }
+
+    const revealEl = document.getElementById("exam-send-reveal");
+    let reveal = (revealEl && revealEl.value) || "after_due";
+    if(!["after_due","immediately","never"].includes(reveal)) reveal = "after_due";
+
+    return { dueAt, timed, duration, reveal };
 }
 
 function closeExamSend(){
@@ -133,6 +220,23 @@ function renderExamSend(){
     if(btn) btn.disabled = examSendTotalPicked() === 0;
 }
 
+/** يضبط موعد التسليم على كل ما اختاره المعلّم الآن — جديداً كان أو قديماً. */
+async function updateAssignmentDue(dueAt){
+    const jobs = [];
+    if(examSendPicked.classes.size)
+        jobs.push(sb.from("exam_assignments").update({ due_at:dueAt })
+            .eq("exam_id", examSendTarget).in("class_id", [...examSendPicked.classes]));
+    if(examSendPicked.grades.size)
+        jobs.push(sb.from("exam_assignments").update({ due_at:dueAt })
+            .eq("exam_id", examSendTarget).in("grade", [...examSendPicked.grades]));
+    if(examSendPicked.students.size)
+        jobs.push(sb.from("exam_assignments").update({ due_at:dueAt })
+            .eq("exam_id", examSendTarget).in("student_id", [...examSendPicked.students]));
+    const results = await Promise.all(jobs);
+    const bad = results.find(r => r && r.error);
+    if(bad) throw bad.error;
+}
+
 function pickRow(kind, value, title, sub){
     const on = examSendPicked[kind].has(value);
     return `
@@ -143,22 +247,49 @@ function pickRow(kind, value, title, sub){
 }
 
 /* ⚠️ الإرسال يكتب صفوف الإسناد أولاً ثم ينشر ثم يجدول البريد.
-   ولا نعتبر التعارض 23505 خطأً: إعادة الإرسال لنفس الفصل أمر طبيعي. */
+   ولا نعتبر التعارض 23505 خطأً: إعادة الإرسال لنفس الفصل أمر طبيعي.
+
+   ⚠️ لكن تجاهل 23505 وحده كان يُسقط الإرسال كلّه صامتاً. الإدخال في
+   PostgreSQL ذرّة واحدة: لو أرسل المعلّم لفصلٍ سبق أن أرسل له وفصلٍ جديد
+   معه، رفع الصفُّ القديم 23505 فتراجعت العملية بأكملها — بما فيها الفصل
+   الجديد — ورأى المعلّم "أُرسل ✅" وطلاب الفصل الجديد لا اختبار عندهم.
+   فالآن نقرأ الموجود ونُدخل الجديد وحده، ثم نُحدّث الموعد على الجميع. */
 async function confirmExamSend(){
     if(!sb || !schoolCtx || !examSendTarget) return;
-    const rows = [];
-    examSendPicked.classes.forEach(id  => rows.push({ exam_id:examSendTarget, class_id:id }));
-    examSendPicked.grades.forEach(g    => rows.push({ exam_id:examSendTarget, grade:g }));
-    examSendPicked.students.forEach(id => rows.push({ exam_id:examSendTarget, student_id:id }));
-    if(!rows.length) return;
+    const wanted = [];
+    examSendPicked.classes.forEach(id  => wanted.push({ exam_id:examSendTarget, class_id:id }));
+    examSendPicked.grades.forEach(g    => wanted.push({ exam_id:examSendTarget, grade:g }));
+    examSendPicked.students.forEach(id => wanted.push({ exam_id:examSendTarget, student_id:id }));
+    if(!wanted.length) return;
+
+    const settings = readExamSendSettings();
+    if(settings.error){ showToast(settings.error); return; }
 
     const btn = document.getElementById("exam-send-confirm");
     schoolBusy(btn, true);
     try{
-        const { error } = await sb.from("exam_assignments").insert(rows);
-        if(error && error.code !== "23505") throw error;
+        const { data: existing, error: exErr } = await sb.from("exam_assignments")
+            .select("class_id, grade, student_id").eq("exam_id", examSendTarget);
+        if(exErr) throw exErr;
+        const seen = new Set((existing || []).map(r => `${r.class_id || ""}|${r.grade || ""}|${r.student_id || ""}`));
+        const fresh = wanted.filter(r =>
+            !seen.has(`${r.class_id || ""}|${r.grade || ""}|${r.student_id || ""}`));
 
-        const { error: pErr } = await sb.from("teacher_exams").update({ published:true }).eq("id", examSendTarget);
+        if(fresh.length){
+            const { error } = await sb.from("exam_assignments")
+                .insert(fresh.map(r => ({ ...r, due_at: settings.dueAt })));
+            if(error && error.code !== "23505") throw error;
+        }
+        /* الموعد يُصحَّح على الصفوف القديمة أيضاً — وإلا بقي موعد إرسالٍ
+           سابق يحكم كشفَ الإجابات لفصلٍ أُعيد إليه الاختبار بموعد جديد */
+        await updateAssignmentDue(settings.dueAt);
+
+        const { error: pErr } = await sb.from("teacher_exams").update({
+            published: true,
+            timed: settings.timed,
+            duration_min: settings.timed ? settings.duration : null,
+            reveal_mode: settings.reveal,
+        }).eq("id", examSendTarget);
         if(pErr) throw pErr;
 
         // البريد لا يُفشل الإرسال: الطلاب يرون الاختبار في الموقع على أي حال

@@ -2291,6 +2291,35 @@
                 <div id="exam-send-body" class="pick-list"></div>
 
                 <p id="exam-send-summary" class="hint" style="margin-top:10px;"></p>
+
+                <!-- إعدادات هذا الإرسال: الموعد، وكشف الإجابات، والمؤقّت -->
+                <div class="send-settings">
+                    <div class="form-group">
+                        <label for="exam-send-due" data-i18n="school.dueLabel">موعد التسليم (اختياري)</label>
+                        <input type="datetime-local" id="exam-send-due">
+                        <p class="hint" data-i18n="school.dueHint">اتركه فارغاً لواجب بلا موعد. وهو الموعد الذي تُكشف بعده الإجابات الصحيحة.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="exam-send-reveal" data-i18n="school.revealLabel">متى يرى الطالب الإجابات الصحيحة؟</label>
+                        <select id="exam-send-reveal">
+                            <option value="after_due" selected data-i18n="school.revealAfterDue">بعد موعد التسليم (موصى به)</option>
+                            <option value="immediately" data-i18n="school.revealNow">فور تسليمه</option>
+                            <option value="never" data-i18n="school.revealNever">لا تُعرض إطلاقاً</option>
+                        </select>
+                        <p class="hint" data-i18n="school.revealHint">«فور تسليمه» يعني أن أول طالب يسلّم يستطيع تصوير الإجابات وإرسالها لزملائه.</p>
+                    </div>
+
+                    <label class="consent-row">
+                        <input type="checkbox" id="exam-send-timed" onchange="toggleExamSendTimer(this.checked)">
+                        <span data-i18n="school.timedLabel">مؤقّت زمني (يُسلَّم تلقائياً عند انتهاء الوقت)</span>
+                    </label>
+                    <div class="form-group" id="exam-send-duration-wrap" style="display:none;">
+                        <label for="exam-send-duration" data-i18n="school.durationLabel">مدّة الاختبار بالدقائق</label>
+                        <input type="number" id="exam-send-duration" min="1" max="300" step="1" value="30">
+                    </div>
+                </div>
+
                 <div style="display:flex; gap:10px; margin-top:12px;">
                     <button type="button" id="exam-send-confirm" class="btn acc-btn" style="flex:1;" onclick="confirmExamSend()" disabled>
                         <i class="fa-solid fa-paper-plane"></i> <span data-i18n="school.sendNow">إرسال</span>
