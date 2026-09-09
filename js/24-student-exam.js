@@ -27,10 +27,14 @@ function ensureStudentExamOverlay(){
     if(ov) return ov;
     ov = document.createElement("div");
     ov.id = "student-exam-overlay";
-    ov.className = "overlay-screen";
+    /* ⚠️ ليست overlay-screen عادية بل شاشة كاملة مستقلة.
+       وصف المالك: "واجهة الاختبار غبية وصغيرة جداً بشكل غريب… المفترض أن
+       تأخذ الشاشة كاملة بشكل مريح، ليست محشورة وكأنها إشعار". وهو محق:
+       الطالب في اختبار، لا يقرأ تنبيهاً — يحتاج كل البكسلات التي أمامه. */
+    ov.className = "se-fullscreen";
     ov.style.display = "none";
     ov.innerHTML = `
-        <div class="card" id="student-exam-card">
+        <div class="se-sheet" id="student-exam-card">
             <div class="card-head" style="align-items:flex-start;">
                 <div style="min-width:0;">
                     <h2 id="se-title" style="margin-bottom:4px;"></h2>
@@ -100,18 +104,31 @@ function renderStudentExamQuestions(){
         `${x.subject ? x.subject + " · " : ""}${qs.length} ${seLabel("سؤالاً","questions")}` +
         (schoolStaffName(x.owner_id) ? ` · ${seLabel("من","from")} ${schoolStaffName(x.owner_id)}` : "");
 
+    /* ⚠️ الصور مسارات في دلو خاص لا روابط عامة — فوضعها في src مباشرة يعطي
+       صورةً مكسورة (وهي التي يرسمها كروم مربّعاً فاتحاً بأيقونة مستند).
+       نضعها مخفيةً بـhidden ثم نوقّع رابطها ونُظهرها. وصف المالك:
+       "الاختبارات التي فيها صورة لا تظهر الصور أثناء إجراء الاختبار". */
+    const imgTag = (path, cls) => path
+        ? `<img class="${cls}" data-exam-img="${escapeHtml(path)}" alt="" hidden>` : "";
+
     document.getElementById("se-body").innerHTML = qs.map((q, i) => `
-        <div class="card" style="margin-bottom:12px;" id="se-q-${i}">
-            <b style="display:block; margin-bottom:10px;">${i + 1}. ${escapeHtml(q.text || "")}</b>
-            ${q.image ? `<img src="${escapeHtml(q.image)}" alt="" style="max-width:100%; border-radius:12px; margin-bottom:10px;">` : ""}
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                ${(q.choices || []).map((c, j) => `
-                    <label class="consent-row" style="cursor:pointer;">
+        <div class="se-q" id="se-q-${i}">
+            <b class="se-q-text">${i + 1}. ${escapeHtml(q.text || "")}</b>
+            ${imgTag(q.image, "se-q-img")}
+            <div class="se-choices">
+                ${(q.choices || []).map((c, j) => {
+                    const txt = (typeof c === "string") ? c : (c.text || "");
+                    const img = (typeof c === "string") ? null : c.image;
+                    return `
+                    <label class="se-choice">
                         <input type="radio" name="se-q${i}" value="${j}" onchange="pickStudentAnswer(${i}, ${j})">
-                        <span>${escapeHtml(typeof c === "string" ? c : (c.text || ""))}</span>
-                    </label>`).join("")}
+                        <span>${escapeHtml(txt)}${imgTag(img, "se-c-img")}</span>
+                    </label>`;
+                }).join("")}
             </div>
         </div>`).join("") || `<p class="card-sub">${seLabel("لا أسئلة في هذا الاختبار.","This exam has no questions.")}</p>`;
+
+    resolveExamImages();
 
     document.getElementById("se-foot").innerHTML = `
         <button type="button" class="btn acc-btn" id="se-submit" onclick="submitStudentExam()">
@@ -119,6 +136,24 @@ function renderStudentExamQuestions(){
         <span class="card-sub" id="se-progress"></span>`;
     updateStudentExamProgress();
     startStudentExamTimer(x.duration_min);
+}
+
+/** يوقّع روابط صور الأسئلة والخيارات ثم يُظهرها. */
+async function resolveExamImages(){
+    const nodes = Array.from(document.querySelectorAll("#se-body img[data-exam-img]"));
+    if(!nodes.length || !sb) return;
+    await Promise.all(nodes.map(async el => {
+        const path = el.getAttribute("data-exam-img");
+        try{
+            const { data, error } = await sb.storage.from("exam-images").createSignedUrl(path, 3600);
+            if(error || !data || !data.signedUrl) throw error || new Error("NO_URL");
+            el.src = data.signedUrl;
+            el.hidden = false;                 // لا تُظهرها قبل وصول الرابط
+        }catch(e){
+            console.warn("[خُطى] تعذّر عرض صورة السؤال:", path, e);
+            el.remove();                       // لا نترك صورة مكسورة مكانها
+        }
+    }));
 }
 
 function pickStudentAnswer(qi, ci){

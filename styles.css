@@ -3401,3 +3401,74 @@ body:not(.dark-mode) select{ background-color:#FFFFFF; }
 }
 .bulk-bar select{ width:auto; min-width:170px; flex:1; }
 .bulk-bar b{ font-size:13px; white-space:nowrap; }
+
+/* ============================================================
+   شاشة اختبار الطالب المدرسي — كاملة، لا "إشعار محشور"
+   ------------------------------------------------------------
+   وصف المالك: "واجهة الاختبار غبية وصغيرة جداً بشكل غريب… المفترض أن
+   تأخذ الشاشة كاملة بشكل مريح، ليست محشورة وكأنها إشعار". وهو محق:
+   الطالب في اختبار حقيقي، والقراءة المريحة جزء من عدالة الاختبار — من
+   يجهد عينه في نصٍّ ضيّق يخطئ لا لأنه لا يعرف.
+   ============================================================ */
+.se-fullscreen{
+    position: fixed; inset: 0; z-index: 9500;
+    display: flex; align-items: stretch; justify-content: center;
+    background: var(--bg, #0A0F1D);
+    overflow-y: auto; padding: 0;
+}
+.se-sheet{
+    width: 100%; max-width: 900px; margin: 0 auto;
+    padding: 28px 24px 60px;
+    display: flex; flex-direction: column;
+}
+.se-sheet .card-head{
+    position: sticky; top: 0; z-index: 2;
+    background: var(--bg, #0A0F1D);
+    padding: 14px 0; margin: 0 0 18px;
+    border-block-end: 1px solid var(--border);
+    display: flex; justify-content: space-between; gap: 14px; align-items: flex-start;
+}
+.se-q{
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 18px; padding: 20px 22px; margin-bottom: 16px;
+}
+.se-q-text{ display: block; margin-bottom: 14px; font-size: 16px; line-height: 1.8; }
+.se-q-img{ max-width: 100%; border-radius: 12px; margin-bottom: 14px; display: block; }
+.se-c-img{ max-width: 220px; border-radius: 10px; margin-top: 8px; display: block; }
+.se-choices{ display: flex; flex-direction: column; gap: 10px; }
+.se-choice{
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 16px; border-radius: 14px; cursor: pointer;
+    background: var(--bg-alt); border: 1.5px solid var(--border);
+    transition: border-color .16s, background .16s;
+    min-height: 52px;                       /* هدف لمس مريح على السبورة */
+}
+.se-choice:hover{ border-color: var(--gold-soft); }
+.se-choice:has(input:checked){ border-color: var(--gold-text); background: rgba(201,150,46,.10); }
+.se-choice input{ margin-top: 3px; flex-shrink: 0; width: 20px; height: 20px; }
+.se-choice span{ line-height: 1.8; }
+#se-foot{ position: sticky; bottom: 0; background: var(--bg, #0A0F1D); padding: 14px 0 0; }
+@media (max-width: 700px){
+    .se-sheet{ padding: 18px 14px 50px; }
+    .se-q{ padding: 16px; }
+}
+
+/* ============================================================
+   منصة المدرسة تُميَّز لطالب المدرسة وحده
+   ------------------------------------------------------------
+   وصف المالك: «منصة المدرسة لدى الطالب تكون بشكل مميّز قليلاً، بدلاً أن
+   تكون قيمتها غير مميّزة بين باقي القوائم — لدى طالب المدرسة فقط، ركّز».
+   فالتمييز مشروط بـbody.is-school-student، ولا يمسّ طالب خُطى العادي ولا
+   المعلّم (منصة المدرسة عنده هي عمله كلّه، فلا معنى لتمييزها عن نفسها).
+   ============================================================ */
+body.is-school-student .nav-item[data-tab="schoolwork"],
+body.is-school-student .mobile-nav-item[data-tab="schoolwork"]{
+    background: linear-gradient(135deg, rgba(201,150,46,.16), rgba(201,150,46,.06));
+    border: 1.5px solid var(--gold-soft);
+    border-radius: 14px;
+    font-weight: 800;
+}
+body.is-school-student .nav-item[data-tab="schoolwork"] i{ color: var(--gold-text); }
+body.is-school-student .nav-item[data-tab="schoolwork"]::after{
+    content: "•"; color: var(--gold-text); margin-inline-start: auto; font-size: 18px; line-height: 1;
+}

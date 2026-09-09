@@ -14,3 +14,8 @@
    ولا يحتاج نقلاً بعد اليوم. لا تضع فيه شيئاً آخر، ولا تُدرج ملفاً بعده.
    ============================================================ */
 if(typeof flushPendingAuthEvents === "function") flushPendingAuthEvents();
+
+// كنسة أولى بعد اكتمال الرسم — انظر شرحها في js/05-boot-nav.js
+if(typeof sweepEmptyMediaBoxes === "function"){
+    window.addEventListener("load", () => setTimeout(sweepEmptyMediaBoxes, 1500));
+}

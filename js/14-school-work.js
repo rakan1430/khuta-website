@@ -622,9 +622,33 @@ async function loadTeacherExams(){
         }
         teacherExamTitles.clear();
         data.forEach(x => teacherExamTitles.set(x.id, x.title));
+
+        /* ⚠️ ما سلّمه الطالب لا يُعرض له "ابدأ الاختبار" بعد اليوم.
+           وصف المالك: "عند انتهاء الطالب من الاختبار لا يبقى لديه مكتوباً
+           ابدأ الاختبار… بل يبقى بزر إظهار النتيجة". وهو محق — الزرّ نفسه
+           يوحي بأن المحاولة متاحة، ثم يُرفض عند الضغط. الوعد الكاذب أسوأ
+           من المنع الصريح. */
+        const myAttempts = new Map();
+        if(schoolCtx.role === "student"){
+            try{
+                const { data: at } = await sb.from("exam_attempts")
+                    .select("exam_id, score, total").limit(300);
+                (at || []).forEach(a => myAttempts.set(a.exam_id, a));
+            }catch(e){ console.warn("[خُطى] تعذّر جلب محاولاتي:", e); }
+        }
         box.innerHTML = data.map(x => {
             const n = Array.isArray(x.questions) ? x.questions.length : 0;
             const mine = x.owner_id === schoolCtx.memberId;
+            /* ⚠️ خطأ أدخلتُه أنا في الدفعة السابقة: جعلتُ زرّ "ابدأ الاختبار"
+               يظهر لكل من ليس مالك الاختبار — فظهر للإدارة على اختبارات
+               المعلّمين. ووصفه المالك بدقة: "كيف المعلم يقوم باختبار معلم
+               آخر؟". الاختبار يؤدّيه الطالب وحده. */
+            const iAmStudent = schoolCtx.role === "student";
+            /* والإدارة تدير اختبارات معلّميها كلها — وهذا ما طلبه المالك:
+               "الإدارة فقط هي ما يظهر لها جميع اختبارات المعلمين ويمكنها
+               التحكم بها كما تريد". (وصلاحيات القراءة في قاعدة البيانات
+               تطابق هذا أصلاً: المعلّم لا يرى إلا اختباراته هو.) */
+            const iCanManage = mine || schoolCtx.role === "admin";
             return `
             <div class="sfile-row">
                 <div class="sfile-main">
@@ -636,11 +660,22 @@ async function loadTeacherExams(){
                                           : `· ${currentLang==='ar'?'مسودة':'draft'}`}${schoolSourceLine(x.owner_id)}</div>
                     </div>
                 </div>
-                ${!mine ? `<div class="sfile-actions">
-                    <button type="button" class="btn btn-sm acc-btn" onclick="openStudentExam('${escapeHtml(x.id)}')">
-                        <i class="fa-solid fa-pen-to-square"></i> ${currentLang==='ar'?'ابدأ الاختبار':'Start'}</button>
-                </div>` : ""}
-                ${mine ? `<div class="sfile-actions">
+                ${iAmStudent ? (() => {
+                    const done = myAttempts.get(x.id);
+                    if(done){
+                        const pct = done.total ? Math.round((done.score / done.total) * 100) : 0;
+                        return `<div class="sfile-actions">
+                            <span class="pill" style="background:var(--teal-soft, rgba(30,132,73,.15)); color:var(--teal-text);">${pct}%</span>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="openStudentExam('${escapeHtml(x.id)}')">
+                                <i class="fa-solid fa-chart-simple"></i> ${currentLang==='ar'?'إظهار النتيجة':'Show result'}</button>
+                        </div>`;
+                    }
+                    return `<div class="sfile-actions">
+                        <button type="button" class="btn btn-sm acc-btn" onclick="openStudentExam('${escapeHtml(x.id)}')">
+                            <i class="fa-solid fa-pen-to-square"></i> ${currentLang==='ar'?'ابدأ الاختبار':'Start'}</button>
+                    </div>`;
+                })() : ""}
+                ${iCanManage ? `<div class="sfile-actions">
                     <button type="button" class="btn btn-sm" onclick="openExamSend('${escapeHtml(x.id)}')">
                         <i class="fa-solid fa-paper-plane"></i> ${x.published
                             ? (currentLang==='ar'?'إرسال لمزيد':'Send to more')

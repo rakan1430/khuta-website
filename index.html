@@ -1410,7 +1410,7 @@
         <!-- ===================== لوحة الجدول ===================== -->
         <section id="view-dashboard" class="view-section active">
             <div class="dash-toolbar">
-                <button type="button" class="btn btn-outline btn-sm" onclick="openSetupOverlay('routine')">
+                <button type="button" id="btn-plans-routine" class="btn btn-outline btn-sm" onclick="openSetupOverlay('routine')">
                     <i class="fa-solid fa-layer-group"></i> <span>خططي وروتيني</span>
                 </button>
                 <button type="button" id="btn-customize-dashboard" class="btn btn-outline btn-sm btn-shimmer" onclick="toggleDashboardCustomizer()">
@@ -2007,7 +2007,7 @@
                 </form>
             </div>
 
-            <div class="card">
+            <div class="card" id="prof-card-stats">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold-text);"></i> <span data-i18n="stats.title">إحصائياتك</span></h2>
                 <p class="card-sub" data-i18n="stats.sub">نظرة عامة على مذاكرتك الفعلية حتى الآن</p>
                 <div class="input-row" style="grid-template-columns:repeat(2,1fr); margin-top:12px;">
@@ -2022,7 +2022,7 @@
                 <button type="button" id="btn-deep-report" class="btn btn-outline btn-block" style="margin-top:12px;" onclick="handleDeepReportClick()"><i class="fa-solid fa-chart-column"></i> <span data-i18n="dash.deepReport">التقرير المتعمّق</span></button>
             </div>
 
-            <div class="card">
+            <div class="card" id="prof-card-badges">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold-text);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
                 <p class="card-sub" data-i18n="badges.sub">تحفيزية بحتة — لا علاقة لها بنسبة تقدمك الفعلية في الخطة</p>
                 <div class="badges-row" id="badges-grid"></div>
@@ -2058,13 +2058,13 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card" id="prof-card-invite">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus" style="color:var(--gold-text);"></i> <span data-i18n="referral.title">ادعُ صديقاً</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="referral.desc">كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.</p>
                 <button type="button" class="btn btn-block" onclick="shareReferralLink()"><i class="fa-solid fa-share-nodes"></i> <span data-i18n="referral.share">مشاركة رابط الدعوة</span></button>
             </div>
 
-            <div class="card">
+            <div class="card" id="prof-card-mistakes">
                 <h2 style="margin-bottom:4px;">🧠 <span data-i18n="mistakebank.title">بنك أخطائك الشخصية</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="mistakebank.desc">ليست أخطاء القدرات — بل أنماطك الشخصية التي تعطّل تقدّمك، نكتشفها من سلوكك الفعلي بمرور الوقت.</p>
                 <div id="mistake-bank-content" class="mistake-bank-card"></div>

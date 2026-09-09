@@ -135,9 +135,67 @@ function applyStaffNav(staff){
     }
 }
 
+/* ============================================================
+   الصقل الشامل: كل ما يخصّ رحلة الطالب لا يظهر لمعلّم ولا لإدارة
+   ------------------------------------------------------------
+   وصف المالك: «هناك بعض النصوص التي لا لازمة لها تظهر لدى المعلّم… في
+   الملف الشخصي تظهر أشياء لا علاقة لها مثل أوسمتك وإنجازاتك، فلماذا قد
+   يحتاج المعلّم أوسمة؟ … وبنك الأخطاء الشخصية، وإحصائياتك، وجامعة الهدف،
+   والمسار الدراسي، والنسبة المستهدفة، وتاريخ اختبارك».
+
+   وهو محق في كل بند. وقد كشف ما هو أهم منها: أنّ الإخفاء كان يُعالَج بندًا
+   بندًا حيثما ظهرت شكوى، لا كقاعدة واحدة. فصارت هنا قاعدةٌ واحدة تُطبَّق
+   على كل موضع دفعةً واحدة، وتُعاد بلا أثر لو تبدّل الحساب.
+   ============================================================ */
+
+/* بطاقات الملف الشخصي التي تخصّ طالب القدرات وحده */
+const STAFF_HIDE_PROFILE = [
+    "prof-card-stats",     // إحصائياتك (ساعات مذاكرة، أسئلة محلولة…)
+    "prof-card-badges",    // أوسمتك وإنجازاتك
+    "prof-card-mistakes",  // بنك أخطائك الشخصية
+    "prof-card-invite",    // ادعُ صديقاً
+];
+
+/* حقول الملف الشخصي التي لا معنى لها لمعلّم: كلها عن اختبار القدرات */
+const STAFF_HIDE_PROFILE_FIELDS = ["prof-track", "prof-goal-uni", "prof-goal-score", "prof-exam-date"];
+
+/* عناصر متفرّقة في اللوحة ووضع التركيز */
+const STAFF_HIDE_MISC = [
+    "btn-plans-routine",   // "خططي وروتيني" — يفتح اختيار مصادر القدرات
+    "focus-task-card",     // مهام اليوم داخل وضع التركيز
+    "focus-xp-value",      // نقاط XP على شاشة التركيز
+];
+
+/** يُخفي الحقل مع تسميته — أي أقرب .form-group يحويه. */
+function staffToggleField(id, hide){
+    const el = document.getElementById(id);
+    if(!el) return;
+    staffToggle(el.closest(".form-group") || el, hide);
+}
+
+function applyStaffProfileAndFocus(staff){
+    STAFF_HIDE_PROFILE.forEach(id => staffToggle(document.getElementById(id), staff));
+    STAFF_HIDE_PROFILE_FIELDS.forEach(id => staffToggleField(id, staff));
+    STAFF_HIDE_MISC.forEach(id => staffToggle(document.getElementById(id), staff));
+
+    // بطاقة XP كاملة لا الرقم وحده (وإلا بقي عنوانها معلّقاً بلا قيمة)
+    const xp = document.getElementById("focus-xp-value");
+    if(xp) staffToggle(xp.closest(".focus-mode-xp-card") || xp, staff);
+
+    /* الاقتباس على شاشة التركيز يخاطب طالباً يذاكر ("وقت المذاكرة استثمار").
+       المعلّم يشغّل المؤقّت على السبورة لحصة أو مسألة — لا لمذاكرته هو. */
+    const quote = document.querySelector(".focus-mode-quote");
+    if(quote) staffToggle(quote, staff);
+
+    // سطر "لم تحدد جامعة الهدف بعد" تحت اسم المعلّم في ملفه — لا معنى له
+    const goalLine = document.getElementById("profile-display-goal");
+    if(goalLine) staffToggle(goalLine, staff);
+}
+
 function applyStaffHome(){
     const staff = isSchoolStaff();
     applyStaffNav(staff);
+    applyStaffProfileAndFocus(staff);
     STAFF_HIDE_CARDS.forEach(id => staffToggle(document.getElementById(id), staff));
 
     STUDENT_ONLY_CARDS.forEach(id => {

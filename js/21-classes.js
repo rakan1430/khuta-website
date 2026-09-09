@@ -68,8 +68,13 @@ async function loadAdminClasses(){
 }
 
 /** يملأ قوائم اختيار الفصل أينما كانت (إسناد الطلاب والمعلّمين). */
+/* ⚠️ كان "bulk-class-select" ناقصاً من هذه القائمة — وهذا كل السبب.
+   وصف المالك: "عند تحديد طلاب والضغط على مربع نقل لتحديد شعبة… المربع لا
+   يكون واضحاً أبداً ولا تظهر الخيارات". ولم يكن غامضاً ولا مشكلةَ ألوان:
+   كان **فارغاً تماماً** لأن أحداً لم يملأه، فتموت ميزة النقل الجماعي كلها
+   عند أول استعمال. (أنا كتبتُ الميزة ونسيتُ وصل قائمتها.) */
 function fillClassPickers(){
-    ["member-class-select", "teacher-class-select"].forEach(id => {
+    ["member-class-select", "teacher-class-select", "bulk-class-select"].forEach(id => {
         const sel = document.getElementById(id);
         if(!sel) return;
         const prev = sel.value;
@@ -79,6 +84,13 @@ function fillClassPickers(){
             o.value = ""; o.textContent = currentLang==='ar' ? "— لا فصول بعد —" : "— no classes —";
             sel.appendChild(o);
             return;
+        }
+        // سطر إرشادي في شريط النقل: ألّا يُنقل أحد بالخطأ لأول فصل في القائمة
+        if(id === "bulk-class-select"){
+            const hint = document.createElement("option");
+            hint.value = ""; hint.disabled = true; hint.selected = true;
+            hint.textContent = currentLang==='ar' ? "اختر الفصل المقصود…" : "Pick target class…";
+            sel.appendChild(hint);
         }
         adminClasses.forEach(c => {
             const o = document.createElement("option");

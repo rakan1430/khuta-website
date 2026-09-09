@@ -784,6 +784,58 @@ function switchTab(tabId, element){
     if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); }
     if(tabId === "settings") renderSettings();
     if(tabId === "tutors") renderTutors();
+    /* ⚠️ يُعاد التطبيق بعد كل انتقال: بعض الأقسام تُعيد رسم محتواها هنا
+       (renderProfileStats مثلاً)، فيعود ما أخفيناه للمعلّم لو طبّقناه مرة
+       واحدة عند الدخول فقط. وهذا سبب عودة أشياء ظننّاها أُخفيت. */
+    if(typeof applyStaffHome === "function"){
+        try{ applyStaffHome(); }catch(e){ console.warn("[خُطى] تعذّر تطبيق واجهة المعلّم:", e); }
+    }
+    try{ sweepEmptyMediaBoxes(); }catch(e){ /* الكنس لا يجوز أن يُسقط الانتقال */ }
+}
+
+/* ============================================================
+   كنس "المربّعات البيضاء" — العناصر التي تعرض إطاراً فارغاً
+   ------------------------------------------------------------
+   شكا المالك مراراً من مربّع أبيض بأيقونة مستند أسفل الصفحة. وقد ثبت أن
+   هذا الشكل بالضبط هو ما يرسمه كروم لعنصر وسائط بلا مصدر صالح:
+   ‎<img>‎ بلا src، أو ‎<embed>/<object>/<iframe>‎ بمصدر فارغ.
+
+   فبدل مطاردة كل موضع على حدة، هذه كنسةٌ عامة: أي عنصر وسائط بلا مصدر
+   يُخفى فوراً. ولا تمسّ عنصراً له مصدر حقيقي، ولا عنصراً مخفياً أصلاً.
+
+   ⚠️ وهي علاج للعَرَض لا للسبب: لو ظهر المربّع مرة أخرى بعدها فمصدره
+   ليس عنصر وسائط، وعندها تُعرَف هويته بسطر واحد في وحدة تحكّم المتصفح:
+       khutaWhatIsAtBottom()
+   ============================================================ */
+function sweepEmptyMediaBoxes(root){
+    const scope = root || document;
+    scope.querySelectorAll("img, embed, object, iframe").forEach(el => {
+        if(el.hidden || el.style.display === "none") return;
+        const src = el.getAttribute("src") || el.getAttribute("data") || "";
+        if(src.trim()) return;                       // له مصدر — لا نلمسه
+        if(el.hasAttribute("data-exam-img")) return; // ينتظر رابطاً موقَّعاً
+        if(el.tagName === "IFRAME" && el.name) return; // إطار الإرسال المخفي
+        el.hidden = true;
+        console.warn("[خُطى] عنصر بلا مصدر أُخفي (مربّع فارغ محتمل):", el);
+    });
+}
+
+/** أداة تشخيص: تقول ما هو العنصر الموجود أسفل منتصف الشاشة، مهما كان. */
+function khutaWhatIsAtBottom(){
+    const x = Math.round(innerWidth / 2);
+    const out = [];
+    for(let y = innerHeight - 6; y > innerHeight - 90; y -= 8){
+        document.elementsFromPoint(x, y).slice(0, 3).forEach(el => {
+            const cs = getComputedStyle(el);
+            const r = el.getBoundingClientRect();
+            out.push(`${el.tagName}#${el.id || "-"}.${String(el.className || "-").slice(0, 40)}` +
+                     ` | ${cs.backgroundColor} | ${cs.position} | w=${Math.round(r.width)} h=${Math.round(r.height)}`);
+        });
+    }
+    const uniq = [...new Set(out)];
+    console.log("%c[خُطى] ما أسفل منتصف الشاشة:", "font-weight:bold");
+    uniq.forEach(l => console.log("  " + l));
+    return uniq;
 }
 
 function setAccent(accent){
