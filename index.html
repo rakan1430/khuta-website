@@ -2355,6 +2355,29 @@
                 </button>
             </div>
 
+            <div class="card" id="admin-import-card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-file-import"></i> استيراد الطلاب من ملف</h3>
+                <p class="card-sub" style="margin-bottom:14px;">
+                    اسحب ملف طلابك (Excel أو CSV) من نظام نور. سنسألك عن الأعمدة مرة واحدة فقط، ونتذكّرها بعدها.
+                </p>
+                <!-- ⚠️ صراحة مقصودة: المدير يسلّم ملفاً فيه أرقام هوية قاصرين،
+                     ومن حقّه أن يعرف أين تذهب قبل أن يسلّمه لا بعده. -->
+                <div class="uni-note" style="margin-bottom:14px;">
+                    <b>أين يذهب رقم الهوية؟</b>
+                    <p style="margin:6px 0 0;">
+                        لا يُحفظ في الموقع إطلاقاً. يُحوَّل إلى بصمة غير قابلة للعكس تُستعمل للمطابقة وحدها،
+                        ويُحفظ منه آخر أربعة أرقام فقط لتمييز متشابهي الأسماء. ولو تسرّبت قاعدة البيانات
+                        كاملةً، لا يخرج منها رقم هوية واحد.
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label>ملف الطلاب (‎.xlsx أو ‎.xls أو ‎.csv)</label>
+                    <input type="file" id="imp-file" accept=".csv,.txt,.xlsx,.xls" onchange="onImportFilePicked(event)">
+                </div>
+                <p id="imp-status" class="hint" style="margin:0;"></p>
+                <div id="imp-mapper"></div>
+            </div>
+
             <div class="card">
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-users-gear"></i> <span data-i18n="school.membersTitle">المدرّسون والطلاب</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.membersSub">إيقاف العضو يمنع دخوله فوراً ويُبقي ملفاته وسجلّه — أأمن من الحذف.</p>
@@ -2727,6 +2750,7 @@
 <script src="js/22-errors.js" defer></script>
 <script src="js/23-school-home.js" defer></script>
 <script src="js/24-student-exam.js" defer></script>
+<script src="js/25-import.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

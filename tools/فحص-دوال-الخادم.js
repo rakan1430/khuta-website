@@ -216,6 +216,97 @@ const brevoAccepts = [
             },
         });
 
+    /* ---------- school-import: الاستيراد الجماعي ---------- */
+    console.log("\nschool-import.js");
+
+    // توكن مزيّف بحمولة amr — الدالة تقرأها من التوكن لا من جسم الطلب
+    const tok = (amr) => "x." + Buffer.from(JSON.stringify({ sub: UID, amr })).toString("base64") + ".y";
+    const GOOGLE = tok([{ method: "oauth" }]);
+    const PASSWORD = tok([{ method: "password" }]);
+
+    const adminRow = ["/rest/v1/school_members?uid=eq.", async () =>
+        ({ status: 200, body: [{ id: "MEM1", school_id: "SCH1" }] })];
+    const noAdminRow = ["/rest/v1/school_members?uid=eq.", async () => ({ status: 200, body: [] })];
+
+    let sentRows = null;
+    const importOk = ["/rest/v1/rpc/import_school_students", async (u, o) => {
+        sentRows = JSON.parse(o.body);
+        return { status: 200, body: { added: sentRows.p_rows.length, updated: 0, skipped: 0, errors: [] } };
+    }];
+
+    await run("school-import.js",
+        post({ accessToken: GOOGLE, rows: [
+            { name: "طالب", national_id: "1012345678", grade: "1", section: "أ" },
+        ]}),
+        [authUser("admin@example.com"), adminRow, importOk],
+        {
+            label: "استيراد سليم — والهوية لا تغادر الخادم أبداً",
+            status: 200,
+            check: (b) => {
+                if(!sentRows) return "لم يُستدعَ الاستيراد";
+                const body = JSON.stringify(sentRows);
+                if(body.includes("1012345678")) return "🚨 رقم الهوية أُرسل لقاعدة البيانات!";
+                const row = sentRows.p_rows[0];
+                if(!/^[0-9a-f]{64}$/.test(row.id_hash)) return "البصمة ليست HMAC صالحاً: " + row.id_hash;
+                if(row.id_last4 !== "5678") return "آخر أربعة أرقام خاطئة: " + row.id_last4;
+                if(JSON.stringify(b).includes("1012345678")) return "🚨 الردّ سرّب رقم الهوية";
+                return null;
+            },
+        });
+
+    // الأرقام العربية يجب أن تعطي البصمة نفسها — وإلا صار للطالب بصمتان
+    let arabicHash = null;
+    await run("school-import.js",
+        post({ accessToken: GOOGLE, rows: [{ name: "طالب", national_id: "١٠١٢٣٤٥٦٧٨" }] }),
+        [authUser("admin@example.com"), adminRow,
+         ["/rest/v1/rpc/import_school_students", async (u, o) => {
+            arabicHash = JSON.parse(o.body).p_rows[0].id_hash;
+            return { status: 200, body: { added: 1, updated: 0, skipped: 0, errors: [] } }; }]],
+        {
+            label: "الأرقام العربية تعطي بصمة الأرقام اللاتينية نفسها",
+            status: 200,
+            check: () => (arabicHash && sentRows && arabicHash === sentRows.p_rows[0].id_hash)
+                ? null : "🚨 بصمتان مختلفتان لنفس الهوية — الغياب لن يتطابق",
+        });
+
+    await run("school-import.js",
+        post({ accessToken: PASSWORD, rows: [{ name: "طالب", national_id: "1012345678" }] }),
+        [authUser("admin@example.com")],
+        { label: "جلسة محدودة (بلا Google) مرفوضة", status: 403 });
+
+    await run("school-import.js",
+        post({ accessToken: GOOGLE, rows: [{ name: "طالب", national_id: "1012345678" }] }),
+        [authUser("t@example.com"), noAdminRow],
+        { label: "غير الإداري مرفوض", status: 403 });
+
+    await run("school-import.js",
+        { httpMethod: "POST", body: JSON.stringify({ accessToken: GOOGLE, rows: [] }), headers: {} },
+        [authUser("admin@example.com"), adminRow],
+        { label: "ملف فارغ مرفوض", status: 400 });
+
+    await run("school-import.js",
+        post({ accessToken: GOOGLE, rows: Array.from({ length: 2500 }, () => ({ name: "ط", national_id: "1012345678" })) }),
+        [authUser("admin@example.com"), adminRow],
+        { label: "أكثر من ٢٠٠٠ صف مرفوض", status: 400 });
+
+    await run("school-import.js",
+        post({ accessToken: GOOGLE, rows: [
+            { name: "بلا هوية", national_id: "" },
+            { name: "هوية قصيرة", national_id: "12" },
+        ]}),
+        [authUser("admin@example.com"), adminRow],
+        {
+            label: "صفوف بلا هوية صالحة تُرفَض بأسبابها بلا استدعاء الكتابة",
+            status: 200,
+            check: (b) => (b.skipped === 2 && b.errors.length === 2 && b.errors[0].reason === "BAD_ID")
+                ? null : "التقرير غير صحيح: " + JSON.stringify(b),
+        });
+
+    await run("school-import.js",
+        post({ accessToken: GOOGLE, rows: [{ name: "ط", national_id: "1012345678" }] }),
+        [["/auth/v1/user", async () => ({ status: 200, body: { id: UID, is_anonymous: true } })]],
+        { label: "الضيف المجهول مرفوض", status: 401 });
+
     /* ---------- school-screen-login ---------- */
     console.log("\nschool-screen-login.js");
     await run("school-screen-login.js",

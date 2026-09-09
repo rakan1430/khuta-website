@@ -3565,3 +3565,32 @@ body.is-school-student .nav-item[data-tab="schoolwork"]::after{
     .board-window.pad-max .pad-side{ flex: 0 0 auto; min-width: 0; max-height: 26vh; }
     .board-window.pad-max .pad-canvas-wrap{ min-height: 42vh; }
 }
+
+/* ============================================================
+   الاستيراد الجماعي للطلاب
+   ============================================================ */
+.imp-map-grid{
+    display: grid; gap: 12px; margin-top: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+.imp-preview-table{
+    width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;
+    min-width: 520px;                       /* يمرّر أفقياً بدل أن ينضغط */
+}
+.imp-preview-table th, .imp-preview-table td{
+    padding: 8px 10px; border: 1px solid var(--border); text-align: start;
+}
+.imp-preview-table th{ background: var(--bg-alt); font-weight: 700; color: var(--text-2); }
+.imp-preview-table td{ color: var(--text-1); }
+
+.imp-result-grid{ display: flex; gap: 10px; flex-wrap: wrap; }
+.imp-stat{
+    flex: 1; min-width: 96px; text-align: center; padding: 14px 10px;
+    border-radius: 14px; background: var(--bg-alt); border: 1.5px solid var(--border);
+}
+.imp-stat b{ display: block; font-size: 26px; font-weight: 800; color: var(--text-1); }
+.imp-stat small{ color: var(--text-3); font-size: 12px; }
+.imp-stat.ok{ border-color: var(--teal); }
+.imp-stat.ok b{ color: var(--teal-text); }
+.imp-stat.warn{ border-color: var(--gold); }
+.imp-stat.warn b{ color: var(--gold-text); }
