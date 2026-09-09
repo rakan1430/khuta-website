@@ -14,8 +14,19 @@
    الحقيقي أظهره بخيار واعٍ. وهذا يحمي الجميع **ويُلغي استثناءً** — ونحن
    اتفقنا أن كل استثناء في هذا الموقع صار مصدر أعطال.
 
-   ولا يُطلَب من الطالب أن يخترع لقباً: النظام يولّده له، وله زرّ "غيّره".
-   من يجد لقباً لائقاً في انتظاره لا يبحث عن حيلة.
+   ⚠️ واللقب من توليد النظام وحده — لا يكتبه الطالب إطلاقاً.
+   وهذا قرار المالك ونصّه: «لن يكون لدى الطالب الحرية في كتابة الاسم
+   المستعار الذي يريده، وإنما سيكون يتم إنشاؤه من النظام، ولدى الطالب
+   القدرة على ضغط زر غيّره إذا لم يعجبه — **لتجنّب مشكلات كتابة اسم غير
+   لائق**».
+
+   وهو محق: خانة كتابة حرّة في منصّة مدرسية تعني أن أحدهم سيكتب فيها ما
+   لا يليق يوماً، وأن على أحدٍ أن يراقبها. والمولّد يُلغي المشكلة من
+   أصلها بدل أن يحاول ملاحقتها.
+
+   ⚠️ ويبقى فحص انتحال الصفة رغم ذلك — دفاعاً لا واجهةً: من يفتح أدوات
+   المطوّر يستطيع تعديل ما في التخزين مباشرةً. انظر أيضاً الفحص في قاعدة
+   البيانات، وهو الحاجز الحقيقي.
    ============================================================ */
 
 const ALIAS_KEY = "khuta_alias";            // يُزامَن تلقائياً (كل مفاتيح khuta_)
@@ -73,6 +84,8 @@ function aliasProblem(name){
     return null;
 }
 
+/* تبقى للسجلّ ولتشخيص الحالات المرفوضة في وحدة التحكّم — لا تُعرض في
+   الواجهة بعد إلغاء الكتابة اليدوية. */
 function aliasProblemText(code){
     const ar = {
         SHORT: "اللقب قصير جداً — حرفان على الأقل.",
@@ -109,13 +122,6 @@ function getPublicAlias(){
     a = generateAlias();
     try{ localStorage.setItem(ALIAS_KEY, a); }catch(e){}
     return a;
-}
-
-function setPublicAlias(name){
-    const problem = aliasProblem(name);
-    if(problem) return problem;
-    try{ localStorage.setItem(ALIAS_KEY, String(name).trim()); }catch(e){}
-    return null;
 }
 
 function regenerateAlias(){
@@ -164,16 +170,9 @@ function renderAliasBox(){
             <button type="button" class="btn btn-outline btn-sm acc-btn" onclick="regenerateAlias()">
                 <i class="fa-solid fa-rotate"></i> ${ar ? "غيّره" : "Change"}</button>
         </div>
-        <div class="form-group" style="margin-top:12px;">
-            <label>${ar ? "أو اكتب لقباً من عندك" : "Or write your own"}</label>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <input type="text" id="alias-input" maxlength="24" placeholder="${escapeHtml(alias)}"
-                       style="flex:1; min-width:160px;">
-                <button type="button" class="btn btn-sm acc-btn" onclick="saveAliasFromInput()">
-                    <i class="fa-solid fa-check"></i> ${ar ? "حفظ" : "Save"}</button>
-            </div>
-            <p id="alias-msg" class="hint" style="margin-top:8px;"></p>
-        </div>
+        <p class="hint" style="margin-top:10px;">${ar
+            ? "الألقاب من توليد النظام. اضغط \"غيّره\" حتى يعجبك واحد."
+            : "Nicknames are system-generated. Press \"Change\" until one suits you."}</p>
         <label class="consent-row" style="margin-top:6px;">
             <input type="checkbox" id="alias-show-real" ${showReal ? "checked" : ""} onchange="toggleShowRealName(this.checked)">
             <span>${ar ? "أظهر اسمي الحقيقي بدل اللقب" : "Show my real name instead"}</span>
@@ -181,23 +180,6 @@ function renderAliasBox(){
         <p class="hint" style="margin-top:6px;">${ar
             ? "لوحة المتصدّرين والمجتمع يقرأهما أي شخص على الإنترنت — لهذا اللقب هو الافتراضي. ومعلّموك وإدارة مدرستك يرون اسمك الحقيقي دائماً في منصة المدرسة."
             : "The leaderboard and community are readable by anyone online — that's why a nickname is the default. Your teachers and school admin always see your real name inside the school platform."}</p>`;
-}
-
-function saveAliasFromInput(){
-    const input = document.getElementById("alias-input");
-    const msg = document.getElementById("alias-msg");
-    if(!input) return;
-    const problem = setPublicAlias(input.value);
-    if(problem){
-        if(msg){ msg.textContent = aliasProblemText(problem); msg.style.color = "var(--rose)"; }
-        return;
-    }
-    input.value = "";
-    renderAliasBox();
-    if(typeof showToast === "function"){
-        showToast(currentLang === "ar" ? "✅ حُفظ لقبك" : "✅ Nickname saved");
-    }
-    refreshPublicName();
 }
 
 function toggleShowRealName(on){
