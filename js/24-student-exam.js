@@ -108,6 +108,10 @@ function renderStudentExamQuestions(){
        صورةً مكسورة (وهي التي يرسمها كروم مربّعاً فاتحاً بأيقونة مستند).
        نضعها مخفيةً بـhidden ثم نوقّع رابطها ونُظهرها. وصف المالك:
        "الاختبارات التي فيها صورة لا تظهر الصور أثناء إجراء الاختبار". */
+    /* ⚠️ hidden وحدها لا تكفي: أي قاعدة تنسيق تضع display على العنصر تتغلّب
+       على قاعدة المتصفّح ‎[hidden]{display:none}‎ — فتظهر الصورة مكسورةً
+       لحظةً قبل وصول رابطها. لذلك التنسيق نفسه يبدأ بـdisplay:none ولا
+       يُعرَض إلا بعد إضافة is-ready. */
     const imgTag = (path, cls) => path
         ? `<img class="${cls}" data-exam-img="${escapeHtml(path)}" alt="" hidden>` : "";
 
@@ -138,21 +142,48 @@ function renderStudentExamQuestions(){
     startStudentExamTimer(x.duration_min);
 }
 
-/** يوقّع روابط صور الأسئلة والخيارات ثم يُظهرها. */
+/** يضع مكان الصورة التي تعذّر عرضها لوحةً تقول السبب — لا فراغاً. */
+function markExamImageFailed(el, why){
+    const box = document.createElement("div");
+    box.className = "se-img-failed";
+    box.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ` +
+        `<span>${seLabel("تعذّر عرض صورة هذا السؤال", "This question's image could not load")}</span>` +
+        `<small>${escapeHtml(String(why || "").slice(0, 120))}</small>`;
+    if(el.parentElement) el.parentElement.replaceChild(box, el);
+}
+
+/* ⚠️ لماذا صار الفشل مرئياً بدل أن يُمحى بصمت؟
+   كان الكود يحذف الصورة عند أي فشل، فيرى الطالب سؤالاً فارغاً بلا سبب —
+   وهو ما وصفه المالك: "لا تظهر الصور ولا أعرف ما المشكلة". وأنا أيضاً لم
+   أعرف: جرّبتُ المسار كاملاً في متصفّح حقيقي فنجحت الصور الثلاث، فالعطل
+   في بيئته لا في الكود. فالفشل الصامت يُعمي الطرفين معاً.
+   الآن: محاولتان، ثم لوحة تقول السبب حرفياً. */
 async function resolveExamImages(){
     const nodes = Array.from(document.querySelectorAll("#se-body img[data-exam-img]"));
-    if(!nodes.length || !sb) return;
+    if(!nodes.length) return;
+    if(!sb){ nodes.forEach(el => markExamImageFailed(el, "NO_CLIENT")); return; }
+
     await Promise.all(nodes.map(async el => {
         const path = el.getAttribute("data-exam-img");
-        try{
-            const { data, error } = await sb.storage.from("exam-images").createSignedUrl(path, 3600);
-            if(error || !data || !data.signedUrl) throw error || new Error("NO_URL");
-            el.src = data.signedUrl;
-            el.hidden = false;                 // لا تُظهرها قبل وصول الرابط
-        }catch(e){
-            console.warn("[خُطى] تعذّر عرض صورة السؤال:", path, e);
-            el.remove();                       // لا نترك صورة مكسورة مكانها
+        let url = null, why = "";
+        for(let attempt = 0; attempt < 2 && !url; attempt++){
+            try{
+                const { data, error } = await sb.storage.from("exam-images").createSignedUrl(path, 3600);
+                if(error) throw error;
+                url = (data && (data.signedUrl || data.signedURL)) || null;   // v2 وv1
+                if(!url) why = "NO_URL_IN_RESPONSE";
+            }catch(e){
+                why = (e && (e.message || e.error || e.name)) || "UNKNOWN";
+                console.warn("[خُطى] تعذّر توقيع رابط الصورة:", path, e);
+            }
         }
+        if(!url){ markExamImageFailed(el, why); return; }
+
+        // الرابط قد يُوقَّع بنجاح ثم يفشل التحميل نفسه (حجب، شبكة، ملف ناقص)
+        el.addEventListener("error", () => markExamImageFailed(el, "IMAGE_LOAD_FAILED"), { once:true });
+        el.addEventListener("load", () => el.classList.add("is-ready"), { once:true });
+        el.removeAttribute("hidden");
+        el.src = url;
     }));
 }
 

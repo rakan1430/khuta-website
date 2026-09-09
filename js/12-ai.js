@@ -483,6 +483,8 @@ function openKhutaBoard(tab, fullMode){
        وتراجع وحفظ باسم — فلم يُبنَ من جديد.) */
     const wantsPad = !tab && typeof isSchoolStaff === "function" && isSchoolStaff();
     switchBoardTab(wantsPad ? "pad" : (tab || "ai"));
+    // المعلّم يفتحها ليكتب أمام صفّه — فتُفتح ملء الشاشة من أول لحظة
+    togglePadMax(wantsPad);
     if(typeof applyStaffBoardText === "function"){
         try{ applyStaffBoardText(typeof isSchoolStaff === "function" && isSchoolStaff()); }
         catch(e){ /* النصوص لا يجوز أن تُسقط فتح السبورة */ }
@@ -747,6 +749,13 @@ function getSavedBoards(){ try{ return JSON.parse(localStorage.getItem(PAD_STORE
 function saveCurrentBoard(){
     const name = (document.getElementById("pad-name-input").value || "").trim() || labT("لوحة بدون اسم","Untitled board");
     const canvas = document.getElementById("student-pad-canvas");
+    /* ⚠️ لوحة فارغة كانت تُحفظ بصمت فتزاحم القائمة بلا فائدة — ومن حفظها
+       بالخطأ ظنّ أن الحفظ لا يعمل، لأنه لا يرى شيئاً حين يفتحها. */
+    if(!padState.strokes.length && !(document.getElementById("pad-text-input").value || "").trim()){
+        showToast(labT("لا شيء لحفظه بعد — ارسم أو اكتب شيئاً أولاً",
+                       "Nothing to save yet — draw or write something first"));
+        return;
+    }
     // نصغّر الصورة المحفوظة (جودة 0.75) حتى لا نستهلك مساحة التخزين المحلي
     const img = padState.strokes.length ? canvas.toDataURL("image/jpeg", 0.75) : "";
     const list = getSavedBoards();
@@ -762,6 +771,8 @@ function renderSavedBoardsList(){
     const box = document.getElementById("pad-saved-list");
     if(!box) return;
     const list = getSavedBoards();
+    const counter = document.getElementById("pad-saved-count");
+    if(counter){ counter.textContent = list.length; counter.style.display = list.length ? "" : "none"; }
     if(list.length === 0){ box.innerHTML = `<div class="card-sub" style="padding:6px 2px;">${labT("لا لوحات محفوظة بعد","No saved boards yet")}</div>`; return; }
     box.innerHTML = list.map(b => `
         <div class="pad-saved-row">
@@ -1506,3 +1517,34 @@ document.addEventListener("keydown", function(e){
    لم تتغيّر بل تحقّقت: الصرف يجب أن يكون في **آخر** ملف دائماً. إن أضفت
    ملفاً جديداً بعده، انقل السطر إليه.
    ============================================================ */
+
+/* ============================================================
+   الدفتر ملء الشاشة
+   ------------------------------------------------------------
+   وصف المالك: «السبورة التي وصفتَها ممتازة، لكن على وضعها الحالي تكون
+   صغيرة… يجب أن تملأ الشاشة من فتحها».
+
+   وهو محق ومحقّ في السبب أيضاً: في الوضع الكامل تُعرض سبورة الذكاء
+   والدفتر جنباً إلى جنب، فيأخذ الدفتر نصف النافذة ثم يقتسم نصفه مع قائمة
+   اللوحات المحفوظة — فتبقى مساحة الرسم ربع الشاشة تقريباً. ومعلّم يكتب
+   مسألة على سبورة فصل لا يُقرأ خطّه من آخر الصف بهذه المساحة.
+
+   في وضع "ملء الشاشة": النافذة تتمدّد، وسبورة الذكاء تنزوي، والدفتر وحده
+   يملأها. ويُفتح تلقائياً لحساب المعلّم والإدارة لأنه سبب فتحهم السبورة.
+   ============================================================ */
+function togglePadMax(force){
+    const win = document.querySelector(".board-window");
+    if(!win) return;
+    const on = (force === undefined) ? !win.classList.contains("pad-max") : !!force;
+    win.classList.toggle("pad-max", on);
+
+    const btn = document.getElementById("pad-max-btn");
+    if(btn){
+        btn.innerHTML = on
+            ? '<i class="fa-solid fa-down-left-and-up-right-to-center"></i>'
+            : '<i class="fa-solid fa-up-right-and-down-left-from-center"></i>';
+        btn.title = on ? labT("تصغير","Exit full screen") : labT("ملء الشاشة","Full screen");
+    }
+    // اللوحة تُرسم بأبعاد بكسل حقيقية، فلا بدّ من إعادة قياسها بعد التمدّد
+    requestAnimationFrame(() => requestAnimationFrame(resizePadCanvas));
+}

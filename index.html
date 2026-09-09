@@ -1249,18 +1249,23 @@
                         <button type="button" id="pad-eraser-btn" class="pad-tool-btn" onclick="padToggleEraser(this)" title="ممحاة"><i class="fa-solid fa-eraser"></i></button>
                         <button type="button" class="pad-tool-btn" onclick="padUndo()" title="تراجع"><i class="fa-solid fa-rotate-left"></i></button>
                         <button type="button" class="pad-tool-btn" onclick="padClear()" title="مسح الكل"><i class="fa-solid fa-broom"></i></button>
+                        <!-- ملء الشاشة: المعلّم يكتب على سبورة الفصل، واللوحة الصغيرة لا تُقرأ من آخر الصف -->
+                        <button type="button" id="pad-max-btn" class="pad-tool-btn" onclick="togglePadMax()" title="ملء الشاشة" aria-label="ملء الشاشة"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
                     </div>
                     <div class="pad-canvas-wrap"><canvas id="student-pad-canvas"></canvas></div>
                     <textarea id="pad-text-input" rows="2" placeholder="اكتب هنا أي شيء: معادلة، مسألة، ملاحظة… (يُحفظ مع اللوحة ويُرسل للذكاء)"></textarea>
                     <div class="pad-actions">
-                        <input type="text" id="pad-name-input" placeholder="اسم اللوحة للحفظ…">
-                        <button type="button" class="btn btn-sm btn-outline" onclick="saveCurrentBoard()"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+                        <input type="text" id="pad-name-input" placeholder="سمِّ اللوحة لتحفظها… (مثل: مسألة الحصة الثالثة)">
+                        <!-- ⚠️ كان زرّاً باهتاً مكتوباً عليه "حفظ" بجانب زرّ الذكاء الملوّن،
+                             فوصفه المالك: "لا يمكن حفظ الرسمة… أعتقد أنه يمكن لكن ليس بشكل واضح".
+                             الحفظ هو الفعل الأهم للمعلّم — فليكن الزرّ الأوضح. -->
+                        <button type="button" class="btn btn-sm acc-btn" onclick="saveCurrentBoard()"><i class="fa-solid fa-floppy-disk"></i> احفظ اللوحة</button>
                         <button type="button" class="btn btn-sm" onclick="sendPadToAI()"><i class="fa-solid fa-wand-magic-sparkles"></i> حلّها بالذكاء</button>
                     </div>
                     <div id="pad-ai-answer" class="pad-ai-answer" style="display:none;"></div>
                 </div>
                 <div class="pad-side">
-                    <div class="pad-side-title"><i class="fa-solid fa-box-archive"></i> لوحاتي المحفوظة</div>
+                    <div class="pad-side-title"><i class="fa-solid fa-box-archive"></i> <span>لوحاتي المحفوظة</span> <span class="pill" id="pad-saved-count" style="display:none;">0</span></div>
                     <div id="pad-saved-list" class="pad-saved-list"></div>
                 </div>
             </div>

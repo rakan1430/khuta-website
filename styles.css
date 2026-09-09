@@ -3457,8 +3457,22 @@ body:not(.dark-mode) select{ background-color:#FFFFFF; }
     border-radius: 18px; padding: 20px 22px; margin-bottom: 16px;
 }
 .se-q-text{ display: block; margin-bottom: 14px; font-size: 16px; line-height: 1.8; }
-.se-q-img{ max-width: 100%; border-radius: 12px; margin-bottom: 14px; display: block; }
-.se-c-img{ max-width: 220px; border-radius: 10px; margin-top: 8px; display: block; }
+/* ⚠️ تبدأ مخفيّة ولا تظهر إلا بعد تحميلها فعلاً (is-ready).
+   وضعُ display:block هنا مباشرةً كان يتغلّب على [hidden] فتومض الصورة
+   مكسورةً قبل وصول رابطها الموقَّع. */
+.se-q-img, .se-c-img{ display: none; }
+.se-q-img.is-ready{ max-width: 100%; border-radius: 12px; margin-bottom: 14px; display: block; }
+.se-c-img.is-ready{ max-width: 260px; border-radius: 10px; margin-top: 8px; display: block; }
+
+/* لوحة "تعذّر عرض الصورة" — تقول السبب بدل أن تترك السؤال فارغاً */
+.se-img-failed{
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 14px 16px; margin-bottom: 14px;
+    border: 1.5px dashed var(--rose); border-radius: 12px;
+    background: rgba(196,67,107,.07); color: var(--text-2); font-size: 13px;
+}
+.se-img-failed i{ color: var(--rose); }
+.se-img-failed small{ color: var(--text-3); font-family: var(--font-mono); font-size: 11px; }
 .se-choices{ display: flex; flex-direction: column; gap: 10px; }
 .se-choice{
     display: flex; align-items: flex-start; gap: 12px;
@@ -3508,3 +3522,46 @@ body.is-school-student .nav-item[data-tab="schoolwork"]::after{
 .school-group-head i{ color: var(--gold-text); }
 .school-group-head b{ color: var(--text-1); font-weight: 800; }
 .school-group-head .pill{ margin-inline-start: auto; }
+
+/* ============================================================
+   الدفتر ملء الشاشة — لسبورة الفصل
+   ------------------------------------------------------------
+   في الوضع الكامل العادي تقتسم سبورةُ الذكاء والدفترُ النافذة، ثم يقتسم
+   الدفتر نصفَه مع قائمة اللوحات — فتبقى مساحة الرسم ربعَ الشاشة تقريباً.
+   ومعلّم يكتب مسألة أمام صفّه لا يُقرأ خطّه من آخر الصف بهذه المساحة.
+   هنا: النافذة تتمدّد، وسبورة الذكاء تنزوي، والدفتر وحده يملأها.
+   ============================================================ */
+.board-window.pad-max{
+    max-width: 98vw; width: 98vw; height: 95vh;
+}
+.board-window.pad-max .board-content-split{ display: flex; flex: 1; min-height: 0; }
+/* ⚠️ التخصيص هنا مقصود لا زائد: قاعدة الوضع الكامل تفرض display:flex
+   !important على سبورة الذكاء بمحدِّد من خمسة أجزاء. و!important لا يحسم
+   بين قاعدتين كلتاهما مهمّة — المحدِّد الأعلى تخصيصاً هو الذي يحسم. فبلا
+   هذه الزيادة تبقى سبورة الذكاء ظاهرة ويبقى الدفتر نصفَ نافذة.
+   (قِسته: مساحة الرسم بقيت ١٩٪ من الشاشة رغم تمدّد النافذة.) */
+.board-window.full-mode.pad-max:not(.showing-chats):not(.showing-file) .board-content-split .board-pane#board-tab-ai,
+.board-window.pad-max #board-tab-file,
+.board-window.pad-max #board-tab-chats{ display: none !important; }
+.board-window.full-mode.pad-max:not(.showing-chats):not(.showing-file) .board-content-split .board-pane#board-tab-pad,
+.board-window.pad-max #board-tab-pad{
+    display: flex !important; flex: 1 1 100%; min-width: 0; width: 100%;
+    opacity: 1; transform: none; animation: none;
+    padding-inline-start: 18px; padding-inline-end: 18px;
+    border-inline-end: none;
+}
+.board-window.pad-max .board-full-hint{ display: none; }
+/* مساحة الرسم تأخذ الأغلبية، وقائمة اللوحات تبقى مرئية لا مطويّة */
+.board-window.pad-max .pad-main{ flex: 4; }
+.board-window.pad-max .pad-side{ flex: 0 0 230px; min-width: 230px; }
+.board-window.pad-max .pad-canvas-wrap{ min-height: 55vh; }
+.board-window.pad-max .pad-color{ width: 34px; height: 34px; }
+.board-window.pad-max .pad-tool-btn{ width: 42px; height: 42px; font-size: 16px; }
+.board-window.pad-max #pad-text-input{ font-size: 15px; }
+
+@media (max-width: 900px){
+    .board-window.pad-max{ width: 100vw; max-width: 100vw; height: 100vh; border-radius: 0; }
+    .board-window.pad-max .pad-layout{ flex-direction: column; }
+    .board-window.pad-max .pad-side{ flex: 0 0 auto; min-width: 0; max-height: 26vh; }
+    .board-window.pad-max .pad-canvas-wrap{ min-height: 42vh; }
+}
