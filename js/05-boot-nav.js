@@ -790,6 +790,8 @@ function switchTab(tabId, element){
     if(typeof applyStaffHome === "function"){
         try{ applyStaffHome(); }catch(e){ console.warn("[خُطى] تعذّر تطبيق واجهة المعلّم:", e); }
     }
+    // بعض الأقسام تُعيد رسم محتواها هنا، فيعود ما أخفاه الوضع
+    if(typeof applyMode === "function"){ try{ applyMode(); }catch(e){} }
     try{ sweepEmptyMediaBoxes(); }catch(e){ /* الكنس لا يجوز أن يُسقط الانتقال */ }
 }
 

@@ -3594,3 +3594,37 @@ body.is-school-student .nav-item[data-tab="schoolwork"]::after{
 .imp-stat.ok b{ color: var(--teal-text); }
 .imp-stat.warn{ border-color: var(--gold); }
 .imp-stat.warn b{ color: var(--gold-text); }
+
+/* ============================================================
+   مبدّل الوضع — لطالب المدرسة وحده
+   ------------------------------------------------------------
+   لا يظهر لمن له وضع واحد: طالب خُطى العادي لا يرى شيئاً جديداً إطلاقاً،
+   والمعلّم لا يملك إلا وضع المدرسة فلا معنى لمبدّل بخيار واحد.
+   ============================================================ */
+.mode-switcher{
+    display: flex; gap: 6px; padding: 5px;
+    background: var(--bg-alt); border: 1px solid var(--border);
+    border-radius: 14px; margin-bottom: 10px;
+}
+.mode-btn{
+    flex: 1; min-width: 0; min-height: 40px;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 8px 10px; border-radius: 10px; cursor: pointer;
+    background: transparent; border: none; color: var(--text-3);
+    font-family: inherit; font-size: 12.5px; font-weight: 700;
+    transition: background .18s, color .18s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mode-btn:hover{ color: var(--text-1); }
+.mode-btn.is-on{
+    background: var(--surface); color: var(--gold-text);
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.mode-btn i{ font-size: 13px; }
+
+/* في وضع المدرسة لا حاجة لتمييز القسم — الشاشة كلها له */
+body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after{ content: none; }
+
+/* إخفاء الوضع — خانة مستقلّة عن style.display كي لا يتنازع نظاما الإظهار.
+   انظر شرح applyMode في js/26-mode.js. */
+.mode-hidden{ display: none !important; }

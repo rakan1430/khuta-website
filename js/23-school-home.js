@@ -16,21 +16,16 @@
    ============================================================ */
 
 /* البطاقات التي تخصّ رحلة الطالب وحده */
-const STUDENT_ONLY_CARDS = [
-    "dash-card-overview-hero",        // نقاط الخبرة والمستوى
-    "dash-card-overview-heatmap",     // خريطة النشاط اليومي
-    "dash-card-overview-quests",      // المهام اليومية
-    "dash-card-overview-leaderboard", // لوحة المتصدّرين
-    "dash-card-progress",             // تقدّم خطة القدرات
-    "dash-card-badges",
-    "dash-card-community",
-];
+/* ⚠️ أُفرغت هذه القوائم عمداً ولم تُحذف الدوال: صار data-modes في HTML
+   هو الذي يقرّر (انظر js/26-mode.js). أبقيناها فارغةً لأن الفرق بين
+   "لا شيء هنا" و"هذا الملف لم يعد له دور" مهمّ لمن يقرأ الكود بعدنا. */
+const STUDENT_ONLY_CARDS = [];
 
 /* ⚠️ "جدول مهامك المخصّص" خرج من هنا بعد ملاحظة المالك:
    «لماذا يوجد بها جدول مهامك؟ ولماذا يحوي أشياء لا يحتاجها المعلّم أو المدير؟»
    وهو محق — ذلك الجدول يُولَّد من خطة الطالب لاختبار القدرات (عدد الأيام،
    الصفحات اليومية، المصادر). لا معنى له لمن لا يذاكر للقدرات أصلاً. */
-const STAFF_HIDE_CARDS = ["dash-card-table"];
+const STAFF_HIDE_CARDS = [];   // ← صار data-modes="khuta" على البطاقة نفسها
 
 /* ويبقى المؤقّت وحده: المعلّم يشغّله على السبورة أمام الصف فعلاً */
 const STAFF_KEEP_CARDS = ["dash-card-timer"];
@@ -39,7 +34,7 @@ const STAFF_KEEP_CARDS = ["dash-card-timer"];
    وصفها المالك بدقة: «يجب أن يكون الموقع مخصّصاً لكل شخص ولكل فرد».
    ومنها بابان معطّلان أصلاً (التحصيلي وستيب "قريباً") — عرضُ وعدٍ لمنتج
    لن يستعمله المعلّم أبداً يجعل المنصة تبدو وكأنها لم تُبنَ له. */
-const STUDENT_ONLY_TABS = ["calculator", "links", "specialties", "community", "examsim", "tutors"];
+const STUDENT_ONLY_TABS = [];  // ← صار data-modes على كل عنصر تنقّل
 
 function isSchoolStaff(){
     return !!(typeof schoolCtx !== "undefined" && schoolCtx &&
@@ -149,22 +144,15 @@ function applyStaffNav(staff){
    ============================================================ */
 
 /* بطاقات الملف الشخصي التي تخصّ طالب القدرات وحده */
-const STAFF_HIDE_PROFILE = [
-    "prof-card-stats",     // إحصائياتك (ساعات مذاكرة، أسئلة محلولة…)
-    "prof-card-badges",    // أوسمتك وإنجازاتك
-    "prof-card-mistakes",  // بنك أخطائك الشخصية
-    "prof-card-invite",    // ادعُ صديقاً
-];
+const STAFF_HIDE_PROFILE = [];  // ← صار data-modes="khuta" على البطاقات نفسها
 
 /* حقول الملف الشخصي التي لا معنى لها لمعلّم: كلها عن اختبار القدرات */
 const STAFF_HIDE_PROFILE_FIELDS = ["prof-track", "prof-goal-uni", "prof-goal-score", "prof-exam-date"];
 
 /* عناصر متفرّقة في اللوحة ووضع التركيز */
-const STAFF_HIDE_MISC = [
-    "btn-plans-routine",   // "خططي وروتيني" — يفتح اختيار مصادر القدرات
-    "focus-task-card",     // مهام اليوم داخل وضع التركيز
-    "focus-xp-value",      // نقاط XP على شاشة التركيز
-];
+/* يبقى هنا ما لا يصلح له data-modes: عناصرُ داخل شاشة التركيز تُبنى
+   وتُخفى بمنطقها الخاص، فلو تركناها للوضع لتنازع المنطقان عليها. */
+const STAFF_HIDE_MISC = ["focus-task-card", "focus-xp-value"];
 
 /** يُخفي الحقل مع تسميته — أي أقرب .form-group يحويه. */
 function staffToggleField(id, hide){

@@ -73,10 +73,57 @@ const tags=[...html.matchAll(/<script src="js\/([^"]+)"/g)].map(m=>m[1]);
 js.filter(f=>!tags.includes(f)).forEach(f=>add('حرج',`ملف غير مُدرج في الصفحة: ${f}`,'index.html'));
 if(tags[tags.length-1]!=='99-boot-flush.js') add('حرج','سطر صرف المصادقة ليس في آخر ملف','index.html');
 
+/* ============================================================
+   كل عنصر يقرّر ما يظهر يجب أن يصرّح بوضعه
+   ------------------------------------------------------------
+   هذا هو الحارس الذي يجعل قلب البنية يصمد. بلا هذا الفحص، أي ميزة جديدة
+   تُضاف لخُطى بلا data-modes ستتسرّب للمعلّم صامتةً — ولن يكتشفها أحد
+   إلا المالك بعد أسبوع في الاستعمال الحقيقي، وهو أغلى مكان ممكن.
+   الآن: من ينسى التصريح يسقط هنا في ثانية.
+   ============================================================ */
+(function checkModeDeclarations(){
+    // (١) أقسام العرض
+    const views = [...html.matchAll(/<section\b([^>]*)id="(view-[a-z]+)"/g)];
+    views.forEach(m => {
+        if(!/data-modes=/.test(m[1])){
+            add("حرج", `قسم بلا تصريح وضع: ${m[2]}`, "index.html — أضِف data-modes إليه");
+        }
+    });
+
+    // (٢) عناصر التنقّل التي تفتح قسماً
+    const navs = [...html.matchAll(/<div\b([^>]*class="(?:nav-item|mobile-nav-item)[^"]*"[^>]*)>/g)];
+    navs.forEach(m => {
+        const tag = m[1];
+        if(!/data-tab="/.test(tag) && !/nav-item-board/.test(tag) && !/badge-soon/.test(html.slice(m.index, m.index + 220))) return;
+        if(!/data-modes=/.test(tag)){
+            const tab = (tag.match(/data-tab="([a-z]+)"/) || [,"(بلا data-tab)"])[1];
+            add("حرج", `عنصر تنقّل بلا تصريح وضع: ${tab}`, "index.html");
+        }
+    });
+
+    // (٣) بطاقات اللوحة
+    const cards = [...html.matchAll(/<div\b([^>]*id="((?:dash-card|prof-card)-[a-z-]+)")/g)];
+    cards.forEach(m => {
+        if(!/data-modes=/.test(m[1])){
+            add("حرج", `بطاقة لوحة بلا تصريح وضع: ${m[2]}`, "index.html");
+        }
+    });
+
+    // (٤) قيم غير معروفة
+    [...html.matchAll(/data-modes="([^"]*)"/g)].forEach(m => {
+        m[1].split(/\s+/).filter(Boolean).forEach(v => {
+            if(v !== "khuta" && v !== "school"){
+                add("حرج", `قيمة وضع غير معروفة: "${v}"`, "index.html — المسموح: khuta و school");
+            }
+        });
+    });
+})();
+
 const order={'حرج':0,'متوسط':1};
 findings.sort((a,b)=>order[a.sev]-order[b.sev]);
 const bySev={};
 findings.forEach(f=>{ bySev[f.sev]=(bySev[f.sev]||0)+1; });
+
 console.log('=== نتيجة التدقيق ===');
 console.log(Object.entries(bySev).map(([k,v])=>`${k}: ${v}`).join(' | ') || 'لا ملاحظات');
 console.log();

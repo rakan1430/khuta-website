@@ -1325,34 +1325,34 @@
     <aside class="sidebar" id="main-sidebar">
         <div class="brand">خُطى<span class="dot">.</span><small data-i18n="brand.tag">QUDRAT COMPANION</small></div>
         <nav style="display:flex; flex-direction:column; gap:8px;">
-            <div class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i> <span data-i18n="nav.dashboard">الخطة والجدول</span></div>
-            <div class="nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i> <span data-i18n="nav.calculator">حساب الموزونة</span></div>
-            <div class="nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i> <span data-i18n="nav.links">الروابط المباشرة</span></div>
-            <div class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
-            <div class="nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i> <span data-i18n="nav.settings">الإعدادات</span></div>
-            <div class="nav-item" data-school-member style="display:none;" data-tab="schoolwork" onclick="switchTab(&#39;schoolwork&#39;,this)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.schoolWork">منصة المدرسة</span></div>
-            <div class="nav-item" data-school-role="admin" data-school-member style="display:none;" data-tab="schooladmin" onclick="switchTab('schooladmin',this)" role="button" tabindex="0"><i class="fa-solid fa-school"></i> <span data-i18n="nav.schoolAdmin">إدارة المدرسة</span> <span id="admin-requests-count" class="pill" style="display:none;">0</span></div>
-            <div class="nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
-            <div class="nav-item" data-tab="community" onclick="switchTab('community',this)" role="button" tabindex="0"><i class="fa-solid fa-users"></i> <span data-i18n="nav.community">المجتمع</span></div>
-            <div class="nav-item nav-item-board" onclick="openKhutaBoard(null, true)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.board">السبورة الذكية</span></div>
-            <div class="nav-item" id="nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-clipboard-question"></i> <span data-i18n="nav.examSim">اختبارات محاكية</span></div>
-            <div class="nav-item" id="nav-tutors" data-tab="tutors" onclick="switchTab('tutors',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.tutors">مدرّسون خصوصيون</span></div>
-            <div class="nav-item disabled"><i class="fa-solid fa-graduation-cap"></i> <span data-i18n="nav.tahsili">التحصيلي</span> <span class="badge-soon" data-i18n="nav.soon">قريباً</span></div>
-            <div class="nav-item disabled"><i class="fa-solid fa-language"></i> <span data-i18n="nav.step">ستيب (STEP)</span> <span class="badge-soon" data-i18n="nav.soon">قريباً</span></div>
+            <div data-modes="khuta school" class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i> <span data-i18n="nav.dashboard">الخطة والجدول</span></div>
+            <div data-modes="khuta" class="nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i> <span data-i18n="nav.calculator">حساب الموزونة</span></div>
+            <div data-modes="khuta" class="nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i> <span data-i18n="nav.links">الروابط المباشرة</span></div>
+            <div data-modes="khuta school" class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
+            <div data-modes="khuta school" class="nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i> <span data-i18n="nav.settings">الإعدادات</span></div>
+            <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolwork" onclick="switchTab(&#39;schoolwork&#39;,this)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.schoolWork">منصة المدرسة</span></div>
+            <div data-modes="school" class="nav-item" data-school-role="admin" data-school-member style="display:none;" data-tab="schooladmin" onclick="switchTab('schooladmin',this)" role="button" tabindex="0"><i class="fa-solid fa-school"></i> <span data-i18n="nav.schoolAdmin">إدارة المدرسة</span> <span id="admin-requests-count" class="pill" style="display:none;">0</span></div>
+            <div data-modes="khuta" class="nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
+            <div data-modes="khuta" class="nav-item" data-tab="community" onclick="switchTab('community',this)" role="button" tabindex="0"><i class="fa-solid fa-users"></i> <span data-i18n="nav.community">المجتمع</span></div>
+            <div data-modes="khuta school" class="nav-item nav-item-board" onclick="openKhutaBoard(null, true)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.board">السبورة الذكية</span></div>
+            <div data-modes="khuta" class="nav-item" id="nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-clipboard-question"></i> <span data-i18n="nav.examSim">اختبارات محاكية</span></div>
+            <div data-modes="khuta" class="nav-item" id="nav-tutors" data-tab="tutors" onclick="switchTab('tutors',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.tutors">مدرّسون خصوصيون</span></div>
+            <div data-modes="khuta" class="nav-item disabled"><i class="fa-solid fa-graduation-cap"></i> <span data-i18n="nav.tahsili">التحصيلي</span> <span class="badge-soon" data-i18n="nav.soon">قريباً</span></div>
+            <div data-modes="khuta" class="nav-item disabled"><i class="fa-solid fa-language"></i> <span data-i18n="nav.step">ستيب (STEP)</span> <span class="badge-soon" data-i18n="nav.soon">قريباً</span></div>
         </nav>
     </aside>
 
     <nav class="mobile-nav">
-        <div class="mobile-nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i><span data-i18n="nav.dashboardShort">الجدول</span></div>
-        <div class="mobile-nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i><span data-i18n="nav.calcShort">الموزونة</span></div>
-        <div class="mobile-nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i><span data-i18n="nav.linksShort">المصادر</span></div>
-        <div class="mobile-nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i><span data-i18n="nav.specialtiesShort">التخصصات</span></div>
-        <div class="mobile-nav-item" data-tab="community" onclick="switchTab('community',this)" role="button" tabindex="0"><i class="fa-solid fa-users"></i><span data-i18n="nav.communityShort">المجتمع</span></div>
-        <div class="mobile-nav-item nav-item-board" onclick="openKhutaBoard(null, true)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i><span data-i18n="nav.boardShort">السبورة</span></div>
-        <div class="mobile-nav-item" id="mobile-nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-clipboard-question"></i><span data-i18n="nav.examSimShort">اختبارات</span></div>
-        <div class="mobile-nav-item" id="mobile-nav-tutors" data-tab="tutors" onclick="switchTab('tutors',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i><span data-i18n="nav.tutorsShort">مدرّسون</span></div>
-        <div class="mobile-nav-item" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i><span data-i18n="nav.profileShort">الملف</span></div>
-        <div class="mobile-nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i><span data-i18n="nav.settingsShort">الإعدادات</span></div>
+        <div data-modes="khuta school" class="mobile-nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i><span data-i18n="nav.dashboardShort">الجدول</span></div>
+        <div data-modes="khuta" class="mobile-nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i><span data-i18n="nav.calcShort">الموزونة</span></div>
+        <div data-modes="khuta" class="mobile-nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i><span data-i18n="nav.linksShort">المصادر</span></div>
+        <div data-modes="khuta" class="mobile-nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i><span data-i18n="nav.specialtiesShort">التخصصات</span></div>
+        <div data-modes="khuta" class="mobile-nav-item" data-tab="community" onclick="switchTab('community',this)" role="button" tabindex="0"><i class="fa-solid fa-users"></i><span data-i18n="nav.communityShort">المجتمع</span></div>
+        <div data-modes="khuta school" class="mobile-nav-item nav-item-board" onclick="openKhutaBoard(null, true)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i><span data-i18n="nav.boardShort">السبورة</span></div>
+        <div data-modes="khuta" class="mobile-nav-item" id="mobile-nav-exam-simulator" data-tab="examsim" onclick="switchTab('examsim',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-clipboard-question"></i><span data-i18n="nav.examSimShort">اختبارات</span></div>
+        <div data-modes="khuta" class="mobile-nav-item" id="mobile-nav-tutors" data-tab="tutors" onclick="switchTab('tutors',this)" style="display:none;" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i><span data-i18n="nav.tutorsShort">مدرّسون</span></div>
+        <div data-modes="khuta school" class="mobile-nav-item" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i><span data-i18n="nav.profileShort">الملف</span></div>
+        <div data-modes="khuta school" class="mobile-nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i><span data-i18n="nav.settingsShort">الإعدادات</span></div>
     </nav>
 
     <main class="main-content">
@@ -1382,11 +1382,11 @@
                         <div id="notif-panel-list" class="notif-panel-list"></div>
                     </div>
                 </div>
-                <div class="gamify-widget" data-feature="gat" title="نقاط الخبرة">
+                <div data-modes="khuta" class="gamify-widget" data-feature="gat" title="نقاط الخبرة">
                     <i class="fa-solid fa-star" style="color:var(--gold-text);"></i>
                     <div><b id="xp-widget-value">0 XP</b><span id="xp-widget-level">مستكشف</span></div>
                 </div>
-                <div class="gamify-widget" data-feature="gat" title="سلسلة المذاكرة">
+                <div data-modes="khuta" class="gamify-widget" data-feature="gat" title="سلسلة المذاكرة">
                     <i class="fa-solid fa-fire" style="color:var(--rose);"></i>
                     <div><b id="streak-widget-value">0</b><span data-i18n="streak.label">يوم متتالي 🔥</span></div>
                 </div>
@@ -1413,9 +1413,9 @@
         </header>
 
         <!-- ===================== لوحة الجدول ===================== -->
-        <section id="view-dashboard" class="view-section active">
+        <section data-modes="khuta school" id="view-dashboard" class="view-section active">
             <div class="dash-toolbar">
-                <button type="button" id="btn-plans-routine" class="btn btn-outline btn-sm" onclick="openSetupOverlay('routine')">
+                <button data-modes="khuta" type="button" id="btn-plans-routine" class="btn btn-outline btn-sm" onclick="openSetupOverlay('routine')">
                     <i class="fa-solid fa-layer-group"></i> <span>خططي وروتيني</span>
                 </button>
                 <button type="button" id="btn-customize-dashboard" class="btn btn-outline btn-sm btn-shimmer" onclick="toggleDashboardCustomizer()">
@@ -1431,7 +1431,7 @@
 
 
             <div id="dash-overview">
-                <div class="overview-hero-row" id="dash-card-overview-hero">
+                <div data-modes="khuta" class="overview-hero-row" id="dash-card-overview-hero">
                     <div class="xp-hero-card">
                         <div class="xp-hexagon">
                             <svg viewBox="0 0 100 115" class="xp-hexagon-svg">
@@ -1476,7 +1476,7 @@
                 </div>
 
                 <div class="overview-lower-row" id="dash-overview-lower-row">
-                    <div class="card ov-heatmap-card" id="dash-card-overview-heatmap">
+                    <div data-modes="khuta" class="card ov-heatmap-card" id="dash-card-overview-heatmap">
                         <h2 style="margin-bottom:2px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold-text);"></i> <span data-i18n="overview.activityTitle">نشاطك اليومي</span></h2>
                         <p class="card-sub" style="margin-bottom:14px;" data-i18n="overview.activitySub">كل مربع يمثّل يوماً — كلما اغمّق اللون زادت دقائق مذاكرتك فيه</p>
                         <div class="ov-heatmap-scroll">
@@ -1495,19 +1495,19 @@
                     </div>
 
                     <div class="ov-sidebar-col">
-                        <div class="card ov-quests-card" id="dash-card-overview-quests">
+                        <div data-modes="khuta" class="card ov-quests-card" id="dash-card-overview-quests">
                             <h2 style="margin-bottom:2px; font-size:15.5px;"><i class="fa-solid fa-list-check" style="color:var(--gold-text);"></i> <span data-i18n="overview.questsTitle">مهام اليوم</span> <span id="today-routine-pill" class="today-routine-pill" style="display:none;"></span></h2>
                             <p class="card-sub" style="margin-bottom:12px;" data-i18n="overview.questsSub">لمحة سريعة — عدّلها من جدولك الكامل أدناه</p>
                             <div id="ov-quests-list"></div>
                         </div>
-                        <div class="card ov-leaderboard-card" id="dash-card-overview-leaderboard">
+                        <div data-modes="khuta" class="card ov-leaderboard-card" id="dash-card-overview-leaderboard">
                             <h2 style="margin-bottom:12px; font-size:15.5px;"><i class="fa-solid fa-ranking-star" style="color:var(--gold-text);"></i> <span data-i18n="overview.leaderboardTitle">لوحة الصدارة</span></h2>
                             <div id="ov-leaderboard-mini"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card" id="dash-card-progress">
+                <div data-modes="khuta" class="card" id="dash-card-progress">
                 <div class="card-head">
                     <div>
                         <div class="eyebrow"><i class="fa-solid fa-shoe-prints"></i> <span data-i18n="progress.eyebrow">مسار التقدم</span></div>
@@ -1539,7 +1539,7 @@
             <div id="dashboard-cards">
 
 
-            <div class="card" id="dash-card-table">
+            <div data-modes="khuta" class="card" id="dash-card-table">
                 <div class="card-head">
                     <div>
                         <h2><i class="fa-solid fa-list-check" style="color:var(--gold-text);"></i> <span data-i18n="table.title">جدول مهامك المخصص</span></h2>
@@ -1578,7 +1578,7 @@
                 </button>
             </div>
 
-            <div class="card timer-card" id="dash-card-timer">
+            <div data-modes="khuta school" class="card timer-card" id="dash-card-timer">
                 <div class="eyebrow" style="justify-content:center;"><i class="fa-solid fa-lock"></i> <span data-i18n="timer.eyebrow">وضع التركيز العميق</span></div>
                 <h2 style="margin:8px 0 4px;" data-i18n="timer.title">التزم بجلستك 🔒</h2>
                 <p style="color:var(--text-3); font-size:13.5px; max-width:440px; margin:0 auto 6px;" data-i18n="timer.desc2">حالة مهامك اليوم تُحدَّث تلقائياً حسب التزامك بالجلسة — لا حاجة لتحديدها يدوياً.</p>
@@ -1627,13 +1627,13 @@
                 </div>
             </div>
 
-            <div class="card" id="dash-card-badges" style="display:none;">
+            <div data-modes="khuta" class="card" id="dash-card-badges" style="display:none;">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold-text);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
                 <p class="card-sub" data-i18n="badges.sub">تحفيزية بحتة — لا علاقة لها بنسبة تقدمك الفعلية في الخطة</p>
                 <div class="badges-row" id="badges-grid-dashboard"></div>
             </div>
 
-            <div class="card" id="dash-card-community" style="display:none;">
+            <div data-modes="khuta" class="card" id="dash-card-community" style="display:none;">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-users" style="color:var(--gold-text);"></i> <span data-i18n="nav.community">المجتمع</span></h2>
                 <p class="card-sub" data-i18n="dash.communityDesc">نظرة سريعة — تفاصيل أكثر في صفحة المجتمع الكاملة</p>
                 <div style="display:flex; align-items:center; gap:14px; margin-top:14px; padding:14px 16px; background:var(--bg-alt); border-radius:14px;">
@@ -1650,7 +1650,7 @@
         </section>
 
         <!-- ===================== الموزونة ===================== -->
-        <section id="view-calculator" class="view-section">
+        <section data-modes="khuta" id="view-calculator" class="view-section">
             <div class="intensity-row" style="margin-bottom:18px;">
                 <div class="intensity-chip selected" id="calc-mode-weighted" onclick="setCalcMode('weighted')" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i> <span data-i18n="calc.modeWeighted">حاسبة الموزونة</span></div>
                 <div class="intensity-chip" id="calc-mode-gpa" onclick="setCalcMode('gpa')" role="button" tabindex="0"><i class="fa-solid fa-graduation-cap"></i> <span data-i18n="calc.modeGpa">حاسبة المعدل التراكمي</span></div>
@@ -1809,7 +1809,7 @@
         </section>
 
         <!-- ===================== الروابط ===================== -->
-        <section id="view-links" class="view-section">
+        <section data-modes="khuta" id="view-links" class="view-section">
             <div class="card">
                 <div class="card-head">
                     <div>
@@ -1874,7 +1874,7 @@
         </section>
 
         <!-- ===================== الاختبارات المحاكية (خلف علم تفعيل) ===================== -->
-        <section id="view-examsim" class="view-section">
+        <section data-modes="khuta" id="view-examsim" class="view-section">
             <div class="card">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-clipboard-question" style="color:var(--gold-text);"></i> <span data-i18n="examsim.title">اختبارات محاكية</span></h2>
                 <p class="card-sub" style="margin-bottom:20px;" data-i18n="examsim.sub">تدرّب بنمط مطابق تماماً لاختبار قياس الفعلي — بوقت أو بدون وقت.</p>
@@ -1938,7 +1938,7 @@
         </section>
 
         <!-- ===================== المدرّسون الخصوصيون (خلف علم تفعيل) ===================== -->
-        <section id="view-tutors" class="view-section">
+        <section data-modes="khuta" id="view-tutors" class="view-section">
             <div class="card">
                 <div class="card-head">
                     <div>
@@ -1951,7 +1951,7 @@
             </div>
         </section>
 
-        <section id="view-profile" class="view-section">
+        <section data-modes="khuta school" id="view-profile" class="view-section">
             <div class="card">
                 <h2 style="margin-bottom:18px;"><i class="fa-solid fa-user" style="color:var(--gold-text);"></i> <span data-i18n="profile.title">الملف الشخصي</span></h2>
                 <div class="profile-head">
@@ -2012,7 +2012,7 @@
                 </form>
             </div>
 
-            <div class="card" id="prof-card-stats">
+            <div data-modes="khuta" class="card" id="prof-card-stats">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chart-simple" style="color:var(--gold-text);"></i> <span data-i18n="stats.title">إحصائياتك</span></h2>
                 <p class="card-sub" data-i18n="stats.sub">نظرة عامة على مذاكرتك الفعلية حتى الآن</p>
                 <div class="input-row" style="grid-template-columns:repeat(2,1fr); margin-top:12px;">
@@ -2027,7 +2027,7 @@
                 <button type="button" id="btn-deep-report" class="btn btn-outline btn-block" style="margin-top:12px;" onclick="handleDeepReportClick()"><i class="fa-solid fa-chart-column"></i> <span data-i18n="dash.deepReport">التقرير المتعمّق</span></button>
             </div>
 
-            <div class="card" id="prof-card-badges">
+            <div data-modes="khuta" class="card" id="prof-card-badges">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-award" style="color:var(--gold-text);"></i> <span data-i18n="badges.title">أوسمتك وإنجازاتك</span></h2>
                 <p class="card-sub" data-i18n="badges.sub">تحفيزية بحتة — لا علاقة لها بنسبة تقدمك الفعلية في الخطة</p>
                 <div class="badges-row" id="badges-grid"></div>
@@ -2063,13 +2063,13 @@
                 </div>
             </div>
 
-            <div class="card" id="prof-card-invite">
+            <div data-modes="khuta" class="card" id="prof-card-invite">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-plus" style="color:var(--gold-text);"></i> <span data-i18n="referral.title">ادعُ صديقاً</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="referral.desc">كل صديق ينضم عبر رابطك يمنحك ويمنحه 50 XP.</p>
                 <button type="button" class="btn btn-block" onclick="shareReferralLink()"><i class="fa-solid fa-share-nodes"></i> <span data-i18n="referral.share">مشاركة رابط الدعوة</span></button>
             </div>
 
-            <div class="card" id="prof-card-mistakes">
+            <div data-modes="khuta" class="card" id="prof-card-mistakes">
                 <h2 style="margin-bottom:4px;">🧠 <span data-i18n="mistakebank.title">بنك أخطائك الشخصية</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="mistakebank.desc">ليست أخطاء القدرات — بل أنماطك الشخصية التي تعطّل تقدّمك، نكتشفها من سلوكك الفعلي بمرور الوقت.</p>
                 <div id="mistake-bank-content" class="mistake-bank-card"></div>
@@ -2079,7 +2079,7 @@
 
         <!-- ===================== الإعدادات ===================== -->
         <!-- ===================== مساحة المدرسة: ملفات وروابط وجدول واختبارات ===================== -->
-        <section id="view-schoolwork" class="view-section">
+        <section data-modes="school" id="view-schoolwork" class="view-section">
             <div class="card settings-hero">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-chalkboard-user" style="color:var(--gold-text);"></i> <span data-i18n="school.workTitle">منصة المدرسة</span></h2>
                 <p class="card-sub" id="school-who-2"></p>
@@ -2305,7 +2305,7 @@
         </div>
 
         <!-- ===================== إدارة المدرسة (المدير فقط) ===================== -->
-        <section id="view-schooladmin" class="view-section">
+        <section data-modes="school" id="view-schooladmin" class="view-section">
             <div class="card settings-hero">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-school" style="color:var(--gold-text);"></i> <span data-i18n="school.adminTitle">إدارة المدرسة</span></h2>
                 <p class="card-sub" id="school-who"></p>
@@ -2454,7 +2454,7 @@
             </div>
         </div>
 
-        <section id="view-settings" class="view-section">
+        <section data-modes="khuta school" id="view-settings" class="view-section">
             <div class="card settings-hero">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-gear" style="color:var(--gold-text);"></i> <span data-i18n="settings.title">الإعدادات</span></h2>
                 <p class="card-sub" data-i18n="settings.sub">كل تفضيلاتك في مكان واحد، مرتّبة حسب الغرض</p>
@@ -2622,7 +2622,7 @@
             </div>
         </section>
         <!-- ===================== دليل التخصصات ===================== -->
-        <section id="view-specialties" class="view-section">
+        <section data-modes="khuta" id="view-specialties" class="view-section">
             <div class="card">
                 <h2><i class="fa-solid fa-book-open-reader" style="color:var(--gold-text);"></i> <span data-i18n="spec.title">دليل التخصصات الذكي</span></h2>
                 <p class="card-sub" data-i18n="spec.sub">نظرة عامة تعريفية — راجع مواقع الجامعات لتفاصيل كل كلية بدقة</p>
@@ -2634,7 +2634,7 @@
         </section>
 
         <!-- ===================== المجتمع (صدارة + غرفة مذاكرة + حائط) ===================== -->
-        <section id="view-community" class="view-section">
+        <section data-modes="khuta" id="view-community" class="view-section">
             <div class="card">
                 <div class="card-head">
                     <div>
@@ -2751,6 +2751,7 @@
 <script src="js/23-school-home.js" defer></script>
 <script src="js/24-student-exam.js" defer></script>
 <script src="js/25-import.js" defer></script>
+<script src="js/26-mode.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>
