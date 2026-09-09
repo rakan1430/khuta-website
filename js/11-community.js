@@ -286,7 +286,10 @@ async function upsertLeaderboardRow(){
     const uid = userData && userData.user && userData.user.id;
     if(!uid) return;
     const session = getSession();
-    const displayName = (session && session.username) || (localStorage.getItem("khuta_name") || (currentLang==='ar'?"طالب مجهول":"Anonymous student"));
+    /* ⚠️ الاسم العلني من دالة واحدة — انظر js/27-alias.js.
+       كان يُبنى هنا وفي ثلاثة مواضع أخرى بنفس السطر المكرّر، فأي إصلاح
+       للخصوصية كان يجب أن يُطبَّق أربع مرات، ومن ينسى واحدة يسرّب اسماً. */
+    const displayName = publicDisplayName();
     await sb.from("leaderboard").upsert({ id: uid, display_name: displayName, xp: getXP(), updated_at: new Date().toISOString() });
 }
 
@@ -431,7 +434,7 @@ async function postForumMessage(){
     const uid = userData && userData.user && userData.user.id;
     if(!uid) return;
     const session = getSession();
-    const name = (session && session.username) || (localStorage.getItem("khuta_name") || (currentLang==='ar'?"طالب":"Student"));
+    const name = publicDisplayName();
     const { error } = await sb.from("forum_posts").insert({ author_name: name, author_id: uid, message: msg });
     if(!error){ input.value = ""; refreshForum(); }
     else showToast(currentLang==='ar'?'تعذّر النشر':'Could not post');
@@ -487,7 +490,7 @@ async function publishTemplate(){
     let config = {};
     try{ config = JSON.parse(localStorage.getItem("khuta_config")) || {}; }catch(e){}
     const session = getSession();
-    const authorName = (session && session.username) || (localStorage.getItem("khuta_name") || (currentLang==='ar'?"طالب":"Student"));
+    const authorName = publicDisplayName();
     const planDays = parseInt(localStorage.getItem("khuta_plan_days")) || null;
     const sessionMinutes = parseInt(localStorage.getItem("khuta_session_minutes")) || null;
     const sourcesSummary = getConfigSummary(config, planDays, sessionMinutes).join(" | ");

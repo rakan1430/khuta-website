@@ -781,7 +781,7 @@ function switchTab(tabId, element){
     window.scrollTo({top:0, behavior:"smooth"});
     if(tabId === "community") initCommunityIfNeeded();
     if(tabId === "specialties") renderSpecialties();
-    if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); }
+    if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); if(typeof renderAliasBox === "function") renderAliasBox(); }
     if(tabId === "settings") renderSettings();
     if(tabId === "tutors") renderTutors();
     /* ⚠️ يُعاد التطبيق بعد كل انتقال: بعض الأقسام تُعيد رسم محتواها هنا

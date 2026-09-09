@@ -3628,3 +3628,13 @@ body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after{ content: none;
 /* إخفاء الوضع — خانة مستقلّة عن style.display كي لا يتنازع نظاما الإظهار.
    انظر شرح applyMode في js/26-mode.js. */
 .mode-hidden{ display: none !important; }
+
+/* ── اللقب العلني ── */
+.alias-current{
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding: 14px 16px; border-radius: 14px;
+    background: var(--bg-alt); border: 1.5px solid var(--border);
+}
+.alias-label{ font-size: 12.5px; color: var(--text-3); }
+.alias-current b{ font-size: 16px; color: var(--gold-text); font-weight: 800; }
+.alias-current .btn{ margin-inline-start: auto; }
