@@ -2427,6 +2427,29 @@
                 <div id="imp-mapper"></div>
             </div>
 
+            <!-- ===================== الغياب من ملفّ نور ===================== -->
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-user-clock"></i>
+                    <span data-i18n="att.title">الغياب من نور</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="att.sub">ارفع كشف الغياب من نور ليظهر بجانب درجات الطلاب. لا تحضير هنا — نور هو السجلّ الرسمي.</p>
+
+                <!-- ⚠️ نفس الصراحة المطلوبة في الاستيراد: المدير يسلّم ملفاً
+                     فيه أرقام هوية قاصرين، ومن حقّه أن يعرف أين تذهب. -->
+                <div class="uni-note" style="margin-bottom:14px;">
+                    <b>أين يذهب رقم الهوية؟</b>
+                    <p style="margin:6px 0 0;">
+                        لا يُحفظ إطلاقاً. يُحوَّل في الخادم إلى البصمة نفسها المستعملة في استيراد
+                        الطلاب، فتُطابَق بها، ثم يُرمى. ولا يُحفظ من الملف إلا أعداد أيام الغياب.
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label>كشف الغياب (‎.xlsx أو ‎.xls أو ‎.csv)</label>
+                    <input type="file" id="att-file" accept=".csv,.txt,.xlsx,.xls" onchange="onAttendanceFilePicked(event)">
+                </div>
+                <p id="att-status" class="hint" style="margin:0;"></p>
+                <div id="att-mapper"></div>
+            </div>
+
             <div class="card">
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-users-gear"></i> <span data-i18n="school.membersTitle">المدرّسون والطلاب</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.membersSub">إيقاف العضو يمنع دخوله فوراً ويُبقي ملفاته وسجلّه — أأمن من الحذف.</p>
@@ -2822,6 +2845,7 @@
 <script src="js/30-parent-links.js" defer></script>
 <script src="js/31-year.js" defer></script>
 <script src="js/32-member-leave.js" defer></script>
+<script src="js/33-attendance.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

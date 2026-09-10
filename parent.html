@@ -61,6 +61,11 @@ h2{ font-size:15px; margin:22px 0 8px; }
 .good{ color:var(--teal); } .mid{ color:var(--gold); } .low{ color:var(--rose); }
 .none{ color:var(--text-3); font-size:12.5px; font-weight:700; }
 .note{ font-size:12.5px; color:var(--text-3); margin-top:16px; text-align:center; line-height:1.9; }
+.att-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+.att-row div{ text-align:center; border:1px dashed var(--border); border-radius:12px; padding:10px 6px; }
+.att-row b{ display:block; font-size:18px; font-weight:800; }
+.att-row span{ font-size:10.5px; color:var(--text-3); font-weight:700; }
+.att-note{ font-size:11px; color:var(--text-3); margin:8px 0 0; text-align:center; }
 .state{ text-align:center; padding:50px 20px; color:var(--text-2); }
 .state b{ display:block; font-size:16px; margin-bottom:6px; color:var(--text-1); }
 </style>
@@ -138,6 +143,9 @@ async function load(){
 
 function render(d){
     const st = d.student || {}, sum = d.summary || {};
+    /* ⚠️ لا يُعرض قسم الغياب إن لم تُرفع كشوف نور: أصفارٌ في صفحة يقرؤها
+       وليّ أمر تعني «ابني لم يغب» لا «لا بيانات». */
+    const att = d.attendance || null;
     const exams = Array.isArray(d.exams) ? d.exams : [];
     const rate = Number(sum.assigned) ? Math.round(Number(sum.done) * 100 / Number(sum.assigned)) : null;
 
@@ -157,6 +165,13 @@ function render(d){
             <div class="tile"><b>${rate == null ? "—" : rate + "%"}</b><span>ما سُلّم منها</span></div>
             <div class="tile"><b>${sum.avg_pct == null ? "—" : sum.avg_pct + "%"}</b><span>المتوسّط</span></div>
         </div>
+        ${att ? `
+        <div class="att-row">
+            <div><b>${Number(att.absent) || 0}</b><span>يوم غياب</span></div>
+            <div><b>${Number(att.late) || 0}</b><span>يوم تأخّر</span></div>
+            <div><b>${Number(att.excused) || 0}</b><span>غياب بعذر</span></div>
+        </div>
+        <p class="att-note">الغياب من كشف نور، آخر تحديث ${esc(fmtDate(att.as_of))}.</p>` : ""}
     </div>
 
     <h2>التفصيل</h2>

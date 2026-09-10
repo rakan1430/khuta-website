@@ -104,6 +104,16 @@ function crBand(p){
     return          { cls:"cr-low",  text: p + "%" };
 }
 
+/** خانة الغياب — ولا تُخلط «صفر غياب» بـ«لا كشف لهذا الطالب». */
+function crAbsentCell(att){
+    if(!att) return `<span class="cr-none">—</span>`;
+    const n = Number(att.absent) || 0;
+    const late = Number(att.late) || 0;
+    const cls = n >= 10 ? "cr-low" : n >= 5 ? "cr-mid" : "";
+    return `<span class="${cls}">${n}</span>` +
+        (late ? `<small style="color:var(--text-3);"> +${late}${crLabel("ت","L")}</small>` : "");
+}
+
 function renderClassReport(){
     const ov = ensureReportOverlay();
     const r = classReport || {};
@@ -114,6 +124,9 @@ function renderClassReport(){
     const teachers = Array.isArray(r.teachers) ? r.teachers : [];
     const rate = crRate(sum);
     const gradeName = (typeof gradeText === "function") ? gradeText(cls.grade) : (cls.grade || "");
+    /* ⚠️ عمود الغياب يظهر فقط إن رُفع كشف نور. وعمودٌ فارغ في ورقةٍ
+       مطبوعة يُقرأ «صفر غياب» لا «لا بيانات» — وهو خطأ يُبنى عليه قرار. */
+    const anyAttendance = students.some(s => s.attendance);
 
     ov.innerHTML = `
     <div class="report-toolbar no-print">
@@ -158,6 +171,7 @@ function renderClassReport(){
                 <th class="cr-num">${crLabel("مطلوب","Assigned")}</th>
                 <th class="cr-num">${crLabel("سُلّم","Done")}</th>
                 <th class="cr-num">${crLabel("المتوسّط","Average")}</th>
+                ${anyAttendance ? `<th class="cr-num">${crLabel("غياب","Absent")}</th>` : ""}
                 <th>${crLabel("آخر نشاط","Last activity")}</th>
             </tr></thead>
             <tbody>${students.map((s, i) => {
@@ -169,6 +183,7 @@ function renderClassReport(){
                     <td class="cr-num">${Number(s.assigned) || 0}</td>
                     <td class="cr-num">${Number(s.done) || 0}</td>
                     <td class="cr-num ${band.cls}">${band.text}</td>
+                    ${anyAttendance ? `<td class="cr-num">${crAbsentCell(s.attendance)}</td>` : ""}
                     <td>${crDate(s.last_at)}</td>
                 </tr>`;
             }).join("")}</tbody>

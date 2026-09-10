@@ -74,6 +74,7 @@ const REPORT = {
     school: "مدارس المتقدمة — فرع الملقا",
     generated_at: "2026-09-10T08:00:00Z",
     summary: { assigned: 3, done: 2, avg_pct: 75 },
+    attendance: { as_of: "2026-09-01", absent: 4, late: 2, excused: 1 },
     exams: [
         { title:"واجب الوحدة ٣", subject:"رياضيات", teacher:"ana btata",
           due_at:"2026-09-13T09:00:00Z", pct:90, done_at:"2026-09-09T10:00:00Z" },
@@ -90,6 +91,8 @@ function reply(body){
     if(mode === "ok")      return { status:200, body: REPORT };
     if(mode === "revoked") return { status:410, body: { error:"REVOKED" } };
     if(mode === "bad")     return { status:403, body: { error:"BAD_LINK" } };
+    /* ⚠️ مدرسةٌ لم ترفع كشف نور — ولا يجوز أن يقرأ وليّ الأمر أصفاراً */
+    if(mode === "noatt")   return { status:200, body: { ...REPORT, attendance: null } };
     if(mode === "xss")     return { status:200, body: { ...REPORT,
         student: { ...REPORT.student, name: '<img src=x onerror="window.__pwned=1">' } } };
     return { status:500, body: { error:"INTERNAL" } };
@@ -156,6 +159,37 @@ async function main(){
            /2026/.test(seen.exams[0].meta) && !/هـ/.test(seen.exams[0].meta), seen.exams[0].meta);
         ok("ويُنبَّه وليّ الأمر ألّا يُشارك الرابط", /لا تُشاركه/.test(seen.note));
         ok("ولا تمرير أفقي على الجوّال", !seen.wide);
+
+        /* ---------- الغياب من نور ---------- */
+        console.log("\nالغياب");
+        const att = await page.evaluate(() => {
+            const row = document.querySelector(".att-row");
+            return {
+                shown: !!row,
+                nums: row ? [...row.querySelectorAll("b")].map(b => b.textContent) : [],
+                note: (document.querySelector(".att-note") || {}).textContent || "",
+            };
+        });
+        ok("يظهر الغياب حين ترفعه المدرسة", att.shown);
+        ok("بأرقامه الثلاثة", JSON.stringify(att.nums) === '["4","2","1"]', JSON.stringify(att.nums));
+        ok("ويُقال إنه من نور ومتى حُدّث",
+           /نور/.test(att.note) && /2026/.test(att.note), att.note.trim());
+
+        mode = "noatt";
+        await page.goto(url() + LINK, { waitUntil: "networkidle" });
+        await page.waitForSelector(".exam", { timeout:5000 });
+        /* ⚠️ أصفارٌ في صفحة يقرؤها وليّ أمر تعني «ابني لم يغب» لا «لا
+           بيانات» — والفرق بينهما اتّهامٌ أو براءة. */
+        const noAtt = await page.evaluate(() => ({
+            row: !!document.querySelector(".att-row"),
+            /* ⚠️ ‎#root‎ لا ‎body‎: نصّ ‎body‎ يشمل محتوى وسم ‎<script>‎ نفسه،
+               وفيه العبارة حرفياً — فيبدو الفحص فاشلاً والصفحة سليمة. */
+            zeros: /يوم غياب/.test(document.getElementById("root").textContent),
+        }));
+        ok("ولا يظهر إطلاقاً حين لا يُرفع (لا أصفار مضلّلة)",
+           noAtt.row === false && noAtt.zeros === false,
+           `att-row=${noAtt.row} zeros=${noAtt.zeros}`);
+        mode = "ok";
 
         /* ---------- ٢) الرمز لا يظهر في أي مسار ---------- */
         console.log("\nأين ذهب الرمز؟");

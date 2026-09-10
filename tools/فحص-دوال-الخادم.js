@@ -571,6 +571,82 @@ const brevoAccepts = [
           async () => ({ status: 403, body: { message: "denied" } })]],
         { label: "ورفضُ قاعدة البيانات لا يُعَدّ نجاحاً", status: 502 });
 
+    /* ---------- school-attendance ---------- */
+    /* ⚠️ نفس مسار الاستيراد الجماعي في الخطر: ملفٌّ فيه أرقام هوية
+       قاصرين. والشرط أن يخرج الرقم من هنا بصمةً ولا يصل قاعدة البيانات. */
+    console.log("\nschool-attendance.js");
+    const attAdmin = ["/rest/v1/school_members?uid=eq.",
+        async () => ({ status: 200, body: [{ id: "m1", school_id: "SCH1" }] })];
+    let attSent = null;
+    const attWrite = ["/rest/v1/rpc/apply_attendance_snapshot", async (u, o) => {
+        attSent = JSON.parse(o.body);
+        return { status: 200, body: { saved: attSent.p_rows.length, unmatched: 0 } };
+    }];
+
+    await run("school-attendance.js",
+        post({ accessToken: GOOGLE_T, asOf: "2026-09-01",
+               rows: [{ national_id: "1012345678", absent: "3", late: "1", excused: "" }] }),
+        [okUser(false), attAdmin, attWrite],
+        { label: "رفعٌ سليم — والهوية لا تغادر الخادم أبداً",
+          status: 200,
+          check: (b) => {
+              const sent = JSON.stringify(attSent);
+              if(/1012345678/.test(sent)) return "🚨 رقم الهوية وصل قاعدة البيانات: " + sent;
+              const r = attSent.p_rows[0];
+              if(!/^[0-9a-f]{64}$/.test(r.hash)) return "البصمة ليست HMAC-SHA256: " + r.hash;
+              if(r.absent !== 3 || r.late !== 1 || r.excused !== 0)
+                  return "الأعداد غير صحيحة: " + JSON.stringify(r);
+              return b.saved === 1 ? null : JSON.stringify(b);
+          } });
+
+    /* ⚠️ نفس بصمة الاستيراد حرفاً بحرف — ولو اختلفتا لما طابق ملفُّ غياب
+       طالباً واحداً استُورد من قبل، ولظهر العطل بعد أسابيع بلا سبب ظاهر.
+       ونقارن بما التقطه فحص الاستيراد أعلاه للرقم نفسه (يُرسله باسم
+       id_hash، ويُرسله الغياب باسم hash — والقيمة يجب أن تتطابق). */
+    await run("school-attendance.js",
+        post({ accessToken: GOOGLE_T, rows: [{ national_id: "١٠١٢٣٤٥٦٧٨", absent: "٢" }] }),
+        [okUser(false), attAdmin, attWrite],
+        { label: "وبصمة الغياب تطابق بصمة الاستيراد — وبالأرقام العربية أيضاً",
+          status: 200,
+          check: () => {
+              const imported = sentRows && sentRows.p_rows && sentRows.p_rows[0].id_hash;
+              if(!imported) return "لم تُلتقط بصمة الاستيراد من الفحص السابق";
+              if(attSent.p_rows[0].absent !== 2) return "الأرقام العربية لم تُقرأ: " + attSent.p_rows[0].absent;
+              return attSent.p_rows[0].hash === imported
+                  ? null : "البصمتان مختلفتان:\n       استيراد " + imported +
+                           "\n       غياب    " + attSent.p_rows[0].hash;
+          } });
+
+    await run("school-attendance.js",
+        post({ accessToken: PASSWORD_T, rows: [{ national_id: "1012345678", absent: 1 }] }),
+        [okUser(false)],
+        { label: "والدخول السريع لا يكفي لرفعه", status: 403 });
+
+    await run("school-attendance.js",
+        post({ accessToken: GOOGLE_T, rows: [{ national_id: "1012345678", absent: 1 }] }),
+        [okUser(true)],
+        { label: "والضيف المجهول مرفوض", status: 401 });
+
+    await run("school-attendance.js",
+        post({ accessToken: GOOGLE_T, rows: [{ national_id: "1012345678", absent: 1 }] }),
+        [okUser(false), plNoAdminRow],
+        { label: "والمعلّم لا يرفع الغياب", status: 403 });
+
+    /* ⚠️ صفوفٌ بلا هوية صالحة لا تستدعي الكتابة إطلاقاً: نداءٌ بصفر صفوف
+       يبدو ناجحاً فيظنّ المدير الغياب رُفع وهو لم يُقرأ منه سطر. */
+    await run("school-attendance.js",
+        post({ accessToken: GOOGLE_T, rows: [{ national_id: "12", absent: 1 }, { national_id: "", absent: 2 }] }),
+        [okUser(false), attAdmin],
+        { label: "وملفٌّ بلا هوية صالحة يُبلّغ ولا يكتب شيئاً",
+          status: 200,
+          check: (b) => (b.saved === 0 && b.badId === 2 && b.note === "NO_VALID_ROWS")
+              ? null : JSON.stringify(b) });
+
+    await run("school-attendance.js",
+        post({ accessToken: GOOGLE_T, rows: [] }),
+        [okUser(false), attAdmin],
+        { label: "وملفٌّ فارغ مرفوض", status: 400 });
+
     console.log(`\n=== النتيجة: ${pass} ناجح، ${fail} فاشل ===`);
     if(fail){
         console.log("\nالإخفاقات:");

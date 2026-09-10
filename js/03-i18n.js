@@ -121,6 +121,8 @@ ar:{
 "year.title":"السنة الدراسية",
 "year.sub":"ترقية جماعية في آخر السنة، مع إبقاء من تريد في مرحلته.",
 "year.promote":"ترقية السنة",
+"att.title":"الغياب من نور",
+"att.sub":"ارفع كشف الغياب من نور ليظهر بجانب درجات الطلاب. لا تحضير هنا — نور هو السجلّ الرسمي.",
 "school.resultsSub":"أفضل نتيجة لكل طالب، وكل محاولاته بجانبها.",
 /* ── الدخول برمز QR على السبورة ── */
 "qr.entry":"الدخول برمز QR من جوّالك",
@@ -434,6 +436,8 @@ en:{
 "year.title":"School year",
 "year.sub":"Bulk promotion at year end, with anyone you pick held back.",
 "year.promote":"Promote year",
+"att.title":"Attendance from Noor",
+"att.sub":"Upload the Noor attendance sheet so it appears beside student marks. No roll-call here — Noor is the official record.",
 "school.resultsSub":"Each student's best score, with all their attempts beside it.",
 /* ── Board sign-in by QR ── */
 "qr.entry":"Sign in with a QR code from your phone",

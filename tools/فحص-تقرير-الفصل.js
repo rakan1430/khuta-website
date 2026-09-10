@@ -60,9 +60,12 @@ const REPORT = {
     generated_at: "2026-09-10T08:30:00Z",
     summary: { students:3, exams:2, expected:6, submitted:3, avg_pct:67 },
     students: [
-        { name:"طالب أ", assigned:2, done:2, avg_pct:75, last_at:"2026-09-09T10:00:00Z" },
-        { name:"طالب ب", assigned:2, done:1, avg_pct:50, last_at:"2026-09-09T10:00:00Z" },
-        { name:"طالب ج", assigned:2, done:0, avg_pct:null, last_at:null },
+        { name:"طالب أ", assigned:2, done:2, avg_pct:75, last_at:"2026-09-09T10:00:00Z",
+          attendance:{ as_of:"2026-09-01", absent:1, late:2, excused:0 } },
+        { name:"طالب ب", assigned:2, done:1, avg_pct:50, last_at:"2026-09-09T10:00:00Z",
+          attendance:{ as_of:"2026-09-01", absent:12, late:0, excused:1 } },
+        /* ⚠️ بلا كشف غياب — ولا يجوز أن يُقرأ صفراً */
+        { name:"طالب ج", assigned:2, done:0, avg_pct:null, last_at:null, attendance:null },
     ],
     exams: [
         { title:"واجب ١", subject:"رياضيات", teacher:"ana btata", done:2, of:3, avg_pct:70 },
@@ -171,8 +174,35 @@ async function main(){
         /* ⚠️ المعلّم يُدخل الموعد بالميلادي، والسنة الدراسية ميلادية —
            و"ar-SA" وحدها تعرضه هجرياً. رأيتُها في أول ورقة طبعتُها:
            "٢٧ ربيع الأول ١٤٤٨" مكان ٩ سبتمبر. */
+        /* آخر عمود هو «آخر نشاط» — ويزحزحه عمودُ الغياب حين يظهر، فنقرأ
+           الأخير لا رقماً ثابتاً */
+        const lastActivity = shown.first[shown.first.length - 1];
         ok("التواريخ ميلادية لا هجرية",
-           /2026/.test(shown.first[5]) && !/هـ/.test(shown.first[5]), shown.first[5]);
+           /2026/.test(lastActivity) && !/هـ/.test(lastActivity), lastActivity);
+        /* ---------- الغياب من نور ---------- */
+        console.log("\nالغياب في الورقة");
+        const att = await page.evaluate(() => {
+            const rows = [...document.querySelectorAll(".report-table")][0].querySelectorAll("tbody tr");
+            const head = [...document.querySelectorAll(".report-table")][0]
+                .querySelectorAll("thead th");
+            const cell = (r) => r.querySelectorAll("td")[5];
+            return {
+                hasCol: [...head].some(h => /غياب/.test(h.textContent)),
+                a: cell(rows[0]).textContent.trim(),
+                b: cell(rows[1]).textContent.trim(),
+                bCls: cell(rows[1]).querySelector("span").className,
+                c: cell(rows[2]).textContent.trim(),
+                cCls: cell(rows[2]).querySelector("span").className,
+            };
+        });
+        ok("عمود الغياب يظهر حين يُرفع الكشف", att.hasCol);
+        ok("ويُذكر التأخّر بجانب الغياب", /1/.test(att.a) && /2/.test(att.a), att.a);
+        ok("والغياب الكثير يُميَّز", /12/.test(att.b) && /cr-low/.test(att.bCls), att.b + " / " + att.bCls);
+        /* ⚠️ من لا كشف له يُكتب «—» لا «0»: صفرٌ في ورقة مطبوعة يُقرأ
+           «لم يغب» لا «لا بيانات»، ويُبنى عليه قرار. */
+        ok("ومن لا كشف له يُكتب «—» لا «0»",
+           att.c === "—" && /cr-none/.test(att.cCls), att.c + " / " + att.cCls);
+
         ok("الورقة موسَّطة لا ملتصقة بحافة (فخّ rtl)",
            Math.abs(shown.left - shown.right) < 20,
            `يسار ${Math.round(shown.left)} / يمين ${Math.round(shown.right)}`);
