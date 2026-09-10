@@ -2385,6 +2385,20 @@
                 </button>
                 <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;">
                 <div id="admin-classes-list"></div>
+            </div>
+
+            <!-- ===================== نهاية السنة الدراسية ===================== -->
+            <div class="card" id="year-card">
+                <div class="card-head">
+                    <div>
+                        <h3 style="margin-bottom:4px;"><i class="fa-solid fa-graduation-cap"></i>
+                            <span data-i18n="year.title">السنة الدراسية</span></h3>
+                        <div class="card-sub" data-i18n="year.sub">ترقية جماعية في آخر السنة، مع إبقاء من تريد في مرحلته.</div>
+                    </div>
+                    <button type="button" class="btn btn-sm acc-btn" onclick="openYearPromotion()">
+                        <i class="fa-solid fa-forward"></i> <span data-i18n="year.promote">ترقية السنة</span></button>
+                </div>
+                <div id="year-status"></div>
                 <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="loadAdminClasses()">
                     <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span>
                 </button>
@@ -2806,6 +2820,7 @@
 <script src="js/28-report.js" defer></script>
 <script src="js/29-moderation.js" defer></script>
 <script src="js/30-parent-links.js" defer></script>
+<script src="js/31-year.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

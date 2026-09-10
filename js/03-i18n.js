@@ -118,6 +118,9 @@ ar:{
 "mod.title":"صندوق المراجعة",
 "mod.sub":"مشاركات أخفاها خمسة بلاغات. ما لا تبتّ فيه خلال أسبوع يُحذف تلقائياً.",
 "mod.refresh":"تحديث",
+"year.title":"السنة الدراسية",
+"year.sub":"ترقية جماعية في آخر السنة، مع إبقاء من تريد في مرحلته.",
+"year.promote":"ترقية السنة",
 "school.resultsSub":"أفضل نتيجة لكل طالب، وكل محاولاته بجانبها.",
 /* ── الدخول برمز QR على السبورة ── */
 "qr.entry":"الدخول برمز QR من جوّالك",
@@ -428,6 +431,9 @@ en:{
 "mod.title":"Review queue",
 "mod.sub":"Posts hidden by five reports. Anything left undecided for a week is deleted automatically.",
 "mod.refresh":"Refresh",
+"year.title":"School year",
+"year.sub":"Bulk promotion at year end, with anyone you pick held back.",
+"year.promote":"Promote year",
 "school.resultsSub":"Each student's best score, with all their attempts beside it.",
 /* ── Board sign-in by QR ── */
 "qr.entry":"Sign in with a QR code from your phone",

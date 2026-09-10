@@ -540,6 +540,37 @@ const brevoAccepts = [
         [],
         { label: "وGET مرفوض", status: 405 });
 
+    /* ---------- school-year-purge ---------- */
+    /* ⚠️ العمل المجدول أخطر ما فيه أن يفشل ناجحاً: يعود ٢٠٠ كل يوم بينما
+       لا يُحذف شيء، فيبقى أرشيف سنوات ولا يسأل أحد. */
+    console.log("\nschool-year-purge.js");
+    await run("school-year-purge.js",
+        { httpMethod: "POST", headers: {} },
+        [["/rest/v1/rpc/purge_archived_school_data",
+          async () => ({ status: 200, body: { exams: 12, files: 4, links: 2 } })]],
+        { label: "يحذف ويُبلّغ بما حُذف",
+          status: 200,
+          check: (b) => (b.ok === true && b.exams === 12 && b.files === 4)
+              ? null : "التقرير غير صحيح: " + JSON.stringify(b) });
+
+    {
+        const saved = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+        await run("school-year-purge.js",
+            { httpMethod: "POST", headers: {} },
+            [],
+            { label: "وبلا مفتاح الخدمة يفشل صراحةً لا صامتاً",
+              status: 500, allow500: true,
+              check: (b) => b.error === "SERVICE_KEY_MISSING" ? null : JSON.stringify(b) });
+        process.env.SUPABASE_SERVICE_ROLE_KEY = saved;
+    }
+
+    await run("school-year-purge.js",
+        { httpMethod: "POST", headers: {} },
+        [["/rest/v1/rpc/purge_archived_school_data",
+          async () => ({ status: 403, body: { message: "denied" } })]],
+        { label: "ورفضُ قاعدة البيانات لا يُعَدّ نجاحاً", status: 502 });
+
     console.log(`\n=== النتيجة: ${pass} ناجح، ${fail} فاشل ===`);
     if(fail){
         console.log("\nالإخفاقات:");

@@ -474,6 +474,7 @@ function applySchoolRoleUI(){
     if(role === "admin"){
         loadAccountRequests(); loadSchoolMembers();
         if(typeof loadAdminClasses === "function") loadAdminClasses();
+        if(typeof loadYearStatus === "function") loadYearStatus();
     }
     // شريط "جلسة محدودة" يشرح للمعلّم لماذا لا تعمل بعض الأزرار — والمنع
     // نفسه في قاعدة البيانات لا هنا.

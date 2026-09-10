@@ -3830,3 +3830,35 @@ body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after{ content: none;
     display:block; font-family:var(--font-mono); font-size:10.5px; color:var(--text-3);
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap; direction:ltr; text-align:start;
 }
+
+/* ============================================================
+   بطاقة السنة الدراسية
+   ------------------------------------------------------------
+   ⚠️ عدّاد الحذف بارز عن قصد. المهلة أسبوع، وبيانات سنةٍ كاملة تُحذف في
+   آخرها؛ ومهلةٌ لا يراها المدير على الشاشة مهلةٌ لا وجود لها عملياً.
+   ============================================================ */
+.year-line{ display:flex; gap:10px; flex-wrap:wrap; align-items:baseline; font-size:12.5px; color:var(--text-3); }
+.year-line b{ font-size:16px; color:var(--gold-text); }
+.year-grades{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+.year-grade{
+    text-align:center; border:1px solid var(--border); border-radius:12px; padding:10px 6px;
+    background:var(--bg-alt);
+}
+.year-grade b{ display:block; font-size:20px; font-family:var(--font-mono); font-weight:800; }
+.year-grade span{ font-size:10.5px; color:var(--text-3); font-weight:700; }
+.year-purge{
+    display:flex; gap:10px; align-items:flex-start; margin-top:12px;
+    padding:11px 14px; border-radius:12px; font-size:12.5px; line-height:1.85;
+    border:1px solid var(--border); background:var(--bg-alt); color:var(--text-2);
+}
+.year-purge i{ color:var(--gold-text); margin-top:3px; flex-shrink:0; }
+.year-purge.urgent{ border-color:var(--rose); }
+.year-purge.urgent i{ color:var(--rose); }
+.year-summary{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px;
+}
+.year-summary div{
+    text-align:center; border:1.5px solid var(--border); border-radius:12px; padding:10px 6px;
+}
+.year-summary b{ display:block; font-size:22px; font-family:var(--font-mono); font-weight:800; color:var(--gold-text); }
+.year-summary span{ font-size:10.5px; color:var(--text-3); font-weight:700; }
