@@ -3862,3 +3862,26 @@ body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after{ content: none;
 }
 .year-summary b{ display:block; font-size:22px; font-family:var(--font-mono); font-weight:800; color:var(--gold-text); }
 .year-summary span{ font-size:10.5px; color:var(--text-3); font-weight:700; }
+
+/* ============================================================
+   مغادرة المدرسة
+   ------------------------------------------------------------
+   ⚠️ لونان مختلفان عن قصد: مغادرة المعلّم لا يضيع فيها شيء (تنتقل
+   ملكيّته)، ونقلُ الطالب يحذف محاولاته. وتوحيدُ شكلهما يجعل المدير
+   يضغط الثاني بخفّة الأول.
+   ============================================================ */
+.leave-facts{ display:grid; grid-template-columns:repeat(auto-fit, minmax(110px,1fr)); gap:8px; }
+.leave-facts div{
+    text-align:center; border:1.5px solid var(--border); border-radius:12px; padding:12px 6px;
+    background:var(--bg-alt);
+}
+.leave-facts b{ display:block; font-size:22px; font-family:var(--font-mono); font-weight:800; color:var(--teal-text); }
+.leave-facts span{ font-size:10.5px; color:var(--text-3); font-weight:700; line-height:1.5; }
+.leave-facts.is-loss div{ border-color:color-mix(in srgb, var(--rose) 45%, var(--border)); }
+.leave-facts.is-loss b{ color:var(--rose); }
+.leave-note{
+    margin-top:12px; padding:11px 14px; border-radius:12px; font-size:12.5px; line-height:1.9;
+    border:1px solid var(--border); background:var(--bg-alt); color:var(--text-2);
+}
+.leave-note b{ color:var(--text-1); }
+.btn.leave-danger{ background:var(--rose); }

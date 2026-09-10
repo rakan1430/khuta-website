@@ -391,6 +391,15 @@ async function loadSchoolMembers(){
                     <button type="button" class="btn btn-ghost btn-sm" onclick="toggleMemberActive('${escapeHtml(m.id)}', ${m.active ? "false" : "true"})">
                         ${m.active ? (currentLang==='ar'?'إيقاف':'Disable') : (currentLang==='ar'?'تفعيل':'Enable')}
                     </button>
+                    <!-- ⚠️ الإيقاف مؤقّت، وهذا خروجٌ نهائي: للمعلّم تنتقل
+                         بياناته إلى الإدارة، وللطالب يخرج من المدرسة ويبقى
+                         حسابه في خُطى. ولا يظهر للمدير نفسه ولا لمديرٍ آخر. -->
+                    ${m.role !== "admin" ? `<button type="button" class="btn btn-ghost btn-sm"
+                        style="color:var(--rose);" onclick="openMemberLeave('${escapeHtml(m.id)}')">
+                        <i class="fa-solid fa-right-from-bracket"></i> ${m.role === "student"
+                            ? (currentLang==='ar'?'نقل من المدرسة':'Transfer out')
+                            : (currentLang==='ar'?'غادر المدرسة':'Left school')}
+                    </button>` : ""}
                 </div>
             </div>`).join("");
         if(typeof updateBulkBar === "function") updateBulkBar();
