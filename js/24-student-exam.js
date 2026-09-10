@@ -180,9 +180,11 @@ function renderExamShell(){
     if(!seReview && seExam.timed && seExam.duration_min) startSeTimer(seExam.duration_min);
 }
 
+/* ⚠️ ميلادي صراحةً: "ar-SA" وحدها تُعطي هجرياً، والمعلّم أدخل الموعد
+   بالميلادي — فيقرأ الطالب تاريخاً لا يطابق ما قاله له معلّمه. */
 function seDueText(iso){
     try{
-        return new Date(iso).toLocaleString(currentLang === "ar" ? "ar-SA" : "en-US",
+        return new Date(iso).toLocaleString(currentLang === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
             { dateStyle: "medium", timeStyle: "short" });
     }catch(e){ return ""; }
 }

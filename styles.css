@@ -3654,3 +3654,133 @@ body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after{ content: none;
 .alias-label{ font-size: 12.5px; color: var(--text-3); }
 .alias-current b{ font-size: 16px; color: var(--gold-text); font-weight: 800; }
 .alias-current .btn{ margin-inline-start: auto; }
+
+/* ============================================================
+   تقرير الفصل — ورقة المدير
+   ------------------------------------------------------------
+   طلب المالك تقريراً مطبوعاً للمدير، والمقصود ورقة لا شاشة. ولهذا
+   للتقرير مظهران: مظهرٌ على الشاشة يقرؤه ويراجعه، ومظهرٌ عند الطباعة
+   أبيض وأسود بلا زخرفة ولا ألوان خلفية — لأن الطابعة المدرسية غالباً
+   بالأبيض والأسود، ولأن الحبر الملوّن يُطلب مرّة في العام.
+   ============================================================ */
+.report-overlay{
+    position:fixed; inset:0; z-index:9600;
+    background:var(--bg); overflow-y:auto; padding:0 0 60px;
+}
+.report-loading{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-height:60vh; gap:6px; padding:40px 24px; text-align:center;
+    color:var(--text-2); font-size:15px; font-weight:700;
+}
+.report-toolbar{
+    position:sticky; top:0; z-index:2;
+    display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+    padding:14px 20px; background:var(--bg-alt); border-block-end:1px solid var(--border);
+}
+/* ورقة A4 تقريباً — يراها المدير على الشاشة كما ستخرج من الطابعة */
+.report-page{
+    width:100%; max-width:820px; margin-inline:auto;   /* rtl: بلا هذا تلتصق باليمين */
+    padding:34px 34px 24px;
+}
+.report-head{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap;
+    padding-block-end:16px; border-block-end:2px solid var(--gold, #C9962E);
+}
+.report-head h1{ font-size:22px; margin:0 0 2px; }
+.report-sub{ font-size:13px; color:var(--text-3); margin:0; }
+.report-meta{ display:flex; flex-direction:column; gap:2px; font-size:12.5px; color:var(--text-2); text-align:end; }
+.report-meta b{ font-size:15px; color:var(--text-1); }
+.report-teachers{ font-size:13px; color:var(--text-2); margin:14px 0 0; }
+
+.report-tiles{ display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-top:18px; }
+.report-tile{
+    border:1px solid var(--border); border-radius:14px; padding:14px 8px; text-align:center;
+    display:flex; flex-direction:column; gap:2px; background:var(--bg-alt);
+}
+.report-tile b{ font-size:24px; font-family:var(--font-mono); font-weight:800; color:var(--gold-text); }
+.report-tile span{ font-size:11px; font-weight:700; color:var(--text-3); }
+.report-note{
+    margin-top:10px; padding:10px 14px; border-radius:12px; font-size:12.5px; line-height:1.8;
+    border:1px solid var(--border); background:var(--bg-alt); color:var(--text-2);
+}
+
+.report-h2{ font-size:16px; margin:26px 0 10px; }
+.report-empty{ font-size:13px; color:var(--text-3); }
+.report-table{ width:100%; border-collapse:collapse; font-size:13px; }
+.report-table th, .report-table td{
+    padding:9px 10px; text-align:start; border-block-end:1px solid var(--border);
+}
+.report-table th{ font-size:11.5px; color:var(--text-3); font-weight:800; white-space:nowrap; }
+.report-table .cr-num{ text-align:center; font-family:var(--font-mono); white-space:nowrap; }
+.cr-good{ color:var(--teal-text); font-weight:800; }
+.cr-mid{ color:var(--gold-text); font-weight:800; }
+.cr-low{ color:var(--rose); font-weight:800; }
+.cr-none{ color:var(--text-3); }
+.report-table tr.cr-behind td:nth-child(2){ font-weight:800; }
+.report-foot{
+    display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    margin-top:26px; padding-block-start:12px; border-block-start:1px solid var(--border);
+    font-size:11.5px; color:var(--text-3);
+}
+@media (max-width:700px){
+    .report-page{ padding:18px 14px; }
+    .report-tiles{ grid-template-columns:1fr 1fr; }
+    .report-table{ font-size:12px; }
+    .report-table th, .report-table td{ padding:7px 6px; }
+}
+
+/* ============================================================
+   الطباعة
+   ------------------------------------------------------------
+   ⚠️ الموقع صفحة واحدة، فكل شيء فيه موجود في DOM دائماً — والطباعة بلا
+   هذه القواعد تُخرج عشرات الصفحات من واجهاتٍ مخفيّة. ولهذا نخفي كل ما
+   في <body> ثم نُظهر التقرير وحده، ولا يُفعَّل ذلك إلا وقت الطباعة
+   بصنفٍ يُوضع على <html> ويُرفع بعدها.
+   ============================================================ */
+@media print{
+    html.printing-report, html.printing-report body{
+        background:#fff !important; color:#000 !important;
+        height:auto !important; overflow:visible !important;
+    }
+    html.printing-report body > *{ display:none !important; }
+    html.printing-report body > #class-report-overlay{
+        display:block !important;
+        position:static !important; inset:auto !important;
+        overflow:visible !important; background:#fff !important; padding:0 !important;
+    }
+    html.printing-report .no-print{ display:none !important; }
+    html.printing-report .report-page{
+        max-width:none; width:auto; padding:0; color:#000;
+    }
+    html.printing-report .report-head{ border-block-end:2px solid #000; }
+    html.printing-report .report-head h1,
+    html.printing-report .report-meta b{ color:#000; }
+    html.printing-report .report-sub,
+    html.printing-report .report-meta,
+    html.printing-report .report-teachers,
+    html.printing-report .report-tile span,
+    html.printing-report .report-table th,
+    html.printing-report .report-foot{ color:#333; }
+    /* بلا خلفيات: المتصفّحات لا تطبعها افتراضياً، فالاعتماد عليها يعني
+       بطاقاتٍ بلا حدود على الورق */
+    html.printing-report .report-tile,
+    html.printing-report .report-note{ background:none !important; border:1px solid #999; }
+    html.printing-report .report-tile b{ color:#000; }
+    html.printing-report .report-table th,
+    html.printing-report .report-table td{ border-block-end:1px solid #999; }
+    /* الألوان تصير سُمكاً: من يطبع بالأبيض والأسود يفقد المعنى وإلا */
+    html.printing-report .cr-good,
+    html.printing-report .cr-mid,
+    html.printing-report .cr-low{ color:#000; font-weight:800; }
+    html.printing-report .cr-low{ text-decoration:underline; }
+    html.printing-report .cr-none{ color:#666; }
+    /* ⚠️ ولا يُقطع صفٌّ نصفين بين ورقتين، ولا يُترك عنوان جدولٍ وحده في
+       آخر ورقة — ورأس الجدول يتكرّر في كل ورقة وإلا صارت أرقاماً بلا
+       عناوين بعد الورقة الأولى */
+    html.printing-report .report-table{ page-break-inside:auto; }
+    html.printing-report .report-table thead{ display:table-header-group; }
+    html.printing-report .report-table tr{ page-break-inside:avoid; }
+    html.printing-report .report-h2{ page-break-after:avoid; }
+    html.printing-report .report-foot{ page-break-before:avoid; }
+    @page{ margin:16mm 14mm; }
+}

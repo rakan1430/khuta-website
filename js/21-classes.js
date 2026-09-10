@@ -52,8 +52,12 @@ async function loadAdminClasses(){
                         <div class="card-sub">${escapeHtml(gradeText(c.grade))}${c.section ? " · " + (currentLang==='ar'?'شعبة ':'Section ') + escapeHtml(c.section) : ""}
                             · ${counts[c.id] || 0} ${currentLang==='ar'?'طالب':'students'}</div>
                     </div>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="deleteSchoolClass('${escapeHtml(c.id)}')">
-                        <i class="fa-solid fa-trash"></i></button>
+                    <div class="sfile-actions">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="openClassReport('${escapeHtml(c.id)}')">
+                            <i class="fa-solid fa-file-lines"></i> ${currentLang==='ar'?'تقرير':'Report'}</button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="deleteSchoolClass('${escapeHtml(c.id)}')">
+                            <i class="fa-solid fa-trash"></i></button>
+                    </div>
                 </div>`).join("");
         }
 
