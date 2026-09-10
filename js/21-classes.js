@@ -55,6 +55,13 @@ async function loadAdminClasses(){
                     <div class="sfile-actions">
                         <button type="button" class="btn btn-outline btn-sm" onclick="openClassReport('${escapeHtml(c.id)}')">
                             <i class="fa-solid fa-file-lines"></i> ${currentLang==='ar'?'تقرير':'Report'}</button>
+                        <!-- ⚠️ المعرّف وحده داخل onclick. اسم الفصل يكتبه المدير،
+                             وescapeHtml لا يحميه هنا: المتصفّح يفكّ ترميز السمة
+                             قبل أن يقرأها محرّك جافاسكربت، فتعود ' علامةً حقيقية
+                             تكسر النصّ. (العلّة نفسها موثّقة في عناوين الاختبارات.)
+                             والاسم يُقرأ من adminClasses داخل الدالّة. -->
+                        <button type="button" class="btn btn-outline btn-sm" onclick="openParentLinks('${escapeHtml(c.id)}')">
+                            <i class="fa-solid fa-link"></i> ${currentLang==='ar'?'أولياء الأمور':'Parents'}</button>
                         <button type="button" class="btn btn-outline btn-sm" onclick="deleteSchoolClass('${escapeHtml(c.id)}')">
                             <i class="fa-solid fa-trash"></i></button>
                     </div>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ⚠️ لا يُفهرَس: الصفحة تعرض درجات قاصر بلا تسجيل دخول. ولو ظهرت في
+     نتائج البحث يوماً لكان الرابط قد صار عامّاً بلا أن يعلم أحد. -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<!-- ولا تُرسَل ترويسة المصدر إلى أي موقع: الرابط نفسه هو الرمز -->
+<meta name="referrer" content="no-referrer">
+<title>متابعة ابني — خُطى</title>
+<link rel="icon" href="icon-192.png">
+<style>
+/* ============================================================
+   صفحة وليّ الأمر — منفصلة عن الموقع عمداً
+   ------------------------------------------------------------
+   لماذا صفحة مستقلّة لا تبويب داخل الموقع؟ لأن وليّ الأمر يفتحها على
+   جوّاله من رسالة واتساب، مرّةً كل أسبوعين. تحميلُ الموقع كلّه (٢١ ألف
+   سطر وواجهات لا تخصّه) ليقرأ جدولاً من خمسة صفوف إهدارٌ لوقته وبياناته،
+   وسطحُ خطرٍ لا داعي له: صفحةٌ بلا تسجيل دخول لا ينبغي أن تحمل شفرة
+   الموقع كلّها.
+   ============================================================ */
+:root{
+    --bg:#F2EDE3; --surface:#FFFFFF; --border:#E2D9C8;
+    --text-1:#10182B; --text-2:#4A5468; --text-3:#8A93A6;
+    --gold:#C9962E; --teal:#1C8A72; --rose:#C4436B;
+    --font: "Segoe UI", "Noto Naskh Arabic", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+    :root{ --bg:#0A0920; --surface:#181F38; --border:#2A3350;
+           --text-1:#F2EDE3; --text-2:#B9C0D4; --text-3:#7B849B; }
+}
+*{ box-sizing:border-box; }
+body{
+    margin:0; padding:0; background:var(--bg); color:var(--text-1);
+    font-family:var(--font); line-height:1.8; font-size:15px;
+}
+.wrap{ max-width:640px; margin-inline:auto; padding:20px 16px 50px; }
+header{ text-align:center; padding:18px 0 10px; }
+header h1{ font-size:19px; margin:0 0 2px; }
+header p{ margin:0; font-size:12.5px; color:var(--text-3); }
+.card{
+    background:var(--surface); border:1px solid var(--border); border-radius:18px;
+    padding:18px 16px; margin-top:14px;
+}
+.who{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline; }
+.who b{ font-size:20px; }
+.who span{ font-size:12.5px; color:var(--text-3); }
+.tiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px; }
+.tile{ text-align:center; border:1px solid var(--border); border-radius:14px; padding:12px 6px; }
+.tile b{ display:block; font-size:22px; font-weight:800; color:var(--gold); }
+.tile span{ font-size:10.5px; color:var(--text-3); font-weight:700; }
+h2{ font-size:15px; margin:22px 0 8px; }
+.exam{
+    border:1px solid var(--border); border-radius:14px; padding:12px 14px; margin-bottom:8px;
+    display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap;
+}
+.exam-main b{ display:block; font-size:14.5px; }
+.exam-main span{ font-size:11.5px; color:var(--text-3); }
+.score{ font-weight:800; font-size:16px; white-space:nowrap; }
+.good{ color:var(--teal); } .mid{ color:var(--gold); } .low{ color:var(--rose); }
+.none{ color:var(--text-3); font-size:12.5px; font-weight:700; }
+.note{ font-size:12.5px; color:var(--text-3); margin-top:16px; text-align:center; line-height:1.9; }
+.state{ text-align:center; padding:50px 20px; color:var(--text-2); }
+.state b{ display:block; font-size:16px; margin-bottom:6px; color:var(--text-1); }
+</style>
+</head>
+<body>
+<div class="wrap" id="root">
+    <div class="state">جارٍ التحميل…</div>
+</div>
+
+<script>
+/* ⚠️ الرمز في الجزء الذي بعد ‎#‎ من الرابط، ويُرسَل في جسم الطلب لا في
+   مساره. وما بعد ‎#‎ لا يصل أي خادم إطلاقاً، فلا يُسجَّل رمزُ دخولٍ دائم
+   في سجلّات الاستضافة ولا يتسرّب في ترويسة Referer. */
+function readLink(){
+    const raw = (location.hash || "").replace(/^#/, "");
+    const p = new URLSearchParams(raw);
+    return { s: p.get("s") || "", v: p.get("v") || "", t: p.get("t") || "" };
+}
+
+function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g,
+        c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+function fmtDate(iso){
+    if(!iso) return "";
+    try{
+        /* ميلادي صراحةً — المعلّم أدخل الموعد بالميلادي، و"ar-SA" وحدها
+           تعرضه هجرياً فيقرأ وليّ الأمر تاريخاً لا يطابق ما قيل لابنه */
+        return new Date(iso).toLocaleDateString("ar-SA-u-ca-gregory-nu-latn",
+            { day:"numeric", month:"long", year:"numeric" });
+    }catch(e){ return ""; }
+}
+
+function band(p){
+    if(p == null) return { cls:"none", text:"لم يُسلّم" };
+    const n = Number(p);
+    return { cls: n >= 80 ? "good" : n >= 50 ? "mid" : "low", text: n + "%" };
+}
+
+function state(title, detail){
+    document.getElementById("root").innerHTML =
+        `<div class="state"><b>${esc(title)}</b>${detail ? esc(detail) : ""}</div>`;
+}
+
+const ERRORS = {
+    BAD_LINK: ["الرابط غير صحيح", "تأكّد من نسخه كاملاً كما وصلك من المدرسة."],
+    REVOKED:  ["انتهت صلاحية هذا الرابط", "أصدرت المدرسة رابطاً جديداً — اطلبه منها."],
+    NOT_FOUND:["لم نجد هذا الطالب", "ربما انتقل من المدرسة."],
+};
+
+async function load(){
+    const link = readLink();
+    if(!link.s || !link.v || !link.t){
+        state("الرابط ناقص", "افتح الرابط كاملاً كما وصلك من المدرسة.");
+        return;
+    }
+    try{
+        const res = await fetch("/.netlify/functions/parent-view", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(link),
+        });
+        const data = await res.json().catch(() => ({}));
+        if(!res.ok){
+            const e = ERRORS[data.error] || ["تعذّر فتح الصفحة", "حاول بعد قليل."];
+            state(e[0], e[1]);
+            return;
+        }
+        render(data);
+    }catch(e){
+        state("تعذّر الاتصال", "تأكّد من اتصالك بالإنترنت.");
+    }
+}
+
+function render(d){
+    const st = d.student || {}, sum = d.summary || {};
+    const exams = Array.isArray(d.exams) ? d.exams : [];
+    const rate = Number(sum.assigned) ? Math.round(Number(sum.done) * 100 / Number(sum.assigned)) : null;
+
+    document.getElementById("root").innerHTML = `
+    <header>
+        <h1>${esc(d.school || "")}</h1>
+        <p>متابعة وليّ الأمر</p>
+    </header>
+
+    <div class="card">
+        <div class="who">
+            <b>${esc(st.name || "")}</b>
+            <span>${esc(st.class || "")}${st.section ? " · شعبة " + esc(st.section) : ""}</span>
+        </div>
+        <div class="tiles">
+            <div class="tile"><b>${Number(sum.assigned) || 0}</b><span>واجب واختبار</span></div>
+            <div class="tile"><b>${rate == null ? "—" : rate + "%"}</b><span>ما سُلّم منها</span></div>
+            <div class="tile"><b>${sum.avg_pct == null ? "—" : sum.avg_pct + "%"}</b><span>المتوسّط</span></div>
+        </div>
+    </div>
+
+    <h2>التفصيل</h2>
+    ${exams.length ? exams.map(x => {
+        const b = band(x.pct);
+        /* ⚠️ الفرق بين "لم يُسلّم" و"صفر" مقصود: الصفر درجةٌ نالها بعد
+           محاولة، وهذا لم يحاول. وخلطهما يظلم الطالب أمام أهله. */
+        const when = x.done_at ? "سُلّم في " + fmtDate(x.done_at)
+                   : (x.due_at ? "موعد التسليم " + fmtDate(x.due_at) : "بلا موعد محدَّد");
+        return `<div class="exam">
+            <div class="exam-main">
+                <b>${esc(x.title || "")}</b>
+                <span>${esc(x.subject || "")}${x.teacher ? " · " + esc(x.teacher) : ""} · ${esc(when)}</span>
+            </div>
+            <div class="score ${b.cls}">${esc(b.text)}</div>
+        </div>`;
+    }).join("") : `<p class="note">لم يصل الطالب أي واجب أو اختبار بعد.</p>`}
+
+    <p class="note">
+        هذه الصفحة للاطّلاع فقط، وتُحدَّث تلقائياً.<br>
+        الرابط خاصٌّ بابنك — لا تُشاركه، فمن يملكه يرى هذه الصفحة.<br>
+        وللمدرسة أن تُلغيه وتُصدر غيره متى شاءت.
+    </p>`;
+}
+
+load();
+/* لو غيّر أحدهم الرابط في الشريط دون إعادة تحميل */
+window.addEventListener("hashchange", load);
+</script>
+</body>
+</html>

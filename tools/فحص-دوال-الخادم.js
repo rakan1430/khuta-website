@@ -411,6 +411,135 @@ const brevoAccepts = [
         process.env.OWNER_NOTIFY_SECRET = SECRET;
     }
 
+    /* ---------- روابط أولياء الأمور ---------- */
+    /* ⚠️ هذه أخطر سلسلة في المشروع: رابطٌ يفتح درجات قاصر بلا تسجيل
+       دخول. وأي ثغرة فيها لا تُكتشف بالاستعمال — تُكتشف حين يجرّب أحدهم.
+       فالفحص هنا على الباب وعلى التوقيع، لا على شكل الصفحة. */
+    console.log("\nparent-links.js / parent-view.js");
+    const CLASS = "cccccccc-1111-2222-3333-444444444444";
+    const STUDENT = "dddddddd-1111-2222-3333-444444444444";
+    const OTHER_SCHOOL_CLASS = "eeeeeeee-1111-2222-3333-444444444444";
+    const SCHOOL = "20f577f5-3ab5-4767-9776-200d7e647cbf";
+
+    /* توكن ادّعاؤه oauth — كما يفحصه hasGoogleAmr من الحمولة نفسها */
+    const jwt = (claims) => "x." + Buffer.from(JSON.stringify(claims))
+        .toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"") + ".y";
+    const GOOGLE_T   = jwt({ amr: [{ method: "oauth" }] });
+    const PASSWORD_T = jwt({ amr: [{ method: "password" }] });
+
+    const okUser = (anon) => ["/auth/v1/user",
+        async () => ({ status: 200, body: { id: UID, is_anonymous: !!anon } })];
+    const plAdminRow = ["/rest/v1/school_members?uid=eq.",
+        async () => ({ status: 200, body: [{ id: "m1", school_id: SCHOOL }] })];
+    const plNoAdminRow = ["/rest/v1/school_members?uid=eq.",
+        async () => ({ status: 200, body: [] })];
+    const classRow = (school) => ["/rest/v1/classes?id=eq.",
+        async () => ({ status: 200, body: [{ id: CLASS, name: "ثالث/أ", school_id: school }] })];
+    const rosterRow = ["/rest/v1/class_students?class_id=eq.",
+        async () => ({ status: 200, body: [
+            { school_members: { id: STUDENT, full_name: "عبدالله", active: true, role: "student", parent_link_version: 3 } },
+            /* معلّم ومنسحبٌ في الفصل: لا يجوز أن يخرج لهما رابط */
+            { school_members: { id: "f1", full_name: "معلّم", active: true, role: "teacher", parent_link_version: 1 } },
+            { school_members: { id: "f2", full_name: "منسحب", active: false, role: "student", parent_link_version: 1 } },
+        ] })];
+
+    let issuedUrl = null;
+    await run("parent-links.js",
+        post({ accessToken: GOOGLE_T, classId: CLASS }),
+        [okUser(false), plAdminRow, classRow(SCHOOL), rosterRow],
+        { label: "المدير يُصدر روابط فصله",
+          status: 200,
+          check: (b) => {
+              if(b.count !== 1) return "عدد الروابط " + b.count + " — تسرّب غير طالب؟ " + JSON.stringify(b.links);
+              issuedUrl = b.links[0].url;
+              if(b.links[0].name !== "عبدالله") return "الاسم: " + b.links[0].name;
+              /* ⚠️ الرمز بعد ‎#‎ لا بعد ‎?‎: ما بعد ‎#‎ لا يصل أي خادم، فلا
+                 يُسجَّل رمزُ دخولٍ دائم في سجلّات الاستضافة ولا في Referer */
+              if(!/#s=/.test(issuedUrl)) return "الرمز في مسار الرابط لا في جزئه: " + issuedUrl;
+              if(/\?t=|\?s=/.test(issuedUrl)) return "الرمز في الاستعلام — يُسجَّل: " + issuedUrl;
+              return /&t=[A-Za-z0-9_-]{22}$/.test(issuedUrl) ? null : "شكل التوقيع: " + issuedUrl;
+          } });
+
+    await run("parent-links.js",
+        post({ accessToken: PASSWORD_T, classId: CLASS }),
+        [okUser(false)],
+        { label: "والدخول السريع لا يكفي لإصدارها", status: 403 });
+
+    await run("parent-links.js",
+        post({ accessToken: GOOGLE_T, classId: CLASS }),
+        [okUser(true)],
+        { label: "والضيف المجهول مرفوض", status: 401 });
+
+    await run("parent-links.js",
+        post({ accessToken: GOOGLE_T, classId: CLASS }),
+        [okUser(false), plNoAdminRow],
+        { label: "والمعلّم لا يُصدر روابط فصل", status: 403 });
+
+    await run("parent-links.js",
+        post({ accessToken: GOOGLE_T, classId: OTHER_SCHOOL_CLASS }),
+        [okUser(false), plAdminRow, classRow("99999999-9999-9999-9999-999999999999")],
+        { label: "ولا يُصدر روابط فصلٍ في مدرسة أخرى", status: 403 });
+
+    await run("parent-links.js",
+        post({ accessToken: GOOGLE_T, classId: "not-a-uuid" }),
+        [okUser(false), plAdminRow],
+        { label: "ومعرّف فصلٍ مشوَّه مرفوض قبل أي قراءة", status: 400 });
+
+    /* ---- الطرف الآخر: هل يقبل التوقيعَ الذي أصدرناه للتوّ؟ ---- */
+    /* ⚠️ لو اختلف التوقيعان لمات كل رابط وُزّع، ولظهر العطل بعد أسابيع
+       في يد أولياء الأمور لا في يدنا. */
+    const linkParts = () => {
+        const p = new URLSearchParams((issuedUrl || "").split("#")[1] || "");
+        return { s: p.get("s"), v: p.get("v"), t: p.get("t") };
+    };
+    const memberRow = (version, extra) => ["/rest/v1/school_members?id=eq.",
+        async () => ({ status: 200, body: [{ parent_link_version: version, active: true, role: "student", ...(extra || {}) }] })];
+    const reportRpc = ["/rest/v1/rpc/parent_child_report",
+        async () => ({ status: 200, body: { student: { name: "عبدالله" }, exams: [] } })];
+
+    await run("parent-view.js",
+        post(linkParts()),
+        [memberRow(3), reportRpc],
+        { label: "الرابط الصادر من parent-links يُقبل هنا (التوقيعان متطابقان)",
+          status: 200,
+          check: (b) => (b.student && b.student.name === "عبدالله") ? null : JSON.stringify(b) });
+
+    await run("parent-view.js",
+        post({ ...linkParts(), t: "AAAAAAAAAAAAAAAAAAAAAA" }),
+        [],
+        { label: "وتوقيعٌ مخترَع مرفوض بلا أي قراءة", status: 403 });
+
+    await run("parent-view.js",
+        post({ ...linkParts(), s: "dddddddd-1111-2222-3333-444444444445" }),
+        [],
+        { label: "وتغيير معرّف الطالب يُبطل التوقيع (لا يقرأ درجات غيره)", status: 403 });
+
+    /* ⚠️ هذا هو "عدّاد الإلغاء" الذي طلبه المالك: رقم النسخة داخل التوقيع
+       ومقروءٌ من قاعدة البيانات معاً. بلا القراءة يبقى كل رابط قديم
+       صالحاً إلى الأبد ويصير زرّ الإلغاء زرّاً لا يفعل شيئاً. */
+    await run("parent-view.js",
+        post(linkParts()),
+        [memberRow(4)],
+        { label: "ورابطٌ أُلغي (رُفع رقم النسخة) يموت فوراً",
+          status: 410,
+          check: (b) => b.error === "REVOKED" ? null : JSON.stringify(b) });
+
+    await run("parent-view.js",
+        post({ ...linkParts(), v: "4" }),
+        [],
+        { label: "ورفعُ رقم النسخة يدوياً في الرابط يُبطل توقيعه", status: 403 });
+
+    await run("parent-view.js",
+        post(linkParts()),
+        [["/rest/v1/school_members?id=eq.",
+          async () => ({ status: 200, body: [{ parent_link_version: 3, active: false, role: "student" }] })]],
+        { label: "وطالبٌ غادر المدرسة لا يُقرأ تقريره", status: 404 });
+
+    await run("parent-view.js",
+        { httpMethod: "GET", headers: {} },
+        [],
+        { label: "وGET مرفوض", status: 405 });
+
     console.log(`\n=== النتيجة: ${pass} ناجح، ${fail} فاشل ===`);
     if(fail){
         console.log("\nالإخفاقات:");
