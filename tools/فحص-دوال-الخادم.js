@@ -350,6 +350,67 @@ const brevoAccepts = [
           status: 502,
           check: (b) => b.error === "RPC_FAILED" ? null : "سببٌ غامض: " + JSON.stringify(b) });
 
+    /* ---------- notify-owner ---------- */
+    /* ⚠️ هذه الدالّة تُرسل بريداً إلى صندوق المالك بلا تسجيل دخول، فكل
+       خطأ فيها يعني أن أي أحد يملأ بريده. الفحص هنا على الباب لا على
+       الرسالة. */
+    console.log("\nnotify-owner.js");
+    const SECRET = "s".repeat(32);
+    process.env.OWNER_NOTIFY_SECRET = SECRET;
+    const notify = (body, headers) => ({
+        httpMethod: "POST", body: JSON.stringify(body), headers: headers || {},
+    });
+    const brevoSeen = [];
+    const brevoSpy = ["api.brevo.com", async (u, opts) => {
+        brevoSeen.push(JSON.parse(opts.body));
+        return { status: 201, body: { messageId: "t" } };
+    }];
+
+    await run("notify-owner.js",
+        notify({ subject: "انتهيت", body: "تفاصيل الردّ" }, { "x-notify-secret": SECRET }),
+        [brevoSpy],
+        { label: "بالسرّ الصحيح تُرسَل إلى العنوانين معاً",
+          status: 200,
+          check: (b) => {
+              const sent = brevoSeen[brevoSeen.length - 1];
+              if(b.ok !== true) return "لم تُبلّغ بالنجاح: " + JSON.stringify(b);
+              if(!sent || sent.to.length !== 2) return "لم تصل العنوانين: " + JSON.stringify(sent);
+              if(sent.htmlContent) return "أُرسلت HTML لا نصاً عادياً";
+              return sent.subject === "انتهيت" ? null : "العنوان تغيّر: " + sent.subject;
+          } });
+
+    /* ⚠️ بلا مسارات شبكة: أي محاولة إرسال في الحالات المرفوضة تُسقط الفحص */
+    await run("notify-owner.js",
+        notify({ subject: "س", body: "ب" }, { "x-notify-secret": "wrong-but-32-chars-long-aaaaaaaa" }),
+        [],
+        { label: "وبسرٍّ خاطئ لا تُرسَل شيئاً", status: 401 });
+
+    await run("notify-owner.js",
+        notify({ subject: "س", body: "ب" }, {}),
+        [],
+        { label: "وبلا سرٍّ إطلاقاً مرفوضة", status: 401 });
+
+    await run("notify-owner.js",
+        { httpMethod: "GET", headers: { "x-notify-secret": SECRET } },
+        [],
+        { label: "وGET مرفوض", status: 405 });
+
+    await run("notify-owner.js",
+        notify({ subject: "", body: "" }, { "x-notify-secret": SECRET }),
+        [],
+        { label: "ورسالة فارغة لا تُرسَل", status: 400 });
+
+    {
+        process.env.OWNER_NOTIFY_SECRET = "short";
+        await run("notify-owner.js",
+            notify({ subject: "س", body: "ب" }, { "x-notify-secret": "short" }),
+            [],
+            { label: "وسرٌّ قصير يعطّل الدالّة بدل أن يفتحها للجميع",
+              status: 500, allow500: true,
+              check: (b) => b.error === "SECRET_NOT_CONFIGURED" ? null : JSON.stringify(b) });
+        process.env.OWNER_NOTIFY_SECRET = SECRET;
+    }
+
     console.log(`\n=== النتيجة: ${pass} ناجح، ${fail} فاشل ===`);
     if(fail){
         console.log("\nالإخفاقات:");
