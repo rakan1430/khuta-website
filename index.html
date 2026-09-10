@@ -2709,6 +2709,21 @@
                     <button type="button" class="btn btn-sm" onclick="postForumMessage()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
                 <div id="forum-list"></div>
+                <p class="hint" style="margin-top:12px;" data-i18n="forum.rules">حائطٌ للأسئلة الدراسية. لا روابط ولا أرقام تواصل، ولا إساءة. وما يراه خمسة طلاب مخالفاً يُخفى حتى تراجعه الإدارة.</p>
+            </div>
+
+            <!-- صندوق مراجعة الإدارة — لا يظهر إلا للمشرف، ويُملأ من moderation_queue -->
+            <div class="card" id="moderation-card" style="display:none;">
+                <div class="card-head">
+                    <div>
+                        <h2><i class="fa-solid fa-flag" style="color:var(--rose);"></i> <span data-i18n="mod.title">صندوق المراجعة</span>
+                            <span id="moderation-count" class="pill" style="display:none;">0</span></h2>
+                        <div class="card-sub" data-i18n="mod.sub">مشاركات أخفاها خمسة بلاغات. ما لا تبتّ فيه خلال أسبوع يُحذف تلقائياً.</div>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm acc-btn" onclick="refreshModerationQueue()">
+                        <i class="fa-solid fa-rotate"></i> <span data-i18n="mod.refresh">تحديث</span></button>
+                </div>
+                <div id="moderation-list"></div>
             </div>
 
             <div class="card">
@@ -2789,6 +2804,7 @@
 <script src="js/26-mode.js" defer></script>
 <script src="js/27-alias.js" defer></script>
 <script src="js/28-report.js" defer></script>
+<script src="js/29-moderation.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

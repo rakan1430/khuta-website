@@ -262,6 +262,8 @@ async function initCommunityIfNeeded(){
     await refreshLeaderboard();
     await refreshForum();
     await refreshTemplates();
+    /* صندوق المراجعة يخفي نفسه لغير المشرف، فنداؤه هنا بلا شرط آمن */
+    if(typeof refreshModerationQueue === "function") await refreshModerationQueue();
     startPresenceHeartbeat();
 }
 
@@ -397,6 +399,7 @@ async function refreshForum(){
             </div>
             <div style="display:flex; gap:6px; flex-shrink:0;">
                 ${!isPinned ? `<button type="button" class="icon-action" title="${currentLang==='ar'?`تثبيت (${PIN_FORUM_COST} XP)`:`Pin (${PIN_FORUM_COST} XP)`}" onclick="pinForumPostWithXP(${row.id})"><i class="fa-solid fa-thumbtack"></i></button>` : ""}
+                <button type="button" class="icon-action" title="${currentLang==='ar'?'إبلاغ':'Report'}" onclick="reportForumPost(${row.id})"><i class="fa-solid fa-flag"></i></button>
                 ${isAdmin ? `<button type="button" class="icon-action" title="${currentLang==='ar'?'حذف (صلاحية مشرف)':'Delete (admin)'}" onclick="deleteForumMessage(${row.id})"><i class="fa-solid fa-trash"></i></button>` : ""}
             </div>
         </div>`;
@@ -436,8 +439,13 @@ async function postForumMessage(){
     const session = getSession();
     const name = publicDisplayName();
     const { error } = await sb.from("forum_posts").insert({ author_name: name, author_id: uid, message: msg });
-    if(!error){ input.value = ""; refreshForum(); }
-    else showToast(currentLang==='ar'?'تعذّر النشر':'Could not post');
+    if(!error){ input.value = ""; refreshForum(); return; }
+    /* ⚠️ السبب صريح لا "تعذّر النشر". الفحص في قاعدة البيانات يرفض بسببٍ
+       محدَّد (رابط، رقم تواصل، تكرار…)، وإخفاؤه عن الطالب يجعله يعيد
+       المحاولة ويظنّ الموقع معطّلاً — وهو إنما وضع رقم جوّاله في سؤال. */
+    showToast(typeof postRejectionText === "function"
+        ? postRejectionText(error)
+        : (currentLang==='ar' ? 'تعذّر النشر' : 'Could not post'));
 }
 
 /* ملخّص مقروء لخطة الطالب الحالية — يُستخدم في معاينة النشر وفي بطاقات القوالب */

@@ -114,6 +114,10 @@ ar:{
 "school.revealHint":"«فور تسليمه» يعني أن أول طالب يسلّم يستطيع تصوير الإجابات وإرسالها لزملائه.",
 "school.timedLabel":"مؤقّت زمني (يُسلَّم تلقائياً عند انتهاء الوقت)",
 "school.durationLabel":"مدّة الاختبار بالدقائق",
+"forum.rules":"حائطٌ للأسئلة الدراسية. لا روابط ولا أرقام تواصل، ولا إساءة. وما يراه خمسة طلاب مخالفاً يُخفى حتى تراجعه الإدارة.",
+"mod.title":"صندوق المراجعة",
+"mod.sub":"مشاركات أخفاها خمسة بلاغات. ما لا تبتّ فيه خلال أسبوع يُحذف تلقائياً.",
+"mod.refresh":"تحديث",
 "school.resultsSub":"أفضل نتيجة لكل طالب، وكل محاولاته بجانبها.",
 /* ── الدخول برمز QR على السبورة ── */
 "qr.entry":"الدخول برمز QR من جوّالك",
@@ -420,6 +424,10 @@ en:{
 "school.revealHint":"\"As soon as they submit\" means the first student to finish can photograph the answers and share them.",
 "school.timedLabel":"Timer (auto-submits when time runs out)",
 "school.durationLabel":"Exam length in minutes",
+"forum.rules":"A wall for study questions. No links, no contact numbers, no abuse. What five students flag is hidden until an admin reviews it.",
+"mod.title":"Review queue",
+"mod.sub":"Posts hidden by five reports. Anything left undecided for a week is deleted automatically.",
+"mod.refresh":"Refresh",
 "school.resultsSub":"Each student's best score, with all their attempts beside it.",
 /* ── Board sign-in by QR ── */
 "qr.entry":"Sign in with a QR code from your phone",

@@ -319,6 +319,37 @@ const brevoAccepts = [
         [],
         { label: "GET مرفوض", status: 405 });
 
+    /* ---------- moderation-sweep ---------- */
+    /* ⚠️ أخطر ما في عملٍ مجدول أن يفشل ناجحاً: يعود 200 كل يوم في سجلّ
+       Netlify بينما لا يُحذف شيء، فلا أحد ينظر، ويبقى المخفيّ أشهراً.
+       فالفحص هنا على الحالات الفاشلة أكثر منه على الناجحة. */
+    console.log("\nmoderation-sweep.js");
+    await run("moderation-sweep.js",
+        { httpMethod: "POST", headers: {} },
+        [["/rest/v1/rpc/sweep_expired_moderation", async () => ({ status: 200, body: 3 })]],
+        { label: "يكنس ويُبلّغ بعدد ما حُذف",
+          status: 200,
+          check: (b) => b.ok === true && b.deleted === 3 ? null : "التقرير غير صحيح: " + JSON.stringify(b) });
+
+    {
+        const saved = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+        await run("moderation-sweep.js",
+            { httpMethod: "POST", headers: {} },
+            [],   // ⚠️ بلا مسارات: أي نداء شبكة هنا يُسقط الفحص
+            { label: "بلا مفتاح الخدمة يفشل صراحةً لا صامتاً",
+              status: 500, allow500: true,
+              check: (b) => b.error === "SERVICE_KEY_MISSING" ? null : "سببٌ غامض: " + JSON.stringify(b) });
+        process.env.SUPABASE_SERVICE_ROLE_KEY = saved;
+    }
+
+    await run("moderation-sweep.js",
+        { httpMethod: "POST", headers: {} },
+        [["/rest/v1/rpc/sweep_expired_moderation", async () => ({ status: 403, body: { message: "denied" } })]],
+        { label: "ورفضُ قاعدة البيانات لا يُعَدّ نجاحاً",
+          status: 502,
+          check: (b) => b.error === "RPC_FAILED" ? null : "سببٌ غامض: " + JSON.stringify(b) });
+
     console.log(`\n=== النتيجة: ${pass} ناجح، ${fail} فاشل ===`);
     if(fail){
         console.log("\nالإخفاقات:");

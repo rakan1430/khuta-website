@@ -3784,3 +3784,36 @@ body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after{ content: none;
     html.printing-report .report-foot{ page-break-before:avoid; }
     @page{ margin:16mm 14mm; }
 }
+
+/* ============================================================
+   صندوق مراجعة الإدارة
+   ------------------------------------------------------------
+   ⚠️ مهلة الحذف مكتوبة على كل صفّ لا في التعليمات وحدها. والسبب أن
+   القرار هنا له موعد: ما لا تبتّ فيه الإدارة أسبوعاً يُحذف تلقائياً،
+   ومهلةٌ لا تراها الإدارة على الشاشة مهلةٌ لا وجود لها عملياً.
+   ============================================================ */
+.mod-row{
+    display:flex; gap:14px; flex-wrap:wrap; align-items:flex-start;
+    padding:14px 0; border-block-end:1px solid var(--border);
+}
+.mod-main{ flex:1 1 260px; min-width:0; }
+.mod-meta{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:11.5px; color:var(--text-3); margin-bottom:6px; }
+.mod-meta b{ color:var(--text-1); font-size:13px; }
+.mod-pill{ background:rgba(226,82,126,.14); color:var(--rose); font-weight:800; }
+.mod-left{ font-weight:700; color:var(--text-3); }
+.mod-left.urgent{ color:var(--rose); }
+.mod-message{
+    font-size:13.5px; line-height:1.9; padding:10px 12px; border-radius:12px;
+    background:var(--bg-alt); border:1px solid var(--border);
+    overflow-wrap:anywhere;                 /* نصّ بلا مسافات لا يمدّ البطاقة */
+}
+.mod-reasons{ margin-top:8px; font-size:11.5px; color:var(--text-3); display:flex; gap:6px; flex-wrap:wrap; }
+.mod-reasons span{
+    padding:3px 9px; border-radius:999px; background:var(--bg-alt); border:1px solid var(--border);
+}
+.mod-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:flex-start; }
+.mod-remove{ background:var(--rose); }
+@media (max-width:600px){
+    .mod-actions{ width:100%; }
+    .mod-actions .btn{ flex:1; justify-content:center; }
+}
