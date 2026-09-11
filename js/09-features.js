@@ -822,7 +822,7 @@ function resolveAccountDataConflict(remoteSnapshot){
         overlay.style.zIndex = "4900";
         overlay.innerHTML = `
             <div class="wizard-card" style="max-width:440px; text-align:center;">
-                <h2 style="margin-bottom:8px;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--gold);"></i> ${currentLang==='ar'?'لديك تقدّمان مختلفان':'You have two different progress records'}</h2>
+                <h2 style="margin-bottom:8px;"><i class="fa-solid fa-triangle-exclamation" style="color:var(--gold-text);"></i> ${currentLang==='ar'?'لديك تقدّمان مختلفان':'You have two different progress records'}</h2>
                 <p class="card-sub" style="margin-bottom:20px; line-height:1.9;">${currentLang==='ar'
                     ? "ذاكرت كضيف على هذا الجهاز، ولحسابك أيضاً بيانات محفوظة من قبل. أيهما تريد الاحتفاظ به؟ (الخيار الآخر سيُفقَد نهائياً)"
                     : "You've been studying as a guest on this device, and your account also has previously saved data. Which do you want to keep? (The other will be lost permanently)"}</p>

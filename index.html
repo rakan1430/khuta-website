@@ -1228,7 +1228,7 @@
                     <div id="filex-result-body"></div>
                     <div class="filex-ask-row">
                         <input type="text" id="filex-question" placeholder="اسأل أي شيء عن ملفك…" data-i18n-ph="filex.askPh" onkeydown="if(event.key==='Enter') askAboutFile()">
-                        <button type="button" class="btn btn-sm" onclick="askAboutFile()"><i class="fa-solid fa-paper-plane"></i></button>
+                        <button type="button" class="btn btn-sm" onclick="askAboutFile()" title="أرسل السؤال" aria-label="أرسل السؤال"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
                     <div id="filex-answers" class="filex-answers"></div>
                     <button type="button" class="btn btn-outline btn-sm" style="margin-top:12px;" onclick="resetFileExplain()">
@@ -1302,7 +1302,7 @@
                 <b data-i18n="bot.title">مساعدك الذكي</b>
                 <div class="chatbot-head-sub"><i class="fa-solid fa-sparkles"></i> <span data-i18n="bot.disclaimer">مدعوم بالذكاء الاصطناعي 🤖</span></div>
             </div>
-            <button type="button" class="btn-ghost" style="padding:6px;" onclick="toggleChatbot()"><i class="fa-solid fa-xmark"></i></button>
+            <button type="button" class="btn-ghost" style="padding:6px;" onclick="toggleChatbot()" title="إغلاق المحادثة" aria-label="إغلاق المحادثة"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <button type="button" class="chatbot-board-btn" onclick="openKhutaBoard('ai')" title="افتح السبورة — يشرح عليها المعلّم الذكي خطوة بخطوة">
             <i class="fa-solid fa-chalkboard-user"></i> افتح السبورة الذكية <span class="board-btn-arrow"><i class="fa-solid fa-arrow-left rtl-flip"></i></span>
@@ -1312,7 +1312,7 @@
     <div class="chatbot-suggestions" id="chatbot-suggestions"></div>
     <div class="field-inline" style="padding:10px;">
         <input type="text" id="chatbot-input" placeholder="اكتب سؤالك..." data-i18n-ph="bot.placeholder" onkeydown="if(event.key==='Enter') sendChatbotMessage()">
-        <button type="button" class="btn btn-sm" onclick="sendChatbotMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        <button type="button" class="btn btn-sm" onclick="sendChatbotMessage()" title="أرسل" aria-label="أرسل"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
 </div>
 
@@ -2743,7 +2743,7 @@
                 </div>
                 <div class="field-inline" style="margin-bottom:16px;">
                     <input type="text" id="forum-input" placeholder="اكتب سؤالك هنا..." data-i18n-ph="forum.placeholder">
-                    <button type="button" class="btn btn-sm" onclick="postForumMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                    <button type="button" class="btn btn-sm" onclick="postForumMessage()" title="انشر سؤالك" aria-label="انشر سؤالك"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
                 <div id="forum-list"></div>
                 <p class="hint" style="margin-top:12px;" data-i18n="forum.rules">حائطٌ للأسئلة الدراسية. لا روابط ولا أرقام تواصل، ولا إساءة. وما يراه خمسة طلاب مخالفاً يُخفى حتى تراجعه الإدارة.</p>

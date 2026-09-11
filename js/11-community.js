@@ -209,7 +209,7 @@ function renderSpecialties(){
             <b>${d.name}</b>
             <div style="font-size:12.5px; color:var(--text-2); line-height:1.8; margin-top:4px;">${d.desc}</div>
             <div style="font-size:11.5px; color:var(--teal); margin-top:6px;"><i class="fa-solid fa-arrow-trend-up"></i> ${d.career}</div>
-            <div style="font-size:10.5px; color:var(--gold); margin-top:8px; font-weight:700;">${currentLang==='ar'?'اضغط لعرض التفاصيل الكاملة':'Tap for full details'} <i class="fa-solid fa-chevron-left rtl-flip"></i></div>
+            <div style="font-size:10.5px; color:var(--gold-text); margin-top:8px; font-weight:700;">${currentLang==='ar'?'اضغط لعرض التفاصيل الكاملة':'Tap for full details'} <i class="fa-solid fa-chevron-left rtl-flip"></i></div>
         </div>`;
     }).join("");
 }
@@ -235,10 +235,10 @@ function openSpecialtyDetail(id){
             </div>
             <p style="font-size:13.5px; color:var(--text-2); line-height:1.9; margin-bottom:14px;">${d.desc}</p>
             <div class="uni-note" style="margin-bottom:10px;"><b style="color:var(--teal);">${currentLang==='ar'?'المسار الوظيفي: ':'Career path: '}</b>${d.career}</div>
-            ${d.outlook ? `<div style="margin-bottom:14px; padding:12px 14px; background:var(--bg-alt); border-radius:12px; border-inline-start:3px solid var(--gold);"><b style="font-size:12.5px; color:var(--text-1);"><i class="fa-solid fa-arrow-trend-up" style="color:var(--gold);"></i> ${currentLang==='ar'?'مستقبل التخصص:':'Career outlook:'}</b><p style="font-size:12.5px; color:var(--text-2); line-height:1.8; margin-top:6px;">${d.outlook}</p></div>` : ""}
-            ${branches.length ? `<div style="margin-bottom:14px;"><b style="font-size:13px; color:var(--gold);">${currentLang==='ar'?'يتفرّع منه:':'Branches into:'}</b>
+            ${d.outlook ? `<div style="margin-bottom:14px; padding:12px 14px; background:var(--bg-alt); border-radius:12px; border-inline-start:3px solid var(--gold);"><b style="font-size:12.5px; color:var(--text-1);"><i class="fa-solid fa-arrow-trend-up" style="color:var(--gold-text);"></i> ${currentLang==='ar'?'مستقبل التخصص:':'Career outlook:'}</b><p style="font-size:12.5px; color:var(--text-2); line-height:1.8; margin-top:6px;">${d.outlook}</p></div>` : ""}
+            ${branches.length ? `<div style="margin-bottom:14px;"><b style="font-size:13px; color:var(--gold-text);">${currentLang==='ar'?'يتفرّع منه:':'Branches into:'}</b>
                 <ul style="margin:8px 0 0; padding-inline-start:20px; font-size:13px; line-height:2;">${branches.map(b=>`<li>${b}</li>`).join("")}</ul></div>` : ""}
-            ${unis.length ? `<div style="margin-bottom:14px;"><b style="font-size:13px; color:var(--gold);">${currentLang==='ar'?'متوفر في جامعات مثل:':'Offered at universities such as:'}</b>
+            ${unis.length ? `<div style="margin-bottom:14px;"><b style="font-size:13px; color:var(--gold-text);">${currentLang==='ar'?'متوفر في جامعات مثل:':'Offered at universities such as:'}</b>
                 <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">${unis.map(u=>`<span class="pill pill-maybe">${u}</span>`).join("")}</div></div>` : ""}
             <div class="uni-note" style="opacity:.7; font-size:11px;">${d.note || ""}</div>
         </div>`;
@@ -307,7 +307,7 @@ async function refreshLeaderboard(){
         <div style="display:flex; align-items:center; gap:12px; padding:10px 6px; border-bottom:1px solid var(--border);">
             <b style="width:24px; color:${i<3?'var(--gold)':'var(--text-3)'};">#${i+1}</b>
             <span style="flex:1; font-weight:600;">${getPrestigeFlair(row.xp)}${escapeHtml(row.display_name)}</span>
-            <span style="font-family:var(--font-mono); color:var(--gold); font-weight:700;">${row.xp} XP</span>
+            <span style="font-family:var(--font-mono); color:var(--gold-text); font-weight:700;">${row.xp} XP</span>
             ${isAdmin ? `<div class="icon-action" style="width:26px; height:26px; font-size:10px;" title="${currentLang==='ar'?'إزالة من لوحة الصدارة':'Remove from leaderboard'}" onclick="removeLeaderboardEntry('${row.id}')"><i class="fa-solid fa-ban"></i></div>` : ""}
         </div>`).join("");
 }
@@ -315,8 +315,8 @@ async function refreshLeaderboard(){
 /* رمز مكانة بسيط بجانب الاسم حسب مستوى XP — يمنح رقم XP قيمة اجتماعية
    ظاهرة فعلياً في لوحة الصدارة، وليس مجرد رقم بلا أثر */
 function getPrestigeFlair(xp){
-    if(xp >= 1000) return '<i class="fa-solid fa-crown" style="color:var(--gold); margin-inline-end:4px;" title="خبير قدرات"></i>';
-    if(xp >= 600) return '<i class="fa-solid fa-star" style="color:var(--gold); margin-inline-end:4px;" title="محترف"></i>';
+    if(xp >= 1000) return '<i class="fa-solid fa-crown" style="color:var(--gold-text); margin-inline-end:4px;" title="خبير قدرات"></i>';
+    if(xp >= 600) return '<i class="fa-solid fa-star" style="color:var(--gold-text); margin-inline-end:4px;" title="محترف"></i>';
     if(xp >= 300) return '<i class="fa-solid fa-bolt" style="color:var(--teal); margin-inline-end:4px;" title="متمرّس"></i>';
     return '';
 }
@@ -393,7 +393,7 @@ async function refreshForum(){
         return `
         <div class="${isPinned ? 'pinned-template-glow' : ''}" style="padding:10px 10px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; gap:10px; align-items:flex-start; ${isPinned ? 'border-radius:12px; margin-bottom:6px;' : ''}">
             <div style="flex:1;">
-                ${isPinned ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span><br>` : ""}
+                ${isPinned ? `<span style="font-size:10.5px; color:var(--gold-text); font-weight:700;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span><br>` : ""}
                 <div style="font-size:13.5px;">${escapeHtml(row.message)}</div>
                 <div style="font-size:11px; color:var(--text-3); margin-top:4px;">${escapeHtml(row.author_name)} · ${new Date(row.created_at).toLocaleDateString(currentLang==='ar'?"ar-SA":"en-US")}</div>
             </div>
@@ -557,7 +557,7 @@ async function refreshTemplates(){
         const glowClass = isPinned ? "pinned-template-glow" : getPopularityGlowClass(likes);
         return `
         <div class="${glowClass}" style="padding:16px; border-radius:16px; background:var(--bg-alt); border:1px solid var(--border); margin-bottom:12px;">
-            ${isPinned ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700; display:block; margin-bottom:6px;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span>` : (glowClass ? `<span style="font-size:10.5px; color:var(--gold); font-weight:700; display:block; margin-bottom:6px;"><i class="fa-solid fa-fire"></i> ${currentLang==='ar'?'الأكثر إعجاباً':'Highly rated'}</span>` : "")}
+            ${isPinned ? `<span style="font-size:10.5px; color:var(--gold-text); font-weight:700; display:block; margin-bottom:6px;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span>` : (glowClass ? `<span style="font-size:10.5px; color:var(--gold-text); font-weight:700; display:block; margin-bottom:6px;"><i class="fa-solid fa-fire"></i> ${currentLang==='ar'?'الأكثر إعجاباً':'Highly rated'}</span>` : "")}
             <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
                 <div>
                     <b style="font-size:14.5px;">${escapeHtml(tpl.title)}</b>

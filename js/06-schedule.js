@@ -50,9 +50,9 @@ function buildScheduleTable(){
         const restMsg = currentLang==='ar'
             ? "اليوم يوم راحتك الأسبوعي 🌙 — استمتع بيومك، وسيستأنف جدولك غداً تلقائياً"
             : "Today is your weekly rest day 🌙 — enjoy it, your schedule resumes automatically tomorrow";
-        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-note"><i class="fa-solid fa-mug-hot" style="font-size:26px; margin-bottom:8px; display:block; color:var(--gold);"></i>${restMsg}</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-note"><i class="fa-solid fa-mug-hot" style="font-size:26px; margin-bottom:8px; display:block; color:var(--gold-text);"></i>${restMsg}</div></td></tr>`;
         const mobileListEl = document.getElementById("schedule-body-mobile");
-        if(mobileListEl) mobileListEl.innerHTML = `<div class="empty-note"><i class="fa-solid fa-mug-hot" style="font-size:22px; margin-bottom:6px; display:block; color:var(--gold);"></i>${restMsg}</div>`;
+        if(mobileListEl) mobileListEl.innerHTML = `<div class="empty-note"><i class="fa-solid fa-mug-hot" style="font-size:22px; margin-bottom:6px; display:block; color:var(--gold-text);"></i>${restMsg}</div>`;
         return;
     }
 

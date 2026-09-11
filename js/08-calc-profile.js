@@ -264,8 +264,8 @@ function renderProfileStats(){
             changeText = currentLang==='ar' ? "لا توجد بيانات كافية للمقارنة بعد" : "Not enough data to compare yet";
         }
         compareEl.innerHTML = currentLang==='ar'
-            ? `<b>${currentLang==='ar'?'الأسبوع الماضي':'Last week'}:</b> ${lastH} ${currentLang==='ar'?'ساعة':'hours'}<br><b>${currentLang==='ar'?'هذا الأسبوع':'This week'}:</b> ${thisH} ${currentLang==='ar'?'ساعة':'hours'}<br><b style="color:var(--gold);">${changeText}</b>`
-            : `<b>Last week:</b> ${lastH} hours<br><b>This week:</b> ${thisH} hours<br><b style="color:var(--gold);">${changeText}</b>`;
+            ? `<b>${currentLang==='ar'?'الأسبوع الماضي':'Last week'}:</b> ${lastH} ${currentLang==='ar'?'ساعة':'hours'}<br><b>${currentLang==='ar'?'هذا الأسبوع':'This week'}:</b> ${thisH} ${currentLang==='ar'?'ساعة':'hours'}<br><b style="color:var(--gold-text);">${changeText}</b>`
+            : `<b>Last week:</b> ${lastH} hours<br><b>This week:</b> ${thisH} hours<br><b style="color:var(--gold-text);">${changeText}</b>`;
     }
 }
 
@@ -915,11 +915,11 @@ function submitExam(){
     document.getElementById("exam-mode-overlay").style.display = "none";
     const box = document.getElementById("exam-results-content");
     box.innerHTML = `
-        <div style="font-size:52px; font-weight:800; color:var(--gold); font-family:var(--font-mono); margin:10px 0;">${pct}%</div>
+        <div style="font-size:52px; font-weight:800; color:var(--gold-text); font-family:var(--font-mono); margin:10px 0;">${pct}%</div>
         <p class="card-sub" style="margin-bottom:18px;">${correctCount} / ${total} ${currentLang==='ar'?'إجابة صحيحة':'correct answers'}</p>
         <div style="display:flex; gap:12px;">
             ${quantTotal>0 ? `<div style="flex:1; background:var(--bg-alt); border-radius:12px; padding:14px;"><b style="font-size:18px; color:var(--teal);">${quantCorrect}/${quantTotal}</b><div class="card-sub" style="font-size:11.5px;">${currentLang==='ar'?'كمي':'Quant'}</div></div>` : ""}
-            ${verbalTotal>0 ? `<div style="flex:1; background:var(--bg-alt); border-radius:12px; padding:14px;"><b style="font-size:18px; color:var(--gold);">${verbalCorrect}/${verbalTotal}</b><div class="card-sub" style="font-size:11.5px;">${currentLang==='ar'?'لفظي':'Verbal'}</div></div>` : ""}
+            ${verbalTotal>0 ? `<div style="flex:1; background:var(--bg-alt); border-radius:12px; padding:14px;"><b style="font-size:18px; color:var(--gold-text);">${verbalCorrect}/${verbalTotal}</b><div class="card-sub" style="font-size:11.5px;">${currentLang==='ar'?'لفظي':'Verbal'}</div></div>` : ""}
         </div>`;
     document.getElementById("exam-results-overlay").style.display = "flex";
     document.body.style.overflow = "hidden";
@@ -1067,7 +1067,7 @@ async function openErrorLogsPanel(){
     list.innerHTML = data.map(e => `
         <div style="padding:10px 12px; background:var(--bg-alt); border-radius:10px; border:1px solid var(--border); font-size:12px;">
             <b style="color:var(--rose);">${escapeHtml(e.message || "")}</b>
-            <div style="color:var(--gold); margin-top:6px; font-weight:600;">💡 ${explainErrorInArabic(e.message)}</div>
+            <div style="color:var(--gold-text); margin-top:6px; font-weight:600;">💡 ${explainErrorInArabic(e.message)}</div>
             <div style="color:var(--text-3); margin-top:4px;">${escapeHtml(e.page_url || "")} · ${new Date(e.created_at).toLocaleString("ar-SA")}</div>
             ${e.stack_summary ? `<div style="color:var(--text-3); margin-top:4px; font-family:var(--font-mono); font-size:10.5px; white-space:pre-wrap; word-break:break-word;">${escapeHtml(e.stack_summary.slice(0,300))}</div>` : ""}
         </div>`).join("");
@@ -1103,7 +1103,7 @@ async function openAnalyticsPanel(){
     box.innerHTML = rows.map(([label, val]) => `
         <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--bg-alt); border-radius:12px;">
             <span style="font-size:13.5px; color:var(--text-2);">${label}</span>
-            <b style="font-size:20px; color:var(--gold);">${val ?? 0}</b>
+            <b style="font-size:20px; color:var(--gold-text);">${val ?? 0}</b>
         </div>`).join("");
 }
 
