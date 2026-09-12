@@ -914,6 +914,22 @@ function applyThemeChrome(isDark){
     const meta = document.getElementById("meta-theme-color");
     if(meta) meta.setAttribute("content", isDark ? "#0A0920" : "#F2EDE3");
     document.documentElement.style.background = isDark ? "#0A0920" : "#F2EDE3";
+
+    /* ⚠️ وشريط التمرير كذلك — وهذا هو «المربّع الأبيض» الذي طارده المالك
+       طويلاً. في styles.css قاعدة ‎*{ scrollbar-color: var(--border) var(--bg-alt) }‎
+       وهي تنطبق على html أيضاً، لكن html يقرأ القيم الفاتحة لأن ‎.dark-mode‎
+       على body لا على html. وشريط تمرير الصفحة يُرسم من الجذر، فيخرج بلون
+       الورق ‎#E8E1D2‎ فوق صفحة داكنة. (قياس: html أعطى rgb(232,225,210)
+       بينما body أعطى rgb(13,20,36).)
+
+       ولماذا الكمبيوتر وحده؟ لأن تنسيق الأشرطة كلّه داخل
+       ‎@media (min-width:993px)‎، والجوّال يستعمل أشرطة عائمة تختفي وحدها.
+
+       ⚠️ ولا يُصلحه ‎body.dark-mode ::-webkit-scrollbar-track‎ الموجود في
+       styles.css: حين تُضبط ‎scrollbar-color‎ القياسية يتجاهل كروم الحديث
+       أشباه العناصر ‎::-webkit-scrollbar-*‎ بالكامل، فتلك القاعدة شفرة ميتة.
+       ولا يُصلحه CSS من body أصلاً — الجذر لا يرث من ابنه. */
+    document.documentElement.style.scrollbarColor = isDark ? "#293552 #0D1424" : "#DDD4C0 #E8E1D2";
 }
 
 function toggleTheme(){
