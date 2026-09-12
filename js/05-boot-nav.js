@@ -815,8 +815,48 @@ function khutaHideBrokenBox(el, why){
     console.warn("[خُطى] عنصر وسائط أُخفي (" + why + "):", el);
 }
 
+/* ============================================================
+   إخفاء درج Netlify المحجوب — سبب «المربّع الأبيض» الحقيقي
+   ------------------------------------------------------------
+   Netlify يحقن في *روابط المعاينة وحدها* أداة تعاون (Netlify Drawer) هي
+   إطار iframe يعرض ‎https://app.netlify.com‎. وسياسة CSP في netlify.toml
+   عندنا ‎default-src 'self'‎ بلا ‎frame-src‎ — فتُحجب الأداة، والإطار
+   المحجوب يرسمه المتصفّح مستطيلاً أبيض فارغاً بأيقونة مستند مكسور.
+
+   وهذا يفسّر كل علامة وصفها المالك:
+     • أسفل الوسط بعرض 780 وارتفاع 48 — مقاس الدرج (قياس فعلي).
+     • لا يظهر على ‎khutaa.netlify.app‎ إطلاقاً — Netlify لا يحقنه في
+       الإنتاج، بل في المعاينات فقط. وهذه كانت أقوى علامة وأهملتُها.
+     • يظهر في Brave وEdge معاً — العلّة في CSP لا في المتصفّح.
+     • لا يظهر في الآيباد ولا الجوّال — الدرج لسطح المكتب.
+     • يظهر بعد الدخول لا في شاشة التحميل — شفرة الدرج تُحقن بعد الرسم.
+
+   ⚠️ ولا نُوسّع CSP لتسمح بـapp.netlify.com: لو سُمح له لظهر شريط تعاون
+   من Netlify أمام إدارة المدرسة — وهو أسوأ من مربّع أبيض. فنُخفيه.
+   ⚠️ والعلاج الجذري في إعدادات Netlify (إيقاف Netlify Drawer)، وهذه
+   الدالّة شبكة أمان لا بديل عنه. وهي لا تلمس شيئاً من محتوى الموقع:
+   شرطها أن يكون مصدر الإطار على app.netlify.com.
+   ============================================================ */
+function khutaHideBlockedNetlifyDrawer(){
+    document.querySelectorAll('iframe[src*="app.netlify.com"]').forEach(fr => {
+        /* نخفي الحاوية المثبَّتة لا الإطار وحده: المستطيل الأبيض يرسمه
+           الـdiv المثبَّت الذي يحويه، فإخفاء الإطار يترك الحاوية. */
+        let el = fr;
+        for(let hops = 0; el && hops < 4; hops++){
+            if(getComputedStyle(el).position === "fixed"){
+                el.style.display = "none";
+                console.warn("[خُطى] أُخفي درج Netlify المحجوب بـCSP (مربّع أبيض):", el);
+                return;
+            }
+            el = el.parentElement;
+        }
+        fr.style.display = "none";
+    });
+}
+
 function sweepEmptyMediaBoxes(root){
     const scope = root || document;
+    try{ khutaHideBlockedNetlifyDrawer(); }catch(e){ /* لا يجوز أن يُسقط الكنس */ }
     scope.querySelectorAll("img, embed, object, iframe, video, audio").forEach(el => {
         if(el.hidden || el.style.display === "none") return;
         if(el.hasAttribute("data-exam-img")) return;    // ينتظر رابطاً موقَّعاً
