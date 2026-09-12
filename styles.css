@@ -43,6 +43,15 @@
        يُستعمل كنصّ على خلفية بطاقة فاتحة ينزل تباينه إلى 4.01 — دون الحد.
        هذه نسخة أغمق للاستعمال النصّي فقط. */
     --teal-text: #14705C;
+    /* ⚠️ ذهبي مخصّص لخلفية الزرّ الأساسي. النصّ عليه أبيض دائماً، و--gold
+       (#C9962E) مع الأبيض تباينه 2.66 — أي أقل من حدّ WCAG AA (4.5) بمقدار
+       النصف تقريباً. وهذا ليس زرّاً هامشياً: «ابدأ الاختبار» و«احسب الموزونة»
+       و«حفظ التعديلات» و«تسجيل الدخول» كلّها .btn، وتُقرأ على سبورة الفصل
+       من آخر الصفّ حيث يضيع الأبيض الباهت على الذهبي تماماً.
+       هذا اللون 4.55 مع الأبيض ويبقى ذهبياً لا بنياً.
+       ⚠️ و--gold نفسه لم يتغيّر: الحدود والتدرّجات والظلال كما هي بالضبط،
+       فالتغيير محصور في خلفية .btn وحدها. */
+    --gold-btn: #976F20;
     --border: #DDD4C0;
     --accent: var(--gold);
     --accent-contrast:#FFFFFF;
@@ -756,7 +765,7 @@ html.fontsize-large body{ zoom:1.15; }
 
 /* ============ الأزرار ============ */
 .btn{
-    background:var(--gold); color:#fff; border:none; padding:13px 24px; border-radius:14px;
+    background:var(--gold-btn); color:#fff; border:none; padding:13px 24px; border-radius:14px;
     font-family:var(--font-body); font-weight:700; font-size:14.5px; cursor:pointer; transition:.25s var(--ease);
     display:inline-flex; align-items:center; justify-content:center; gap:9px; box-shadow:var(--shadow-gold);
     position:relative; overflow:hidden;
