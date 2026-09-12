@@ -809,17 +809,51 @@ function switchTab(tabId, element){
    ليس عنصر وسائط، وعندها تُعرَف هويته بسطر واحد في وحدة تحكّم المتصفح:
        khutaWhatIsAtBottom()
    ============================================================ */
+function khutaHideBrokenBox(el, why){
+    if(el.hidden) return;
+    el.hidden = true;
+    console.warn("[خُطى] عنصر وسائط أُخفي (" + why + "):", el);
+}
+
 function sweepEmptyMediaBoxes(root){
     const scope = root || document;
-    scope.querySelectorAll("img, embed, object, iframe").forEach(el => {
+    scope.querySelectorAll("img, embed, object, iframe, video, audio").forEach(el => {
         if(el.hidden || el.style.display === "none") return;
+        if(el.hasAttribute("data-exam-img")) return;    // ينتظر رابطاً موقَّعاً
+        if(el.tagName === "IFRAME" && el.name) return;  // إطار الإرسال المخفي
+
         const src = el.getAttribute("src") || el.getAttribute("data") || "";
-        if(src.trim()) return;                       // له مصدر — لا نلمسه
-        if(el.hasAttribute("data-exam-img")) return; // ينتظر رابطاً موقَّعاً
-        if(el.tagName === "IFRAME" && el.name) return; // إطار الإرسال المخفي
-        el.hidden = true;
-        console.warn("[خُطى] عنصر بلا مصدر أُخفي (مربّع فارغ محتمل):", el);
+        if(!src.trim()){ khutaHideBrokenBox(el, "بلا مصدر"); return; }
+
+        /* ⚠️ ووجودُ مصدرٍ لا يعني أنّ الصورة وصلت. كانت الكنسة السابقة
+           تتحقّق من فراغ src وحده، فتمرّ الصورة التي لها رابط لكنّه يفشل —
+           وهي بالضبط الحالة التي يرسم لها كروم أيقونة الورقة المكسورة التي
+           يشكو منها المالك. ومصدر الفشل قد لا يكون الموقع إطلاقاً: متصفّح
+           Brave يحجب صور حسابات Google افتراضياً، فتفشل صورة الحساب على
+           الكمبيوتر وتنجح على الجوّال — وهو ما يطابق وصفه تماماً. */
+        if(el.tagName === "IMG"){
+            if(el.complete && el.naturalWidth === 0){
+                khutaHideBrokenBox(el, "مصدره لم يُحمَّل");
+            }else if(!el.complete && !el.dataset.khutaWatched){
+                el.dataset.khutaWatched = "1";
+                el.addEventListener("error", () => khutaHideBrokenBox(el, "فشل تحميل المصدر"), { once:true });
+            }
+        }
     });
+}
+
+/* ⚠️ والكنسة مرّةً بعد الإقلاع لا تكفي: المالك لاحظ أنّ المربّع «لا يظهر
+   في صفحة التحميل ولا شاشة الدخول، ويظهر فقط عند الدخول للموقع» — أي بعد
+   أن تُرسم الواجهة ببيانات الحساب، وقد يكون ذلك بعد الكنسة بثوانٍ. فنُراقب
+   ما يُضاف لاحقاً بدل انتظار تبديل تبويب. */
+function khutaWatchForBrokenBoxes(){
+    if(window.__khutaMediaObserver || typeof MutationObserver !== "function") return;
+    let pending = null;
+    window.__khutaMediaObserver = new MutationObserver(() => {
+        clearTimeout(pending);   // تجميع الدفعات: الرسم يضيف عشرات العقد
+        pending = setTimeout(() => { try{ sweepEmptyMediaBoxes(); }catch(e){} }, 250);
+    });
+    window.__khutaMediaObserver.observe(document.body, { childList:true, subtree:true });
 }
 
 /** أداة تشخيص: تقول ما هو العنصر الموجود أسفل منتصف الشاشة، مهما كان. */
