@@ -19,3 +19,7 @@ if(typeof flushPendingAuthEvents === "function") flushPendingAuthEvents();
 if(typeof sweepEmptyMediaBoxes === "function"){
     window.addEventListener("load", () => setTimeout(sweepEmptyMediaBoxes, 1500));
 }
+// ثم مراقبةٌ دائمة: المربّع يظهر بعد الدخول، أي بعد الكنسة الأولى بثوانٍ
+if(typeof khutaWatchForBrokenBoxes === "function"){
+    window.addEventListener("load", khutaWatchForBrokenBoxes);
+}
