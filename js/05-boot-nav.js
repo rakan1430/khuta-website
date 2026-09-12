@@ -874,6 +874,81 @@ function khutaWhatIsAtBottom(){
     return uniq;
 }
 
+/* ============================================================
+   لوحة التشخيص المرئية — ‎?diag=1‎ على روابط المعاينة
+   ------------------------------------------------------------
+   ⚠️ لماذا لوحة على الصفحة بدل وحدة التحكّم؟ لأن وحدة التحكّم فشلت مرّتين
+   مع المالك: كروم يرفض لصق أي شفرة حتى يُكتب "allow pasting" أولاً، وهي
+   رسالة تبدو تحذيراً أمنياً فيتوقّف عندها أي عاقل. فالنتيجة تُرسَم هنا
+   بخطّ كبير يُصوَّر بالكاميرا — لا كتابة ولا لصق ولا أدوات مطوّرين.
+
+   ⚠️ ومحصورة بروابط المعاينة كوضع العرض: لا تظهر على العنوان الحقيقي
+   مهما أُضيف للرابط.
+   ============================================================ */
+function khutaDiagPanel(){
+    const esc = (s) => String(s).replace(/[&<>]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[c]));
+    const cs  = (el) => getComputedStyle(el);
+    const rootCS = cs(document.documentElement), bodyCS = cs(document.body);
+
+    const lines = [];
+    lines.push(["الشاشة", innerWidth + "×" + innerHeight + "  ·  كثافة " + (devicePixelRatio || 1)]);
+    lines.push(["شريط تمرير html", rootCS.scrollbarColor || "(غير مضبوط)"]);
+    lines.push(["شريط تمرير body", bodyCS.scrollbarColor || "(غير مضبوط)"]);
+    lines.push(["خلفية html", rootCS.backgroundColor]);
+    lines.push(["أصناف body", document.body.className || "(بلا)"]);
+
+    /* شريط تمرير الصفحة: أفقي أم رأسي أم لا شيء؟ */
+    const de = document.documentElement;
+    lines.push(["تمرير الصفحة",
+        "رأسي: " + (de.scrollHeight > de.clientHeight ? "نعم" : "لا") +
+        "  ·  أفقي: " + (de.scrollWidth > de.clientWidth ? "نعم" : "لا") +
+        "  ·  فرق العرض: " + (innerWidth - de.clientWidth) + "px"]);
+
+    /* صور فشل تحميلها — المشتبه به الثاني */
+    /* ⚠️ ويُستثنى المخفيّ فعلاً: avatar-img يولد بـ‎src=""‎ و‎display:none‎،
+       فبلا هذا الاستثناء يظهر في التقرير كـ«صورة مكسورة» وهو غير مرئي
+       إطلاقاً — بلاغٌ كاذب يُرسل المالك والقارئ في طريق خاطئ. */
+    const broken = [...document.querySelectorAll("img")]
+        .filter(i => !i.hidden && cs(i).display !== "none" && cs(i).visibility !== "hidden"
+                     && i.complete && i.naturalWidth === 0)
+        .map(i => (i.id || i.className || "img") + " ← " + ((i.getAttribute("src") || "(بلا مصدر)").slice(0, 60)));
+    lines.push(["صور مكسورة ظاهرة", broken.length ? broken.join(" / ") : "لا شيء ✅"]);
+
+    /* ما الذي يشغل أسفل منتصف الشاشة فعلاً */
+    const atBottom = (typeof khutaWhatIsAtBottom === "function") ? khutaWhatIsAtBottom() : [];
+
+    const box = document.createElement("div");
+    box.id = "khuta-diag-panel";
+    box.style.cssText =
+        "position:fixed; inset:12px; z-index:2147483647; overflow:auto;" +
+        "background:#0B1020; color:#F3EFE6; border:3px solid #E8C77E; border-radius:14px;" +
+        "padding:16px; font-family:monospace; font-size:15px; line-height:1.75; direction:rtl; text-align:right;";
+    box.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;">' +
+        '<b style="font-size:19px;color:#E8C77E;">تشخيص المربّع الأبيض</b>' +
+        '<button type="button" style="background:#CD4256;color:#fff;border:0;border-radius:10px;padding:10px 18px;font-size:15px;cursor:pointer;"' +
+        ' onclick="document.getElementById(\'khuta-diag-panel\').remove()">إغلاق</button></div>' +
+        lines.map(([k, v]) =>
+            '<div style="margin-bottom:7px;"><span style="color:#E8C77E;">' + esc(k) + ':</span> ' + esc(v) + '</div>').join("") +
+        '<div style="margin-top:12px;color:#E8C77E;">أسفل منتصف الشاشة:</div>' +
+        (atBottom.length
+            ? atBottom.map(l => '<div style="margin-right:10px;font-size:13px;">• ' + esc(l) + '</div>').join("")
+            : '<div style="margin-right:10px;">لا عنصر — أي أنّ ما تراه ليس من محتوى الصفحة (شريط تمرير أو واجهة متصفّح)</div>');
+    document.body.appendChild(box);
+}
+
+/* ⚠️ الشرط يُفحَص داخل معالج load لا عند تحليل هذا الملف: دالّة
+   isNetlifyPreviewHost تعيش في js/15-demo.js الذي يُحمَّل بعد هذا الملف،
+   ففحصها هنا مباشرةً يجدها "غير معرَّفة" دائماً فلا تظهر اللوحة أبداً.
+   (وقع هذا فعلاً في أول تشغيل.) */
+window.addEventListener("load", () => setTimeout(() => {
+    try{
+        if(new URLSearchParams(location.search).get("diag") !== "1") return;
+        if(typeof isNetlifyPreviewHost !== "function" || !isNetlifyPreviewHost()) return;
+        khutaDiagPanel();
+    }catch(e){ /* التشخيص لا يجوز أن يكسر الإقلاع */ }
+}, 2500));
+
 function setAccent(accent){
     document.body.classList.remove("accent-green", "accent-purple", "accent-blue", "accent-rose", "accent-teal2", "accent-amber", "accent-indigo");
     if(accent) document.body.classList.add(accent);
