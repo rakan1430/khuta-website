@@ -1,6 +1,6 @@
 /* ============================================================
    قلّدها — التخاطب مع الخادم
-   كل النداءات POST واحدة على /api/room، والفارق بينها حقل op.
+   كل النداءات POST واحدة على الدالة نفسها، والفارق بينها حقل op.
    ============================================================ */
 (function (global) {
   "use strict";
@@ -22,10 +22,16 @@
     pid = makePid();
   }
 
+  /* المسار الثابت الذي تعمل عليه الدالة في كل أساليب النشر.
+     المسار المختصر /api/room يعمل أيضاً حين يُنشر بـ Netlify CLI،
+     لكنه يعتمد على بيانات بناء لا تُرفَع مع الحزمة اليدوية —
+     فنستعمل المسار المضمون دائماً. */
+  const API = "/.netlify/functions/room";
+
   async function call(op, params) {
     let res;
     try {
-      res = await fetch("/api/room", {
+      res = await fetch(API, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(Object.assign({ op, pid }, params || {})),

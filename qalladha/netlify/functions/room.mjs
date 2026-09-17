@@ -2,16 +2,123 @@
    قلّدها — دالة الغرف
    ------------------------------------------------------------
    كل التواصل بين الجهازين يمرّ من هنا. التخزين على Netlify Blobs
-   (لا قاعدة بيانات ولا إعداد). المبدأ الذي يحكم التصميم كله:
-   كل لاعب يكتب في مفاتيح تخصّه وحده، ولا أحد يكتب فوق كتابة الآخر.
-   وثيقة الغرفة نفسها لا يعدّلها إلا حدثٌ نادر (إنشاء، انضمام، بدء،
-   انتقال جولة) — لأن Blobs بلا معاملات: آخر كاتب يفوز.
-   ============================================================ */
-import { getStore } from "@netlify/blobs";
+   لكن **بلا أي حزمة npm**: نخاطب واجهته مباشرة عبر fetch. السبب
+   عملي: هذا الملف قد يُرفع وحده داخل حزمة لا تحوي node_modules،
+   فأي import خارجي يسقط عند التشغيل. وبلا اعتماديات يعمل في كل
+   أسلوب نشر: رفع يدوي، أو Netlify CLI، أو بناء من المستودع.
 
-/* قراءة قوية (strong): اللاعب الثاني يجب أن يرى تسجيل الأول فوراً،
-   لا بعد ستين ثانية كما في الاتّساق الافتراضي. */
-const st = () => getStore({ name: "qalladha", consistency: "strong" });
+   المبدأ الذي يحكم التصميم: كل لاعب يكتب في مفاتيح تخصّه وحده،
+   ولا أحد يكتب فوق كتابة الآخر. وثيقة الغرفة لا يعدّلها إلا حدثٌ
+   نادر (إنشاء، انضمام، بدء، انتقال جولة) — لأن التخزين بلا
+   معاملات: آخر كاتب يفوز.
+   ============================================================ */
+
+/* ============================================================
+   طبقة التخزين
+   ------------------------------------------------------------
+   Netlify تحقن في الدالة متغيّر بيئة يحمل عنوان مخزن الـBlobs
+   ومفتاحه. شكل المسار تغيّر بين إصدارات المنصّة (أُضيفت المنطقة
+   إليه لاحقاً)، والحزمة الرسمية كانت تخفي هذا الاختلاف. بدل
+   التخمين نكتشف الشكل الصحيح مرة واحدة: نكتب مفتاح فحص ونقرؤه،
+   وأول شكل يرجّع ما كتبناه هو المعتمد. تُحفظ النتيجة في ذاكرة
+   النسخة فلا يتكرّر الاكتشاف مع كل نداء.
+   ============================================================ */
+
+const STORE = "qalladha";
+
+const CTX = (() => {
+  const raw = process.env.NETLIFY_BLOBS_CONTEXT;
+  if (!raw) return null;
+  try {
+    return JSON.parse(Buffer.from(raw, "base64").toString("utf8"));
+  } catch {
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+})();
+
+/* نفضّل العنوان غير المُخبّأ: اللاعب الثاني يجب أن يرى تسجيل الأول
+   فوراً، لا بعد أن تنتهي صلاحية نسخة مخبّأة. */
+const EDGE = CTX ? String(CTX.uncachedEdgeURL || CTX.edgeURL || "").replace(/\/+$/, "") : "";
+
+function candidateUrls(key) {
+  if (!CTX || !EDGE) return [];
+  const k = encodeURIComponent(key);
+  const site = CTX.siteID;
+  const region = CTX.primaryRegion;
+  const forms = [];
+  if (region) forms.push(`${EDGE}/region:${region}/${site}/site:${STORE}/${k}`);
+  forms.push(`${EDGE}/${site}/site:${STORE}/${k}`);
+  if (region) forms.push(`${EDGE}/region:${region}/${site}/${STORE}/${k}`);
+  forms.push(`${EDGE}/${site}/${STORE}/${k}`);
+  return forms;
+}
+
+const authHeaders = () => ({ authorization: `Bearer ${CTX.token}` });
+
+let formIndex = null;        // الشكل المعتمد بعد الاكتشاف
+let discovering = null;      // وعدٌ واحد يمنع اكتشافين متوازيين
+
+async function discover() {
+  if (formIndex !== null) return formIndex;
+  if (discovering) return discovering;
+  discovering = (async () => {
+    const urls = candidateUrls("__probe");
+    const stamp = String(Date.now());
+    for (let i = 0; i < urls.length; i++) {
+      try {
+        const put = await fetch(urls[i], { method: "PUT", headers: authHeaders(), body: stamp });
+        if (!put.ok) continue;
+        const got = await fetch(urls[i], { method: "GET", headers: authHeaders() });
+        if (got.ok && (await got.text()) === stamp) {
+          formIndex = i;
+          return i;
+        }
+      } catch { /* نجرّب الشكل التالي */ }
+    }
+    return null;
+  })();
+  const result = await discovering;
+  discovering = null;
+  return result;
+}
+
+async function blobUrl(key) {
+  const i = await discover();
+  if (i === null) return null;
+  return candidateUrls(key)[i];
+}
+
+const store = {
+  async getText(key) {
+    const url = await blobUrl(key);
+    if (!url) throw new Error("storage-unavailable");
+    const res = await fetch(url, { method: "GET", headers: authHeaders() });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error("storage-read-" + res.status);
+    return await res.text();
+  },
+  async getJSON(key) {
+    const t = await this.getText(key);
+    if (t === null || t === "") return null;
+    try { return JSON.parse(t); } catch { return null; }
+  },
+  async set(key, value) {
+    const url = await blobUrl(key);
+    if (!url) throw new Error("storage-unavailable");
+    const res = await fetch(url, { method: "PUT", headers: authHeaders(), body: value });
+    if (!res.ok) throw new Error("storage-write-" + res.status);
+  },
+  setJSON(key, value) { return this.set(key, JSON.stringify(value)); },
+  async delete(key) {
+    const url = await blobUrl(key);
+    if (!url) return;
+    try { await fetch(url, { method: "DELETE", headers: authHeaders() }); } catch { /* لا يضرّ */ }
+  },
+};
+
+/* ============================================================
+   منطق الغرف
+   ============================================================ */
 
 /* الغرفة تعيش 12 ساعة ثم تُعدّ منتهية. لا حاجة لمكنسة مجدولة:
    نحذفها عند أول محاولة دخول بعد انتهائها. */
@@ -19,7 +126,7 @@ const ROOM_TTL_MS = 12 * 60 * 60 * 1000;
 
 /* سقف حجم المقطع الصوتي بعد ترميز base64 (≈ 700 كيلوبايت خام).
    تسجيل من أربع ثوانٍ لا يقترب من هذا، والسقف يمنع إغراق التخزين. */
-const MAX_AUDIO_CHARS = 950_000;
+const MAX_AUDIO_CHARS = 950000;
 
 /* حروف كود الغرفة: حذفنا ما يلتبس نطقه أو شكله (O/0, I/1, B/8, S/5)
    لأن الكود يُقال صوتياً في الغالب: "غرفتي كي تسعة..." */
@@ -57,8 +164,8 @@ function makeCode() {
   return out;
 }
 
-async function loadRoom(store, code) {
-  const room = await store.get(roomKey(code), { type: "json" });
+async function loadRoom(code) {
+  const room = await store.getJSON(roomKey(code));
   if (!room) return null;
   if (Date.now() - room.createdAt > ROOM_TTL_MS) {
     await store.delete(roomKey(code));
@@ -80,8 +187,24 @@ export default async (req) => {
     return fail("طلب غير مفهوم");
   }
 
-  const store = st();
   const op = String(body.op ?? "");
+
+  /* فحصٌ تشخيصي: يقول هل التخزين متاح وأي شكل مسار اعتُمد، بلا
+     كشف أي مفتاح. وُضع قبل التحقق من اللاعب كي يعمل وحده. */
+  if (op === "diag") {
+    let form = null, err = null;
+    try { form = await discover(); } catch (e) { err = String(e && e.message); }
+    return json({
+      ok: form !== null,
+      hasContext: !!CTX,
+      hasEdge: !!EDGE,
+      hasRegion: !!(CTX && CTX.primaryRegion),
+      urlForm: form,
+      candidates: CTX ? candidateUrls("k").length : 0,
+      error: err,
+    });
+  }
+
   const pid = cleanPid(body.pid);
   if (!pid) return fail("معرّف لاعب غير صالح");
 
@@ -90,7 +213,7 @@ export default async (req) => {
     let code = null;
     for (let tries = 0; tries < 8 && !code; tries++) {
       const candidate = makeCode();
-      if (!(await store.get(roomKey(candidate)))) code = candidate;
+      if (!(await store.getText(roomKey(candidate)))) code = candidate;
     }
     if (!code) return fail("تعذّر إيجاد كود فارغ، جرّب مرة ثانية", 503);
 
@@ -112,7 +235,7 @@ export default async (req) => {
   /* كل ما تبقّى يحتاج كوداً وغرفة قائمة */
   const code = cleanCode(body.code);
   if (!code) return fail("كود الغرفة يتكوّن من 4 خانات");
-  const room = await loadRoom(store, code);
+  const room = await loadRoom(code);
   if (!room) return fail("ما لقينا غرفة بهذا الكود — تأكّد منه أو أنشئ غرفة جديدة", 404);
 
   /* ---------- الانضمام ---------- */
@@ -137,7 +260,7 @@ export default async (req) => {
     const round = Number(body.round ?? room.round) | 0;
     const subs = {};
     for (const p of room.players) {
-      const s = await store.get(subKey(code, round, p.pid), { type: "json" });
+      const s = await store.getJSON(subKey(code, round, p.pid));
       if (s) subs[p.pid] = s;
     }
     /* لا نكشف نتيجة أحد قبل أن يسجّل الاثنان — كي لا يتسلّل أحد
@@ -150,7 +273,7 @@ export default async (req) => {
     }
     const ready = [];
     for (const p of room.players) {
-      if (await store.get(readyKey(code, round, p.pid))) ready.push(p.pid);
+      if (await store.getText(readyKey(code, round, p.pid))) ready.push(p.pid);
     }
     return json({ room, subs: safeSubs, revealed: everyone, ready });
   }
@@ -168,7 +291,7 @@ export default async (req) => {
 
   if (op === "gettarget") {
     const slot = String(body.slot ?? "").replace(/[^a-z0-9]/gi, "").slice(0, 12);
-    const t = await store.get(targetKey(code, slot), { type: "json" });
+    const t = await store.getJSON(targetKey(code, slot));
     if (!t) return fail("لم نجد صوت التحدي", 404);
     return json(t);
   }
@@ -219,9 +342,9 @@ export default async (req) => {
     if (!who || !inRoom(room, who)) return fail("لاعب غير معروف", 404);
     /* لا يُسلَّم التسجيل إلا بعد أن يسجّل الاثنان */
     for (const p of room.players) {
-      if (!(await store.get(subKey(code, round, p.pid)))) return fail("لم ينتهِ الجميع بعد", 409);
+      if (!(await store.getText(subKey(code, round, p.pid)))) return fail("لم ينتهِ الجميع بعد", 409);
     }
-    const c = await store.get(clipKey(code, round, who), { type: "json" });
+    const c = await store.getJSON(clipKey(code, round, who));
     if (!c) return fail("لم نجد التسجيل", 404);
     return json(c);
   }
@@ -233,12 +356,12 @@ export default async (req) => {
     await store.set(readyKey(code, round, pid), "1");
 
     let count = 0;
-    for (const p of room.players) if (await store.get(readyKey(code, round, p.pid))) count++;
+    for (const p of room.players) if (await store.getText(readyKey(code, round, p.pid))) count++;
 
     if (count >= room.players.length) {
       /* نقرأ الغرفة من جديد قبل التقديم: لو سبقنا الطرف الآخر إليها
          فالجولة تقدّمت أصلاً ولا يصحّ أن نقدّمها مرتين. */
-      const fresh = await loadRoom(store, code);
+      const fresh = await loadRoom(code);
       if (fresh && fresh.round === round && fresh.phase === "play") {
         const next = round + 1;
         if (next >= fresh.rounds) fresh.phase = "end";
@@ -247,7 +370,7 @@ export default async (req) => {
         await store.setJSON(roomKey(code), fresh);
         return json({ room: fresh });
       }
-      const latest = await loadRoom(store, code);
+      const latest = await loadRoom(code);
       return json({ room: latest ?? room });
     }
     return json({ room });
