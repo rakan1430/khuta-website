@@ -1,0 +1,18 @@
+# قلّدها — موقع صغير مستقل تماماً (لا علاقة له بموقع خُطى)
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+# المايكروفون مسموح لنفس النطاق — اللعبة كلها قائمة عليه.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "microphone=(self), camera=(), geolocation=()"
+
+# لا نخزّن الصفحة في الكاش كي تصل التعديلات فوراً، والملفات الثابتة تُراجَع دائماً
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
