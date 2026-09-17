@@ -1089,6 +1089,19 @@
     syncSettingsUI();
     applyVolumes();
 
+    /* نسخة التجربة (ملف واحد بلا خادم): لا غرف ولا كود، وضع الجهاز
+       الواحد فقط — نُخفي ما لا يعمل بدل أن نتركه يفشل عند الضغط. */
+    if (window.QALLADHA_OFFLINE) {
+      const panel = document.querySelector("#screen-home .panel");
+      if (panel) panel.hidden = true;
+      $("btn-local").textContent = "🎙️ ابدأوا اللعب";
+      const fine = document.querySelector("#screen-home .fineprint");
+      if (fine) fine.textContent =
+        "هذه نسخة التجربة: جهاز واحد تتناوبان عليه. وضع الجهازين بكود غرفة يعمل في النسخة المنشورة على Netlify.";
+      show("screen-home");
+      return;
+    }
+
     const params = new URLSearchParams(location.search);
     const r = (params.get("r") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
     if (r.length === 4) {
