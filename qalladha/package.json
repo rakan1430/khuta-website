@@ -2,8 +2,5 @@
   "name": "qalladha",
   "version": "1.0.0",
   "private": true,
-  "description": "قلّدها — لعبة تقليد الأصوات بين صديقين",
-  "dependencies": {
-    "@netlify/blobs": "^8.1.0"
-  }
+  "description": "قلّدها — لعبة تقليد الأصوات بين صديقين (ملفات ثابتة بلا اعتماديات)"
 }
