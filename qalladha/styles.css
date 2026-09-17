@@ -399,29 +399,64 @@ output { color: var(--cream); font-weight: 700; }
 }
 .rcard.is-winner { border-color: var(--gold); }
 
+/* اللاعب الذي يُكشف الآن: مرفوعٌ قليلاً وحدّه ذهبي، كمن وقف تحت الضوء */
+.rcard.is-onstage {
+  border-color: var(--gold);
+  transform: translateY(-2px) scale(1.015);
+  transition: transform 0.25s ease;
+}
+
+.stage-note {
+  margin: 0;
+  text-align: center;
+  font-family: "Baloo Bhaijaan 2", "Cairo", sans-serif;
+  font-size: 17px;
+  color: var(--gold);
+}
+
 .dial {
   width: 72px;
   height: 72px;
   border-radius: 50%;
   display: grid;
   place-items: center;
+  border: 3px solid var(--edge);
+}
+
+/* قرص الرقم يجلس داخل الحلقة، والحلقة نفسها تدرّج مخروطي يتحرك */
+.dial-num {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--stage-2);
   font-family: "Baloo Bhaijaan 2", monospace;
   font-size: 23px;
   font-weight: 800;
   color: var(--cream);
   font-variant-numeric: tabular-nums;
-  border: 3px solid var(--edge);
 }
 
 .rcard-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .rcard-name { font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 6px; }
 .rcard-name .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rcard-name .avatar { font-size: 22px; line-height: 1; flex: 0 0 auto; }
 
 .bars { display: flex; flex-direction: column; gap: 4px; }
 .bar-row { display: grid; grid-template-columns: 46px 1fr 34px; align-items: center; gap: 8px; font-size: 12px; color: var(--dim); }
 .bar-track { height: 8px; background: var(--stage); border-radius: 999px; overflow: hidden; }
-.bar-fill { display: block; height: 100%; border-radius: 999px; background: var(--mint); }
+.bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--mint);
+  transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
 .bar-row b { color: var(--cream); font-variant-numeric: tabular-nums; text-align: end; font-weight: 700; }
+
+/* زرّ يشتغل الآن: يتغيّر نصّه ولونه كي يعرف اللاعب أن الضغطة وصلت */
+.btn.is-playing { background: var(--pink); color: var(--edge); }
 
 .clip-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
 .clip-btns .btn { min-height: 40px; font-size: 15px; padding: 4px 14px; }

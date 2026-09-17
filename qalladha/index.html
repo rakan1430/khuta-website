@@ -35,7 +35,7 @@
         <button id="btn-create" class="btn btn-primary" type="button">أنشئ غرفة 🎙️</button>
         <div class="or"><span>أو</span></div>
         <div class="join-row">
-          <input id="inp-code" type="text" maxlength="4" placeholder="كود" inputmode="latin" autocapitalize="characters" aria-label="كود الغرفة">
+          <input id="inp-code" type="text" maxlength="4" placeholder="كود" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="كود الغرفة">
           <button id="btn-join" class="btn btn-mint" type="button">ادخل</button>
         </div>
       </div>
@@ -124,8 +124,9 @@
 
       <!-- النتيجة -->
       <div id="result" class="result" hidden>
-        <div id="verdict" class="verdict"></div>
+        <p id="stage-note" class="stage-note" hidden></p>
         <div id="cards" class="result-cards"></div>
+        <div id="verdict" class="verdict" hidden></div>
         <div class="effects">
           <span class="field-label">اسمعوها بأصوات ثانية</span>
           <div id="effect-chips" class="chips"></div>

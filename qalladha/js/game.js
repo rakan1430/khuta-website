@@ -185,7 +185,7 @@
       const blob = Sound.base64ToBlob(t.audio, t.mime);
       return await Sound.decode(await blob.arrayBuffer());
     }
-    return await Sound.renderChallenge(id);
+    return await Sound.loadChallenge(id);
   }
 
   /* ============================================================
@@ -626,95 +626,196 @@
     return "var(--pink)";
   }
 
-  function renderResult(entries) {
+  /* شخصية ثابتة لكل لاعب: مشتقّة من معرّفه فلا تتبدّل بين الجولات،
+     ولا تحتاج تخزيناً ولا اختياراً من اللاعب. */
+  const AVATARS = ["🦁", "🐯", "🐵", "🐻", "🦊", "🐺", "🦉", "🐨", "🐙", "🦖", "🐲", "🤠"];
+  function avatarFor(key) {
+    let h = 0;
+    for (let i = 0; i < String(key).length; i++) h = (h * 31 + String(key).charCodeAt(i)) >>> 0;
+    return AVATARS[h % AVATARS.length];
+  }
+
+  const reducedMotion = () => {
+    try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+    catch (e) { return false; }
+  };
+
+  /* ---------- تشغيل بحالة ظاهرة ---------- */
+  /* بلا هذا كان اللاعب يضغط "اسمع" فلا يتغيّر شيء في الزرّ، فلا يدري
+     أبدأ التشغيل أم لم يستجب الزرّ أصلاً. */
+  let activePlay = null;
+
+  function resetPlayBtn() {
+    if (!activePlay) return;
+    activePlay.el.textContent = activePlay.label;
+    activePlay.el.classList.remove("is-playing");
+    activePlay = null;
+  }
+
+  function playWith(btn, label, buffer, effect) {
+    const wasThis = activePlay && activePlay.el === btn;
+    Sound.stopAll();
+    resetPlayBtn();
+    if (wasThis || !buffer) return;          // ضغطة ثانية = إيقاف
+    activePlay = { el: btn, label };
+    btn.textContent = "⏹️ أوقف";
+    btn.classList.add("is-playing");
+    Sound.playBuffer(buffer, {
+      effect: effect,
+      onEnded: () => { if (activePlay && activePlay.el === btn) resetPlayBtn(); },
+    });
+  }
+
+  /* العدّاد يصعد من الصفر إلى النتيجة، وتصعد معه نقرة تعلو طبقتها،
+     ثم يستقرّ برنّة. هذا ما يجعل الكشف لحظةً لا مجرّد رقم يظهر. */
+  function animateDial(ring, num, score) {
+    return new Promise((resolve) => {
+      const paint = (v) => {
+        ring.style.background =
+          "conic-gradient(" + dialColor(score) + " " + (v * 3.6) + "deg, var(--stage) 0)";
+        num.textContent = ar(Math.round(v));
+      };
+      if (reducedMotion() || score <= 0) { paint(score); resolve(); return; }
+
+      const dur = 700 + Math.min(700, score * 8);
+      const t0 = performance.now();
+      let lastTick = 0;
+      const frame = (now) => {
+        const t = Math.min(1, (now - t0) / dur);
+        const eased = 1 - Math.pow(1 - t, 3);      // يتباطأ عند الاقتراب
+        paint(score * eased);
+        if (now - lastTick > 80 && t < 0.96) {
+          lastTick = now;
+          Sound.sfx("count", { frac: eased });
+        }
+        if (t < 1) requestAnimationFrame(frame);
+        else { Sound.sfx("land"); resolve(); }
+      };
+      requestAnimationFrame(frame);
+    });
+  }
+
+  function buildCard(e, isTop, many) {
+    const card = document.createElement("div");
+    card.className = "rcard is-onstage" + (isTop && many ? " is-winner" : "");
+
+    const dial = document.createElement("div");
+    dial.className = "dial";
+    dial.style.background = "conic-gradient(" + dialColor(e.result.score) + " 0deg, var(--stage) 0)";
+    const inner = document.createElement("span");
+    inner.className = "dial-num";
+    inner.textContent = ar(0);
+    dial.appendChild(inner);
+
+    const body = document.createElement("div");
+    body.className = "rcard-body";
+
+    const nm = document.createElement("div");
+    nm.className = "rcard-name";
+    const face = document.createElement("span");
+    face.className = "avatar";
+    face.textContent = avatarFor(e.key);
+    const who = document.createElement("span");
+    who.className = "who";
+    who.textContent = e.name;
+    nm.append(face, who);
+    if (isTop && many) {
+      const crown = document.createElement("span");
+      crown.className = "crown-badge";
+      crown.textContent = "👑";
+      crown.hidden = true;                 // يظهر بعد أن تُكشف النتيجتان
+      nm.appendChild(crown);
+    }
+
+    const bars = document.createElement("div");
+    bars.className = "bars";
+    const parts = e.result.parts || {};
+    const fills = [];
+    [["النبرة", parts.tone, "var(--mint)"], ["النغمة", parts.pitch, "var(--gold)"], ["الإيقاع", parts.rhythm, "var(--pink)"]]
+      .forEach(([label, value, color]) => {
+        const row = document.createElement("div");
+        row.className = "bar-row";
+        const l = document.createElement("span");
+        l.textContent = label;
+        const track = document.createElement("span");
+        track.className = "bar-track";
+        const fill = document.createElement("span");
+        fill.className = "bar-fill";
+        fill.style.width = "0%";
+        fill.style.background = color;
+        track.appendChild(fill);
+        const b = document.createElement("b");
+        b.textContent = value == null ? "—" : ar(value);
+        row.append(l, track, b);
+        bars.appendChild(row);
+        fills.push([fill, value == null ? 0 : value]);
+      });
+
+    const btns = document.createElement("div");
+    btns.className = "clip-btns";
+    const label = e.isMe ? "▶️ اسمع تسجيلك" : "▶️ اسمع تسجيله";
+    const play = document.createElement("button");
+    play.type = "button";
+    play.className = "btn btn-mint";
+    play.textContent = label;
+    play.disabled = !e.buffer;
+    play.onclick = () => playWith(play, label, e.buffer, S.effect);
+
+    const orig = document.createElement("button");
+    orig.type = "button";
+    orig.className = "btn btn-ghost";
+    orig.textContent = "🎧 الأصل";
+    orig.onclick = () => {
+      if (S.target) playWith(orig, "🎧 الأصل", S.target.buffer, "normal");
+    };
+    btns.append(play, orig);
+
+    body.append(nm, bars, btns);
+    card.append(dial, body);
+    return { card, ring: dial, num: inner, fills, crown: nm.querySelector(".crown-badge") };
+  }
+
+  async function renderResult(entries) {
     stopPolling();
+    resetPlayBtn();
     $("stage").hidden = true;
     $("pass-card").hidden = true;
     $("result").hidden = false;
     $("wait-note").hidden = true;
+    $("btn-next").hidden = true;          // لا ينتقل أحد قبل أن ينتهي الكشف
     renderScoreboard();
 
     const box = $("cards");
     box.innerHTML = "";
+    const stageNote = $("stage-note");
     const top = Math.max.apply(null, entries.map((e) => e.result.score));
+    const many = entries.length > 1;
 
-    entries.forEach((e) => {
-      const card = document.createElement("div");
-      card.className = "rcard" + (e.result.score === top && entries.length > 1 ? " is-winner" : "");
+    const v = $("verdict");
+    v.hidden = true;
+    v.innerHTML = "";
 
-      const dial = document.createElement("div");
-      dial.className = "dial";
-      dial.style.background =
-        "conic-gradient(" + dialColor(e.result.score) + " " + (e.result.score * 3.6) + "deg, var(--stage) 0)";
-      const inner = document.createElement("span");
-      inner.textContent = ar(e.result.score);
-      inner.style.cssText =
-        "background:var(--stage-2);width:52px;height:52px;border-radius:50%;display:grid;place-items:center;";
-      dial.appendChild(inner);
+    /* كشفٌ واحداً تلو الآخر: كلٌّ يصعد المسرح وحده وتُحسب نتيجته
+       أمام الاثنين، بدل أن تظهر البطاقتان دفعةً واحدة بلا تشويق. */
+    const built = [];
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      const c = buildCard(e, e.result.score === top, many);
+      built.push(c);
+      box.appendChild(c.card);
 
-      const body = document.createElement("div");
-      body.className = "rcard-body";
-
-      const nm = document.createElement("div");
-      nm.className = "rcard-name";
-      const who = document.createElement("span");
-      who.className = "who";
-      who.textContent = e.name;
-      nm.appendChild(who);
-      if (e.result.score === top && entries.length > 1) {
-        const crown = document.createElement("span");
-        crown.textContent = "👑";
-        nm.appendChild(crown);
+      if (many) {
+        stageNote.hidden = false;
+        stageNote.textContent = "على المسرح: " + e.name.replace(" (أنت)", "");
       }
-
-      const bars = document.createElement("div");
-      bars.className = "bars";
-      const parts = e.result.parts || {};
-      [["النبرة", parts.tone, "var(--mint)"], ["النغمة", parts.pitch, "var(--gold)"], ["الإيقاع", parts.rhythm, "var(--pink)"]]
-        .forEach(([label, value, color]) => {
-          const row = document.createElement("div");
-          row.className = "bar-row";
-          const l = document.createElement("span");
-          l.textContent = label;
-          const track = document.createElement("span");
-          track.className = "bar-track";
-          const fill = document.createElement("span");
-          fill.className = "bar-fill";
-          fill.style.width = (value == null ? 0 : value) + "%";
-          fill.style.background = color;
-          track.appendChild(fill);
-          const b = document.createElement("b");
-          b.textContent = value == null ? "—" : ar(value);
-          row.append(l, track, b);
-          bars.appendChild(row);
-        });
-
-      const btns = document.createElement("div");
-      btns.className = "clip-btns";
-      const play = document.createElement("button");
-      play.type = "button";
-      play.className = "btn btn-mint";
-      play.textContent = "▶️ اسمع تسجيله";
-      if (e.isMe) play.textContent = "▶️ اسمع تسجيلك";
-      play.disabled = !e.buffer;
-      play.onclick = () => {
-        Sound.stopAll();
-        Sound.playBuffer(e.buffer, { effect: S.effect });
-      };
-      const orig = document.createElement("button");
-      orig.type = "button";
-      orig.className = "btn btn-ghost";
-      orig.textContent = "🎧 الأصل";
-      orig.onclick = () => {
-        Sound.stopAll();
-        if (S.target) Sound.playBuffer(S.target.buffer, {});
-      };
-      btns.append(play, orig);
-
-      body.append(nm, bars, btns);
-      card.append(dial, body);
-      box.appendChild(card);
-    });
+      await wait(reducedMotion() ? 0 : 260);
+      c.fills.forEach(([fill, value]) => { fill.style.width = value + "%"; });
+      await animateDial(c.ring, c.num, e.result.score);
+      c.card.classList.remove("is-onstage");
+      await wait(reducedMotion() ? 0 : 320);
+    }
+    stageNote.hidden = true;
+    built.forEach((c) => { if (c.crown) c.crown.hidden = false; });
 
     renderEffectChips();
 
@@ -725,25 +826,33 @@
 
     const sorted = entries.slice().sort((a, b) => b.result.score - a.result.score);
     let head;
-    if (entries.length < 2) head = "نتيجتك";
+    if (!many) head = "نتيجتك";
     else if (sorted[0].result.score === sorted[1].result.score) head = "تعادل! نفس الدرجة بالضبط.";
     else head = sorted[0].name.replace(" (أنت)", "") + " كسب الجولة بفارق " +
       ar(sorted[0].result.score - sorted[1].result.score) + " نقطة";
 
-    const v = $("verdict");
-    v.innerHTML = "";
     const h = document.createElement("span");
     h.className = "verdict-head";
     h.textContent = head;
     const p = document.createElement("span");
     p.textContent = line;
     v.append(h, p);
+    v.hidden = false;
 
     Sound.sfx(mine.result.silent ? "crickets" : band.sfx);
     setTimeout(() => Sound.speak(line, settings.tts), 700);
 
     const last = S.round + 1 >= S.rounds;
     $("btn-next").textContent = last ? "النتيجة النهائية 🏁" : "الجولة التالية ⏭️";
+    $("btn-next").hidden = false;
+
+    /* صوت الجولة القادمة يُحمَّل الآن، والناس تقرأ النتيجة —
+       فلا ينتظره أحد عند بداية الجولة. */
+    if (!last) {
+      const nextId = S.mode === "local" ? S.localChallenges[S.round + 1]
+                                        : (S.room && S.room.challenges[S.round + 1]);
+      Sound.prefetch(nextId);
+    }
   }
 
   function renderEffectChips() {
@@ -1014,10 +1123,29 @@
     $("btn-create").onclick = createRoom;
     $("btn-join").onclick = joinRoom;
     $("btn-local").onclick = startLocal;
-    $("inp-code").addEventListener("input", (e) => {
-      e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+    /* ⚠️ لوحة المفاتيح العربية على الحاسوب تُخرج حروفاً عربية، وكان
+       المرشّح يبتلعها فيبدو الحقل وكأنه يرفض الحروف ويقبل الأرقام
+       وحدها. الحلّ أن نقرأ الزرّ الفيزيائي (e.code) لا الحرف الناتج:
+       زرّ «ش» هو KeyA مهما كانت لغة اللوحة. */
+    const codeInput = $("inp-code");
+    const AR_DIGIT_MAP = { "٠": "0", "١": "1", "٢": "2", "٣": "3", "٤": "4", "٥": "5", "٦": "6", "٧": "7", "٨": "8", "٩": "9", "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4", "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9" };
+
+    codeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { joinRoom(); return; }
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const m = /^Key([A-Z])$/.exec(e.code) || /^(?:Digit|Numpad)([0-9])$/.exec(e.code);
+      if (!m) return;                       // نترك Backspace والأسهم وغيرها للمتصفح
+      e.preventDefault();
+      if (codeInput.value.length >= 4) return;
+      codeInput.value = (codeInput.value + m[1]).slice(0, 4);
     });
-    $("inp-code").addEventListener("keydown", (e) => { if (e.key === "Enter") joinRoom(); });
+
+    /* اللصق والكتابة على الجوال يمرّان من هنا: نحوّل الأرقام العربية
+       إلى لاتينية بدل حذفها، ثم نُبقي ما يصلح للكود فقط. */
+    codeInput.addEventListener("input", (e) => {
+      const mapped = String(e.target.value).replace(/[٠-٩۰-۹]/g, (d) => AR_DIGIT_MAP[d] || "");
+      e.target.value = mapped.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+    });
     $("inp-name").addEventListener("keydown", (e) => { if (e.key === "Enter") createRoom(); });
 
     $("btn-share").onclick = async () => {

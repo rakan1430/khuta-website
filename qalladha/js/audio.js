@@ -1,18 +1,20 @@
 /* ============================================================
    قلّدها — محرّك الصوت
    ------------------------------------------------------------
-   كل صوت في اللعبة مُولَّد في المتصفح لحظياً: لا ملفات صوتية
-   تُحمَّل، فاللعبة تفتح فوراً وتعمل على شبكة ضعيفة.
-   أصوات التحدي تُرسَم مرة واحدة داخل OfflineAudioContext ثم
-   تُحفظ كمقطع جاهز — ليسمع اللاعبان نفس الصوت تماماً، ولتكون
-   نسخة التحليل هي نسخة التشغيل حرفياً.
+   أصوات التحدي **تسجيلات حقيقية** في مجلد sounds/ — كانت مولّدة
+   بالتوليف فخرجت أزيزاً إلكترونياً لا يُشبه ما تدّعيه، وهذا يقتل
+   اللعبة: من يقلّد صوتاً لا يعرفه؟ التسجيلات من مجموعة ESC-50،
+   واخترنا منها المقاطع الموسومة CC0 (ملك عام) وحدها، ثم قُصّت على
+   الحدث ووُحّدت جهارتها.
+
+   أمّا المؤثرات والموسيقى فتبقى مُولّدة: هي أصلاً أصوات كرتونية
+   مقصودة (بوق ملعب، ترومبون حزين)، ولا ملف يُحمّل من أجلها.
    ============================================================ */
 (function (global) {
   "use strict";
 
   let ctx = null;
   let master = null, challengeGain = null, sfxGain = null, musicGain = null;
-  const cache = new Map();
 
   function context() {
     if (!ctx) {
@@ -39,7 +41,7 @@
     if (g) g.gain.value = Math.max(0, Math.min(1, v));
   };
 
-  /* ---------- لبنات التوليف ---------- */
+  /* ---------- لبنات التوليف (للمؤثرات والموسيقى فقط) ---------- */
 
   function adsr(c, dest, t0, dur, peak, attack, release) {
     const g = c.createGain();
@@ -52,21 +54,6 @@
     p.linearRampToValueAtTime(0, t0 + dur);
     g.connect(dest);
     return g;
-  }
-
-  /* رنّانات تُشبه تجاويف الحلق — هي ما يجعل الموجة المنشارية
-     تُسمع "حيواناً" لا أزيزاً إلكترونياً */
-  function formants(c, dest, freqs, qs) {
-    const input = c.createGain();
-    freqs.forEach((f, i) => {
-      const bp = c.createBiquadFilter();
-      bp.type = "bandpass";
-      bp.frequency.value = f;
-      bp.Q.value = (qs && qs[i]) || 6;
-      input.connect(bp);
-      bp.connect(dest);
-    });
-    return input;
   }
 
   function noiseSource(c, t0, dur) {
@@ -105,176 +92,60 @@
   }
 
   /* ---------- التحديات ---------- */
-  /* كل تحدٍّ: اسم يُعرض، ورمز، ومدّة، ودالة ترسم الصوت. */
+  /* التلميح مكتوب ليقول للاعب كيف يُخرج الصوت بفمه، لا ليصف الحيوان. */
 
   const CHALLENGES = [
-    {
-      id: "cat", name: "مواء قطة", emoji: "🐱", dur: 1.1, hint: "ابدأ ناعماً واصعد ثم اهبط",
-      draw(c, dest, t0) {
-        const out = adsr(c, dest, t0, 0.9, 0.55, 0.09, 0.32);
-        const f = formants(c, out, [760, 1950, 2850], [9, 11, 12]);
-        tone(c, f, t0, 0.88, "sawtooth", [[0, 500], [0.22, 780], [0.48, 640], [0.88, 370]], 0.9,
-          { attack: 0.07, release: 0.3, vibRate: 6.5, vibDepth: 16 });
-      },
-    },
-    {
-      id: "dog", name: "نباح كلب", emoji: "🐶", dur: 1.0, hint: "نباحتان قصيرتان وحاسمتان",
-      draw(c, dest, t0) {
-        [0, 0.42].forEach((off) => {
-          const t = t0 + off;
-          const f = formants(c, dest, [520, 1150], [3, 4]);
-          tone(c, f, t, 0.2, "sawtooth", [[0, 230], [0.05, 190], [0.2, 130]], 0.75, { attack: 0.006, release: 0.12 });
-          const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1800;
-          const ng = adsr(c, dest, t, 0.09, 0.32, 0.004, 0.07);
-          lp.connect(ng);
-          noiseSource(c, t, 0.09).connect(lp);
-        });
-      },
-    },
-    {
-      id: "rooster", name: "صياح ديك", emoji: "🐓", dur: 1.6, hint: "أربع نغمات: كو كو كو كوووو",
-      draw(c, dest, t0) {
-        const seq = [[0, 0.18, 660], [0.21, 0.22, 980], [0.46, 0.18, 820], [0.67, 0.62, 560]];
-        seq.forEach(([off, d, hz]) => {
-          const f = formants(c, dest, [900, 2100], [7, 8]);
-          tone(c, f, t0 + off, d, "sawtooth", [[0, hz], [d * 0.6, hz * 1.05], [d, hz * 0.8]], 0.8,
-            { attack: 0.02, release: d * 0.4, vibRate: 7, vibDepth: 12 });
-        });
-      },
-    },
-    {
-      id: "cow", name: "خوار بقرة", emoji: "🐄", dur: 1.5, hint: "صوت عميق وطويل من الصدر",
-      draw(c, dest, t0) {
-        const f = formants(c, dest, [420, 880, 1300], [6, 7, 8]);
-        tone(c, f, t0, 1.35, "sawtooth", [[0, 128], [0.35, 112], [1.0, 104], [1.35, 90]], 0.9,
-          { attack: 0.12, release: 0.45, vibRate: 4.5, vibDepth: 5 });
-      },
-    },
-    {
-      id: "sheep", name: "مأمأة خروف", emoji: "🐑", dur: 1.2, hint: "اهتزاز سريع: مااااااع",
-      draw(c, dest, t0) {
-        const f = formants(c, dest, [1000, 1850, 2600], [8, 9, 10]);
-        tone(c, f, t0, 1.05, "sawtooth", [[0, 240], [0.3, 225], [1.05, 200]], 0.85,
-          { attack: 0.05, release: 0.3, vibRate: 13, vibDepth: 30 });
-      },
-    },
-    {
-      id: "monkey", name: "قرد", emoji: "🐵", dur: 1.4, hint: "أوه أوه أوه… آآآه",
-      draw(c, dest, t0) {
-        [0, 0.2, 0.4].forEach((off) => {
-          const f = formants(c, dest, [560, 1100], [8, 9]);
-          tone(c, f, t0 + off, 0.15, "sawtooth", [[0, 380], [0.08, 520], [0.15, 430]], 0.7, { attack: 0.01, release: 0.08 });
-        });
-        const f2 = formants(c, dest, [780, 1400], [7, 8]);
-        tone(c, f2, t0 + 0.66, 0.6, "sawtooth", [[0, 620], [0.2, 700], [0.6, 480]], 0.8,
-          { attack: 0.03, release: 0.3, vibRate: 9, vibDepth: 22 });
-      },
-    },
-    {
-      id: "bird", name: "زقزقة عصفور", emoji: "🐦", dur: 1.0, hint: "زقزقات حادّة ومتقطّعة",
-      draw(c, dest, t0) {
-        [0, 0.15, 0.3, 0.52, 0.67].forEach((off, i) => {
-          tone(c, dest, t0 + off, 0.07, "sine", [[0, 3000 + i * 120], [0.04, 4600], [0.07, 3400]], 0.35,
-            { attack: 0.006, release: 0.03 });
-        });
-      },
-    },
-    {
-      id: "owl", name: "بومة", emoji: "🦉", dur: 1.4, hint: "هوو… هوو، ناعمة وغامضة",
-      draw(c, dest, t0) {
-        [0, 0.6].forEach((off) => {
-          const f = formants(c, dest, [430, 860], [10, 11]);
-          tone(c, f, t0 + off, 0.42, "sine", [[0, 360], [0.15, 400], [0.42, 350]], 0.6,
-            { attack: 0.1, release: 0.22, vibRate: 5, vibDepth: 6 });
-        });
-      },
-    },
-    {
-      id: "siren", name: "صفّارة إسعاف", emoji: "🚑", dur: 1.8, hint: "نغمتان تتبادلان بلا توقّف",
-      draw(c, dest, t0) {
-        const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600; lp.connect(dest);
-        for (let i = 0; i < 4; i++) {
-          const hz = i % 2 === 0 ? 680 : 900;
-          tone(c, lp, t0 + i * 0.42, 0.4, "square", [[0, hz]], 0.28, { attack: 0.03, release: 0.05 });
-        }
-      },
-    },
-    {
-      id: "alarm", name: "إنذار", emoji: "🚨", dur: 1.5, hint: "بيب بيب بيب متساوية",
-      draw(c, dest, t0) {
-        for (let i = 0; i < 6; i++) {
-          tone(c, dest, t0 + i * 0.22, 0.11, "square", [[0, 1040]], 0.22, { attack: 0.005, release: 0.02 });
-        }
-      },
-    },
-    {
-      id: "horn", name: "بوق سيارة", emoji: "🚗", dur: 0.9, hint: "نفخة واحدة ثابتة",
-      draw(c, dest, t0) {
-        const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2000; lp.connect(dest);
-        tone(c, lp, t0, 0.7, "sawtooth", [[0, 400]], 0.3, { attack: 0.02, release: 0.06 });
-        tone(c, lp, t0, 0.7, "sawtooth", [[0, 505]], 0.26, { attack: 0.02, release: 0.06 });
-      },
-    },
-    {
-      id: "bike", name: "دراجة نارية", emoji: "🏍️", dur: 1.8, hint: "زمجرة تعلو ثم تهدأ",
-      draw(c, dest, t0) {
-        const trem = c.createGain(); trem.gain.value = 0.5; trem.connect(dest);
-        const lfo = c.createOscillator(); lfo.type = "sawtooth"; lfo.frequency.value = 24;
-        const lg = c.createGain(); lg.gain.value = 0.4;
-        lfo.connect(lg); lg.connect(trem.gain); lfo.start(t0); lfo.stop(t0 + 1.7);
-        const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1400; lp.connect(trem);
-        tone(c, lp, t0, 1.65, "sawtooth", [[0, 75], [0.5, 190], [1.0, 150], [1.65, 95]], 0.5,
-          { attack: 0.1, release: 0.4 });
-        const bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 900; bp.Q.value = 1.2;
-        const ng = adsr(c, trem, t0, 1.6, 0.16, 0.2, 0.5);
-        bp.connect(ng);
-        noiseSource(c, t0, 1.6).connect(bp);
-      },
-    },
-    {
-      id: "laser", name: "ليزر فضائي", emoji: "👾", dur: 0.7, hint: "هبوط حادّ وسريع",
-      draw(c, dest, t0) {
-        const o = c.createOscillator(); o.type = "sawtooth";
-        o.frequency.setValueAtTime(2600, t0);
-        o.frequency.exponentialRampToValueAtTime(160, t0 + 0.4);
-        const g = adsr(c, dest, t0, 0.45, 0.3, 0.005, 0.2);
-        o.connect(g); o.start(t0); o.stop(t0 + 0.5);
-      },
-    },
-    {
-      id: "doorbell", name: "جرس الباب", emoji: "🔔", dur: 1.4, hint: "دِنغ… دونغ",
-      draw(c, dest, t0) {
-        [[0, 680], [0.42, 540]].forEach(([off, hz]) => {
-          const g = c.createGain();
-          g.gain.setValueAtTime(0.35, t0 + off);
-          g.gain.exponentialRampToValueAtTime(0.001, t0 + off + 0.85);
-          g.connect(dest);
-          const o = c.createOscillator(); o.type = "sine"; o.frequency.value = hz;
-          const o2 = c.createOscillator(); o2.type = "sine"; o2.frequency.value = hz * 2.7;
-          const g2 = c.createGain(); g2.gain.value = 0.25; o2.connect(g2); g2.connect(g);
-          o.connect(g);
-          o.start(t0 + off); o.stop(t0 + off + 0.9);
-          o2.start(t0 + off); o2.stop(t0 + off + 0.9);
-        });
-      },
-    },
+    { id: "dog",             name: "نباح كلب",       emoji: "🐶", hint: "نباحتان قصيرتان وحاسمتان" },
+    { id: "cat",             name: "مواء قطة",       emoji: "🐱", hint: "ابدأ ناعماً، اصعد، ثم اهبط" },
+    { id: "rooster",         name: "صياح ديك",       emoji: "🐓", hint: "كو كو كو كوووو — أربع نغمات" },
+    { id: "cow",             name: "خوار بقرة",      emoji: "🐄", hint: "صوت عميق طويل من الصدر" },
+    { id: "sheep",           name: "مأمأة خروف",     emoji: "🐑", hint: "مااااع، باهتزاز سريع" },
+    { id: "hen",             name: "قوقأة دجاجة",    emoji: "🐔", hint: "نقّ نقّ متقطّع وسريع" },
+    { id: "pig",             name: "نخير خنزير",     emoji: "🐷", hint: "من الأنف، قصير ومتكرّر" },
+    { id: "crow",            name: "نعيق غراب",      emoji: "🐦‍⬛", hint: "قااق قااق — خشن ومزعج" },
+    { id: "frog",            name: "نقيق ضفدع",      emoji: "🐸", hint: "قرقرة من عمق الحلق" },
+
+    { id: "siren",           name: "صفّارة إسعاف",   emoji: "🚑", hint: "نغمتان تتبادلان بلا توقّف" },
+    { id: "car_horn",        name: "بوق سيارة",      emoji: "🚗", hint: "نفخة واحدة ثابتة" },
+    { id: "train",           name: "صفير قطار",      emoji: "🚂", hint: "صفير طويل ثم يهبط" },
+    { id: "helicopter",      name: "مروحية",         emoji: "🚁", hint: "طقطقة متّصلة لا تتوقّف" },
+    { id: "chainsaw",        name: "منشار كهربائي",  emoji: "🪚", hint: "زمجرة تعلو ثم تثبت" },
+    { id: "engine",          name: "هدير محرّك",     emoji: "🏍️", hint: "هدير متّصل من الحلق" },
+
+    { id: "crying_baby",     name: "رضيع يبكي",      emoji: "👶", hint: "صراخ متقطّع يعلو ويهبط" },
+    { id: "laughing",        name: "ضحكة",           emoji: "😂", hint: "اضحك من قلبك، لا تتصنّع" },
+    { id: "sneezing",        name: "عطسة",           emoji: "🤧", hint: "آآآ… تشوو!" },
+    { id: "snoring",         name: "شخير نائم",      emoji: "😴", hint: "شهيق طويل خشن" },
+    { id: "coughing",        name: "كحّة",           emoji: "😷", hint: "كحّتان جافّتان" },
+
+    { id: "church_bells",    name: "أجراس",          emoji: "🔔", hint: "دِنغ دونغ متكرّر" },
+    { id: "clock_alarm",     name: "منبّه",          emoji: "⏰", hint: "بيب بيب متساوية" },
+    { id: "door_wood_knock", name: "طرق باب",        emoji: "🚪", hint: "ثلاث طرقات على الخشب" },
+    { id: "glass_breaking",  name: "كسر زجاج",       emoji: "🥃", hint: "تحطّم مفاجئ ثم رذاذ" },
   ];
 
   const byId = (id) => CHALLENGES.find((c) => c.id === id) || null;
 
-  /* رسم التحدي مرة واحدة في سياق غير مسموع ثم حفظه مقطعاً جاهزاً */
-  async function renderChallenge(id) {
-    if (cache.has(id)) return cache.get(id);
-    const def = byId(id);
-    if (!def) return null;
-    const OAC = global.OfflineAudioContext || global.webkitOfflineAudioContext;
-    const sr = 44100;
-    const oc = new OAC(1, Math.ceil(sr * (def.dur + 0.3)), sr);
-    const out = oc.createGain(); out.gain.value = 0.9; out.connect(oc.destination);
-    def.draw(oc, out, 0.05);
-    const buf = await oc.startRendering();
-    cache.set(id, buf);
-    return buf;
+  /* تحميل مقطع التحدي وفكّ ترميزه مرة واحدة ثم حفظه.
+     الوعد نفسه يُحفظ لا نتيجته فقط، كي لا يبدأ تحميلان متوازيان
+     حين يضغط اللاعب "اسمع" قبل أن ينتهي التحميل الأول. */
+  const clipCache = new Map();
+
+  function loadChallenge(id) {
+    if (clipCache.has(id)) return clipCache.get(id);
+    const p = (async () => {
+      const res = await fetch("sounds/" + encodeURIComponent(id) + ".mp3", { cache: "force-cache" });
+      if (!res.ok) throw new Error("sound-" + res.status);
+      return await decode(await res.arrayBuffer());
+    })();
+    p.catch(() => clipCache.delete(id));   // فشلٌ لا يُحفظ، كي تنجح إعادة المحاولة
+    clipCache.set(id, p);
+    return p;
+  }
+
+  /* تحميل مسبق بلا انتظار: يهيّئ صوت الجولة القادمة أثناء النتيجة */
+  function prefetch(id) {
+    if (id && id.indexOf("custom:") !== 0) { try { loadChallenge(id); } catch (e) {} }
   }
 
   /* ---------- تشغيل مقطع، مع تأثيرات مضحكة ---------- */
@@ -398,12 +269,22 @@
     go(c, t0) {
       tone(c, sfxGain, t0, 0.3, "square", [[0, 1320]], 0.16, { attack: 0.005, release: 0.2 });
     },
+    /* نقرة العدّاد وهو يصعد — طبقتها ترتفع مع النتيجة فيُسمع الصعود */
+    count(c, t0, opt) {
+      const f = 520 + 700 * Math.min(1, Math.max(0, (opt && opt.frac) || 0));
+      tone(c, sfxGain, t0, 0.04, "square", [[0, f]], 0.05, { attack: 0.002, release: 0.025 });
+    },
+    /* رنّة استقرار العدّاد */
+    land(c, t0) {
+      [880, 1320].forEach((hz, i) =>
+        tone(c, sfxGain, t0 + i * 0.05, 0.3, "triangle", [[0, hz]], 0.12, { attack: 0.004, release: 0.22 }));
+    },
   };
 
-  function sfx(name) {
+  function sfx(name, opt) {
     const c = context();
     const fn = SFX[name];
-    if (fn) fn(c, c.currentTime + 0.02);
+    if (fn) fn(c, c.currentTime + 0.02, opt);
   }
 
   /* ---------- موسيقى خلفية بسيطة ---------- */
@@ -516,6 +397,14 @@
     await new Promise((r) => setTimeout(r, ms));
     if (rec.state !== "inactive") rec.stop();
     const blob = await done;
+
+    /* ⚠️ إطفاء المايك فور انتهاء التسجيل — لا تأجيل.
+       ما دام المايك مفتوحاً يعامل الجوال الصفحة كأنها مكالمة هاتفية،
+       فيحوّل الخرج إلى سمّاعة الأذن العلوية بدل مكبّر الصوت، فيسمع
+       اللاعب النتيجة همساً ولا يفهم لماذا. إغلاق المسارات هنا يعيد
+       الجهاز إلى وضع الوسائط العادي. */
+    releaseMic();
+
     return { blob, mime: blob.type };
   }
 
@@ -576,7 +465,7 @@
 
   global.Sound = {
     context, unlock, setVolume,
-    CHALLENGES, byId, renderChallenge,
+    CHALLENGES, byId, loadChallenge, prefetch,
     EFFECTS, playBuffer, stopAll,
     sfx, musicOn, musicOff,
     record, listMics, getStream, releaseMic,
