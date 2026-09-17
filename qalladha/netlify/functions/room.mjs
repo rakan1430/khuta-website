@@ -4,8 +4,11 @@
    كل التواصل بين الجهازين يمرّ من هنا. التخزين على Netlify Blobs
    لكن **بلا أي حزمة npm**: نخاطب واجهته مباشرة عبر fetch. السبب
    عملي: هذا الملف قد يُرفع وحده داخل حزمة لا تحوي node_modules،
-   فأي import خارجي يسقط عند التشغيل. وبلا اعتماديات يعمل في كل
-   أسلوب نشر: رفع يدوي، أو Netlify CLI، أو بناء من المستودع.
+   فأي import خارجي يسقط عند التشغيل.
+
+   وللسبب نفسه نستعمل صيغة handler الكلاسيكية لا صيغة Request/Response
+   الحديثة: الحديثة تُكتشف من بيانات بناء لا تُرفع مع الحزمة اليدوية،
+   والكلاسيكية مفهومة في كل أساليب النشر بلا استثناء.
 
    المبدأ الذي يحكم التصميم: كل لاعب يكتب في مفاتيح تخصّه وحده،
    ولا أحد يكتب فوق كتابة الآخر. وثيقة الغرفة لا يعدّلها إلا حدثٌ
@@ -57,6 +60,7 @@ const authHeaders = () => ({ authorization: `Bearer ${CTX.token}` });
 
 let formIndex = null;        // الشكل المعتمد بعد الاكتشاف
 let discovering = null;      // وعدٌ واحد يمنع اكتشافين متوازيين
+let lastProbe = null;        // آخر حالات الفحص، للتشخيص وحده
 
 async function discover() {
   if (formIndex !== null) return formIndex;
@@ -64,17 +68,25 @@ async function discover() {
   discovering = (async () => {
     const urls = candidateUrls("__probe");
     const stamp = String(Date.now());
+    const tried = [];
     for (let i = 0; i < urls.length; i++) {
       try {
         const put = await fetch(urls[i], { method: "PUT", headers: authHeaders(), body: stamp });
-        if (!put.ok) continue;
+        if (!put.ok) { tried.push(`${i}:put${put.status}`); continue; }
         const got = await fetch(urls[i], { method: "GET", headers: authHeaders() });
-        if (got.ok && (await got.text()) === stamp) {
+        const text = got.ok ? await got.text() : null;
+        if (got.ok && text === stamp) {
+          tried.push(`${i}:ok`);
+          lastProbe = tried;
           formIndex = i;
           return i;
         }
-      } catch { /* نجرّب الشكل التالي */ }
+        tried.push(`${i}:get${got.status}`);
+      } catch (e) {
+        tried.push(`${i}:err`);
+      }
     }
+    lastProbe = tried;
     return null;
   })();
   const result = await discovering;
@@ -132,13 +144,13 @@ const MAX_AUDIO_CHARS = 950000;
    لأن الكود يُقال صوتياً في الغالب: "غرفتي كي تسعة..." */
 const CODE_ALPHABET = "ACDEFGHJKLMNPQRTUVWXYZ2346799";
 
-const json = (body, status = 200) =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
-  });
+const json = (body, statusCode = 200) => ({
+  statusCode,
+  headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  body: JSON.stringify(body),
+});
 
-const fail = (message, status = 400) => json({ error: message }, status);
+const fail = (message, statusCode = 400) => json({ error: message }, statusCode);
 
 const roomKey = (code) => `room/${code}`;
 const subKey = (code, round, pid) => `sub/${code}/${round}/${pid}`;
@@ -177,23 +189,35 @@ async function loadRoom(code) {
 const isHost = (room, pid) => room.hostPid === pid;
 const inRoom = (room, pid) => room.players.some((p) => p.pid === pid);
 
-export default async (req) => {
-  if (req.method !== "POST") return fail("استخدم POST", 405);
+export async function handler(event) {
+  if ((event.httpMethod || "").toUpperCase() !== "POST") return fail("استخدم POST", 405);
 
   let body;
   try {
-    body = await req.json();
+    const raw = event.isBase64Encoded
+      ? Buffer.from(event.body || "", "base64").toString("utf8")
+      : (event.body || "");
+    body = JSON.parse(raw);
   } catch {
     return fail("طلب غير مفهوم");
   }
 
+  try {
+    return await route(body);
+  } catch (e) {
+    /* خلل في التخزين يصل للاعب كرسالة مفهومة لا كصفحة خطأ بيضاء */
+    return fail("تعذّر الوصول للتخزين: " + String((e && e.message) || e), 500);
+  }
+}
+
+async function route(body) {
   const op = String(body.op ?? "");
 
   /* فحصٌ تشخيصي: يقول هل التخزين متاح وأي شكل مسار اعتُمد، بلا
      كشف أي مفتاح. وُضع قبل التحقق من اللاعب كي يعمل وحده. */
   if (op === "diag") {
     let form = null, err = null;
-    try { form = await discover(); } catch (e) { err = String(e && e.message); }
+    try { form = await discover(); } catch (e) { err = String((e && e.message) || e); }
     return json({
       ok: form !== null,
       hasContext: !!CTX,
@@ -201,6 +225,7 @@ export default async (req) => {
       hasRegion: !!(CTX && CTX.primaryRegion),
       urlForm: form,
       candidates: CTX ? candidateUrls("k").length : 0,
+      probe: lastProbe,
       error: err,
     });
   }
@@ -391,6 +416,4 @@ export default async (req) => {
   }
 
   return fail("عملية غير معروفة");
-};
-
-export const config = { path: "/api/room" };
+}
