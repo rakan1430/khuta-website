@@ -2,13 +2,11 @@
    قلّدها — دالة الغرف
    ------------------------------------------------------------
    كل التواصل بين الجهازين يمرّ من هنا. التخزين على Netlify Blobs
-   لكن **بلا أي حزمة npm**: نخاطب واجهته مباشرة عبر fetch. السبب
-   عملي: هذا الملف قد يُرفع وحده داخل حزمة لا تحوي node_modules،
-   فأي import خارجي يسقط عند التشغيل.
-
-   وللسبب نفسه نستعمل صيغة handler الكلاسيكية لا صيغة Request/Response
-   الحديثة: الحديثة تُكتشف من بيانات بناء لا تُرفع مع الحزمة اليدوية،
-   والكلاسيكية مفهومة في كل أساليب النشر بلا استثناء.
+   لكن **بلا أي حزمة npm**: نخاطب واجهته مباشرة عبر fetch، لأن
+   هذا الملف قد يُرفع وحده داخل حزمة لا تحوي node_modules، فأي import
+   خارجي يسقط عند التشغيل. وللسبب نفسه نستعمل صيغة handler
+   الكلاسيكية: صيغة Request/Response الحديثة تُكتشف من بيانات بناء
+   لا تُرفع مع الحزمة اليدوية.
 
    المبدأ الذي يحكم التصميم: كل لاعب يكتب في مفاتيح تخصّه وحده،
    ولا أحد يكتب فوق كتابة الآخر. وثيقة الغرفة لا يعدّلها إلا حدثٌ
@@ -19,79 +17,85 @@
 /* ============================================================
    طبقة التخزين
    ------------------------------------------------------------
-   Netlify تحقن في الدالة متغيّر بيئة يحمل عنوان مخزن الـBlobs
-   ومفتاحه. شكل المسار تغيّر بين إصدارات المنصّة (أُضيفت المنطقة
-   إليه لاحقاً)، والحزمة الرسمية كانت تخفي هذا الاختلاف. بدل
-   التخمين نكتشف الشكل الصحيح مرة واحدة: نكتب مفتاح فحص ونقرؤه،
-   وأول شكل يرجّع ما كتبناه هو المعتمد. تُحفظ النتيجة في ذاكرة
-   النسخة فلا يتكرّر الاكتشاف مع كل نداء.
+   موضع سياق التخزين يختلف باختلاف صيغة الدالة: في الحديثة
+   يأتي في متغيّر بيئة، وفي الكلاسيكية داخل context الواصل مع النداء.
+   نقبل الموضعين. وشكل المسار نفسه تغيّر بين إصدارات المنصّة
+   (أُضيفت المنطقة إليه لاحقاً)، فبدل التخمين نكتشف الصحيح مرة
+   واحدة: نكتب مفتاح فحص ونقرؤه، وأول شكل يرجّع ما كتبناه هو
+   المعتمد، وتُحفظ النتيجة في ذاكرة النسخة.
    ============================================================ */
 
 const STORE = "qalladha";
 
-const CTX = (() => {
-  const raw = process.env.NETLIFY_BLOBS_CONTEXT;
-  if (!raw) return null;
-  try {
-    return JSON.parse(Buffer.from(raw, "base64").toString("utf8"));
-  } catch {
-    try { return JSON.parse(raw); } catch { return null; }
-  }
-})();
+let CTX = null;
 
-/* نفضّل العنوان غير المُخبّأ: اللاعب الثاني يجب أن يرى تسجيل الأول
-   فوراً، لا بعد أن تنتهي صلاحية نسخة مخبّأة. */
-const EDGE = CTX ? String(CTX.uncachedEdgeURL || CTX.edgeURL || "").replace(/\/+$/, "") : "";
+function decodeCtx(raw) {
+  if (!raw) return null;
+  try { return JSON.parse(Buffer.from(String(raw), "base64").toString("utf8")); }
+  catch { try { return JSON.parse(String(raw)); } catch { return null; } }
+}
+
+function initCtx(context) {
+  if (CTX) return CTX;
+  let src = null;
+  let obj = decodeCtx(process.env.NETLIFY_BLOBS_CONTEXT);
+  if (obj) src = "env";
+  if (!obj) {
+    const custom = context && context.clientContext && context.clientContext.custom;
+    obj = decodeCtx(custom && custom.blobs);
+    if (obj) src = "clientContext";
+  }
+  if (!obj) return null;
+
+  const edge = String(obj.uncachedEdgeURL || obj.edgeURL || obj.url || "").replace(/\/+$/, "");
+  const token = obj.token || "";
+  const siteID = obj.siteID || process.env.SITE_ID || "";
+  if (!edge || !token || !siteID) return null;
+
+  CTX = { edge, token, siteID, region: obj.primaryRegion || "", src };
+  return CTX;
+}
 
 function candidateUrls(key) {
-  if (!CTX || !EDGE) return [];
+  if (!CTX) return [];
   const k = encodeURIComponent(key);
-  const site = CTX.siteID;
-  const region = CTX.primaryRegion;
+  const { edge, siteID, region } = CTX;
   const forms = [];
-  if (region) forms.push(`${EDGE}/region:${region}/${site}/site:${STORE}/${k}`);
-  forms.push(`${EDGE}/${site}/site:${STORE}/${k}`);
-  if (region) forms.push(`${EDGE}/region:${region}/${site}/${STORE}/${k}`);
-  forms.push(`${EDGE}/${site}/${STORE}/${k}`);
+  if (region) forms.push(`${edge}/region:${region}/${siteID}/site:${STORE}/${k}`);
+  forms.push(`${edge}/${siteID}/site:${STORE}/${k}`);
+  if (region) forms.push(`${edge}/region:${region}/${siteID}/${STORE}/${k}`);
+  forms.push(`${edge}/${siteID}/${STORE}/${k}`);
   return forms;
 }
 
 const authHeaders = () => ({ authorization: `Bearer ${CTX.token}` });
 
 let formIndex = null;        // الشكل المعتمد بعد الاكتشاف
-let discovering = null;      // وعدٌ واحد يمنع اكتشافين متوازيين
 let lastProbe = null;        // آخر حالات الفحص، للتشخيص وحده
 
 async function discover() {
   if (formIndex !== null) return formIndex;
-  if (discovering) return discovering;
-  discovering = (async () => {
-    const urls = candidateUrls("__probe");
-    const stamp = String(Date.now());
-    const tried = [];
-    for (let i = 0; i < urls.length; i++) {
-      try {
-        const put = await fetch(urls[i], { method: "PUT", headers: authHeaders(), body: stamp });
-        if (!put.ok) { tried.push(`${i}:put${put.status}`); continue; }
-        const got = await fetch(urls[i], { method: "GET", headers: authHeaders() });
-        const text = got.ok ? await got.text() : null;
-        if (got.ok && text === stamp) {
-          tried.push(`${i}:ok`);
-          lastProbe = tried;
-          formIndex = i;
-          return i;
-        }
-        tried.push(`${i}:get${got.status}`);
-      } catch (e) {
-        tried.push(`${i}:err`);
+  const urls = candidateUrls("__probe");
+  const stamp = String(Date.now());
+  const tried = [];
+  for (let i = 0; i < urls.length; i++) {
+    try {
+      const put = await fetch(urls[i], { method: "PUT", headers: authHeaders(), body: stamp });
+      if (!put.ok) { tried.push(i + ":put" + put.status); continue; }
+      const got = await fetch(urls[i], { method: "GET", headers: authHeaders() });
+      if (got.ok && (await got.text()) === stamp) {
+        tried.push(i + ":ok");
+        lastProbe = tried;
+        formIndex = i;
+        return i;
       }
+      tried.push(i + ":get" + got.status);
+    } catch (e) {
+      tried.push(i + ":err " + String((e && e.message) || e).slice(0, 60));
     }
-    lastProbe = tried;
-    return null;
-  })();
-  const result = await discovering;
-  discovering = null;
-  return result;
+  }
+  lastProbe = tried;
+  return null;
 }
 
 async function blobUrl(key) {
@@ -189,7 +193,7 @@ async function loadRoom(code) {
 const isHost = (room, pid) => room.hostPid === pid;
 const inRoom = (room, pid) => room.players.some((p) => p.pid === pid);
 
-export async function handler(event) {
+export async function handler(event, context) {
   if ((event.httpMethod || "").toUpperCase() !== "POST") return fail("استخدم POST", 405);
 
   let body;
@@ -202,6 +206,32 @@ export async function handler(event) {
     return fail("طلب غير مفهوم");
   }
 
+  const ready = initCtx(context);
+  const op = String(body.op ?? "");
+
+  /* فحصٌ تشخيصي: يقول من أين جاء سياق التخزين وأي شكل مسار
+     اعتُمد، بلا كشف أي مفتاح. قبل التحقق من اللاعب كي يعمل وحده. */
+  if (op === "diag") {
+    let form = null, err = null;
+    if (ready) {
+      try { form = await discover(); } catch (e) { err = String((e && e.message) || e); }
+    }
+    const custom = context && context.clientContext && context.clientContext.custom;
+    return json({
+      ok: form !== null,
+      source: CTX ? CTX.src : null,
+      hasEnvVar: !!process.env.NETLIFY_BLOBS_CONTEXT,
+      hasClientBlobs: !!(custom && custom.blobs),
+      hasSiteIdEnv: !!process.env.SITE_ID,
+      hasRegion: !!(CTX && CTX.region),
+      urlForm: form,
+      probe: lastProbe,
+      error: err,
+    });
+  }
+
+  if (!ready) return fail("تخزين الغرف غير متاح على هذا الموقع", 503);
+
   try {
     return await route(body);
   } catch (e) {
@@ -212,24 +242,6 @@ export async function handler(event) {
 
 async function route(body) {
   const op = String(body.op ?? "");
-
-  /* فحصٌ تشخيصي: يقول هل التخزين متاح وأي شكل مسار اعتُمد، بلا
-     كشف أي مفتاح. وُضع قبل التحقق من اللاعب كي يعمل وحده. */
-  if (op === "diag") {
-    let form = null, err = null;
-    try { form = await discover(); } catch (e) { err = String((e && e.message) || e); }
-    return json({
-      ok: form !== null,
-      hasContext: !!CTX,
-      hasEdge: !!EDGE,
-      hasRegion: !!(CTX && CTX.primaryRegion),
-      urlForm: form,
-      candidates: CTX ? candidateUrls("k").length : 0,
-      probe: lastProbe,
-      error: err,
-    });
-  }
-
   const pid = cleanPid(body.pid);
   if (!pid) return fail("معرّف لاعب غير صالح");
 
