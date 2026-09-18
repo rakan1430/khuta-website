@@ -32,7 +32,7 @@
     oppResult: null,
     oppClipBuffer: null,
     revealed: false,
-    customs: [],           // [{slot, base64, mime, buffer}]
+    customs: [],           // [{slot, base64, mime, buffer, label}]
     localNames: ["اللاعب الأول", "اللاعب الثاني"],
     localTurn: 0,
     localRound: [],        // نتيجتا الجولة الحالية في الوضع المحلّي
@@ -168,7 +168,7 @@
 
   function challengeMeta(id) {
     if (id && id.indexOf("custom:") === 0) {
-      return { emoji: "🎤", name: "تحدّي من عندكم", hint: "صوت سجّلتموه بأنفسكم — قلّدوه!" };
+      return { emoji: "🎤", name: "صوت من عندكم", hint: "أضفتموه أنتم — قلّدوه!" };
     }
     const def = Sound.byId(id);
     return def
@@ -176,16 +176,18 @@
       : { emoji: "🎧", name: "صوت", hint: "" };
   }
 
+  /* يرجّع المقطع واسمه: الأصوات الجاهزة أسماؤها معروفة سلفاً، وأمّا
+     المرفوعة فاسمها محفوظ مع المقطع ولا يُعرف إلا بعد جلبه. */
   async function loadTarget(id) {
     if (id && id.indexOf("custom:") === 0) {
       const slot = id.slice(7);
       const local = S.customs.find((c) => c.slot === slot);
-      if (local && local.buffer) return local.buffer;
+      if (local && local.buffer) return { buffer: local.buffer, label: local.label };
       const t = await Net.getTarget(S.code, slot);
       const blob = Sound.base64ToBlob(t.audio, t.mime);
-      return await Sound.decode(await blob.arrayBuffer());
+      return { buffer: await Sound.decode(await blob.arrayBuffer()), label: t.label };
     }
-    return await Sound.loadChallenge(id);
+    return { buffer: await Sound.loadChallenge(id), label: null };
   }
 
   /* ============================================================
@@ -300,7 +302,8 @@
     S.customs.forEach((c, i) => {
       const li = document.createElement("li");
       const label = document.createElement("span");
-      label.textContent = "تحدّي " + ar(i + 1);
+      label.className = "custom-name";
+      label.textContent = c.label || "تحدّي " + ar(i + 1);
       const wrap = document.createElement("span");
       wrap.className = "clip-btns";
       const play = document.createElement("button");
@@ -323,6 +326,18 @@
     });
   }
 
+  /* يضيف مقطعاً جاهزاً (مسجّلاً أو مرفوعاً) إلى تحدّيات هذه اللعبة */
+  async function addCustom(blob, label) {
+    const prepared = await Sound.prepareClip(await blob.arrayBuffer(), 5);
+    const base64 = await Sound.blobToBase64(prepared);
+    const buffer = await Sound.decode(await prepared.arrayBuffer());
+    const slot = "c" + (S.customs.length + 1) + Math.floor(Math.random() * 90 + 10);
+    const name = String(label || "").slice(0, 24) || null;
+    if (S.mode === "online") await Net.target(S.code, slot, base64, prepared.type, name);
+    S.customs.push({ slot, base64, mime: prepared.type, buffer, label: name });
+    renderCustoms();
+  }
+
   async function recordCustom() {
     const btn = $("btn-rec-custom");
     if (S.busy) return;
@@ -337,19 +352,40 @@
       }
       btn.textContent = "🔴 سجّل الآن…";
       Sound.sfx("go");
-      const { blob, mime } = await Sound.record(5000, settings.mic, null);
+      const { blob } = await Sound.record(5000, settings.mic, null);
       btn.textContent = "نجهّز…";
-      const base64 = await Sound.blobToBase64(blob);
-      const buffer = await Sound.decode(await blob.arrayBuffer());
-      const slot = "c" + (S.customs.length + 1) + Math.floor(Math.random() * 90 + 10);
-      if (S.mode === "online") await Net.target(S.code, slot, base64, mime);
-      S.customs.push({ slot, base64, mime, buffer });
-      renderCustoms();
+      await addCustom(blob, "تسجيل " + ar(S.customs.length + 1));
       toast("انحفظ! صار أحد التحديات.");
     } catch (e) {
       toast(micError(e));
     } finally {
       btn.textContent = original;
+      S.busy = false;
+    }
+  }
+
+  /* رفع ملف جاهز — هذا هو طريق أصوات الميمز: ينزّلها اللاعب من حيث
+     شاء ويرفعها هنا، فنقصّها على أعلى خمس ثوانٍ ونوحّد جهارتها.
+     الملف الأصلي لا يُرفع: المعالجة كلها في المتصفّح. */
+  async function uploadCustom(file) {
+    if (!file || S.busy) return;
+    S.busy = true;
+    const btn = $("btn-upload-custom");
+    const original = btn.textContent;
+    try {
+      if (file.size > 25 * 1024 * 1024) throw new Error("too-big");
+      btn.textContent = "نجهّز الملف…";
+      const name = file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim();
+      await addCustom(file, name);
+      toast("انضاف! صار أحد التحديات.");
+    } catch (e) {
+      const msg = e && e.message === "too-big"
+        ? "الملف كبير — اختر مقطعاً أقصر."
+        : "ما قدرنا نقرأ هذا الملف — جرّب MP3 أو M4A.";
+      toast(msg);
+    } finally {
+      btn.textContent = original;
+      $("inp-custom-file").value = "";
       S.busy = false;
     }
   }
@@ -428,8 +464,9 @@
     /* تحضير الصوت الأصلي وبصمته — بعد رسم الشاشة كي لا تتجمّد */
     setTimeout(async () => {
       try {
-        const buffer = await loadTarget(S.challengeId);
-        S.target = { buffer, features: Scoring.extract(buffer) };
+        const t = await loadTarget(S.challengeId);
+        S.target = { buffer: t.buffer, features: Scoring.extract(t.buffer) };
+        if (t.label) $("ch-name").textContent = t.label;
         $("btn-listen").disabled = false;
       } catch (e) {
         toast("تعذّر تجهيز صوت التحدي");
@@ -1169,6 +1206,8 @@
     });
 
     $("btn-rec-custom").onclick = recordCustom;
+    $("btn-upload-custom").onclick = () => $("inp-custom-file").click();
+    $("inp-custom-file").onchange = (e) => uploadCustom(e.target.files && e.target.files[0]);
     $("btn-start").onclick = startGame;
     $("btn-leave").onclick = goHome;
     $("btn-listen").onclick = listen;

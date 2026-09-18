@@ -70,7 +70,8 @@
       rpc("qalladha_submit", { p_pid: pid, p_code: code, p_round: round, p_score: score, p_parts: parts, p_audio: audio, p_mime: mime }),
     clip: (code, round, who) => rpc("qalladha_clip", { p_pid: pid, p_code: code, p_round: round, p_who: who }),
     ready: (code, round) => rpc("qalladha_ready", { p_pid: pid, p_code: code, p_round: round }),
-    target: (code, slot, audio, mime) => rpc("qalladha_target", { p_pid: pid, p_code: code, p_slot: slot, p_audio: audio, p_mime: mime }),
+    target: (code, slot, audio, mime, label) =>
+      rpc("qalladha_target", { p_pid: pid, p_code: code, p_slot: slot, p_audio: audio, p_mime: mime, p_label: label || null }),
     getTarget: (code, slot) => rpc("qalladha_gettarget", { p_pid: pid, p_code: code, p_slot: slot }),
     again: (code) => rpc("qalladha_again", { p_pid: pid, p_code: code }),
   };

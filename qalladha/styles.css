@@ -256,8 +256,11 @@ output { color: var(--cream); font-weight: 700; }
 .player-list li:nth-child(2) .dot { background: var(--pink); }
 .custom-list li { justify-content: space-between; }
 .custom-list .btn { min-height: 38px; padding: 4px 12px; font-size: 14px; }
+.custom-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
 .custom-box { display: flex; flex-direction: column; gap: 10px; border-top: 2px dashed var(--stage-3); padding-top: 14px; }
+.custom-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.custom-actions .btn { flex: 1 1 150px; }
 
 .wait-note { text-align: center; color: var(--dim); font-size: 14.5px; margin: 0; }
 

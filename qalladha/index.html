@@ -77,9 +77,16 @@
         </div>
 
         <div class="custom-box">
-          <span class="field-label">تحدٍّ من عندك <em>(اختياري)</em></span>
-          <p class="hint">شغّل صوت ترند من جوال ثانٍ وسجّله هنا، أو سوِّ صوتاً غريباً بنفسك — ويصير أحد التحديات.</p>
-          <button id="btn-rec-custom" class="btn btn-gold btn-sm" type="button">🎙️ سجّل صوت التحدي (٥ ثوانٍ)</button>
+          <span class="field-label">أصواتكم أنتم <em>(اختياري)</em></span>
+          <p class="hint">
+            تبون أصوات ميمز ومشاهير؟ نزّلوها من Myinstants أو Voicy وارفعوها هنا —
+            تُقصّ وتُضبط تلقائياً وتصير تحدّيات في لعبتكم. أو سجّلوا أي صوت بالمايك مباشرة.
+          </p>
+          <div class="custom-actions">
+            <button id="btn-upload-custom" class="btn btn-gold btn-sm" type="button">📁 ارفع ملفاً صوتياً</button>
+            <button id="btn-rec-custom" class="btn btn-mint btn-sm" type="button">🎙️ سجّل بالمايك</button>
+          </div>
+          <input id="inp-custom-file" type="file" accept="audio/*" hidden>
           <ul id="custom-list" class="custom-list"></ul>
         </div>
 

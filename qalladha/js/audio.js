@@ -118,10 +118,23 @@
     { id: "snoring",         name: "شخير نائم",      emoji: "😴", hint: "شهيق طويل خشن" },
     { id: "coughing",        name: "كحّة",           emoji: "😷", hint: "كحّتان جافّتان" },
 
+    { id: "clapping",        name: "تصفيق",          emoji: "👏", hint: "بالفم لا باليد!" },
+    { id: "brushing_teeth",  name: "تفريش أسنان",    emoji: "🪥", hint: "حكّ سريع متكرّر" },
+    { id: "drinking_sipping", name: "رشفة شرب",      emoji: "🥤", hint: "سحب ثم بلع" },
+    { id: "toilet_flush",    name: "سيفون",          emoji: "🚽", hint: "اندفاع ثم هسيس يخفت" },
+
     { id: "church_bells",    name: "أجراس",          emoji: "🔔", hint: "دِنغ دونغ متكرّر" },
     { id: "clock_alarm",     name: "منبّه",          emoji: "⏰", hint: "بيب بيب متساوية" },
     { id: "door_wood_knock", name: "طرق باب",        emoji: "🚪", hint: "ثلاث طرقات على الخشب" },
+    { id: "door_wood_creaks", name: "باب يصرّ",      emoji: "🚪", hint: "صرير طويل يقشعرّ له البدن" },
     { id: "glass_breaking",  name: "كسر زجاج",       emoji: "🥃", hint: "تحطّم مفاجئ ثم رذاذ" },
+    { id: "can_opening",     name: "فتح علبة",       emoji: "🥫", hint: "كششش! ثم فقاعات" },
+    { id: "vacuum_cleaner",  name: "مكنسة كهربائية", emoji: "🧹", hint: "أزيز متّصل عالٍ" },
+    { id: "airplane",        name: "طائرة",          emoji: "✈️", hint: "هدير بعيد يعلو" },
+    { id: "thunderstorm",    name: "رعد",            emoji: "⛈️", hint: "قصفة ثم دمدمة تبتعد" },
+    { id: "fireworks",       name: "ألعاب نارية",    emoji: "🎆", hint: "طقطقة وانفجارات متفرّقة" },
+    { id: "wind",            name: "ريح",            emoji: "🌬️", hint: "نفخ متّصل من الشفتين" },
+    { id: "crickets",        name: "صراصير",         emoji: "🦗", hint: "صرير حادّ متقطّع" },
   ];
 
   const byId = (id) => CHALLENGES.find((c) => c.id === id) || null;
@@ -423,6 +436,101 @@
     });
   }
 
+  /* ---------- تجهيز صوت جاهز يرفعه اللاعب ---------- */
+  /* ملفّ ينزّله اللاعب من الإنترنت قد يكون دقيقتين وستيريو و320 كيلوبت،
+     ولا يصلح تحدّياً كما هو: نأخذ منه أعلى مقطع طاقةً في حدود المدّة،
+     ونقصّ الصمت حوله، ونوحّد جهارته كبقية الأصوات، ثم نكتبه WAV أحادياً
+     خفيفاً. كل ذلك في المتصفّح — لا يُرفع الملف الأصلي إطلاقاً. */
+
+  const CLIP_SR = 22050;
+
+  function encodeWav(samples, sampleRate) {
+    const n = samples.length;
+    const buf = new ArrayBuffer(44 + n * 2);
+    const v = new DataView(buf);
+    const str = (off, s) => { for (let i = 0; i < s.length; i++) v.setUint8(off + i, s.charCodeAt(i)); };
+    str(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); str(8, "WAVE");
+    str(12, "fmt "); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sampleRate, true); v.setUint32(28, sampleRate * 2, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    str(36, "data"); v.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) {
+      const s = Math.max(-1, Math.min(1, samples[i]));
+      v.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    }
+    return buf;
+  }
+
+  async function prepareClip(arrayBuffer, maxSeconds) {
+    const audio = await decode(arrayBuffer);
+    const maxSec = maxSeconds || 5;
+
+    // دمج القنوات ثم إعادة الأخذ إلى معدّل خفيف
+    const ch = audio.numberOfChannels;
+    const src = audio.getChannelData(0);
+    let mono = src;
+    if (ch > 1) {
+      mono = new Float32Array(src.length);
+      for (let c = 0; c < ch; c++) {
+        const d = audio.getChannelData(c);
+        for (let i = 0; i < mono.length; i++) mono[i] += d[i] / ch;
+      }
+    }
+    const ratio = audio.sampleRate / CLIP_SR;
+    const x = new Float32Array(Math.floor(mono.length / ratio));
+    for (let i = 0; i < x.length; i++) {
+      const p = i * ratio, i0 = Math.floor(p), f = p - i0;
+      x[i] = (mono[i0] || 0) * (1 - f) + (mono[i0 + 1] || 0) * f;
+    }
+
+    // مغلّف الطاقة لاختيار أعلى نافذة وقصّ الصمت حولها
+    const hop = Math.round(CLIP_SR * 0.02);
+    const env = [];
+    for (let i = 0; i + hop <= x.length; i += hop) {
+      let s = 0;
+      for (let k = i; k < i + hop; k++) s += x[k] * x[k];
+      env.push(Math.sqrt(s / hop));
+    }
+    if (!env.length) throw new Error("clip-empty");
+
+    const want = Math.min(env.length, Math.round(maxSec / 0.02));
+    let start = 0;
+    if (env.length > want) {
+      const acc = [0];
+      for (const v2 of env) acc.push(acc[acc.length - 1] + v2);
+      let best = -1;
+      for (let i = 0; i + want <= env.length; i++) {
+        const e = acc[i + want] - acc[i];
+        if (e > best) { best = e; start = i; }
+      }
+    }
+    let a = start, b = Math.min(env.length - 1, start + want - 1);
+    let peakEnv = 0;
+    for (let i = a; i <= b; i++) peakEnv = Math.max(peakEnv, env[i]);
+    const gate = peakEnv * 0.10;
+    while (a < b && env[a] < gate) a++;
+    while (b > a && env[b] < gate) b--;
+    a = Math.max(start, a - 4); b = Math.min(start + want - 1, b + 4);
+
+    let seg = x.subarray(a * hop, Math.min(x.length, (b + 1) * hop));
+    if (seg.length < CLIP_SR * 0.4) seg = x.subarray(start * hop, Math.min(x.length, (start + want) * hop));
+    seg = Float32Array.from(seg);
+
+    // تلاشٍ عند الطرفين، ثم توحيد الجهارة كبقية أصوات اللعبة
+    const fi = Math.round(CLIP_SR * 0.02), fo = Math.round(CLIP_SR * 0.05);
+    for (let i = 0; i < Math.min(fi, seg.length); i++) seg[i] *= i / fi;
+    for (let i = 0; i < Math.min(fo, seg.length); i++) seg[seg.length - 1 - i] *= i / fo;
+
+    let sq = 0, peak = 1e-9;
+    for (let i = 0; i < seg.length; i++) { sq += seg[i] * seg[i]; peak = Math.max(peak, Math.abs(seg[i])); }
+    const rms = Math.sqrt(sq / Math.max(1, seg.length));
+    const gain = Math.min(0.10 / (rms + 1e-9), 0.95 / peak);
+    for (let i = 0; i < seg.length; i++) seg[i] *= gain;
+
+    return new Blob([encodeWav(seg, CLIP_SR)], { type: "audio/wav" });
+  }
+
   const blobToBase64 = (blob) =>
     new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -469,7 +577,7 @@
     EFFECTS, playBuffer, stopAll,
     sfx, musicOn, musicOff,
     record, listMics, getStream, releaseMic,
-    decode, blobToBase64, base64ToBlob,
+    decode, blobToBase64, base64ToBlob, prepareClip,
     speak, hasArabicVoice,
   };
 })(window);
