@@ -13,6 +13,17 @@
   const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
   const ar = (n) => String(n).replace(/[0-9]/g, (d) => AR_DIGITS[+d]);
 
+  /* تمييز العدد بالعربية: صوتٌ واحد، صوتان، ثلاثة أصوات، أحد عشر صوتاً.
+     والصفة تتبع المعدود لا العدد، فلها صيغتها في كل حالة. */
+  function sounds(n, adj) {
+    const f = adj ? ["جاهز", "جاهزان", "جاهزة", "جاهزاً"] : ["", "", "", ""];
+    const j = (w) => (w ? " " + w : "");
+    if (n === 1) return "صوت واحد" + j(f[0]);
+    if (n === 2) return "صوتان" + j(f[1]);
+    if (n <= 10) return ar(n) + " أصوات" + j(f[2]);
+    return ar(n) + " صوتاً" + j(f[3]);
+  }
+
   /* ---------- الحالة ---------- */
   const S = {
     mode: null,
@@ -35,6 +46,7 @@
     library: [],           // [{id, label, hint, seconds}] — تُجلب من الخادم
     libCache: {},          // مقاطع المكتبة بعد فكّ الترميز، كي لا تُجلب مرتين
     libReturn: "screen-home",
+    libError: false,       // آخر جلب فشل؟ فرقٌ مهم: الفاضية غير المتعذّرة
     localNames: ["اللاعب الأول", "اللاعب الثاني"],
     localTurn: 0,
     localRound: [],        // نتيجتا الجولة الحالية في الوضع المحلّي
@@ -333,8 +345,11 @@
     try {
       const list = await Net.libList();
       S.library = Array.isArray(list) ? list : [];
+      S.libError = false;
       return true;
     } catch (e) {
+      /* لا نمسح ما بين أيدينا: انقطاعٌ عابر لا يعني أن المكتبة خلت */
+      S.libError = true;
       if (!quiet) toast(e.message);
       return false;
     }
@@ -347,22 +362,36 @@
       if (c.dataset.pool === "lib") c.disabled = n === 0;
     });
     $("pool-note").textContent = n === 0
-      ? "المكتبة فاضية — أضيفوا أصواتكم مرّة واحدة وتبقى لكل لعبة."
-      : "مكتبتكم فيها " + ar(n) + (n === 1 ? " صوت" : " صوتاً") +
-        "، ومعها " + ar(Sound.CHALLENGES.length) + " صوتاً جاهزاً.";
+      ? (S.libError
+          ? "ما قدرنا نوصل للمكتبة — تأكّدوا من الاتصال."
+          : "المكتبة فاضية — أضيفوا أصواتكم مرّة واحدة وتبقى لكل لعبة.")
+      : "مكتبتكم فيها " + sounds(n) +
+        "، ومعها " + sounds(Sound.CHALLENGES.length, true) + ".";
   }
 
   function enterLibrary(from) {
     S.libReturn = from || "screen-home";
     show("screen-library");
     renderLibrary();
-    refreshLibrary(true).then(renderLibrary);
+    if (!S.library.length) {
+      const status = $("lib-status");
+      status.hidden = false;
+      status.textContent = "نفتح المكتبة…";
+      refreshLibrary(true).then(() => { status.hidden = true; renderLibrary(); });
+    } else {
+      refreshLibrary(true).then(renderLibrary);
+    }
   }
 
   function renderLibrary() {
     const ul = $("lib-list");
     ul.innerHTML = "";
-    $("lib-empty").hidden = S.library.length > 0;
+
+    const empty = $("lib-empty");
+    empty.hidden = S.library.length > 0;
+    empty.textContent = S.libError
+      ? "ما قدرنا نوصل للمكتبة — تأكّدوا من الاتصال وارجعوا."
+      : "المكتبة فاضية — ارفعوا أول صوت.";
 
     S.library.forEach((item) => {
       const li = document.createElement("li");
@@ -477,7 +506,7 @@
       S.busy = false;
     }
     renderLibrary();
-    if (ok && !failed.length) toast("انضاف " + ar(ok) + (ok === 1 ? " صوت ✅" : " أصوات ✅"));
+    if (ok && !failed.length) toast("انضاف " + sounds(ok) + " ✅");
     else if (ok) toast("انضاف " + ar(ok) + "، وتعذّر " + ar(failed.length));
     else toast("ما قدرنا نقرأ الملفات — جرّب MP3 أو M4A.");
   }
