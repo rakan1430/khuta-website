@@ -248,5 +248,24 @@
 <script src="js/audio.js"></script>
 <script src="js/net.js"></script>
 <script src="js/game.js"></script>
+
+<script>
+window.__log = [];
+window.addEventListener("error", (e) => window.__log.push("ERR: " + e.message));
+function dump(){ let d=document.getElementById("probe-out"); if(!d){d=document.createElement("div");d.id="probe-out";document.body.appendChild(d);} d.textContent = window.__log.join(" ;; "); }
+window.addEventListener("load", function(){
+  setTimeout(function(){
+    const L = window.__log;
+    const ids = ["screen-library","lib-list","lib-empty","btn-library","btn-lib-upload","btn-lib-record",
+                 "inp-lib-file","btn-lib-back","pool-pick","pool-note","btn-lobby-library","stage-note"];
+    L.push("عناصر ناقصة: " + (ids.filter((i) => !document.getElementById(i)).join(",") || "لا شيء"));
+    L.push("Net.libList=" + (window.Net && typeof Net.libList === "function"));
+    L.push("Sound.prepareClip=" + (window.Sound && typeof Sound.prepareClip === "function"));
+    L.push("تحديات=" + (window.Sound ? Sound.CHALLENGES.length : "?"));
+    L.push("رقائق المصدر=" + document.querySelectorAll("#pool-pick .chip").length);
+    dump();
+  }, 700);
+});
+</script>
 </body>
 </html>

@@ -260,6 +260,16 @@ output { color: var(--cream); font-weight: 700; }
 
 .custom-box { display: flex; flex-direction: column; gap: 10px; border-top: 2px dashed var(--stage-3); padding-top: 14px; }
 .custom-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.lib-title {
+  font-family: "Baloo Bhaijaan 2", "Cairo", sans-serif;
+  font-size: 26px;
+  margin: 0;
+  color: var(--gold);
+  text-align: center;
+}
+.lib-row { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.lib-row .lib-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.lib-secs { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 .custom-actions .btn { flex: 1 1 150px; }
 
 .wait-note { text-align: center; color: var(--dim); font-size: 14.5px; margin: 0; }

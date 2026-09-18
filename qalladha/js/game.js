@@ -32,7 +32,9 @@
     oppResult: null,
     oppClipBuffer: null,
     revealed: false,
-    customs: [],           // [{slot, base64, mime, buffer, label}]
+    library: [],           // [{id, label, hint, seconds}] — تُجلب من الخادم
+    libCache: {},          // مقاطع المكتبة بعد فكّ الترميز، كي لا تُجلب مرتين
+    libReturn: "screen-home",
     localNames: ["اللاعب الأول", "اللاعب الثاني"],
     localTurn: 0,
     localRound: [],        // نتيجتا الجولة الحالية في الوضع المحلّي
@@ -45,7 +47,7 @@
   };
 
   const settings = {
-    mic: "", volCh: 90, volSfx: 80, volMusic: 0, dur: 4, tts: true, rounds: 5,
+    mic: "", volCh: 90, volSfx: 80, volMusic: 0, dur: 4, tts: true, rounds: 5, pool: "all",
   };
 
   /* ---------- تخزين محلّي متسامح ---------- */
@@ -77,7 +79,7 @@
   }
 
   /* ---------- واجهة عامة ---------- */
-  const SCREENS = ["screen-home", "screen-lobby", "screen-play", "screen-end"];
+  const SCREENS = ["screen-home", "screen-lobby", "screen-library", "screen-play", "screen-end"];
   function show(id) {
     SCREENS.forEach((s) => { $(s).hidden = s !== id; });
     window.scrollTo(0, 0);
@@ -159,16 +161,39 @@
   };
 
   /* ---------- التحديات ---------- */
+  /* مصدر أصوات الجولة: مكتبتكم، أو الجاهزة، أو الاثنتان.
+     وإن لم يكفِ المصدر المختار عدد الجولات نُكمل من الآخر بدل أن
+     نُنقص الجولات — لعبة بجولتين ليست لعبة. */
   function buildChallenges(rounds) {
-    const builtins = shuffle(Sound.CHALLENGES.map((c) => c.id));
-    const customs = S.customs.map((c) => "custom:" + c.slot);
-    const list = shuffle(customs.concat(builtins)).slice(0, rounds);
+    const builtins = Sound.CHALLENGES.map((c) => c.id);
+    const lib = S.library.map((x) => "lib:" + x.id);
+
+    let primary, secondary;
+    if (settings.pool === "lib") { primary = lib; secondary = builtins; }
+    else if (settings.pool === "builtin") { primary = builtins; secondary = lib; }
+    else { primary = lib.concat(builtins); secondary = []; }
+
+    const list = shuffle(primary.slice()).slice(0, rounds);
+    if (list.length < rounds) {
+      for (const id of shuffle(secondary.slice())) {
+        if (list.length >= rounds) break;
+        if (list.indexOf(id) === -1) list.push(id);
+      }
+    }
     return shuffle(list);
   }
 
+  const libItem = (id) =>
+    S.library.find((x) => String(x.id) === String(id).slice(4)) || null;
+
   function challengeMeta(id) {
-    if (id && id.indexOf("custom:") === 0) {
-      return { emoji: "🎤", name: "صوت من عندكم", hint: "أضفتموه أنتم — قلّدوه!" };
+    if (id && id.indexOf("lib:") === 0) {
+      const it = libItem(id);
+      return {
+        emoji: "🎵",
+        name: (it && it.label) || "صوت من مكتبتكم",
+        hint: (it && it.hint) || "من مكتبتكم — قلّدوه!",
+      };
     }
     const def = Sound.byId(id);
     return def
@@ -179,13 +204,13 @@
   /* يرجّع المقطع واسمه: الأصوات الجاهزة أسماؤها معروفة سلفاً، وأمّا
      المرفوعة فاسمها محفوظ مع المقطع ولا يُعرف إلا بعد جلبه. */
   async function loadTarget(id) {
-    if (id && id.indexOf("custom:") === 0) {
-      const slot = id.slice(7);
-      const local = S.customs.find((c) => c.slot === slot);
-      if (local && local.buffer) return { buffer: local.buffer, label: local.label };
-      const t = await Net.getTarget(S.code, slot);
+    if (id && id.indexOf("lib:") === 0) {
+      if (S.libCache[id]) return S.libCache[id];
+      const t = await Net.libGet(Number(id.slice(4)));
       const blob = Sound.base64ToBlob(t.audio, t.mime);
-      return { buffer: await Sound.decode(await blob.arrayBuffer()), label: t.label };
+      const out = { buffer: await Sound.decode(await blob.arrayBuffer()), label: t.label };
+      S.libCache[id] = out;
+      return out;
     }
     return { buffer: await Sound.loadChallenge(id), label: null };
   }
@@ -249,7 +274,6 @@
     S.mode = "local";
     S.code = null;
     S.isHost = true;
-    S.customs = [];
     S.totals = { p0: 0, p1: 0 };
     S.counted = [];
     enterLobby();
@@ -271,7 +295,8 @@
       renderPlayers();
       startPolling(2000);
     }
-    renderCustoms();
+    renderPoolPicker();
+    refreshLibrary(true).then(renderPoolPicker);
     show("screen-lobby");
   }
 
@@ -296,50 +321,169 @@
     }
   }
 
-  function renderCustoms() {
-    const ul = $("custom-list");
+  /* ============================================================
+     مكتبة الأصوات — تُرفع مرّة وتبقى
+     ------------------------------------------------------------
+     كانت الأصوات المرفوعة تُحفظ مع الغرفة، والغرفة تموت بعد اثنتي
+     عشرة ساعة، فيعيد اللاعبون الرفع كل مرة. الآن تعيش في مكتبة
+     مستقلّة: يُرفع الصوت مرّة، ويظهر في كل لعبة لكل من يدخل.
+     ============================================================ */
+
+  async function refreshLibrary(quiet) {
+    try {
+      const list = await Net.libList();
+      S.library = Array.isArray(list) ? list : [];
+      return true;
+    } catch (e) {
+      if (!quiet) toast(e.message);
+      return false;
+    }
+  }
+
+  function renderPoolPicker() {
+    const n = S.library.length;
+    document.querySelectorAll("#pool-pick .chip").forEach((c) => {
+      c.classList.toggle("is-on", c.dataset.pool === settings.pool);
+      if (c.dataset.pool === "lib") c.disabled = n === 0;
+    });
+    $("pool-note").textContent = n === 0
+      ? "المكتبة فاضية — أضيفوا أصواتكم مرّة واحدة وتبقى لكل لعبة."
+      : "مكتبتكم فيها " + ar(n) + (n === 1 ? " صوت" : " صوتاً") +
+        "، ومعها " + ar(Sound.CHALLENGES.length) + " صوتاً جاهزاً.";
+  }
+
+  function enterLibrary(from) {
+    S.libReturn = from || "screen-home";
+    show("screen-library");
+    renderLibrary();
+    refreshLibrary(true).then(renderLibrary);
+  }
+
+  function renderLibrary() {
+    const ul = $("lib-list");
     ul.innerHTML = "";
-    S.customs.forEach((c, i) => {
+    $("lib-empty").hidden = S.library.length > 0;
+
+    S.library.forEach((item) => {
       const li = document.createElement("li");
-      const label = document.createElement("span");
-      label.className = "custom-name";
-      label.textContent = c.label || "تحدّي " + ar(i + 1);
-      const wrap = document.createElement("span");
-      wrap.className = "clip-btns";
+      li.className = "lib-row";
+
+      const top = document.createElement("div");
+      top.className = "lib-top";
+      const name = document.createElement("span");
+      name.className = "custom-name";
+      name.textContent = item.label;
+      const secs = document.createElement("span");
+      secs.className = "lib-secs";
+      secs.textContent = item.seconds ? ar(Number(item.seconds).toFixed(1)) + " ث" : "";
+      top.append(name, secs);
+
+      const btns = document.createElement("div");
+      btns.className = "clip-btns";
+
       const play = document.createElement("button");
       play.type = "button";
       play.className = "btn btn-mint";
-      play.textContent = "▶️";
-      play.setAttribute("aria-label", "استمع للتحدي " + ar(i + 1));
+      play.textContent = "▶️ اسمع";
       play.onclick = async () => {
-        if (!c.buffer) c.buffer = await Sound.decode(await Sound.base64ToBlob(c.base64, c.mime).arrayBuffer());
-        Sound.playBuffer(c.buffer, {});
+        try {
+          await Sound.unlock();
+          const t = await loadTarget("lib:" + item.id);
+          playWith(play, "▶️ اسمع", t.buffer, "normal");
+        } catch (e) { toast("تعذّر تشغيل الصوت"); }
       };
+
+      const ren = document.createElement("button");
+      ren.type = "button";
+      ren.className = "btn btn-ghost";
+      ren.textContent = "غيّر الاسم";
+      ren.onclick = async () => {
+        const v = window.prompt("اسم الصوت:", item.label);
+        if (v === null) return;
+        try {
+          await Net.libUpdate(item.id, v, item.hint);
+          item.label = v.trim().slice(0, 40) || item.label;
+          renderLibrary();
+        } catch (e) { toast(e.message); }
+      };
+
       const del = document.createElement("button");
       del.type = "button";
       del.className = "btn btn-ghost";
       del.textContent = "حذف";
-      del.onclick = () => { S.customs.splice(i, 1); renderCustoms(); };
-      wrap.append(play, del);
-      li.append(label, wrap);
+      del.onclick = async () => {
+        if (!window.confirm("نحذف «" + item.label + "» من المكتبة؟")) return;
+        try {
+          await Net.libRemove(item.id);
+          S.library = S.library.filter((x) => x.id !== item.id);
+          delete S.libCache["lib:" + item.id];
+          renderLibrary();
+        } catch (e) { toast(e.message); }
+      };
+
+      btns.append(play, ren, del);
+      li.append(top, btns);
       ul.appendChild(li);
     });
   }
 
-  /* يضيف مقطعاً جاهزاً (مسجّلاً أو مرفوعاً) إلى تحدّيات هذه اللعبة */
-  async function addCustom(blob, label) {
-    const prepared = await Sound.prepareClip(await blob.arrayBuffer(), 5);
-    const base64 = await Sound.blobToBase64(prepared);
-    const buffer = await Sound.decode(await prepared.arrayBuffer());
-    const slot = "c" + (S.customs.length + 1) + Math.floor(Math.random() * 90 + 10);
-    const name = String(label || "").slice(0, 24) || null;
-    if (S.mode === "online") await Net.target(S.code, slot, base64, prepared.type, name);
-    S.customs.push({ slot, base64, mime: prepared.type, buffer, label: name });
-    renderCustoms();
+  /* الملف القصير الصغير يُرفع كما هو فيبقى مضغوطاً وخفيفاً (ملف ميم
+     نموذجي ثانيتان و40 كيلوبايت)، والطويل وحده يُقصّ على أعلى خمس
+     ثوانٍ ويُطبَّع مستواه. المعالجة كلها في المتصفّح. */
+  async function libAdd(file, label) {
+    const raw = await file.arrayBuffer();
+    let blob = file, seconds = null;
+    try {
+      const probe = await Sound.decode(raw.slice(0));
+      seconds = probe.duration;
+      if (probe.duration > 6 || file.size > 400000) {
+        blob = await Sound.prepareClip(raw.slice(0), 5);
+        seconds = (blob.size - 44) / 2 / 22050;
+      }
+    } catch (e) {
+      throw new Error("bad-audio");
+    }
+    const base64 = await Sound.blobToBase64(blob);
+    const name = String(label || "صوت")
+      .replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim().slice(0, 40) || "صوت";
+    const r = await Net.libAdd(name, null, base64, blob.type || "audio/mpeg",
+                               Math.round(seconds * 100) / 100);
+    S.library.push({ id: r.id, label: name, hint: null, seconds: seconds });
   }
 
-  async function recordCustom() {
-    const btn = $("btn-rec-custom");
+  async function libUpload(files) {
+    if (!files || !files.length || S.busy) return;
+    S.busy = true;
+    const status = $("lib-status");
+    status.hidden = false;
+    let ok = 0;
+    const failed = [];
+    try {
+      await Sound.unlock();
+      for (let i = 0; i < files.length; i++) {
+        status.textContent = "نرفع " + ar(i + 1) + " من " + ar(files.length) + "…";
+        try {
+          if (files[i].size > 25 * 1024 * 1024) throw new Error("too-big");
+          await libAdd(files[i], files[i].name);
+          ok++;
+          renderLibrary();
+        } catch (e) {
+          failed.push(files[i].name);
+        }
+      }
+    } finally {
+      status.hidden = true;
+      $("inp-lib-file").value = "";
+      S.busy = false;
+    }
+    renderLibrary();
+    if (ok && !failed.length) toast("انضاف " + ar(ok) + (ok === 1 ? " صوت ✅" : " أصوات ✅"));
+    else if (ok) toast("انضاف " + ar(ok) + "، وتعذّر " + ar(failed.length));
+    else toast("ما قدرنا نقرأ الملفات — جرّب MP3 أو M4A.");
+  }
+
+  async function libRecord() {
+    const btn = $("btn-lib-record");
     if (S.busy) return;
     S.busy = true;
     const original = btn.textContent;
@@ -353,39 +497,14 @@
       btn.textContent = "🔴 سجّل الآن…";
       Sound.sfx("go");
       const { blob } = await Sound.record(5000, settings.mic, null);
-      btn.textContent = "نجهّز…";
-      await addCustom(blob, "تسجيل " + ar(S.customs.length + 1));
-      toast("انحفظ! صار أحد التحديات.");
+      btn.textContent = "نحفظ…";
+      await libAdd(blob, "تسجيل " + ar(S.library.length + 1));
+      renderLibrary();
+      toast("انحفظ في المكتبة ✅");
     } catch (e) {
-      toast(micError(e));
+      toast(e && e.message === "bad-audio" ? "ما قدرنا نقرأ التسجيل" : micError(e));
     } finally {
       btn.textContent = original;
-      S.busy = false;
-    }
-  }
-
-  /* رفع ملف جاهز — هذا هو طريق أصوات الميمز: ينزّلها اللاعب من حيث
-     شاء ويرفعها هنا، فنقصّها على أعلى خمس ثوانٍ ونوحّد جهارتها.
-     الملف الأصلي لا يُرفع: المعالجة كلها في المتصفّح. */
-  async function uploadCustom(file) {
-    if (!file || S.busy) return;
-    S.busy = true;
-    const btn = $("btn-upload-custom");
-    const original = btn.textContent;
-    try {
-      if (file.size > 25 * 1024 * 1024) throw new Error("too-big");
-      btn.textContent = "نجهّز الملف…";
-      const name = file.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim();
-      await addCustom(file, name);
-      toast("انضاف! صار أحد التحديات.");
-    } catch (e) {
-      const msg = e && e.message === "too-big"
-        ? "الملف كبير — اختر مقطعاً أقصر."
-        : "ما قدرنا نقرأ هذا الملف — جرّب MP3 أو M4A.";
-      toast(msg);
-    } finally {
-      btn.textContent = original;
-      $("inp-custom-file").value = "";
       S.busy = false;
     }
   }
@@ -1013,7 +1132,6 @@
     S.mode = null;
     S.code = null;
     S.room = null;
-    S.customs = [];
     Sound.releaseMic();
     try { history.replaceState(null, "", location.pathname); } catch (e) {}
     show("screen-home");
@@ -1205,9 +1323,19 @@
       };
     });
 
-    $("btn-rec-custom").onclick = recordCustom;
-    $("btn-upload-custom").onclick = () => $("inp-custom-file").click();
-    $("inp-custom-file").onchange = (e) => uploadCustom(e.target.files && e.target.files[0]);
+    $("btn-library").onclick = () => enterLibrary("screen-home");
+    $("btn-lobby-library").onclick = () => enterLibrary("screen-lobby");
+    $("btn-lib-back").onclick = () => {
+      show(S.libReturn);
+      if (S.libReturn === "screen-lobby") renderPoolPicker();
+    };
+    $("btn-lib-upload").onclick = () => $("inp-lib-file").click();
+    $("inp-lib-file").onchange = (e) => libUpload(e.target.files);
+    $("btn-lib-record").onclick = libRecord;
+
+    document.querySelectorAll("#pool-pick .chip").forEach((c) => {
+      c.onclick = () => { settings.pool = c.dataset.pool; saveSettings(); renderPoolPicker(); };
+    });
     $("btn-start").onclick = startGame;
     $("btn-leave").onclick = goHome;
     $("btn-listen").onclick = listen;
@@ -1268,6 +1396,8 @@
       show("screen-home");
       return;
     }
+
+    refreshLibrary(true);        // في الخلفية: لا تنتظرها الصفحة
 
     const params = new URLSearchParams(location.search);
     const r = (params.get("r") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);

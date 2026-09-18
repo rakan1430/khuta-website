@@ -74,5 +74,15 @@
       rpc("qalladha_target", { p_pid: pid, p_code: code, p_slot: slot, p_audio: audio, p_mime: mime, p_label: label || null }),
     getTarget: (code, slot) => rpc("qalladha_gettarget", { p_pid: pid, p_code: code, p_slot: slot }),
     again: (code) => rpc("qalladha_again", { p_pid: pid, p_code: code }),
+
+    /* مكتبة الأصوات الدائمة — مستقلّة عن الغرف، تعيش ما دام الموقع */
+    libList: () => rpc("qalladha_lib_list", {}),
+    libGet: (id) => rpc("qalladha_lib_get", { p_id: id }),
+    libAdd: (label, hint, audio, mime, seconds) =>
+      rpc("qalladha_lib_add", { p_pid: pid, p_label: label, p_hint: hint || null,
+                                p_audio: audio, p_mime: mime, p_seconds: seconds || null }),
+    libUpdate: (id, label, hint) =>
+      rpc("qalladha_lib_update", { p_pid: pid, p_id: id, p_label: label, p_hint: hint || null }),
+    libRemove: (id) => rpc("qalladha_lib_remove", { p_pid: pid, p_id: id }),
   };
 })(window);
