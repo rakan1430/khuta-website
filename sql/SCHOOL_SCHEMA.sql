@@ -491,6 +491,11 @@ begin
     end if;
     return new;
 end $$;
+-- ⚠️ دالّة مُطلِق: لا معنى لأن تكون نقطة نهاية معروضة، فتفشل بلا سياق
+-- مُطلِق لو نُوديت مباشرة على أي حال. لكن EXECUTE يُمنح لـPUBLIC افتراضياً
+-- في Postgres، وفحص-صلاحيات-الدوال.sql يرصد بالضبط هذا النمط — فتُسحَب
+-- هنا حتى لا يظهر صفٌّ في ذلك الفحص، لا لأنها استُغلّت فعلاً.
+revoke all on function enforce_links_limit() from public, anon;
 
 drop trigger if exists trg_links_limit on teacher_links;
 create trigger trg_links_limit before insert on teacher_links

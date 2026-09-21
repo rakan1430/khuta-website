@@ -809,17 +809,91 @@ function switchTab(tabId, element){
    ليس عنصر وسائط، وعندها تُعرَف هويته بسطر واحد في وحدة تحكّم المتصفح:
        khutaWhatIsAtBottom()
    ============================================================ */
+function khutaHideBrokenBox(el, why){
+    if(el.hidden) return;
+    el.hidden = true;
+    console.warn("[خُطى] عنصر وسائط أُخفي (" + why + "):", el);
+}
+
+/* ============================================================
+   إخفاء درج Netlify المحجوب — سبب «المربّع الأبيض» الحقيقي
+   ------------------------------------------------------------
+   Netlify يحقن في *روابط المعاينة وحدها* أداة تعاون (Netlify Drawer) هي
+   إطار iframe يعرض ‎https://app.netlify.com‎. وسياسة CSP في netlify.toml
+   عندنا ‎default-src 'self'‎ بلا ‎frame-src‎ — فتُحجب الأداة، والإطار
+   المحجوب يرسمه المتصفّح مستطيلاً أبيض فارغاً بأيقونة مستند مكسور.
+
+   وهذا يفسّر كل علامة وصفها المالك:
+     • أسفل الوسط بعرض 780 وارتفاع 48 — مقاس الدرج (قياس فعلي).
+     • لا يظهر على ‎khutaa.netlify.app‎ إطلاقاً — Netlify لا يحقنه في
+       الإنتاج، بل في المعاينات فقط. وهذه كانت أقوى علامة وأهملتُها.
+     • يظهر في Brave وEdge معاً — العلّة في CSP لا في المتصفّح.
+     • لا يظهر في الآيباد ولا الجوّال — الدرج لسطح المكتب.
+     • يظهر بعد الدخول لا في شاشة التحميل — شفرة الدرج تُحقن بعد الرسم.
+
+   ⚠️ ولا نُوسّع CSP لتسمح بـapp.netlify.com: لو سُمح له لظهر شريط تعاون
+   من Netlify أمام إدارة المدرسة — وهو أسوأ من مربّع أبيض. فنُخفيه.
+   ⚠️ والعلاج الجذري في إعدادات Netlify (إيقاف Netlify Drawer)، وهذه
+   الدالّة شبكة أمان لا بديل عنه. وهي لا تلمس شيئاً من محتوى الموقع:
+   شرطها أن يكون مصدر الإطار على app.netlify.com.
+   ============================================================ */
+function khutaHideBlockedNetlifyDrawer(){
+    document.querySelectorAll('iframe[src*="app.netlify.com"]').forEach(fr => {
+        /* نخفي الحاوية المثبَّتة لا الإطار وحده: المستطيل الأبيض يرسمه
+           الـdiv المثبَّت الذي يحويه، فإخفاء الإطار يترك الحاوية. */
+        let el = fr;
+        for(let hops = 0; el && hops < 4; hops++){
+            if(getComputedStyle(el).position === "fixed"){
+                el.style.display = "none";
+                console.warn("[خُطى] أُخفي درج Netlify المحجوب بـCSP (مربّع أبيض):", el);
+                return;
+            }
+            el = el.parentElement;
+        }
+        fr.style.display = "none";
+    });
+}
+
 function sweepEmptyMediaBoxes(root){
     const scope = root || document;
-    scope.querySelectorAll("img, embed, object, iframe").forEach(el => {
+    try{ khutaHideBlockedNetlifyDrawer(); }catch(e){ /* لا يجوز أن يُسقط الكنس */ }
+    scope.querySelectorAll("img, embed, object, iframe, video, audio").forEach(el => {
         if(el.hidden || el.style.display === "none") return;
+        if(el.hasAttribute("data-exam-img")) return;    // ينتظر رابطاً موقَّعاً
+        if(el.tagName === "IFRAME" && el.name) return;  // إطار الإرسال المخفي
+
         const src = el.getAttribute("src") || el.getAttribute("data") || "";
-        if(src.trim()) return;                       // له مصدر — لا نلمسه
-        if(el.hasAttribute("data-exam-img")) return; // ينتظر رابطاً موقَّعاً
-        if(el.tagName === "IFRAME" && el.name) return; // إطار الإرسال المخفي
-        el.hidden = true;
-        console.warn("[خُطى] عنصر بلا مصدر أُخفي (مربّع فارغ محتمل):", el);
+        if(!src.trim()){ khutaHideBrokenBox(el, "بلا مصدر"); return; }
+
+        /* ⚠️ ووجودُ مصدرٍ لا يعني أنّ الصورة وصلت. كانت الكنسة السابقة
+           تتحقّق من فراغ src وحده، فتمرّ الصورة التي لها رابط لكنّه يفشل —
+           وهي بالضبط الحالة التي يرسم لها كروم أيقونة الورقة المكسورة التي
+           يشكو منها المالك. ومصدر الفشل قد لا يكون الموقع إطلاقاً: متصفّح
+           Brave يحجب صور حسابات Google افتراضياً، فتفشل صورة الحساب على
+           الكمبيوتر وتنجح على الجوّال — وهو ما يطابق وصفه تماماً. */
+        if(el.tagName === "IMG"){
+            if(el.complete && el.naturalWidth === 0){
+                khutaHideBrokenBox(el, "مصدره لم يُحمَّل");
+            }else if(!el.complete && !el.dataset.khutaWatched){
+                el.dataset.khutaWatched = "1";
+                el.addEventListener("error", () => khutaHideBrokenBox(el, "فشل تحميل المصدر"), { once:true });
+            }
+        }
     });
+}
+
+/* ⚠️ والكنسة مرّةً بعد الإقلاع لا تكفي: المالك لاحظ أنّ المربّع «لا يظهر
+   في صفحة التحميل ولا شاشة الدخول، ويظهر فقط عند الدخول للموقع» — أي بعد
+   أن تُرسم الواجهة ببيانات الحساب، وقد يكون ذلك بعد الكنسة بثوانٍ. فنُراقب
+   ما يُضاف لاحقاً بدل انتظار تبديل تبويب. */
+function khutaWatchForBrokenBoxes(){
+    if(window.__khutaMediaObserver || typeof MutationObserver !== "function") return;
+    let pending = null;
+    window.__khutaMediaObserver = new MutationObserver(() => {
+        clearTimeout(pending);   // تجميع الدفعات: الرسم يضيف عشرات العقد
+        pending = setTimeout(() => { try{ sweepEmptyMediaBoxes(); }catch(e){} }, 250);
+    });
+    window.__khutaMediaObserver.observe(document.body, { childList:true, subtree:true });
 }
 
 /** أداة تشخيص: تقول ما هو العنصر الموجود أسفل منتصف الشاشة، مهما كان. */
@@ -839,6 +913,81 @@ function khutaWhatIsAtBottom(){
     uniq.forEach(l => console.log("  " + l));
     return uniq;
 }
+
+/* ============================================================
+   لوحة التشخيص المرئية — ‎?diag=1‎ على روابط المعاينة
+   ------------------------------------------------------------
+   ⚠️ لماذا لوحة على الصفحة بدل وحدة التحكّم؟ لأن وحدة التحكّم فشلت مرّتين
+   مع المالك: كروم يرفض لصق أي شفرة حتى يُكتب "allow pasting" أولاً، وهي
+   رسالة تبدو تحذيراً أمنياً فيتوقّف عندها أي عاقل. فالنتيجة تُرسَم هنا
+   بخطّ كبير يُصوَّر بالكاميرا — لا كتابة ولا لصق ولا أدوات مطوّرين.
+
+   ⚠️ ومحصورة بروابط المعاينة كوضع العرض: لا تظهر على العنوان الحقيقي
+   مهما أُضيف للرابط.
+   ============================================================ */
+function khutaDiagPanel(){
+    const esc = (s) => String(s).replace(/[&<>]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[c]));
+    const cs  = (el) => getComputedStyle(el);
+    const rootCS = cs(document.documentElement), bodyCS = cs(document.body);
+
+    const lines = [];
+    lines.push(["الشاشة", innerWidth + "×" + innerHeight + "  ·  كثافة " + (devicePixelRatio || 1)]);
+    lines.push(["شريط تمرير html", rootCS.scrollbarColor || "(غير مضبوط)"]);
+    lines.push(["شريط تمرير body", bodyCS.scrollbarColor || "(غير مضبوط)"]);
+    lines.push(["خلفية html", rootCS.backgroundColor]);
+    lines.push(["أصناف body", document.body.className || "(بلا)"]);
+
+    /* شريط تمرير الصفحة: أفقي أم رأسي أم لا شيء؟ */
+    const de = document.documentElement;
+    lines.push(["تمرير الصفحة",
+        "رأسي: " + (de.scrollHeight > de.clientHeight ? "نعم" : "لا") +
+        "  ·  أفقي: " + (de.scrollWidth > de.clientWidth ? "نعم" : "لا") +
+        "  ·  فرق العرض: " + (innerWidth - de.clientWidth) + "px"]);
+
+    /* صور فشل تحميلها — المشتبه به الثاني */
+    /* ⚠️ ويُستثنى المخفيّ فعلاً: avatar-img يولد بـ‎src=""‎ و‎display:none‎،
+       فبلا هذا الاستثناء يظهر في التقرير كـ«صورة مكسورة» وهو غير مرئي
+       إطلاقاً — بلاغٌ كاذب يُرسل المالك والقارئ في طريق خاطئ. */
+    const broken = [...document.querySelectorAll("img")]
+        .filter(i => !i.hidden && cs(i).display !== "none" && cs(i).visibility !== "hidden"
+                     && i.complete && i.naturalWidth === 0)
+        .map(i => (i.id || i.className || "img") + " ← " + ((i.getAttribute("src") || "(بلا مصدر)").slice(0, 60)));
+    lines.push(["صور مكسورة ظاهرة", broken.length ? broken.join(" / ") : "لا شيء ✅"]);
+
+    /* ما الذي يشغل أسفل منتصف الشاشة فعلاً */
+    const atBottom = (typeof khutaWhatIsAtBottom === "function") ? khutaWhatIsAtBottom() : [];
+
+    const box = document.createElement("div");
+    box.id = "khuta-diag-panel";
+    box.style.cssText =
+        "position:fixed; inset:12px; z-index:2147483647; overflow:auto;" +
+        "background:#0B1020; color:#F3EFE6; border:3px solid #E8C77E; border-radius:14px;" +
+        "padding:16px; font-family:monospace; font-size:15px; line-height:1.75; direction:rtl; text-align:right;";
+    box.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;">' +
+        '<b style="font-size:19px;color:#E8C77E;">تشخيص المربّع الأبيض</b>' +
+        '<button type="button" style="background:#CD4256;color:#fff;border:0;border-radius:10px;padding:10px 18px;font-size:15px;cursor:pointer;"' +
+        ' onclick="document.getElementById(\'khuta-diag-panel\').remove()">إغلاق</button></div>' +
+        lines.map(([k, v]) =>
+            '<div style="margin-bottom:7px;"><span style="color:#E8C77E;">' + esc(k) + ':</span> ' + esc(v) + '</div>').join("") +
+        '<div style="margin-top:12px;color:#E8C77E;">أسفل منتصف الشاشة:</div>' +
+        (atBottom.length
+            ? atBottom.map(l => '<div style="margin-right:10px;font-size:13px;">• ' + esc(l) + '</div>').join("")
+            : '<div style="margin-right:10px;">لا عنصر — أي أنّ ما تراه ليس من محتوى الصفحة (شريط تمرير أو واجهة متصفّح)</div>');
+    document.body.appendChild(box);
+}
+
+/* ⚠️ الشرط يُفحَص داخل معالج load لا عند تحليل هذا الملف: دالّة
+   isNetlifyPreviewHost تعيش في js/15-demo.js الذي يُحمَّل بعد هذا الملف،
+   ففحصها هنا مباشرةً يجدها "غير معرَّفة" دائماً فلا تظهر اللوحة أبداً.
+   (وقع هذا فعلاً في أول تشغيل.) */
+window.addEventListener("load", () => setTimeout(() => {
+    try{
+        if(new URLSearchParams(location.search).get("diag") !== "1") return;
+        if(typeof isNetlifyPreviewHost !== "function" || !isNetlifyPreviewHost()) return;
+        khutaDiagPanel();
+    }catch(e){ /* التشخيص لا يجوز أن يكسر الإقلاع */ }
+}, 2500));
 
 function setAccent(accent){
     document.body.classList.remove("accent-green", "accent-purple", "accent-blue", "accent-rose", "accent-teal2", "accent-amber", "accent-indigo");
@@ -880,6 +1029,22 @@ function applyThemeChrome(isDark){
     const meta = document.getElementById("meta-theme-color");
     if(meta) meta.setAttribute("content", isDark ? "#0A0920" : "#F2EDE3");
     document.documentElement.style.background = isDark ? "#0A0920" : "#F2EDE3";
+
+    /* ⚠️ وشريط التمرير كذلك — وهذا هو «المربّع الأبيض» الذي طارده المالك
+       طويلاً. في styles.css قاعدة ‎*{ scrollbar-color: var(--border) var(--bg-alt) }‎
+       وهي تنطبق على html أيضاً، لكن html يقرأ القيم الفاتحة لأن ‎.dark-mode‎
+       على body لا على html. وشريط تمرير الصفحة يُرسم من الجذر، فيخرج بلون
+       الورق ‎#E8E1D2‎ فوق صفحة داكنة. (قياس: html أعطى rgb(232,225,210)
+       بينما body أعطى rgb(13,20,36).)
+
+       ولماذا الكمبيوتر وحده؟ لأن تنسيق الأشرطة كلّه داخل
+       ‎@media (min-width:993px)‎، والجوّال يستعمل أشرطة عائمة تختفي وحدها.
+
+       ⚠️ ولا يُصلحه ‎body.dark-mode ::-webkit-scrollbar-track‎ الموجود في
+       styles.css: حين تُضبط ‎scrollbar-color‎ القياسية يتجاهل كروم الحديث
+       أشباه العناصر ‎::-webkit-scrollbar-*‎ بالكامل، فتلك القاعدة شفرة ميتة.
+       ولا يُصلحه CSS من body أصلاً — الجذر لا يرث من ابنه. */
+    document.documentElement.style.scrollbarColor = isDark ? "#293552 #0D1424" : "#DDD4C0 #E8E1D2";
 }
 
 function toggleTheme(){

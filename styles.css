@@ -3141,7 +3141,14 @@ body.is-school input[type="radio"],
     display: inline-flex; align-items: center; justify-content: center; gap: 3px;
     cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 800;
 }
-.tt-slot{ background: var(--card); border: 1px solid var(--border); position: relative; }
+/* ⚠️ كان var(--card) — ومتغيّر بهذا الاسم غير معرَّف في المشروع إطلاقاً.
+   الموجود --card-light و --card-dark و --surface الذي يختار بينهما. و var()
+   غير المحلول يُبطل الخاصية كلّها فتعود لقيمتها الابتدائية: بلا خلفية.
+   فالخانة كانت شفّافة تماماً في الوضعين. و--surface هو الصحيح لأنه يتبع
+   الوضع الداكن. ⚠️ ولا يصحّ إصلاحها بتعريف --card: var(--surface) على
+   :root — المتغيّر يُحسب حيث يُعلَن، فيُحسب هناك على قيمة الوضع الفاتح
+   ويُورَّث أبيض إلى الوضع الداكن. */
+.tt-slot{ background: var(--surface); border: 1px solid var(--border); position: relative; }
 
 /* ── ملاحظة على الحصة نفسها، لا على اليوم كله ──
    زرّها يبقى باهتاً حتى يُلمس أو تكون عليه ملاحظة: الجدول أداةُ قراءة
@@ -3205,7 +3212,12 @@ body.is-school input[type="radio"],
     display: flex; align-items: center; justify-content: center;
     gap: 14px; flex-wrap: wrap;
     padding: 10px 16px;
-    background: var(--card);
+    /* ⚠️ كان var(--card) وهو غير معرَّف — فكان الشريط بلا خلفية إطلاقاً:
+       مستطيل مثبَّت بعرض الشاشة وارتفاع 62px فوق كل شيء (z-index 9998)
+       يُظهر ما خلفه. وهذا هو «المربّع الأبيض» الذي شكا منه المالك، وموضعه
+       بالضبط موضع أزرار التحويل بين مدرّس/طالب/إدارة. ولذلك لا يظهر على
+       khutaa.netlify.app إطلاقاً: وضع العرض محصور بروابط المعاينة. */
+    background: var(--surface);
     border-block-start: 2px solid var(--gold-text);
     box-shadow: 0 -6px 20px rgba(0,0,0,.10);
     font-size: 13px;
