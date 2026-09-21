@@ -732,12 +732,26 @@ function finalizeSetup(){
     localStorage.setItem("khuta_session_minutes", (hours * 60) + minutes);
     localStorage.setItem("khuta_autobreak_minutes", document.getElementById("auto-break-minutes").value || 10);
     localStorage.setItem("khuta_short_break_limit", document.getElementById("short-break-limit").value || 0);
-    localStorage.setItem("khuta_start_section", document.querySelector('input[name="start_section"]:checked').value);
+    /* ⚠️ عطل حقيقي وقع فعلياً: ‎restoreSetupForm‎ تُنزّل ‎checked‎ عن كل
+       أزرار الاختيار في المجموعة إن كانت قيمة config.found المحفوظة لا
+       تطابق أياً من الخيارات الحالية حرفياً (r.checked = r.value ===
+       config.found لكل عنصر) — فتنتهي المجموعة كلها بلا اختيار. ‎.value‎
+       المباشر على ‎querySelector(…: checked)‎ حينها يرمي خطأً يوقف
+       الدالّة **قبل** إغلاق ‎setup-overlay‎ أدناه، فيبقى المعالج مفتوحاً
+       للأبد بصمت. والمستخدم يرى أزرار المعالج (بطاقات، خانات اختيار)
+       تُعلَّم فعلاً عند اللمس/النقر — لأن ذلك تصرّفها الطبيعي كعناصر نموذج
+       — لكن لا شيء "يُفتح" أبداً، لأنه لم يغادر المعالج قط. هذا ما بدا
+       "لمسة تُحدِّد ولا تفتح" ولم يكن خللاً في اللمس إطلاقاً.
+       الحلّ: قيمة احتياطية آمنة بدل الرمي، تطابق الخيار الافتراضي
+       المُعلَّم ‎checked‎ في HTML. */
+    const startRadio = document.querySelector('input[name="start_section"]:checked');
+    localStorage.setItem("khuta_start_section", startRadio ? startRadio.value : "verbal");
     if(!localStorage.getItem("khuta_plan_start")){
         localStorage.setItem("khuta_plan_start", new Date().toISOString());
     }
 
-    const found = document.querySelector('input[name="quant_found"]:checked').value;
+    const foundRadio2 = document.querySelector('input[name="quant_found"]:checked');
+    const found = foundRadio2 ? foundRadio2.value : "moasser";
     const einsteinReviewOnly = document.getElementById("einstein_review_only").checked;
     const skipVerbal = document.getElementById("skip_verbal_entirely").checked;
     const restDayVal = document.getElementById("rest-day-select").value;
@@ -895,6 +909,51 @@ function khutaWatchForBrokenBoxes(){
     });
     window.__khutaMediaObserver.observe(document.body, { childList:true, subtree:true });
 }
+
+/* ============================================================
+   جسر اللمس ← نقرة — لعناصر القائمة المخصّصة على سبورة لمس حقيقية
+   ------------------------------------------------------------
+   المالك وصف عطلاً على سبورة BenQ فعلية: العناصر الأصلية تعمل باللمس
+   تماماً — زرّ "المتابعة كضيف" وزرّ الإشعارات كلاهما ‎<button>‎ حقيقي
+   ويفتحان. لكن عناصر القائمة (‎<div role="button" onclick=…>‎) تُميَّز
+   عند اللمس (نفس تأثير :hover/:active) ولا تُفتح أبداً.
+
+   ⚠️ وهذا ليس ما أصلحه user-select: تلك كانت لمشكلة "يُحدَّد نصّاً بدل
+   أن يُنقر"، وهذه مختلفة — الدليل أنّها بقيت بعد ذلك الإصلاح. الفرق بين
+   ما يعمل وما لا يعمل هو نوع العنصر نفسه: أصلي مقابل مخصَّص. والتفسير
+   الأرجح: طبقة اللمس في هذا اللوح لا تولّد حدث click حقيقياً إلا على
+   عناصر النموذج الأصلية (button, a…) — وrole="button" يخاطب قارئ
+   الشاشة فقط، ولا يغيّر شيئاً في توليد المتصفّح لحدث النقرة من اللمسة.
+
+   فالحلّ: نستولي على touchend بأنفسنا، ونُطلق click() برمجياً على أي
+   عنصر onclick ليس عنصر نموذج أصلياً أصلاً (فتلك تعمل ولا نمسّها) —
+   بشرط أن تكون اللمسة ضغطاً لا سحباً (حركة أقل من 10px)، ومنع السلوك
+   الافتراضي بعدها كي لا تتكرّر النقرة إن كانت الآلية الأصلية تعمل جزئياً
+   على جهاز آخر. ولا صلة له بمسارات النقر بالفأرة إطلاقاً — لا تُلمس. */
+(function initTouchClickBridge(){
+    const NATIVE_TAGS = new Set(["BUTTON", "A", "INPUT", "SELECT", "TEXTAREA", "LABEL"]);
+    let startX = 0, startY = 0, startEl = null;
+
+    document.addEventListener("touchstart", (e) => {
+        if(e.touches.length !== 1){ startEl = null; return; }
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        startEl = e.target && e.target.closest ? e.target.closest("[onclick]") : null;
+    }, { passive:true });
+
+    document.addEventListener("touchend", (e) => {
+        const el = startEl;
+        startEl = null;
+        if(!el || NATIVE_TAGS.has(el.tagName)) return; // عنصر أصلي — يعمل أصلاً، لا نتدخّل
+        if(!document.contains(el)) return;             // تغيّرت الصفحة قبل رفع الإصبع
+        const t = e.changedTouches && e.changedTouches[0];
+        if(!t) return;
+        const moved = Math.hypot(t.clientX - startX, t.clientY - startY);
+        if(moved > 10) return; // سحب لا ضغط — على الأرجح تمرير
+        e.preventDefault();
+        el.click();
+    }, { passive:false });
+})();
 
 /** أداة تشخيص: تقول ما هو العنصر الموجود أسفل منتصف الشاشة، مهما كان. */
 function khutaWhatIsAtBottom(){
