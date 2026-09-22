@@ -72,6 +72,10 @@ async function renderStaffHomeSummary(){
         <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;">
             <button type="button" class="btn btn-sm acc-btn" onclick="switchTab('schoolwork')">
                 <i class="fa-solid fa-chalkboard-user"></i> ${currentLang==='ar'?'منصة المدرسة':'School platform'}</button>
+            <button type="button" class="btn btn-outline btn-sm acc-btn" onclick="switchTab('schoolexams')">
+                <i class="fa-solid fa-clipboard-question"></i> ${currentLang==='ar'?'الاختبارات':'Exams'}</button>
+            <button type="button" class="btn btn-outline btn-sm acc-btn" onclick="switchTab('schooltt')">
+                <i class="fa-solid fa-table-list"></i> ${currentLang==='ar'?'الجدول الدراسي':'Schedule'}</button>
             ${schoolCtx.role === "admin" ? `<button type="button" class="btn btn-outline btn-sm acc-btn" onclick="switchTab('schooladmin')">
                 <i class="fa-solid fa-user-shield"></i> ${currentLang==='ar'?'إدارة المدرسة':'School admin'}</button>` : ""}
         </div>`;
