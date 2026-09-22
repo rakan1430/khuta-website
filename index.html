@@ -2211,6 +2211,21 @@
                         <div class="form-group"><label data-i18n="school.examDuration">المدة بالدقائق (اختياري)</label><input type="number" id="exam-duration" min="1" max="300" placeholder="45"></div>
                     </div>
 
+                    <!-- تحويل ملف إلى أسئلة: بالذكاء الاصطناعي، أو معاينة للنسخ اليدوي -->
+                    <details class="exq-import" open>
+                        <summary data-i18n="school.examFileTitle">حوّل ملفاً إلى أسئلة</summary>
+                        <p class="hint" style="margin:10px 0;" data-i18n="school.examFileHint">
+                            ارفع ورقة عمل أو محتوى شرح (صورة أو PDF، حتى ٤ ميجا). الذكاء الاصطناعي يستخرج أسئلتها الجاهزة أو يولّد أسئلة من محتواها مباشرة في المسودّة أدناه للمراجعة — أو عاينه فقط وانسخ أسئلته بنفسك.
+                        </p>
+                        <div class="input-row">
+                            <input type="file" id="exam-ai-file" accept="image/png,image/jpeg,image/webp,application/pdf" onchange="previewExamAiFile()">
+                            <button type="button" id="exam-ai-convert-btn" class="btn btn-outline acc-btn" onclick="convertFileToExamAI()">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="school.examFileConvert">استخراج بالذكاء الاصطناعي</span>
+                            </button>
+                        </div>
+                        <div id="exam-ai-preview" style="margin-top:12px;"></div>
+                    </details>
+
                     <!-- المنشئ المرئي: كل سؤال بطاقة، ولكل سؤال وخيار صورة اختيارية -->
                     <div class="exq-toolbar">
                         <b data-i18n="school.examQuestions">الأسئلة</b>

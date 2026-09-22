@@ -33,6 +33,7 @@ function newExamQuestion(){
         image: null,                                    // مسار في دلو exam-images
         choices: [{ text:"", image:null }, { text:"", image:null }],
         correct: 0,
+        explanation: null,                               // { type:'text'|'image'|'drawing', text, image }
     };
 }
 
@@ -261,6 +262,8 @@ function renderExamBuilder(){
                     <i class="fa-solid fa-plus"></i> ${currentLang==='ar' ? 'خيار آخر' : 'Add choice'}</button>
                 ${issues.length ? `<span class="exq-issue"><i class="fa-solid fa-triangle-exclamation"></i> ${escapeHtml(issues.join(" · "))}</span>` : ""}
             </div>
+
+            ${renderExplanationBlock(q, qi)}
         </div>`;
     }).join("");
 
@@ -288,6 +291,305 @@ async function hydrateExamImages(root){
         if(url){ img.src = url; img.hidden = false; }
         else node.classList.add("exq-img-broken");
     }
+}
+
+/* ============================================================
+   شرح الحل — نص أو صورة أو رسم بخط يد المعلّم
+   ------------------------------------------------------------
+   يظهر للطالب بعد التسليم عند مراجعة إجاباته (js/24-student-exam.js)،
+   ولا يصل إطلاقاً قبل ذلك — نفس القناة الآمنة التي تحذف "correct" أصلاً
+   (get_exam_for_student)، فحجبه عن الطالب قبل التسليم مسؤولية الخادم لا
+   الواجهة هنا.
+
+   ⚠️ التخزين: لا عمود جديد ولا هجرة — q.explanation جزء من نفس JSONB
+   "questions" الذي يُحفَظ أصلاً في teacher_exams. والصورة (مرفوعة أو رسم
+   مصدَّر PNG) تذهب لنفس دلو exam-images بنفس آلية توقيع الروابط.
+   ============================================================ */
+
+function ensureExplanation(qi){
+    const q = ensureExamDraft().questions[qi];
+    if(!q) return null;
+    if(!q.explanation) q.explanation = { type:"text", text:"", image:null };
+    return q.explanation;
+}
+
+function setExplanationType(qi, type){
+    const ex = ensureExplanation(qi);
+    if(ex) ex.type = type;
+    renderExamBuilder();
+}
+
+function updateExplanationText(qi, value){
+    const q = ensureExamDraft().questions[qi];
+    if(q && q.explanation) q.explanation.text = value;
+}
+
+function clearExplanation(qi){
+    const q = ensureExamDraft().questions[qi];
+    if(q) q.explanation = null;
+    renderExamBuilder();
+}
+
+async function pickExplanationImage(qi){
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/png,image/jpeg,image/webp,image/gif";
+    input.onchange = async () => {
+        const file = input.files && input.files[0];
+        if(!file) return;
+        showToast(currentLang==='ar' ? 'جارٍ رفع الصورة…' : 'Uploading…');
+        const path = await uploadExamImage(file);
+        if(!path) return;
+        const ex = ensureExplanation(qi);
+        ex.image = path; ex.type = "image";
+        renderExamBuilder();
+    };
+    input.click();
+}
+
+function removeExplanationImage(qi){
+    const q = ensureExamDraft().questions[qi];
+    if(q && q.explanation) q.explanation.image = null;
+    renderExamBuilder();
+}
+
+/* ---------- لوحة الرسم بخط اليد ---------- */
+let edQi = null, edCtx = null, edDrawing = false, edLastX = 0, edLastY = 0;
+
+function ensureExplainDrawModal(){
+    let modal = document.getElementById("explain-draw-modal");
+    if(modal) return modal;
+    modal = document.createElement("div");
+    modal.id = "explain-draw-modal";
+    modal.className = "overlay-screen";
+    modal.style.display = "none";
+    modal.innerHTML = `
+        <div class="wizard-card" style="max-width:760px;">
+            <h3 style="margin-bottom:4px;"><i class="fa-solid fa-pen-nib"></i> ${currentLang==='ar' ? 'اكتب الشرح بخط يدك' : "Write the explanation by hand"}</h3>
+            <p class="card-sub" style="margin-bottom:12px;">${currentLang==='ar' ? 'ارسم بإصبعك أو بقلم الشاشة، ثم احفظ.' : 'Draw with your finger or a stylus, then save.'}</p>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <button type="button" class="btn btn-outline btn-sm acc-btn" onclick="clearExplanationCanvas()">
+                    <i class="fa-solid fa-eraser"></i> ${currentLang==='ar' ? 'مسح' : 'Clear'}</button>
+                <label class="hint" style="display:flex; align-items:center; gap:6px;">
+                    ${currentLang==='ar' ? 'سُمك القلم' : 'Pen size'}
+                    <input type="range" id="explain-pen-size" min="2" max="14" value="4">
+                </label>
+            </div>
+            <canvas id="explain-draw-canvas" width="760" height="420"
+                style="background:#fff; border-radius:14px; touch-action:none; width:100%; max-width:760px; border:1px solid var(--border); cursor:crosshair;"></canvas>
+            <div style="display:flex; gap:10px; margin-top:14px;">
+                <button type="button" class="btn btn-outline btn-block acc-btn" onclick="closeExplanationDraw()">${currentLang==='ar' ? 'إلغاء' : 'Cancel'}</button>
+                <button type="button" class="btn acc-btn btn-block" onclick="saveExplanationDraw()">
+                    <i class="fa-solid fa-floppy-disk"></i> ${currentLang==='ar' ? 'حفظ الشرح' : 'Save'}</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    return modal;
+}
+
+function explainCanvasPos(canvas, e){
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width, scaleY = canvas.height / r.height;
+    return { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY };
+}
+
+function bindExplainCanvasEvents(canvas){
+    if(canvas.dataset.bound) return;
+    canvas.dataset.bound = "1";
+    canvas.addEventListener("pointerdown", (e) => {
+        edDrawing = true;
+        try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+        const p = explainCanvasPos(canvas, e);
+        edLastX = p.x; edLastY = p.y;
+    });
+    canvas.addEventListener("pointermove", (e) => {
+        if(!edDrawing || !edCtx) return;
+        const sizeEl = document.getElementById("explain-pen-size");
+        edCtx.lineWidth = (sizeEl && parseInt(sizeEl.value, 10)) || 4;
+        edCtx.lineCap = "round"; edCtx.lineJoin = "round"; edCtx.strokeStyle = "#1a1a1a";
+        const p = explainCanvasPos(canvas, e);
+        edCtx.beginPath(); edCtx.moveTo(edLastX, edLastY); edCtx.lineTo(p.x, p.y); edCtx.stroke();
+        edLastX = p.x; edLastY = p.y;
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(ev =>
+        canvas.addEventListener(ev, () => { edDrawing = false; }));
+}
+
+function openExplanationDraw(qi){
+    ensureExplanation(qi);
+    edQi = qi;
+    const modal = ensureExplainDrawModal();
+    modal.style.display = "flex";
+    const canvas = document.getElementById("explain-draw-canvas");
+    edCtx = canvas.getContext("2d");
+    edCtx.fillStyle = "#fff";
+    edCtx.fillRect(0, 0, canvas.width, canvas.height);
+    bindExplainCanvasEvents(canvas);
+}
+
+function clearExplanationCanvas(){
+    if(!edCtx) return;
+    edCtx.fillStyle = "#fff";
+    edCtx.fillRect(0, 0, edCtx.canvas.width, edCtx.canvas.height);
+}
+
+function closeExplanationDraw(){
+    const modal = document.getElementById("explain-draw-modal");
+    if(modal) modal.style.display = "none";
+    edQi = null; edCtx = null;
+}
+
+async function saveExplanationDraw(){
+    const canvas = document.getElementById("explain-draw-canvas");
+    const qi = edQi;
+    if(qi == null || !canvas) return;
+    const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+    if(!blob){ showToast(currentLang==='ar' ? 'تعذّر حفظ الرسم' : 'Could not save the drawing'); return; }
+    showToast(currentLang==='ar' ? 'جارٍ الرفع…' : 'Uploading…');
+    const path = await uploadExamImage(blob);
+    if(!path) return;
+    const ex = ensureExplanation(qi);
+    ex.image = path; ex.type = "drawing";
+    closeExplanationDraw();
+    renderExamBuilder();
+}
+
+function renderExplanationBlock(q, qi){
+    const ex = q.explanation;
+    const type = ex ? ex.type : null;
+    return `
+    <div class="exq-explain">
+        <div class="exq-explain-head">
+            <i class="fa-solid fa-lightbulb"></i>
+            <b>${currentLang==='ar' ? 'شرح الحل (اختياري)' : 'Solution explanation (optional)'}</b>
+            <span class="hint">${currentLang==='ar' ? 'يظهر للطالب بعد التسليم عند مراجعة أخطائه' : 'Shown to the student when reviewing mistakes after submitting'}</span>
+            ${ex ? `<button type="button" class="btn-ghost btn-sm" onclick="clearExplanation(${qi})" title="${currentLang==='ar'?'إزالة الشرح':'Remove explanation'}"><i class="fa-solid fa-trash"></i></button>` : ""}
+        </div>
+        <div class="exq-explain-tabs">
+            <button type="button" class="exq-tab ${type==='text'?'is-active':''}" onclick="setExplanationType(${qi},'text')"><i class="fa-solid fa-font"></i> ${currentLang==='ar'?'نص':'Text'}</button>
+            <button type="button" class="exq-tab ${type==='image'?'is-active':''}" onclick="setExplanationType(${qi},'image')"><i class="fa-solid fa-image"></i> ${currentLang==='ar'?'صورة':'Image'}</button>
+            <button type="button" class="exq-tab ${type==='drawing'?'is-active':''}" onclick="openExplanationDraw(${qi})"><i class="fa-solid fa-pen-nib"></i> ${currentLang==='ar'?'بخط اليد':'Handwritten'}</button>
+        </div>
+        ${type==='text' ? `
+        <textarea class="exq-text" rows="2" placeholder="${currentLang==='ar'?'اكتب شرح الحل هنا…':'Write the explanation…'}"
+            oninput="updateExplanationText(${qi}, this.value)">${escapeHtml((ex && ex.text) || "")}</textarea>` : ""}
+        ${(type==='image' || type==='drawing') ? (
+            ex.image
+            ? `<div class="exq-img" data-img-path="${escapeHtml(ex.image)}">
+                   <img alt="${currentLang==='ar'?'شرح الحل':'Explanation'}" hidden>
+                   <button type="button" class="exq-img-x" onclick="removeExplanationImage(${qi})"><i class="fa-solid fa-xmark"></i></button>
+               </div>`
+            : (type==='image'
+                ? `<button type="button" class="btn btn-outline btn-sm" onclick="pickExplanationImage(${qi})"><i class="fa-solid fa-upload"></i> ${currentLang==='ar'?'ارفع صورة الشرح':'Upload explanation image'}</button>`
+                : `<button type="button" class="btn btn-outline btn-sm" onclick="openExplanationDraw(${qi})"><i class="fa-solid fa-pen"></i> ${currentLang==='ar'?'افتح لوحة الرسم':'Open drawing pad'}</button>`)
+          ) : ""}
+    </div>`;
+}
+
+/* ============================================================
+   تحويل ملف إلى مسودّة اختبار — بالذكاء الاصطناعي أو يدوياً بالمعاينة
+   ------------------------------------------------------------
+   طريقتان جنباً إلى جنب كما طلب المالك: (١) استخراج/توليد آلي عبر
+   gemini-proxy.js (نمط schoolExamFile)، أسئلته تدخل المسودّة كأي سؤال
+   آخر فلا تُرسَل للطلاب إلا بعد مراجعة المعلّم وحفظه وإرساله يدوياً —
+   نفس بوابة المراجعة الموجودة أصلاً، بلا حاجة لأي بناء إضافي.
+   (٢) معاينة الملف نفسه بجانب المنشئ لمن يفضّل النسخ يدوياً بلا استخراج آلي.
+
+   ⚠️ الملف لا يُرفع لأي تخزين هنا — يذهب Base64 مباشرة داخل جسم الطلب
+   لدالّة Netlify (حدّها 6 ميجا)، فحصرنا الحجم الخام بـ4 ميجا هنا يطابق
+   MAX_SCHOOL_EXAM_FILE_B64_LENGTH في gemini-proxy.js بعد تضخّم Base64.
+   ============================================================ */
+const MAX_EXAM_AI_FILE_BYTES = 4 * 1024 * 1024;
+const EXAM_AI_FILE_TYPES = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+
+function fileToBase64(file){
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+        reader.onerror = () => reject(new Error("FILE_READ_FAILED"));
+        reader.readAsDataURL(file);
+    });
+}
+
+/** معاينة الملف المرفوع بجانب المنشئ — للنسخ اليدوي بلا استخراج آلي. */
+function previewExamAiFile(){
+    const input = document.getElementById("exam-ai-file");
+    const box = document.getElementById("exam-ai-preview");
+    if(!box) return;
+    const file = input && input.files && input.files[0];
+    if(!file){ box.innerHTML = ""; return; }
+
+    const url = URL.createObjectURL(file);
+    if(/^image\//.test(file.type)){
+        box.innerHTML = `<img src="${url}" alt="" style="max-width:100%; border-radius:12px; border:1px solid var(--border);">`;
+    }else if(file.type === "application/pdf"){
+        box.innerHTML = `<a href="${url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm acc-btn">
+            <i class="fa-solid fa-file-pdf"></i> ${currentLang==='ar' ? 'فتح الملف في نافذة جديدة للنسخ منه' : 'Open the file in a new tab to copy from'}</a>`;
+    }else{
+        box.innerHTML = `<span class="hint">${escapeHtml(file.name)}</span>`;
+    }
+}
+
+async function convertFileToExamAI(){
+    const input = document.getElementById("exam-ai-file");
+    const file = input && input.files && input.files[0];
+    if(!file){
+        showToast(currentLang==='ar' ? 'اختر ملفاً أولاً' : 'Choose a file first');
+        return;
+    }
+    if(!EXAM_AI_FILE_TYPES.includes(file.type)){
+        showToast(currentLang==='ar' ? 'نوع الملف غير مدعوم للاستخراج الآلي (PNG/JPG/WEBP/PDF)' : 'File type not supported for AI extraction (PNG/JPG/WEBP/PDF)');
+        return;
+    }
+    if(file.size > MAX_EXAM_AI_FILE_BYTES){
+        showToast(currentLang==='ar' ? 'حجم الملف أكبر من ٤ ميجا — الاستخراج الآلي محدود، لكن يمكنك نسخ الأسئلة يدوياً من المعاينة' : 'File larger than 4 MB for AI extraction — you can still copy questions manually from the preview');
+        return;
+    }
+
+    const btn = document.getElementById("exam-ai-convert-btn");
+    schoolBusy(btn, true);
+    showToast(currentLang==='ar' ? 'جارٍ تحليل الملف بالذكاء الاصطناعي…' : 'Analyzing the file with AI…');
+    try{
+        const fileData = await fileToBase64(file);
+        const reply = await callGeminiProxy("schoolExamFile", { fileMime: file.type, fileData });
+        const data = extractJson(reply);
+
+        if(!data.accepted){
+            showToast(data.rejection_note || (currentLang==='ar' ? 'تعذّر قبول هذا الملف' : 'This file was not accepted'));
+            return;
+        }
+        const raw = Array.isArray(data.questions) ? data.questions : [];
+        const imported = raw
+            .filter(q => q && typeof q.text === "string" && q.text.trim()
+                && Array.isArray(q.choices) && q.choices.length >= 2
+                && Number.isInteger(q.correct) && q.correct >= 0 && q.correct < q.choices.length)
+            .map(q => ({
+                id: "q" + Math.random().toString(36).slice(2, 9),
+                text: String(q.text).trim().slice(0, 2000),
+                image: null,
+                choices: q.choices.slice(0, MAX_EXAM_CHOICES).map(t => ({ text: String(t).trim().slice(0, 500), image: null })),
+                correct: Math.min(q.correct, Math.min(q.choices.length, MAX_EXAM_CHOICES) - 1),
+                explanation: null,
+            }));
+
+        if(!imported.length){
+            showToast(currentLang==='ar' ? 'لم يستخرج الذكاء الاصطناعي أي سؤال صالح من هذا الملف' : 'AI could not extract any valid question from this file');
+            return;
+        }
+
+        const d = ensureExamDraft();
+        const onlyEmpty = d.questions.length === 1 && !d.questions[0].text.trim()
+                          && !d.questions[0].image && d.questions[0].choices.every(c => !c.text.trim() && !c.image);
+        d.questions = onlyEmpty ? imported : d.questions.concat(imported);
+        renderExamBuilder();
+        showToast(currentLang==='ar'
+            ? `أُضيف ${imported.length} سؤالاً من الملف — راجعها وعدّلها قبل الحفظ ✅`
+            : `${imported.length} question(s) added from the file — review before saving ✅`);
+    }catch(e){
+        console.error("[خُطى] تعذّر تحويل الملف إلى اختبار:", e);
+        const authMsg = (typeof getAiLimitErrorMessage === "function") ? getAiLimitErrorMessage(e) : null;
+        showToast(authMsg || (currentLang==='ar' ? 'تعذّر تحليل الملف — تأكّد من الاتصال وحاول مجدداً' : 'Could not analyze the file — check your connection and try again'));
+    }finally{ schoolBusy(btn, false); }
 }
 
 /* ---------- الاستيراد السريع ---------- */
@@ -362,7 +664,15 @@ function validateExamDraft(){
             return;
         }
 
-        questions.push({ id:q.id, text, image:q.image || null, choices, correct });
+        // شرح فارغ (بلا نص وبلا صورة) لا يُحفَظ — يبقى null كأنه لم يُضَف قط
+        let explanation = null;
+        if(q.explanation){
+            const exText = (q.explanation.text || "").trim();
+            const exImage = q.explanation.image || null;
+            if(exText || exImage) explanation = { type: q.explanation.type || "text", text: exText, image: exImage };
+        }
+
+        questions.push({ id:q.id, text, image:q.image || null, choices, correct, explanation });
     });
 
     return { questions, problems };

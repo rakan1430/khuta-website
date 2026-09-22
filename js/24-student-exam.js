@@ -232,7 +232,13 @@ function renderSeQuestion(){
                     <span class="choice-letter">${seChoiceLetter(j)}</span>
                 </label>`;
             }).join("")}
-        </div>`;
+        </div>
+        ${(seReview && q.explanation && (q.explanation.text || q.explanation.image)) ? `
+        <div class="se-explain">
+            <div class="se-explain-head"><i class="fa-solid fa-lightbulb"></i> ${seLabel("شرح المعلّم","Teacher's explanation")}</div>
+            ${q.explanation.text ? `<p>${escapeHtml(q.explanation.text)}</p>` : ""}
+            ${q.explanation.image ? `<img class="se-explain-img" data-exam-img="${escapeHtml(q.explanation.image)}" alt="" hidden>` : ""}
+        </div>` : ""}`;
 
     const mark = document.getElementById("se-mark");
     if(mark) mark.checked = seMarked.has(seIndex);
