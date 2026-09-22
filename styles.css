@@ -174,7 +174,11 @@ h1,h2,h3,h4{ font-family: var(--font-display); font-weight:700; letter-spacing:0
 @media (min-width:993px){
     .app-container.sidebar-collapsed{ grid-template-columns: 0px 1fr; }
 }
-.sidebar{ transition: opacity 0.3s ease, transform 0.35s ease; overflow:hidden; grid-column:1; }
+/* overflow-x:hidden وحده (لا overflow:hidden الكامل) لأن الأخير كان يمنع
+   سكرول القائمة رأسياً كذلك — فحين زادت عناصر المدرسة (اختبارات، سبورة...)
+   عن ارتفاع الشاشة (آيباد، لابتوبات بارتفاع أقل) كانت تُقصّ ولا وسيلة للوصول
+   إليها. overflow-x يبقى مخفياً لأنه ضروري أثناء حركة طي/فتح القائمة. */
+.sidebar{ transition: opacity 0.3s ease, transform 0.35s ease; overflow-x:hidden; overflow-y:auto; -webkit-overflow-scrolling:touch; grid-column:1; }
 .app-container.sidebar-collapsed .sidebar{ opacity:0; transform:translateX(-16px); pointer-events:none; padding:0; border:none; }
 html[dir="rtl"] .app-container.sidebar-collapsed .sidebar{ transform:translateX(16px); }
 @media (min-width:993px){
