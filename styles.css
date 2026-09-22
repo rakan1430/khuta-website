@@ -3319,6 +3319,15 @@ body.has-demo-bar .mobile-nav{ inset-block-end: 68px; }
 .exq-import{ margin-top:14px; border:1px solid var(--border); border-radius:14px; padding:10px 14px; }
 .exq-import summary{ cursor:pointer; font-weight:700; font-size:13px; }
 
+/* ---------- شرح الحل لكل سؤال ---------- */
+.exq-explain{ margin-top:14px; padding-top:12px; border-top:1px dashed var(--border); }
+.exq-explain-head{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px; color:var(--gold-text); }
+.exq-explain-head b{ color:var(--text-1); }
+.exq-explain-head .hint{ flex-basis:100%; margin:0; }
+.exq-explain-head .btn-ghost{ margin-inline-start:auto; }
+.exq-explain-tabs{ display:flex; gap:6px; margin-bottom:8px; }
+.exq-explain-tabs .exq-tab{ flex:1; min-height:40px; font-size:12.5px; }
+
 /* ---------- تبويبات ومنتقي المستهدفين ---------- */
 .exq-tabs{ display:flex; gap:6px; }
 .exq-tab{
@@ -3528,6 +3537,16 @@ body:not(.dark-mode) select{ background-color:#FFFFFF; }
 }
 .se-img-failed i{ color: var(--rose); }
 .se-img-failed small{ color: var(--text-3); font-family: var(--font-mono); font-size: 11px; }
+
+/* شرح المعلّم — يظهر في المراجعة وحدها بعد التسليم، انظر get_exam_review */
+.se-explain{
+    margin-top: 16px; padding: 14px 16px; border-radius: 14px;
+    background: rgba(201,150,46,.08); border: 1px solid rgba(201,150,46,.25);
+}
+.se-explain-head{ display:flex; align-items:center; gap:8px; font-weight:800; color:var(--gold-text); margin-bottom:8px; }
+.se-explain p{ white-space: pre-wrap; line-height:1.7; color:var(--text-1); }
+.se-explain-img{ display:none; max-width:100%; border-radius:12px; margin-top:8px; background:#fff; }
+.se-explain-img.is-ready{ display:block; }
 
 /* ---------- شاشة النتيجة ---------- */
 .se-result{

@@ -161,6 +161,30 @@ const FILE_QA_SYSTEM_PROMPT = `${FILE_IDENTITY_CORE}
 القواعد: إن كانت الإجابة موجودة في الملف فاستند إليها صراحةً واشرحها بوضوح. إن كان السؤال متعلقاً بالمادة لكن إجابته ليست في الملف، أجب من معرفتك العامة ووضّح للطالب أن هذه المعلومة ليست في ملفه. إن كان السؤال خارج موضوع الملف والمواد الدراسية تماماً، اعتذر بلطف ووجّهه لسؤال متعلق بمادته.
 أجب بنص عادي واضح ومختصر (لا JSON)، بأسطر قصيرة، بلا مقدمات طويلة.`;
 
+/* ============================================================
+   تحويل ملف المعلّم إلى مسودّة اختبار — نسخة المدارس
+   ------------------------------------------------------------
+   يختلف عن EXAM_SYSTEM_PROMPT (وضع "exam") في أمرين: (١) المُرسِل هنا
+   معلّم لا طالب، والملف قد يكون صورة أو PDF ممسوحاً ضوئياً لا نصاً مُستخرَجاً
+   مسبقاً — فيصل كـinline_data لا كنص. (٢) الناتج مسودّة خاصة بفصل هذا
+   المعلّم وحده، فلا يجوز أن يدخل بنك خُطى العام لأسئلة اختبار القدرات
+   (shared_exam_questions) — ولذلك هذا النمط غير مشمول إطلاقاً في شرط
+   storeSharedExamQuestions أدناه (يتحقق من mode === "exam" حصراً).
+
+   ⚠️ ولا حصر بمادة القدرات هنا: المعلّم قد يرفع ملف رياضيات أو علوم أو
+   أي مادة مدرسية، فالهوية والقبول هنا على نمط FILE_IDENTITY_CORE (تعليمي
+   عام) لا KHUTA_IDENTITY_CORE (قدرات فقط). ============================================================ */
+const SCHOOL_EXAM_FILE_SYSTEM_PROMPT = `${FILE_IDENTITY_CORE}
+
+سيصلك ملف (صورة أو PDF) رفعه معلّم من داخل لوحة إنشاء الاختبارات، ليحوّله إلى أسئلة اختيار من متعدد لفصله.
+
+${FILE_SAFETY_RULES}
+
+عند القبول، أجب حصراً بكائن JSON واحد صالح دون أي نص خارجه ودون أسوار كود، بهذا الشكل بالضبط:
+{"accepted":true,"reject_reason":null,"rejection_note":null,"questions":[{"text":"نص السؤال","choices":["أ","ب","ج","د"],"correct":0}]}
+القواعد: إن كان الملف يحوي أسئلة اختيار من متعدد جاهزة فعلاً (ورقة عمل أو بنك أسئلة)، استخرجها كما هي بنصّها وخياراتها وإجابتها الصحيحة إن كانت مذكورة، بنفس عددها وترتيبها في الملف. إن لم توجد أسئلة جاهزة (الملف شرح أو محاضرة أو ملخص)، ولّد بنفسك عدداً مناسباً (٥ إلى ١٥ حسب حجم المحتوى) من أسئلة اختيار من متعدد تقيس فهم الطالب لهذا المحتوى تحديداً. choices أربعة بالضبط لكل سؤال دائماً، correct رقم من 0 إلى 3 لموقع الإجابة الصحيحة. إن تعذّر تحديد الإجابة الصحيحة لسؤال مستخرَج من الملف (لم تُذكر) استبعد ذلك السؤال كلياً بدل تخمين إجابته.
+عند الرفض أجب بـ: {"accepted":false,"reject_reason":"…","rejection_note":"…","questions":[]} ولا شيء غير ذلك.`;
+
 // كل نمط مسموح له نظام تعليمات ثابت فقط — لا صلة إطلاقاً بأي شيء يرسله المتصفح
 const MODE_SYSTEM_PROMPTS = {
     chat: CHAT_SYSTEM_PROMPT,
@@ -170,7 +194,14 @@ const MODE_SYSTEM_PROMPTS = {
     title: TITLE_SYSTEM_PROMPT,
     fileExplain: FILE_EXPLAIN_SYSTEM_PROMPT,
     fileQA: FILE_QA_SYSTEM_PROMPT,
+    schoolExamFile: SCHOOL_EXAM_FILE_SYSTEM_PROMPT,
 };
+
+// أنواع الملفات التي يقبلها Gemini كـinline_data مباشرة لهذا النمط
+const SCHOOL_EXAM_FILE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
+// Base64 لا خام: ~4 ميجا خام ≈ 5.4 ميجا Base64. نبقى تحت حدّ جسم طلب
+// Netlify Functions المتزامنة (6 ميجا) بهامش مريح.
+const MAX_SCHOOL_EXAM_FILE_B64_LENGTH = 5_600_000;
 
 const MAX_TEXT_LENGTH = 8000;         // حد افتراضي لأي نص مفرد (chat/board/pad/title)
 const MAX_EXAM_TEXT_LENGTH = 20000;   // نمط "exam" يستقبل محتوى ملف دراسي كامل، يحتاج هامشاً أكبر
@@ -217,6 +248,18 @@ function buildContents(mode, body){
         if(!fileText) throw new Error("fileQA mode requires fileText");
         if(!question) throw new Error("fileQA mode requires a question");
         return [{ role: "user", parts: [{ text: `【نص ملف الطالب】\n${fileText}\n\n【سؤال الطالب】\n${question}` }] }];
+    }
+
+    // schoolExamFile: ملف (صورة أو PDF) لا نص — يصل كـinline_data
+    if(mode === "schoolExamFile"){
+        const mime = body.fileMime;
+        if(typeof mime !== "string" || !SCHOOL_EXAM_FILE_MIME_TYPES.has(mime)){
+            throw new Error("fileMime must be one of: " + [...SCHOOL_EXAM_FILE_MIME_TYPES].join(", "));
+        }
+        const data = body.fileData;
+        if(typeof data !== "string" || !data) throw new Error("schoolExamFile mode requires fileData");
+        if(data.length > MAX_SCHOOL_EXAM_FILE_B64_LENGTH) throw new Error("file payload too large");
+        return [{ role: "user", parts: [{ inline_data: { mime_type: mime, data } }] }];
     }
 
     // board / exam / title / fileExplain: نص واحد فقط
