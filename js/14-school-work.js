@@ -612,8 +612,14 @@ async function loadTeacherExams(){
     if(!box || !schoolCtx || !sb) return;
     box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'جارٍ التحميل…':'Loading…'}</p>`;
     try{
+        // ⚠️ questions لا يُقرأ هنا عمداً منذ ٢٠٢٦-٠٩-٢٢: كان يصل هذا الاستعلامَ
+        // كاملاً (بإجاباته الصحيحة وشروحها) لكل طالب فور فتح تبويب الاختبارات
+        // — قبل أن يضغط "ابدأ الاختبار" أصلاً، عبر استجابة الشبكة العادية بلا
+        // حاجة لأي اختراق. سُحبت صلاحية قراءته مباشرة من قاعدة البيانات
+        // (انظر sql/EXAM_FUNCTIONS.sql)، وlength وحده هو ما احتجناه أصلاً —
+        // فجاء question_count عمود مولَّد بدلاً منه.
         const { data, error } = await sb.from("teacher_exams")
-            .select("id, title, subject, grade, questions, published, owner_id, created_at")
+            .select("id, title, subject, grade, question_count, published, owner_id, created_at")
             .order("created_at", { ascending:false }).limit(100);
         if(error) throw error;
         if(!data || !data.length){
@@ -637,7 +643,7 @@ async function loadTeacherExams(){
             }catch(e){ console.warn("[خُطى] تعذّر جلب محاولاتي:", e); }
         }
         box.innerHTML = renderSchoolList(data, x => {
-            const n = Array.isArray(x.questions) ? x.questions.length : 0;
+            const n = x.question_count || 0;
             const mine = x.owner_id === schoolCtx.memberId;
             /* ⚠️ خطأ أدخلتُه أنا في الدفعة السابقة: جعلتُ زرّ "ابدأ الاختبار"
                يظهر لكل من ليس مالك الاختبار — فظهر للإدارة على اختبارات
