@@ -71,6 +71,8 @@ ar:{
 /* ── نسخة المدارس ── */
 "nav.schoolAdmin":"إدارة المدرسة",
 "nav.schoolWork":"منصة المدرسة",
+"nav.schoolExams":"الاختبارات",
+"nav.schoolSchedule":"الجدول الدراسي",
 "dash.deepReport":"التقرير المتعمّق",
 "school.workTitle":"منصة المدرسة",
 "school.filterAllRoles":"كل الأدوار","school.filterAllGrades":"كل المراحل",
@@ -386,6 +388,8 @@ en:{
 /* ── Schools edition ── */
 "nav.schoolAdmin":"School admin",
 "nav.schoolWork":"School platform",
+"nav.schoolExams":"Exams",
+"nav.schoolSchedule":"Schedule",
 "dash.deepReport":"Deep report",
 "school.workTitle":"School platform",
 "school.filterAllRoles":"All roles","school.filterAllGrades":"All grades",

@@ -475,7 +475,7 @@ function applySchoolRoleUI(){
     if(badge && !role) badge.style.display = "none";
     if(schoolCtx){
         const label = `${schoolCtx.fullName} — ${schoolRoleLabel(schoolCtx.role)}`;
-        ["school-who","school-who-2"].forEach(id => {
+        ["school-who","school-who-2","school-who-3","school-who-4"].forEach(id => {
             const el = document.getElementById(id);
             if(el) el.textContent = label;
         });

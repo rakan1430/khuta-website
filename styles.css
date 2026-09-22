@@ -3562,14 +3562,18 @@ body:not(.dark-mode) select{ background-color:#FFFFFF; }
    المعلّم (منصة المدرسة عنده هي عمله كلّه، فلا معنى لتمييزها عن نفسها).
    ============================================================ */
 body.is-school-student .nav-item[data-tab="schoolwork"],
-body.is-school-student .mobile-nav-item[data-tab="schoolwork"]{
+body.is-school-student .mobile-nav-item[data-tab="schoolwork"],
+body.is-school-student .nav-item[data-tab="schoolexams"],
+body.is-school-student .mobile-nav-item[data-tab="schoolexams"]{
     background: linear-gradient(135deg, rgba(201,150,46,.16), rgba(201,150,46,.06));
     border: 1.5px solid var(--gold-soft);
     border-radius: 14px;
     font-weight: 800;
 }
-body.is-school-student .nav-item[data-tab="schoolwork"] i{ color: var(--gold-text); }
-body.is-school-student .nav-item[data-tab="schoolwork"]::after{
+body.is-school-student .nav-item[data-tab="schoolwork"] i,
+body.is-school-student .nav-item[data-tab="schoolexams"] i{ color: var(--gold-text); }
+body.is-school-student .nav-item[data-tab="schoolwork"]::after,
+body.is-school-student .nav-item[data-tab="schoolexams"]::after{
     content: "•"; color: var(--gold-text); margin-inline-start: auto; font-size: 18px; line-height: 1;
 }
 
@@ -3685,7 +3689,8 @@ body.is-school-student .nav-item[data-tab="schoolwork"]::after{
 .mode-btn i{ font-size: 13px; }
 
 /* في وضع المدرسة لا حاجة لتمييز القسم — الشاشة كلها له */
-body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after{ content: none; }
+body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after,
+body[data-mode="school"] .nav-item[data-tab="schoolexams"]::after{ content: none; }
 
 /* إخفاء الوضع — خانة مستقلّة عن style.display كي لا يتنازع نظاما الإظهار.
    انظر شرح applyMode في js/26-mode.js. */
