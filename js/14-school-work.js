@@ -16,11 +16,8 @@ const WEEKDAYS_AR = ["الأحد","الاثنين","الثلاثاء","الأر�
 const WEEKDAYS_EN = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 function weekdayName(i){ return (currentLang === "ar" ? WEEKDAYS_AR : WEEKDAYS_EN)[i] || ""; }
 
-function schoolBusy(btn, on){
-    if(!btn) return;
-    btn.disabled = on;
-    btn.style.opacity = on ? ".6" : "";
-}
+/* schoolBusy نُقلت إلى js/13-school.js: هذا الملف يُحمَّل عند الحاجة على
+   الجوّال، وjs/20-entry.js (يُحمَّل دائماً) يستعملها. */
 
 /* ============================================================
    ملفات المدرّس
@@ -72,9 +69,7 @@ async function loadTeacherFiles(){
 }
 
 function gradeLabel(g){
-    const ar = { "1":"أول ثانوي", "2":"ثاني ثانوي", "3":"ثالث ثانوي" };
-    const en = { "1":"Grade 10", "2":"Grade 11", "3":"Grade 12" };
-    return (currentLang==='ar' ? ar : en)[g] || g;
+    return (typeof gradeName === "function") ? gradeName(g) : String(g || "");
 }
 
 /* الملف في مخزن خاص، فلا يُفتح برابط ثابت. ننشئ رابطاً موقَّعاً قصير العمر
@@ -116,10 +111,13 @@ async function uploadTeacherFile(){
         return;
     }
 
+    if(file && typeof schoolStorageAllows === "function" && !(await schoolStorageAllows(file.size))) return;
+
     const btn = document.getElementById("tfile-submit");
     schoolBusy(btn, true);
+    let storagePath = null;
     try{
-        let storagePath = null, size = null;
+        let size = null;
         if(file){
             // اسم آمن: نُبقي الامتداد فقط ونولّد بقيته. اسم الملف الأصلي قد
             // يحوي مسارات (../) أو حروفاً تكسر المسار داخل المخزن.
@@ -145,10 +143,16 @@ async function uploadTeacherFile(){
         if(error) throw error;
         titleEl.value = ""; urlEl.value = ""; fileEl.value = "";
         document.getElementById("tfile-subject").value = "";
+        storagePath = null;   // صار له سجلّ — لم يعد يتيماً
         showToast(currentLang==='ar'?'تم الرفع ✅':'Uploaded ✅');
         loadTeacherFiles();
     }catch(e){
         console.error("[خُطى] تعذّر الرفع:", e);
+        /* رُفع الملف ثم فشل حفظ سجلّه: يبقى في المخزن بلا سجلّ يشير إليه،
+           يأكل من مساحة المدرسة ولا يراه أحد ولا يُحذف أبداً. نحذفه. */
+        if(storagePath){
+            try{ await sb.storage.from("teacher-files").remove([storagePath]); }catch(err){}
+        }
         showSchoolError(e, currentLang==='ar'?'رفع الملف':'the upload');
     }finally{ schoolBusy(btn, false); }
 }

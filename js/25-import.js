@@ -314,6 +314,7 @@ function renderImportResult(out){
     const reason = (r) => ({
         BAD_ID:   impLabel("رقم هوية غير صالح", "invalid national ID"),
         BAD_NAME: impLabel("اسم ناقص", "missing name"),
+        STUDENT_LIMIT: impLabel("بلغت المدرسة حدّ الطلاب في باقتها", "school reached its student limit"),
     })[r] || r;
 
     box.innerHTML = `

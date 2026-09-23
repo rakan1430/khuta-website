@@ -73,6 +73,9 @@ ar:{
 "nav.schoolWork":"منصة المدرسة",
 "nav.schoolExams":"الاختبارات",
 "nav.schoolSchedule":"الجدول الدراسي",
+"school.setupTitle":"إعداد المدرسة: الروابط والمراحل والمواد",
+"school.setupSub":"روابط الانضمام خاصة بمدرستك. والمراحل والمواد تظهر في كل قوائم المنصّة — الفصول والاختبارات والملفات وإسناد المعلّمين.",
+"school.assignSubjectHint":"المواد من إعدادات المدرسة — يضيفها المدير من «مراحل المدرسة وموادها».",
 "dash.deepReport":"التقرير المتعمّق",
 "school.workTitle":"منصة المدرسة",
 "school.filterAllRoles":"كل الأدوار","school.filterAllGrades":"كل المراحل",
@@ -393,6 +396,9 @@ en:{
 "nav.schoolWork":"School platform",
 "nav.schoolExams":"Exams",
 "nav.schoolSchedule":"Schedule",
+"school.setupTitle":"School setup: links, grades and subjects",
+"school.setupSub":"Join links are specific to your school. Grades and subjects appear in every list — classes, exams, files and teacher assignments.",
+"school.assignSubjectHint":"Subjects come from the school setup — the admin adds them there.",
 "dash.deepReport":"Deep report",
 "school.workTitle":"School platform",
 "school.filterAllRoles":"All roles","school.filterAllGrades":"All grades",
@@ -672,6 +678,8 @@ function applyI18n(){
     renderProgress();
     updateWelcomeText();
     applyContentNumbers();
+    // قوائم المراحل والمواد تُبنى من إعدادات المدرسة بلا data-i18n، فتُعاد هنا
+    if(typeof applySchoolSettingsUI === "function"){ try{ applySchoolSettingsUI(); }catch(e){} }
     renderGamification();
     renderBadges();
     renderHeaderMiniAvatar();

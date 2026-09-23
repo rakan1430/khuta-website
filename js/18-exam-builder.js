@@ -70,6 +70,7 @@ async function uploadExamImage(file){
         showToast(currentLang==='ar' ? 'حجم الصورة أكبر من ٥ ميجا' : 'Image larger than 5 MB');
         return null;
     }
+    if(typeof schoolStorageAllows === "function" && !(await schoolStorageAllows(file.size))) return null;
     // ⚠️ اسم الملف الأصلي لا يُستعمل إطلاقاً: قد يحمل ../ أو محارف تكسر المسار
     const ext = ({ "image/png":"png", "image/jpeg":"jpg", "image/webp":"webp", "image/gif":"gif" })[file.type];
     const path = `${schoolCtx.schoolId}/${schoolCtx.memberId}/${crypto.randomUUID()}.${ext}`;

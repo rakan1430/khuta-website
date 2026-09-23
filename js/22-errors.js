@@ -45,6 +45,15 @@ function schoolError(e, action){
     }
 
     // ٤) قيود واضحة يفهمها المستخدم
+    // حدود المدرسة ومراحلها (sql/PHASE0_FOUNDATION.sql)
+    if(/STUDENT_LIMIT/i.test(raw))
+        return ar ? "بلغت المدرسة الحدّ الأعلى لعدد الطلاب في باقتها. تواصل مع إدارة خُطى لرفع الحد."
+                  : "The school reached its student limit. Contact Khuta to raise it.";
+    if(/GRADE_IN_USE/i.test(raw))
+        return ar ? "لا يمكن حذف هذه المرحلة: فيها طلاب أو فصول. انقلهم لمرحلة أخرى أولاً."
+                  : "This grade has students or classes. Move them first.";
+    if(/GRADE_CODE_IMMUTABLE/i.test(raw))
+        return ar ? "لا يمكن تغيير رمز المرحلة — عدّل اسمها فقط." : "A grade's code can't change — edit its name.";
     /* حارس طلبات الحسابات (account_requests_guard في قاعدة البيانات) —
        أُضيف لأن باب الطلبات العلني كان مفتوحاً بلا حدّ، فأي زائر يغرق قائمة
        الإدارة بآلاف الطلبات. ورفضٌ بلا سبب مفهوم = شكوى "الموقع معطّل". */

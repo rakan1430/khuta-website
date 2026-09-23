@@ -17,14 +17,10 @@ let examSendMode = "classes";   // classes | grades | students
 let examSendPicked = { classes:new Set(), grades:new Set(), students:new Set() };
 let examStudentsCache = [];
 
-const SCHOOL_GRADES = [
-    { value:"1", ar:"أول ثانوي",   en:"Grade 10" },
-    { value:"2", ar:"ثاني ثانوي",  en:"Grade 11" },
-    { value:"3", ar:"ثالث ثانوي",  en:"Grade 12" },
-];
+/* المراحل من إعدادات المدرسة (js/13-school.js) لا قائمة ثابتة — كانت هنا
+   «أول/ثاني/ثالث ثانوي» حرفياً، فمدرسة متوسطة ترسل لمراحل غير موجودة. */
 function gradeText(v){
-    const g = SCHOOL_GRADES.find(x => x.value === String(v));
-    return g ? (currentLang==='ar' ? g.ar : g.en) : String(v || "");
+    return (typeof gradeName === "function") ? gradeName(v) : String(v || "");
 }
 
 async function openExamSend(examId){
@@ -185,11 +181,12 @@ function renderExamSend(){
         html = schoolClasses.length
             ? schoolClasses.map(c => pickRow("classes", c.id,
                 `${escapeHtml(c.name)}`,
-                `${gradeText(c.grade)}${c.section ? " · " + escapeHtml(c.section) : ""}`)).join("")
+                `${escapeHtml(gradeText(c.grade))}${c.section ? " · " + escapeHtml(c.section) : ""}`)).join("")
             : `<p class="card-sub">${currentLang==='ar' ? 'لا فصول مسندة إليك بعد. تسندها الإدارة.' : 'No classes assigned to you yet.'}</p>`;
     }else if(examSendMode === "grades"){
-        html = SCHOOL_GRADES.map(g => pickRow("grades", g.value,
-            currentLang==='ar' ? g.ar : g.en,
+        // ⚠️ escapeHtml إلزامي: أسماء المراحل يكتبها المدير الآن، لم تعد ثابتة في الكود
+        html = schoolGradesList().map(g => pickRow("grades", g.code,
+            escapeHtml(gradeText(g.code)),
             currentLang==='ar' ? 'كل طلاب هذه المرحلة' : 'All students in this grade')).join("");
     }else{
         const q = ((document.getElementById("exam-send-search") || {}).value || "").trim().toLowerCase();
@@ -199,7 +196,7 @@ function renderExamSend(){
         html = list.length
             ? list.slice(0, 200).map(s => pickRow("students", s.id,
                 escapeHtml(s.full_name),
-                `${gradeText(s.grade)}${s.section ? " · " + escapeHtml(s.section) : ""}`)).join("")
+                `${escapeHtml(gradeText(s.grade))}${s.section ? " · " + escapeHtml(s.section) : ""}`)).join("")
             : `<p class="card-sub">${q
                 ? (currentLang==='ar' ? 'لا طالب بهذا الاسم.' : 'No student by that name.')
                 : (currentLang==='ar' ? 'لا يظهر لك طلاب — تأكد من إسناد فصولك.' : 'No students visible to you.')}</p>`;
@@ -377,7 +374,7 @@ async function openSchoolExamResults(examId){
                 <div class="res-row">
                     <div class="res-who">
                         <b>${escapeHtml(r.s.info.full_name || (currentLang==='ar'?'طالب':'Student'))}</b>
-                        <small>${gradeText(r.s.info.grade)}${r.s.info.section ? " · " + escapeHtml(r.s.info.section) : ""}</small>
+                        <small>${escapeHtml(gradeText(r.s.info.grade))}${r.s.info.section ? " · " + escapeHtml(r.s.info.section) : ""}</small>
                     </div>
                     <div class="res-score ${scoreClass(r.best)}">
                         ${r.best == null ? (currentLang==='ar' ? 'لم يُنهِ' : 'Unfinished') : r.best + "%"}

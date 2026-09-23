@@ -17,7 +17,7 @@
 let adminClasses = [];
 
 function classLabel(c){
-    const g = (typeof gradeText === "function") ? gradeText(c.grade) : c.grade;
+    const g = (typeof gradeName === "function") ? gradeName(c.grade) : c.grade;
     return `${c.name} — ${g}${c.section ? " / " + c.section : ""}`;
 }
 
@@ -49,7 +49,7 @@ async function loadAdminClasses(){
                 <div class="member-row">
                     <div>
                         <b>${escapeHtml(c.name)}</b>
-                        <div class="card-sub">${escapeHtml(gradeText(c.grade))}${c.section ? " · " + (currentLang==='ar'?'شعبة ':'Section ') + escapeHtml(c.section) : ""}
+                        <div class="card-sub">${escapeHtml(gradeName(c.grade))}${c.section ? " · " + (currentLang==='ar'?'شعبة ':'Section ') + escapeHtml(c.section) : ""}
                             · ${counts[c.id] || 0} ${currentLang==='ar'?'طالب':'students'}</div>
                     </div>
                     <div class="sfile-actions">
@@ -127,7 +127,7 @@ async function addSchoolClass(){
         showToast(currentLang==='ar' ? 'اكتب الشعبة (أ، ب، ج…) — إجبارية' : 'Section is required');
         sectionEl.focus(); return;
     }
-    const finalName = name || `${gradeText(grade)} / ${section}`;
+    const finalName = name || `${gradeName(grade)} / ${section}`;
 
     const btn = document.getElementById("class-add-btn");
     schoolBusy(btn, true);
@@ -178,6 +178,7 @@ async function openAssignClass(memberId){
     // المادة تخصّ المعلّم وحده — إظهارها للطالب يربك ويطلب ما لا لزوم له
     const subjGroup = document.getElementById("assign-subject-group");
     if(subjGroup) subjGroup.style.display = (m.role === "teacher") ? "block" : "none";
+    if(typeof fillSubjectSelect === "function") fillSubjectSelect(document.getElementById("assign-subject"));
 
     if(!adminClasses.length) await loadAdminClasses(); else fillClassPickers();
     await renderAssignedClasses();
@@ -192,24 +193,33 @@ function closeAssignClass(){
 async function renderAssignedClasses(){
     const box = document.getElementById("assign-class-current");
     if(!box || !assignTargetMember) return;
-    const table = assignTargetMember.role === "student" ? "class_students" : "class_teachers";
-    const col   = assignTargetMember.role === "student" ? "student_id" : "teacher_id";
+    const isStudent = assignTargetMember.role === "student";
+    const table = isStudent ? "class_students" : "class_teachers";
+    const col   = isStudent ? "student_id" : "teacher_id";
     try{
         const { data, error } = await sb.from(table)
-            .select("class_id").eq(col, assignTargetMember.id);
+            .select(isStudent ? "class_id" : "id, class_id, subject, subject_id").eq(col, assignTargetMember.id);
         if(error) throw error;
-        const ids = (data || []).map(r => r.class_id);
-        if(!ids.length){
+        const rows = data || [];
+        if(!rows.length){
             box.innerHTML = `<p class="card-sub">${currentLang==='ar'
                 ? '⚠️ غير مسنَد لأي فصل — لن يرى شيئاً حتى تُسنِده.'
                 : '⚠️ Not assigned to any class yet.'}</p>`;
             return;
         }
-        box.innerHTML = ids.map(id => {
-            const c = adminClasses.find(x => x.id === id);
+        /* المعلّم قد يدرّس مادتين في الفصل نفسه، فيُعرض كل إسناد بمادته
+           ويُلغى بمعرّفه هو — لا بالفصل وحده فيسقط الإسنادان معاً. */
+        box.innerHTML = rows.map(r => {
+            const c = adminClasses.find(x => x.id === r.class_id);
+            const subj = !isStudent
+                ? (schoolSubjectsList(true).find(s => s.id === r.subject_id) || null)
+                : null;
+            const subjText = !isStudent ? (subj ? subjectName(subj) : (r.subject || "")) : "";
+            const key = isStudent ? r.class_id : r.id;
             return `<div class="member-row">
-                <b>${escapeHtml(c ? classLabel(c) : id)}</b>
-                <button type="button" class="btn btn-outline btn-sm" onclick="unassignClass('${escapeHtml(id)}')">
+                <div><b>${escapeHtml(c ? classLabel(c) : r.class_id)}</b>
+                    ${subjText ? `<span class="pill">${escapeHtml(subjText)}</span>` : ""}</div>
+                <button type="button" class="btn btn-outline btn-sm" onclick="unassignClass('${escapeHtml(key)}')">
                     <i class="fa-solid fa-xmark"></i></button>
             </div>`;
         }).join("");
@@ -233,14 +243,18 @@ async function assignMemberToClass(){
                 .insert({ class_id: classId, student_id: assignTargetMember.id });
             if(error && error.code !== "23505") throw error;
         }else{
+            // المادة من قائمة مواد المدرسة لا نصٌّ حرّ: «رياضيات» و«الرياضيات»
+            // كانتا تُحسبان مادتين، فلا تُجمع درجات مادة واحدة لاحقاً.
             const subjEl = document.getElementById("assign-subject");
-            const subject = (subjEl && subjEl.value || "").trim();
-            if(!subject){
-                showToast(currentLang==='ar' ? 'اكتب المادة التي يدرّسها' : 'Enter the subject');
+            const subjectId = (subjEl && subjEl.value) || "";
+            const subj = schoolSubjectsList(true).find(s => s.id === subjectId);
+            if(!subj){
+                showToast(currentLang==='ar' ? 'اختر المادة التي يدرّسها — وإن لم تجدها فأضفها من «مراحل المدرسة وموادها»' : 'Pick the subject');
                 schoolBusy(btn, false); return;
             }
             const { error } = await sb.from("class_teachers")
-                .insert({ class_id: classId, teacher_id: assignTargetMember.id, subject });
+                .insert({ class_id: classId, teacher_id: assignTargetMember.id,
+                          subject: subj.name_ar, subject_id: subj.id });
             if(error && error.code !== "23505") throw error;
         }
         showToast(currentLang==='ar' ? 'تم الإسناد ✅' : 'Assigned ✅');
@@ -252,13 +266,16 @@ async function assignMemberToClass(){
     }finally{ schoolBusy(btn, false); }
 }
 
-async function unassignClass(classId){
+/* للطالب: المفتاح معرّف الفصل. للمعلّم: معرّف صفّ الإسناد نفسه — كان
+   الحذف بالفصل والمعلّم معاً، فمعلّمٌ يدرّس الرياضيات والفيزياء لنفس الفصل
+   يفقد الإسنادين حين يُلغى أحدهما. */
+async function unassignClass(key){
     if(!sb || !assignTargetMember) return;
-    const table = assignTargetMember.role === "student" ? "class_students" : "class_teachers";
-    const col   = assignTargetMember.role === "student" ? "student_id" : "teacher_id";
     try{
-        const { error } = await sb.from(table).delete()
-            .eq("class_id", classId).eq(col, assignTargetMember.id);
+        const q = assignTargetMember.role === "student"
+            ? sb.from("class_students").delete().eq("class_id", key).eq("student_id", assignTargetMember.id)
+            : sb.from("class_teachers").delete().eq("id", key).eq("teacher_id", assignTargetMember.id);
+        const { error } = await q;
         if(error) throw error;
         renderAssignedClasses();
         loadAdminClasses();

@@ -23,7 +23,23 @@ let yearStudents = [];
 
 function yrLabel(ar, en){ return currentLang === "ar" ? ar : en; }
 
-const GRADE_NEXT = { "1": "2", "2": "3" };
+/* المراحل مرتّبة كما ترتّبها قاعدة البيانات حرفياً (sort_order ثم code) —
+   فما يعرضه هذا الملخّص هو ما ستفعله promote_school_year بالضبط. كانت
+   هنا «١←٢، ٢←٣، ٣ يتخرّج» ثابتة، فمدرسة ابتدائية تُرقّي الصف الثالث
+   إلى التخرّج في الملخّص بينما القاعدة ترقّيه للرابع. */
+function yrGrades(){
+    const list = (typeof schoolGradesList === "function") ? schoolGradesList() : [];
+    return [...list].sort((a, b) => ((a.sort || 0) - (b.sort || 0)) || String(a.code).localeCompare(String(b.code)));
+}
+
+/** المرحلة التالية، أو null للمتخرّج، أو undefined لمرحلة غير معروفة (لا تُمسّ). */
+function yrNextGrade(code){
+    if(code === null || code === undefined || code === "") return undefined;
+    const list = yrGrades();
+    const i = list.findIndex(g => String(g.code) === String(code));
+    if(i < 0) return undefined;
+    return i === list.length - 1 ? null : list[i + 1].code;
+}
 
 function yrGradeText(g){
     return (typeof gradeText === "function") ? gradeText(g) : String(g || "");
@@ -74,10 +90,10 @@ function renderYearStatus(){
             <span>${yrLabel("بدأت","started")} ${yrDate(s.year_started_at)}</span>
         </div>
         <div class="year-grades">
-            ${["1","2","3"].map(g => `
+            ${yrGrades().map(g => `
                 <div class="year-grade">
-                    <b>${Number(by[g]) || 0}</b>
-                    <span>${escapeHtml(yrGradeText(g))}</span>
+                    <b>${Number(by[g.code]) || 0}</b>
+                    <span>${escapeHtml(yrGradeText(g.code))}</span>
                 </div>`).join("")}
         </div>
         ${left === null ? "" : `
@@ -146,8 +162,9 @@ function yearOutcome(){
     let promoted = 0, graduated = 0;
     yearStudents.forEach(s => {
         if(yearHoldBack.has(s.id)) return;
-        if(s.grade === "3") graduated++;
-        else if(GRADE_NEXT[s.grade]) promoted++;
+        const next = yrNextGrade(s.grade);
+        if(next === null) graduated++;
+        else if(next) promoted++;
     });
     return { promoted, graduated, held: yearHoldBack.size };
 }
@@ -160,9 +177,12 @@ function renderYearPromotion(){
     m.innerHTML = `<div class="wizard-card" style="max-width:640px;">
         <h3 style="margin-bottom:4px;"><i class="fa-solid fa-graduation-cap"></i>
             ${yrLabel("ترقية السنة الدراسية","Promote the school year")}</h3>
-        <p class="card-sub" style="margin-bottom:14px;">${yrLabel(
-            "كل طالب يصعد مرحلةً، وثالث ثانوي يتخرّج. حدّد من تريد إبقاءه في مرحلته.",
-            "Every student moves up a grade; grade 12 graduates. Tick anyone who should stay.")}</p>
+        <p class="card-sub" style="margin-bottom:14px;">${(() => {
+            const g = yrGrades(); const last = g.length ? escapeHtml(yrGradeText(g[g.length - 1].code)) : "";
+            return yrLabel(
+                `كل طالب يصعد مرحلةً، و${last} يتخرّج. حدّد من تريد إبقاءه في مرحلته.`,
+                `Every student moves up a grade; ${last} graduates. Tick anyone who should stay.`);
+        })()}</p>
 
         <div class="form-group">
             <label for="year-label-input">${yrLabel("اسم السنة الجديدة","New year label")}</label>
@@ -174,9 +194,11 @@ function renderYearPromotion(){
         <div class="pick-list" style="max-height:34vh;">
             ${yearStudents.length ? yearStudents.map(s => {
                 const held = yearHoldBack.has(s.id);
+                const next = yrNextGrade(s.grade);
                 const dest = held ? yrLabel("يبقى في مرحلته","stays")
-                    : (s.grade === "3" ? yrLabel("يتخرّج ويخرج من المنصّة","graduates")
-                                       : `${yrGradeText(s.grade)} ← ${yrGradeText(GRADE_NEXT[s.grade] || s.grade)}`);
+                    : next === null ? yrLabel("يتخرّج ويخرج من المنصّة","graduates")
+                    : next ? `${yrGradeText(s.grade)} ← ${yrGradeText(next)}`
+                    : yrLabel("بلا مرحلة معروفة — لا يتغيّر","no known grade — unchanged");
                 return `
                 <button type="button" class="pick-row ${held ? "is-on" : ""}" onclick="toggleYearHold('${escapeHtml(s.id)}')">
                     <i class="fa-${held ? "solid fa-square-check" : "regular fa-square"}"></i>

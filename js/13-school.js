@@ -14,6 +14,13 @@
 let schoolCtx = null;      // { schoolId, memberId, role, fullName, grade, section }
 let schoolIdCache = null;
 
+// هنا لا في 14-school-work.js: ذلك يُحمَّل عند الحاجة على الجوّال، وتستعملها ملفات تُحمَّل دائماً
+function schoolBusy(btn, on){
+    if(!btn) return;
+    btn.disabled = on;
+    btn.style.opacity = on ? ".6" : "";
+}
+
 /* معرّف المدرسة يُقرأ قبل تسجيل الدخول (لنعرف لأي مدرسة يُرسَل الطلب).
    عبر دالة SECURITY DEFINER لأن جدول schools نفسه محمي بـRLS. */
 /* ⚠️ هنا كان العطل الذي أوقف الاختبار كلّه: الدالة كانت تشترط
@@ -24,16 +31,171 @@ let schoolIdCache = null;
    السبب الأعمق: كُتبت أيام كانت المدرسة نسخةً منفصلة لها عنوانها الخاص، ثم
    صرنا منصة واحدة ولم تُحدَّث معها. والدالة الجديدة في قاعدة البيانات تُرجع
    المدرسة الوحيدة حين لا يُمرَّر slug — وهو حال منصتنا اليوم. */
+/* ⚠️ مع تعدّد المدارس صار لكل مدرسة رابط انضمام خاص: ‎?school=<slug>&apply=…‎
+   وبلا ‎?school=‎ تُرجع القاعدة المدرسة الأقدم — لأن كل روابط ‎?apply=‎ الموزّعة
+   قبل تعدّد المدارس كانت لها. أما slug لا يطابق مدرسة فيُرجع null ولا نخمّن
+   (انظر school_for_request في sql/PHASE0_FOUNDATION.sql). */
+function requestedSchoolSlug(){
+    let slug = null;
+    try{ slug = new URLSearchParams(location.search).get("school"); }catch(e){}
+    if(slug && /^[a-z0-9-]{3,40}$/i.test(slug)) return slug.toLowerCase();
+    return (typeof TENANT !== "undefined" && TENANT && TENANT.schoolSlug) ? TENANT.schoolSlug : null;
+}
+
 async function getSchoolId(){
     if(schoolIdCache) return schoolIdCache;
     if(!sb) return null;
     try{
-        const slug = (typeof TENANT !== "undefined" && TENANT && TENANT.schoolSlug) ? TENANT.schoolSlug : null;
-        const { data, error } = await sb.rpc("school_for_request", { p_slug: slug });
+        const { data, error } = await sb.rpc("school_for_request", { p_slug: requestedSchoolSlug() });
         if(error) throw error;
         schoolIdCache = data || null;
     }catch(e){ console.warn("[خُطى] تعذّر تحديد المدرسة:", e); }
     return schoolIdCache;
+}
+
+/* ============================================================
+   إعدادات المدرسة: مراحلها وموادّها
+   ------------------------------------------------------------
+   كانت «أول/ثاني/ثالث ثانوي» مكتوبة في أكثر من سبعة مواضع (قوائم في
+   الصفحة، و‎gradeText‎ و‎gradeLabel‎، ودالّتا الترقية والاستيراد في القاعدة).
+   مدرسة متوسطة كانت ستعرض «أول ثانوي» لطلاب الصف السابع. الآن تأتي من
+   جدول school_grades لكل مدرسة، والقوائم الثابتة في الصفحة احتياطٌ يُستبدل
+   فور وصول الإعدادات — ويطابقها حرفياً للمدرسة الحالية.
+   ============================================================ */
+let schoolSettings = null;      // { grades:[{code,label_ar,label_en,sort}], subjects:[{id,name_ar,name_en,sort,active}] }
+const FALLBACK_GRADES = [
+    { code:"1", label_ar:"أول ثانوي",  label_en:"Grade 10", sort:1 },
+    { code:"2", label_ar:"ثاني ثانوي", label_en:"Grade 11", sort:2 },
+    { code:"3", label_ar:"ثالث ثانوي", label_en:"Grade 12", sort:3 },
+];
+
+function schoolGradesList(){
+    const g = schoolSettings && Array.isArray(schoolSettings.grades) ? schoolSettings.grades : null;
+    return (g && g.length) ? g : FALLBACK_GRADES;
+}
+
+function schoolSubjectsList(includeInactive){
+    const s = (schoolSettings && Array.isArray(schoolSettings.subjects)) ? schoolSettings.subjects : [];
+    return includeInactive ? s : s.filter(x => x.active);
+}
+
+/** اسم المرحلة من رمزها بلغة الواجهة — والرمز نفسه إن لم يُعرف. */
+function gradeName(code){
+    if(code === null || code === undefined || code === "") return "";
+    const g = schoolGradesList().find(x => String(x.code) === String(code));
+    if(!g) return String(code);
+    return currentLang === "ar" ? g.label_ar : (g.label_en || g.label_ar);
+}
+
+function subjectName(s){
+    if(!s) return "";
+    return currentLang === "ar" ? s.name_ar : (s.name_en || s.name_ar);
+}
+
+/* قوائم المراحل في الصفحة: [المعرّف، نصّ الخيار الأول الفارغ أو null] */
+const GRADE_SELECTS = [
+    ["areq-grade",   null],
+    ["tfile-grade",  ["كل الصفوف", "All grades"]],
+    ["exam-grade",   null],
+    ["class-grade",  null],
+    ["filter-grade", ["كل المراحل", "All grades"]],
+];
+
+function fillGradeSelect(sel, emptyLabel){
+    if(!sel) return;
+    const prev = sel.value;
+    sel.textContent = "";
+    if(emptyLabel){
+        const o = document.createElement("option");
+        o.value = ""; o.textContent = currentLang === "ar" ? emptyLabel[0] : emptyLabel[1];
+        sel.appendChild(o);
+    }
+    schoolGradesList().forEach(g => {
+        const o = document.createElement("option");
+        o.value = g.code; o.textContent = gradeName(g.code);
+        sel.appendChild(o);
+    });
+    if(prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+/* المادة في الملفات والاختبارات والجدول نصٌّ حرّ حتى اليوم. نقترح مواد
+   المدرسة عبر datalist دون أن نمنع الكتابة — فلا ينكسر ما كُتب سابقاً. */
+function fillSubjectDatalist(){
+    let dl = document.getElementById("school-subjects-list");
+    if(!dl){
+        dl = document.createElement("datalist");
+        dl.id = "school-subjects-list";
+        document.body.appendChild(dl);
+    }
+    dl.textContent = "";
+    schoolSubjectsList(false).forEach(s => {
+        const o = document.createElement("option");
+        o.value = s.name_ar;
+        dl.appendChild(o);
+    });
+    ["tfile-subject", "exam-subject", "tt-subject"].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.setAttribute("list", "school-subjects-list");
+    });
+}
+
+function fillSubjectSelect(sel){
+    if(!sel) return;
+    const prev = sel.value;
+    sel.textContent = "";
+    const list = schoolSubjectsList(false);
+    if(!list.length){
+        const o = document.createElement("option");
+        o.value = ""; o.textContent = currentLang === "ar" ? "— أضف مواد المدرسة أولاً —" : "— add subjects first —";
+        sel.appendChild(o);
+        return;
+    }
+    list.forEach(s => {
+        const o = document.createElement("option");
+        o.value = s.id; o.textContent = subjectName(s);
+        sel.appendChild(o);
+    });
+    if(prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
+/** يعيد رسم كل ما يعتمد على الإعدادات — بعد تحميلها، وبعد تبديل اللغة. */
+function applySchoolSettingsUI(){
+    GRADE_SELECTS.forEach(([id, empty]) => fillGradeSelect(document.getElementById(id), empty));
+    fillSubjectDatalist();
+    fillSubjectSelect(document.getElementById("assign-subject"));
+}
+
+/* فحص المساحة قبل الرفع. سياسة الرفع في القاعدة هي الحارس الحقيقي، لكن
+   رفضها يصل برسالة «لا صلاحية» عامة — فيظن المعلّم أن حسابه معطوب. هنا
+   نقول السبب الحقيقي قبل أن ينتظر رفع ملف كبير. وأي فشل في الفحص نفسه
+   لا يمنع الرفع: القاعدة ستحكم على أي حال. */
+async function schoolStorageAllows(extraBytes){
+    if(!sb || !schoolCtx) return true;
+    try{
+        const { data, error } = await sb.rpc("school_storage_status", { p_school: schoolCtx.schoolId });
+        if(error) throw error;
+        if(!data || data.limit_mb === null || data.limit_mb === undefined) return true;
+        const limit = Number(data.limit_mb) * 1048576;
+        if(Number(data.used_bytes) + (Number(extraBytes) || 0) > limit){
+            const usedMb = Math.round(Number(data.used_bytes) / 1048576);
+            showToast(currentLang === "ar"
+                ? `امتلأت مساحة المدرسة (${usedMb} من ${data.limit_mb} ميجا). احذف ملفات قديمة، أو تواصل مع إدارة خُطى لزيادتها.`
+                : `School storage is full (${usedMb} of ${data.limit_mb} MB).`);
+            return false;
+        }
+    }catch(e){ console.warn("[خُطى] تعذّر فحص مساحة المدرسة:", e); }
+    return true;
+}
+
+async function loadSchoolSettings(schoolId){
+    if(!sb || !schoolId) return schoolSettings;
+    try{
+        const { data, error } = await sb.rpc("school_settings", { p_school: schoolId });
+        if(error) throw error;
+        schoolSettings = data || null;
+    }catch(e){ console.warn("[خُطى] تعذّر تحميل إعدادات المدرسة:", e); }
+    applySchoolSettingsUI();
+    return schoolSettings;
 }
 
 /* يُستدعى بعد كل تسجيل دخول ناجح — في خُطى نفسها، لا في نسخة منفصلة.
@@ -151,6 +313,36 @@ async function fillRequestIdentity(){
         const meta = user.user_metadata || {};
         nameEl.value = meta.full_name || meta.name || "";
     }
+    if(signedIn) showRequestSchool();
+}
+
+/* مع تعدّد المدارس يجب أن يرى المتقدّم لأي مدرسة يرسل طلبه، وأن تُعرض له
+   مراحل **تلك** المدرسة لا مراحل مدرسة أخرى. */
+async function showRequestSchool(){
+    const el = document.getElementById("areq-school");
+    const btn = document.getElementById("areq-submit");
+    if(!sb) return;
+    try{
+        const { data, error } = await sb.rpc("school_request_info", { p_slug: requestedSchoolSlug() });
+        if(error) throw error;
+        if(!data || !data.id){
+            if(el){
+                el.style.display = "block";
+                el.textContent = currentLang === "ar"
+                    ? "⚠️ رابط المدرسة غير صحيح. اطلب من مدرستك الرابط الصحيح."
+                    : "⚠️ This school link is not valid. Ask your school for the correct link.";
+            }
+            if(btn){ btn.disabled = true; btn.style.opacity = ".5"; }
+            return;
+        }
+        schoolIdCache = data.id;
+        if(el){
+            el.style.display = "block";
+            el.textContent = (currentLang === "ar" ? "المدرسة: " : "School: ")
+                + (currentLang === "ar" ? data.name_ar : (data.name_en || data.name_ar));
+        }
+        await loadSchoolSettings(data.id);
+    }catch(e){ console.warn("[خُطى] تعذّر تحديد مدرسة الطلب:", e); }
 }
 
 function closeAccountRequest(){
@@ -265,7 +457,7 @@ async function loadAccountRequests(){
         }
         box.innerHTML = data.map(r => {
             const when = new Date(r.created_at).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US');
-            const cls = r.grade ? `${escapeHtml(r.grade)}${r.section ? " / " + escapeHtml(r.section) : ""}` : "—";
+            const cls = r.grade ? `${escapeHtml(gradeName(r.grade))}${r.section ? " / " + escapeHtml(r.section) : ""}` : "—";
             return `
             <div class="areq-card">
                 <div class="areq-head">
@@ -319,7 +511,8 @@ async function approveRequest(id){
             raw.includes("NEEDS_GOOGLE")          ? (currentLang==='ar' ? "أكّد هويتك بحساب Google أولاً" : "Confirm with Google first") :
             raw.includes("REQUEST_HAS_NO_EMAIL")  ? (currentLang==='ar' ? "الطلب بلا بريد — اطلب من صاحبه إعادة إرساله بعد تسجيل الدخول" : "Request has no email") :
             raw.includes("ALREADY_REVIEWED")      ? (currentLang==='ar' ? "هذا الطلب رُوجع من قبل" : "Already reviewed") :
-            (currentLang==='ar' ? "تعذّر تنفيذ العملية" : "Action failed"));
+            // بقية الأسباب (منها حدّ الطلاب في باقة المدرسة) يشرحها schoolError
+            schoolError(e, currentLang==='ar' ? "قبول الطلب" : "approving the request"));
     }
 }
 
@@ -380,7 +573,7 @@ async function loadSchoolMembers(){
                   <div>
                     <b>${escapeHtml(m.full_name)}</b>
                     <span class="pill">${escapeHtml(schoolRoleLabel(m.role))}</span>
-                    ${m.grade ? `<span class="card-sub"> · ${escapeHtml(gradeText(m.grade))}${m.section ? " / " + escapeHtml(m.section) : ""}</span>` : ""}
+                    ${m.grade ? `<span class="card-sub"> · ${escapeHtml(gradeName(m.grade))}${m.section ? " / " + escapeHtml(m.section) : ""}</span>` : ""}
                     ${m.role === "student" && !m.section ? `<span class="card-sub" style="color:var(--gold-text);"> · ${currentLang==='ar'?'⚠️ بلا شعبة':'⚠️ no section'}</span>` : ""}
                   </div>
                 </div>
@@ -422,8 +615,8 @@ async function toggleMemberActive(id, makeActive){
         if(error) throw error;
         loadSchoolMembers();
     }catch(e){
-        console.error("[خُطى] تعذّر تعديل العضو:", e);
-        showToast(currentLang==='ar' ? "تعذّر تنفيذ العملية" : "Action failed");
+        // إعادة تفعيل طالب قد تُرفض لبلوغ حدّ الطلاب — فالسبب يُقال لا يُخفى
+        showSchoolError(e, currentLang==='ar' ? "تعديل العضو" : "updating the member");
     }
 }
 
@@ -432,6 +625,18 @@ async function toggleMemberActive(id, makeActive){
    ============================================================ */
 function applySchoolRoleUI(){
     const role = schoolCtx ? schoolCtx.role : null;
+    /* على الجوّال: ملفات المدرسة لا تُحمَّل إلا لعضو مدرسة (انظر المُحمِّل في
+       index.html). نحمّلها ثم نعيد هذه الدالّة — وقبل ذلك لا يظهر أي قسم
+       مدرسي، فلا يضغط أحد زرّاً دالّته لم تصل بعد. */
+    if(role && typeof khutaGroupReady === "function" && !khutaGroupReady("school")){
+        khutaLoadGroup("school").then(() => applySchoolRoleUI()).catch(e => {
+            console.error("[خُطى] تعذّر تحميل ملفات المدرسة:", e);
+            showToast(currentLang === "ar"
+                ? "تعذّر تحميل أقسام المدرسة — تحقّق من الاتصال ثم حدّث الصفحة."
+                : "Couldn't load the school sections — check your connection and refresh.");
+        });
+        return;
+    }
     /* ⚠️ هذا الصنف يشغّل مقاسات اللمس المكبَّرة (44px) لأعضاء المدرسة.
        كانت مشروطة بعنوان النسخة، فماتت حين وحّدنا المنصّتين. */
     document.body.classList.toggle("is-school", !!role);
@@ -494,7 +699,13 @@ function applySchoolRoleUI(){
     if(typeof applyStaffHome === "function"){
         try{ applyStaffHome(); }catch(e){ console.warn("[خُطى] تعذّر تهيئة الصفحة الرئيسية:", e); }
     }
-    if(typeof loadSchoolWorkspace === "function") loadSchoolWorkspace();
+    // الإعدادات قبل مساحة العمل: القوائم ترسم أسماء المراحل منها
+    const ready = (schoolCtx && typeof loadSchoolSettings === "function")
+        ? loadSchoolSettings(schoolCtx.schoolId) : Promise.resolve();
+    ready.finally(() => {
+        if(typeof loadSchoolWorkspace === "function") loadSchoolWorkspace();
+        if(role === "admin" && typeof renderSchoolSettingsAdmin === "function") renderSchoolSettingsAdmin();
+    });
 }
 
 /* يُستدعى من مسار الإقلاع بعد اكتمال تسجيل الدخول */
@@ -505,7 +716,8 @@ async function initSchoolAfterLogin(){
     // يكمل تجربته المعتادة كأن قسم المدرسة غير موجود.
     if(!ctx) return;
     hideSchoolGate();
-    if(typeof loadSchoolWorkspace === "function") loadSchoolWorkspace();
+    // ⚠️ لا نداء ثانٍ لـloadSchoolWorkspace هنا: applySchoolRoleUI أعلاه تستدعيها
+    // بعد وصول إعدادات المدرسة. النداء المبكّر كان يرسم القوائم قبلها.
 }
 
 /* ============================================================

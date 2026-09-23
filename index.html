@@ -314,6 +314,7 @@
             </p>
 
             <p id="areq-entry-note" class="hint" style="display:none; margin-bottom:10px; font-weight:700; color:var(--gold-text);"></p>
+            <p id="areq-school" class="uni-note" style="display:none; margin-bottom:12px; font-weight:700;"></p>
 
             <!-- ⚠️ لا طلب بلا حساب: الإدارة توافق على بريد، والنظام يربط الحساب
                  بالعضوية حين يتطابق البريد. فلو كُتب باليد وأخطأ حرفاً واحداً
@@ -856,6 +857,7 @@
 
         <p class="hint" style="margin-top:14px;">إدارة قائمة المشرفين نفسها تتم من Supabase Table Editor مباشرة (جدول app_admins) — أضف أي حساب Google تريد منحه هذه الصلاحية.</p>
         <div class="divider"></div>
+        <button type="button" class="btn btn-sm btn-block acc-btn" onclick="openOwnerSchools()"><i class="fa-solid fa-school"></i> إدارة المدارس — الإنشاء والمديرون والحدود</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" onclick="openErrorLogsPanel()"><i class="fa-solid fa-bug"></i> سجل الأخطاء البرمجية</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openAnalyticsPanel()"><i class="fa-solid fa-chart-line"></i> لوحة التحليلات</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openLiveUsersPanel()"><i class="fa-solid fa-signal"></i> المتصلون الآن بالتفصيل</button>
@@ -2384,6 +2386,13 @@
                 </button>
             </div>
 
+            <!-- روابط الانضمام الخاصة بهذه المدرسة، ومراحلها وموادها — js/34-school-settings.js -->
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-sliders"></i> <span data-i18n="school.setupTitle">إعداد المدرسة: الروابط والمراحل والمواد</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.setupSub">روابط الانضمام خاصة بمدرستك. والمراحل والمواد تظهر في كل قوائم المنصّة — الفصول والاختبارات والملفات وإسناد المعلّمين.</p>
+                <div id="school-settings-admin"></div>
+            </div>
+
             <!-- ⚠️ الفصول أساس كل شيء: الجدول الدراسي، ورؤية الطالب لملفات
                  معلّميه، واستهداف الاختبارات. بلا فصل لا يعمل أيٌّ منها. -->
             <div class="card">
@@ -2539,7 +2548,8 @@
                 </div>
                 <div class="form-group" id="assign-subject-group">
                     <label data-i18n="school.assignSubject">المادة (للمعلّم)</label>
-                    <input type="text" id="assign-subject" maxlength="40" placeholder="رياضيات">
+                    <select id="assign-subject"></select>
+                    <p class="hint" data-i18n="school.assignSubjectHint">المواد من إعدادات المدرسة — يضيفها المدير من «مراحل المدرسة وموادها».</p>
                 </div>
                 <button type="button" id="assign-class-btn" class="btn btn-block acc-btn" onclick="assignMemberToClass()">
                     <i class="fa-solid fa-plus"></i> <span data-i18n="school.assignAdd">إسناد</span>
@@ -2839,6 +2849,86 @@
      مرئية لبعضها كما لو كانت ملفاً واحداً.
 
      عند إضافة ملف جديد: أضِف وسم <script> له هنا بنفس نمط الترتيب. -->
+<!-- ============================================================
+     تحميل ملفات المدرسة عند الحاجة — على الجوّال وحده
+     ------------------------------------------------------------
+     قرار المالك: «لا يحمّل أي شيء إلا عندما يُفتح… محصور مع الهواتف فقط،
+     في الكمبيوتر سيتم تحميل كل شيء، كما أنه أيضاً في التطبيق المحمّل».
+
+     ملفات المدرسة ≈ ربع الجافاسكربت، وطالب خُطى على جوّاله لا يحتاج منها
+     سطراً. فعلى الجوّال (في المتصفّح) لا تُحمَّل إلا بعد أن يثبت أن الحساب
+     عضو مدرسة (applySchoolRoleUI في js/13-school.js).
+
+     ⚠️ على الكمبيوتر والتطبيق المثبَّت: كل وسم khutaEager أدناه يكتب وسم
+     ‎<script defer>‎ نفسه **في موضعه الأصلي** عبر document.write أثناء تحليل
+     الصفحة — فيبقى الترتيب والسلوك مطابقَين لما قبل هذا التعديل حرفياً.
+     (document.write لوسم defer من نفس الأصل آمن ولا يحجب التحليل.)
+
+     ⚠️ ولا يُكسر شيء بغياب الملف: فحصٌ آلي أكّد أن أيّاً منها لا يُنفّذ
+     شيئاً عند تحميله (دوالّ وثوابت فقط)، وأن كل نداء لها من الملفات
+     الدائمة محروس بـtypeof أو يقع داخل أقسام المدرسة التي لا تظهر إلا بعد
+     تحميلها. الاستثناء الوحيد schoolBusy نُقلت إلى 13-school.js.
+     ============================================================ -->
+<script>
+(function(){
+    var ua = navigator.userAgent || "";
+    var phone = (navigator.userAgentData && navigator.userAgentData.mobile === true)
+             || /Android.+Mobile|iPhone|iPod|Windows Phone|IEMobile|Opera Mini/i.test(ua);
+    var installed = false;
+    try{
+        installed = window.matchMedia("(display-mode: standalone)").matches
+                 || window.matchMedia("(display-mode: fullscreen)").matches
+                 || navigator.standalone === true;
+    }catch(e){}
+    var lazy = phone && !installed;
+    try{ if(new URLSearchParams(location.search).get("lazy") === "0") lazy = false; }catch(e){}
+    window.KHUTA_LAZY = lazy;
+    window.KHUTA_GROUPS = {
+        school: ["js/14-school-work.js", "js/18-exam-builder.js", "js/19-exam-send.js", "js/21-classes.js", "js/23-school-home.js", "js/24-student-exam.js", "js/25-import.js", "js/28-report.js", "js/30-parent-links.js", "js/31-year.js", "js/32-member-leave.js", "js/33-attendance.js", "js/34-school-settings.js"],
+        owner:  ["js/34-school-settings.js", "js/35-owner-schools.js"]
+    };
+    var loaded = {}, groupPromises = {};
+    window.khutaEager = function(src){
+        if(lazy) return;
+        loaded[src] = true;
+        document.write('<script src="' + src + '" defer><\/script>');
+    };
+    function loadOne(src){
+        if(loaded[src]) return loaded[src] === true ? Promise.resolve() : loaded[src];
+        loaded[src] = new Promise(function(resolve, reject){
+            var s = document.createElement("script");
+            s.src = src;
+            s.async = false;          // يحفظ ترتيب التنفيذ بين ملفات المجموعة
+            s.onload = function(){ loaded[src] = true; resolve(); };
+            s.onerror = function(){ delete loaded[src]; reject(new Error("LOAD_FAILED " + src)); };
+            document.head.appendChild(s);
+        });
+        return loaded[src];
+    }
+    /** يحمّل مجموعة مرة واحدة ويعيد وعداً يكتمل بتنفيذ كل ملفاتها. */
+    window.khutaLoadGroup = function(name){
+        if(!lazy) return Promise.resolve();
+        if(groupPromises[name]) return groupPromises[name];
+        var files = window.KHUTA_GROUPS[name] || [];
+        groupPromises[name] = Promise.all(files.map(loadOne)).catch(function(e){
+            delete groupPromises[name];
+            throw e;
+        });
+        return groupPromises[name];
+    };
+    window.khutaGroupReady = function(name){
+        return !lazy || (window.KHUTA_GROUPS[name] || []).every(function(f){ return loaded[f] === true; });
+    };
+    // زرّ «إدارة المدارس» في أدوات المشرف: الملف يُحمَّل عند أول ضغطة.
+    // حين يُحمَّل يستبدل تصريحُ الدالّة فيه هذا البديلَ تلقائياً.
+    if(lazy){
+        window.openOwnerSchools = function(){
+            return window.khutaLoadGroup("owner").then(function(){ return window.openOwnerSchools(); })
+                .catch(function(e){ console.error("[خُطى]", e); alert("تعذّر تحميل اللوحة — تحقّق من الاتصال."); });
+        };
+    }
+})();
+</script>
 <!-- ⚠️ 00-tenant.js يجب أن يبقى أول ملف: منه يعرف الموقع أي نسخة هو
      (خُطى للقدرات، أو نسخة مدرسة)، وأي قاعدة بيانات يستعمل. -->
 <script src="js/00-tenant.js" defer></script>
@@ -2855,26 +2945,28 @@
 <script src="js/11-community.js" defer></script>
 <script src="js/12-ai.js" defer></script>
 <script src="js/13-school.js" defer></script>
-<script src="js/14-school-work.js" defer></script>
+<script>khutaEager("js/14-school-work.js")</script>
 <script src="js/15-demo.js" defer></script>
 <script src="js/16-qr.js" defer></script>
 <script src="js/17-qr-login.js" defer></script>
-<script src="js/18-exam-builder.js" defer></script>
-<script src="js/19-exam-send.js" defer></script>
+<script>khutaEager("js/18-exam-builder.js")</script>
+<script>khutaEager("js/19-exam-send.js")</script>
 <script src="js/20-entry.js" defer></script>
-<script src="js/21-classes.js" defer></script>
+<script>khutaEager("js/21-classes.js")</script>
 <script src="js/22-errors.js" defer></script>
-<script src="js/23-school-home.js" defer></script>
-<script src="js/24-student-exam.js" defer></script>
-<script src="js/25-import.js" defer></script>
+<script>khutaEager("js/23-school-home.js")</script>
+<script>khutaEager("js/24-student-exam.js")</script>
+<script>khutaEager("js/25-import.js")</script>
 <script src="js/26-mode.js" defer></script>
 <script src="js/27-alias.js" defer></script>
-<script src="js/28-report.js" defer></script>
+<script>khutaEager("js/28-report.js")</script>
 <script src="js/29-moderation.js" defer></script>
-<script src="js/30-parent-links.js" defer></script>
-<script src="js/31-year.js" defer></script>
-<script src="js/32-member-leave.js" defer></script>
-<script src="js/33-attendance.js" defer></script>
+<script>khutaEager("js/30-parent-links.js")</script>
+<script>khutaEager("js/31-year.js")</script>
+<script>khutaEager("js/32-member-leave.js")</script>
+<script>khutaEager("js/33-attendance.js")</script>
+<script>khutaEager("js/34-school-settings.js")</script>
+<script>khutaEager("js/35-owner-schools.js")</script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>
