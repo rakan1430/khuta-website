@@ -94,6 +94,8 @@ async function main(){
                     if(name === "promote_school_year"){
                         if(window.__promoteError)
                             return { data:null, error:{ message: window.__promoteError } };
+                        // القاعدة تُرجع خطأ الرمز كقيمة لا استثناء (sql/PHASE6_FIXES.sql §٣)
+                        if(args.p_code !== "123456") return { data:{ error: args.p_code ? "CODE_INVALID" : "CODE_MISSING" }, error:null };
                         return { data: { promoted:2, graduated:1, held_back:2, archived:12 }, error:null };
                     }
                     return { data:null, error:null };
@@ -103,6 +105,21 @@ async function main(){
                     order: function(){ return this; },
                     limit: async () => ({ data: JSON.parse(JSON.stringify(window.__students)), error:null }),
                 }),
+            };
+            sb.auth = { getSession: async () => ({ data:{ session:{ access_token:"tok" } } }) };
+            window.__codeRequests = 0;
+            window.fetch = async (url, opt) => {
+                if(String(url).includes("sensitive-code")){ window.__codeRequests++;
+                    return { ok:true, json: async () => ({ ok:true, sentTo:"ad***n@gmail.com", expiresIn:600 }) }; }
+                return { ok:false, json: async () => ({}) };
+            };
+            /* المسار الجديد: رمز من البريد قبل التنفيذ (ملاحظة المالك ٢٤ سبتمبر) */
+            window.__withCode = async (code) => {
+                yearCodeResendAt = 0;
+                const label = (document.getElementById("year-label-input") || {}).value;
+                await sendYearCode();
+                if(label !== undefined && document.getElementById("year-label-input")) document.getElementById("year-label-input").value = label;
+                document.getElementById("year-code-input").value = code === undefined ? "123456" : code;
             };
             schoolCtx = { schoolId:"sch", memberId:"m", role:"admin", fullName:"مدير" };
             showToast = (m) => window.__toasts.push(String(m));
@@ -182,8 +199,33 @@ async function main(){
 
         /* ---------- ٣) التأكيد يذكر الأرقام ---------- */
         console.log("\nقبل التنفيذ");
+        /* ---------- ٢ب) بلا رمز لا تنفيذ ---------- */
+        const noCode = await page.evaluate(async () => {
+            const btnSend = !!document.getElementById("year-send-code");
+            const btnConfirm = !!document.getElementById("year-confirm");
+            await confirmYearPromotion();   // بلا خانة رمز أصلاً
+            return { btnSend, btnConfirm, called: window.__calls.filter(c => c.name === "promote_school_year").length,
+                     toast: window.__toasts.slice(-1)[0] };
+        });
+        ok("قبل الرمز: زرّ «أرسل رمز التحقق» وحده، لا زرّ تنفيذ", noCode.btnSend && !noCode.btnConfirm);
+        ok("ومحاولة التنفيذ بلا رمز لا تنادي الخادم", noCode.called === 0 && /٦ أرقام/.test(noCode.toast || ""), noCode.toast);
+        const sent = await page.evaluate(async () => {
+            await window.__withCode("");
+            return { req: window.__codeRequests, text: document.getElementById("year-modal").textContent,
+                     input: !!document.getElementById("year-code-input") };
+        });
+        ok("طلب الرمز يُرسَل، ويُذكر البريد المقنَّع، وتظهر خانة الرمز", sent.req === 1 && /ad\*\*\*n@gmail.com/.test(sent.text) && sent.input);
+        const wrong = await page.evaluate(async () => {
+            window.__confirmAnswer = true;
+            document.getElementById("year-code-input").value = "999999";
+            await confirmYearPromotion();
+            return { toast: window.__toasts.slice(-1)[0], open: document.getElementById("year-modal").style.display !== "none" };
+        });
+        ok("رمز خاطئ: رسالة واضحة، والنافذة تبقى", /غير صحيح/.test(wrong.toast) && wrong.open, wrong.toast);
+
         await page.evaluate(async () => {
             window.__confirmAnswer = false;
+            document.getElementById("year-code-input").value = "123456";
             await confirmYearPromotion();
         });
         const asked = await page.evaluate(() => ({
@@ -195,13 +237,14 @@ async function main(){
         ok("ويقول إن الإجراء لا رجعة فيه", /لا رجعة/.test(asked.msg));
         ok("ويذكر حذف بيانات العام الماضي", /تُحذف/.test(asked.msg));
         /* ⚠️ الرفض يعني ألّا يُنفَّذ شيء إطلاقاً */
-        ok("ورفضُ التأكيد لا يُنفّذ شيئاً", asked.called === 0, String(asked.called));
+        ok("ورفضُ التأكيد لا يُنفّذ شيئاً", asked.called === 1, String(asked.called));   // النداء الوحيد: الرمز الخاطئ أعلاه
 
         /* ---------- ٤) التنفيذ ---------- */
         console.log("\nالتنفيذ");
         await page.evaluate(async () => {
             window.__confirmAnswer = true;
             document.getElementById("year-label-input").value = "1449";
+            document.getElementById("year-code-input").value = "123 456";   // بمسافة كما يُنسخ من البريد
             await confirmYearPromotion();
         });
         const done = await page.evaluate(() => ({
@@ -214,6 +257,7 @@ async function main(){
            done.call && JSON.stringify([...done.call.args.p_hold_back].sort()) === '["s1","s4"]',
            JSON.stringify(done.call && done.call.args));
         ok("ومعها اسم السنة الجديدة", done.call && done.call.args.p_year_label === "1449");
+        ok("ومعها الرمز (أرقاماً فقط)", done.call && done.call.args.p_code === "123456", done.call && done.call.args.p_code);
         ok("وتُغلق النافذة بعد النجاح", done.closed);
         ok("ويُقال ما جرى بالأرقام", /2/.test(done.toast) && /1/.test(done.toast), done.toast);
         ok("وتُحدَّث البطاقة تلقائياً", done.refreshed >= 4, String(done.refreshed));
@@ -226,6 +270,7 @@ async function main(){
                 window.__promoteError = err;
                 await openYearPromotion();
                 await new Promise(r => setTimeout(r, 30));
+                await window.__withCode();
                 await confirmYearPromotion();
                 out[err] = window.__toasts.slice(-1)[0];
             }

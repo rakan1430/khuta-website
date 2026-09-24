@@ -349,11 +349,14 @@ create policy attempts_student_own on exam_attempts for select to authenticated
                    where e.id = exam_attempts.exam_id
                      and student_id = my_member_id(e.school_id)));
 
+-- ⚠️ أُزيلت (٢٤ سبتمبر ٢٠٢٦): كانت هنا سياسة attempts_student_insert تسمح للطالب
+-- بإدراج محاولته مباشرةً — أي بدرجة يختارها هو. في القاعدة الحيّة سُحبت صلاحية
+-- INSERT/UPDATE/DELETE على exam_attempts من المتصفّح كلّياً، والتسليم عبر
+-- submit_exam_attempt وحدها (تصحّح في القاعدة). انظر sql/PHASE1_HOMEWORK_GRADES.sql §٠.
 drop policy if exists attempts_student_insert on exam_attempts;
-create policy attempts_student_insert on exam_attempts for insert to authenticated
-    with check (exists (select 1 from teacher_exams e
-                        where e.id = exam_attempts.exam_id
-                          and student_id = my_member_id(e.school_id)));
+drop policy if exists attempts_student_write  on exam_attempts;
+drop policy if exists attempts_student_update on exam_attempts;
+revoke insert, update, delete on exam_attempts from authenticated, anon;
 
 drop policy if exists attempts_owner_read on exam_attempts;
 create policy attempts_owner_read on exam_attempts for select to authenticated

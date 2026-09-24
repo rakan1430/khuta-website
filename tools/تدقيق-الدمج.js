@@ -69,7 +69,8 @@ all.forEach(({f,src})=>{
 });
 
 // ٥) ملفات JS غير مُدرجة، وترتيب سطر الصرف
-const tags=[...html.matchAll(/<script src="js\/([^"]+)"/g)].map(m=>m[1]);
+// الوسم العادي، أو khutaEager("js/…") — التحميل عند الحاجة على الجوّال (المرحلة ٠)
+const tags=[...html.matchAll(/<script src="js\/([^"]+)"|khutaEager\("js\/([^"]+)"\)/g)].map(m=>m[1]||m[2]);
 js.filter(f=>!tags.includes(f)).forEach(f=>add('حرج',`ملف غير مُدرج في الصفحة: ${f}`,'index.html'));
 if(tags[tags.length-1]!=='99-boot-flush.js') add('حرج','سطر صرف المصادقة ليس في آخر ملف','index.html');
 

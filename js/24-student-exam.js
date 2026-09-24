@@ -27,14 +27,13 @@
    ============================================================ */
 
 let seExam = null;          // الاختبار المفتوح
-let seAnswers = {};         // { "0": 2 }
+let seAnswers = {};         // { "<رقم السؤال الأصلي>": <رقم الخيار الأصلي> }
 let seMarked = new Set();   // أسئلة مُمَيَّزة للمراجعة
 let seIndex = 0;
 let seFontStep = 0;         // -1 / 0 / +1
 let seTimer = null;
 let seLeft = 0;
 let seReview = null;        // بيانات المراجعة بعد التسليم
-const seImgCache = new Map();
 
 function seLabel(ar, en){ return currentLang === "ar" ? ar : en; }
 
@@ -61,15 +60,29 @@ async function openStudentExam(examId){
     document.body.style.overflow = "hidden";
 
     try{
-        const { data, error } = await sb.rpc("get_exam_for_student", { p_exam: examId });
+        /* p_client: 2 = هذه الواجهة تفهم الخلط: تُرسل الإجابات بأرقامها
+           الأصلية (q.i / c.ci). الواجهة القديمة المنشورة لا ترسله، فيصلها
+           الترتيب الأصلي ولا يختلّ تصحيحها — انظر sql/PHASE1_HOMEWORK_GRADES.sql §2 */
+        const { data, error } = await sb.rpc("get_exam_for_student", { p_exam: examId, p_client: 2 });
         if(error) throw error;
         seExam = data;
         seAnswers = {}; seMarked = new Set(); seIndex = 0; seReview = null;
-        seImgCache.clear();
 
+        if(data.kind === "practice"){
+            // التدريب: يُعاد متى شاء — شاشة محاولاته السابقة إن وُجدت، وإلا ابدأ
+            if(Array.isArray(data.attempts) && data.attempts.length) showPracticeIntro();
+            else renderExamShell();
+            return;
+        }
         if(data.attempt){
             // سلّمه من قبل — نعرض نتيجته، ومراجعته إن سمح معلّمه
-            await showStudentExamResult({ score: data.attempt.score, total: data.attempt.total }, true);
+            await showStudentExamResult({ score: data.attempt.score, total: data.attempt.total,
+                                          late: data.attempt.late }, true);
+            return;
+        }
+        if(data.closed){
+            // واجب انتهت مهلته ولم يُسلَّم — لا حلّ، لكن الحلّ النموذجي متاح
+            showMissedHomework();
             return;
         }
         renderExamShell();
@@ -90,6 +103,9 @@ function studentExamError(e){
     if(/NOT_IN_SCHOOL/i.test(raw))     return seLabel("حسابك غير مرتبط بمدرسة.","Your account isn't linked to a school.");
     if(/EXAM_NOT_FOUND/i.test(raw))    return seLabel("لم نجد هذا الاختبار — ربما حذفه معلّمك.","Exam not found — your teacher may have deleted it.");
     if(/REVIEW_NOT_ALLOWED/i.test(raw))return seLabel("المراجعة غير متاحة الآن.","Review isn't available yet.");
+    if(/TOO_MANY_ATTEMPTS/i.test(raw)) return seLabel("محاولات كثيرة خلال ساعة — خذ استراحة ثم عُد.","Too many attempts this hour — take a break.");
+    if(/PAST_DUE/i.test(raw))          return seLabel("انتهى موعد تسليم هذا الواجب — لم يُقبل التسليم.","This homework's deadline has passed — not accepted.");
+    if(/ARCHIVED_YEAR/i.test(raw))     return seLabel("هذا العمل من عام دراسي مؤرشف.","This belongs to an archived school year.");
     return (typeof schoolError === "function")
         ? schoolError(e, seLabel("فتح الاختبار","opening the exam"))
         : seLabel("تعذّر فتح الاختبار.","Could not open the exam.");
@@ -129,14 +145,22 @@ function renderExamShell(){
                 <span>${escapeHtml(x.title || "")}</span>
                 ${x.subject ? `<span>${escapeHtml(x.subject)}</span>` : ""}
                 ${x.due_at ? `<span>${seLabel("التسليم","Due")}: ${seDueText(x.due_at)}</span>` : ""}
+                ${(!seReview && x.kind === "homework" && x.past_due && !x.closed) ? `
+                <span class="se-late-note"><i class="fa-solid fa-clock"></i> ${seLabel(
+                    `فات الموعد — يُقبل حتى ${seDueText(x.close_at)} ويُعلَّم «متأخر»`,
+                    `Past due — accepted until ${seDueText(x.close_at)}, marked late`)}</span>` : ""}
             </div>
 
             <div class="exam-stats-grid" id="se-stats"></div>
             <div class="exam-palette-grid" id="se-palette"></div>
 
             <div class="exam-sidebar-actions">
-                ${seReview ? "" : `<button type="button" class="btn-examside" onclick="submitStudentExam()">
-                    <i class="fa-solid fa-paper-plane"></i> ${seLabel("تسليم الاختبار","Submit")}</button>`}
+                ${seReview ? (seIsPractice() ? `<button type="button" class="btn-examside" onclick="restartPractice()">
+                    <i class="fa-solid fa-rotate-right"></i> ${seLabel("تدرّب مجدداً","Practice again")}</button>` : "")
+                  : `<button type="button" class="btn-examside" onclick="submitStudentExam()">
+                    <i class="fa-solid fa-paper-plane"></i> ${seIsHomework()
+                        ? seLabel("تسليم الواجب","Submit homework")
+                        : seIsPractice() ? seLabel("إنهاء التدريب","Finish practice") : seLabel("تسليم الاختبار","Submit")}</button>`}
                 <button type="button" class="btn-examside outline" onclick="closeStudentExam()">
                     <i class="fa-solid fa-right-from-bracket"></i> ${seLabel("خروج","Exit")}</button>
             </div>
@@ -191,6 +215,16 @@ function seDueText(iso){
 
 /* ---------- التنقّل والعرض ---------- */
 
+function seIsHomework(){ return !!(seExam && seExam.kind === "homework"); }
+function seIsPractice(){ return !!(seExam && seExam.kind === "practice"); }
+
+/* ⚠️ الإجابة تُحفظ برقم السؤال والخيار **الأصليين** لا بموضعهما على
+   الشاشة: مع خلط الأسئلة يختلف الموضع من طالب لآخر، والتصحيح في قاعدة
+   البيانات يقارن بالترتيب الأصلي. (i/ci يرسلهما الخادم؛ وإن غابا — نسخة
+   أقدم — فالموضع هو الأصل لأنه لم يُخلط شيء.) */
+function seQKey(q, pos){ return String(q && q.i !== undefined && q.i !== null ? q.i : pos); }
+function seCKey(c, pos){ return (c && typeof c === "object" && c.ci !== undefined && c.ci !== null) ? c.ci : pos; }
+
 function seGo(i){
     const qs = seQuestions();
     if(!qs.length) return;
@@ -209,12 +243,12 @@ function renderSeQuestion(){
 
     if(num) num.textContent = `${seLabel("السؤال","Question")} ${seIndex + 1} ${seLabel("من","of")} ${qs.length}`;
 
-    const given = seReview ? q.given : seAnswers[String(seIndex)];
+    const given = seReview ? q.given : seAnswers[seQKey(q, seIndex)];
     const correct = seReview ? q.correct : null;
 
     area.innerHTML = `
         ${q.text ? `<div class="exam-question-text">${escapeHtml(q.text)}</div>` : ""}
-        ${q.image ? `<img class="se-q-img" data-exam-img="${escapeHtml(q.image)}" alt="" hidden>` : ""}
+        ${q.image ? `<span class="kimg kimg-q"><img class="se-q-img" data-exam-img="${escapeHtml(q.image)}" alt="${seLabel("صورة السؤال","Question image")}" hidden onclick="seZoomImage(this)"></span>` : ""}
         <div class="exam-choices">
             ${(q.choices || []).map((c, j) => {
                 const txt = (typeof c === "string") ? c : (c.text || "");
@@ -224,11 +258,11 @@ function renderSeQuestion(){
                 if(seReview){
                     if(j === correct) cls += " correct";
                     else if(j === given) cls += " incorrect";
-                }else if(given === j) cls += " selected";
+                }else if(given === seCKey(c, j)) cls += " selected";
                 return `
-                <label class="${cls}" ${seReview ? "" : `onclick="sePick(${j})"`}>
+                <label class="${cls}" ${seReview ? "" : `onclick="sePick(${seCKey(c, j)})"`}>
                     <span>${escapeHtml(txt)}
-                        ${img ? `<img class="se-c-img" data-exam-img="${escapeHtml(img)}" alt="" hidden>` : ""}</span>
+                        ${img ? `<span class="kimg kimg-sm"><img class="se-c-img" data-exam-img="${escapeHtml(img)}" alt="${seLabel("صورة الخيار","Choice image")}" hidden></span>` : ""}</span>
                     <span class="choice-letter">${seChoiceLetter(j)}</span>
                 </label>`;
             }).join("")}
@@ -237,7 +271,7 @@ function renderSeQuestion(){
         <div class="se-explain">
             <div class="se-explain-head"><i class="fa-solid fa-lightbulb"></i> ${seLabel("شرح المعلّم","Teacher's explanation")}</div>
             ${q.explanation.text ? `<p>${escapeHtml(q.explanation.text)}</p>` : ""}
-            ${q.explanation.image ? `<img class="se-explain-img" data-exam-img="${escapeHtml(q.explanation.image)}" alt="" hidden>` : ""}
+            ${q.explanation.image ? `<span class="kimg kimg-q"><img class="se-explain-img" data-exam-img="${escapeHtml(q.explanation.image)}" alt="${seLabel("شرح المعلّم","Teacher's explanation")}" hidden onclick="seZoomImage(this)"></span>` : ""}
         </div>` : ""}`;
 
     const mark = document.getElementById("se-mark");
@@ -261,7 +295,7 @@ function seChoiceLetter(j){
 
 function sePick(j){
     if(seReview) return;
-    seAnswers[String(seIndex)] = j;
+    seAnswers[seQKey(seQuestions()[seIndex], seIndex)] = j;
     renderSeQuestion();
     renderSePalette();
     renderSeStats();
@@ -284,7 +318,7 @@ function renderSePalette(){
             const ok = q.given !== null && q.given !== undefined && q.given === q.correct;
             cls += ok ? " answered" : " incorrect-flag";
         }else{
-            if(seAnswers[String(i)] !== undefined) cls += " answered";
+            if(seAnswers[seQKey(q, i)] !== undefined) cls += " answered";
             if(seMarked.has(i)) cls += " marked";
         }
         if(i === seIndex) cls += " current";
@@ -324,33 +358,33 @@ function seSetFont(step, silent){
 /* ---------- الصور ---------- */
 
 /* ⚠️ الصور مسارات في دلو خاص لا روابط عامة، فوضعها في src مباشرة يعطي
-   صورةً مكسورة. نوقّعها ونُظهرها، ونحفظ الرابط كي لا يُوقَّع مرتين حين
-   يتنقّل الطالب بين الأسئلة ذهاباً وإياباً. */
-async function resolveExamImages(){
+   صورةً مكسورة. mountExamImage (js/18-exam-builder.js) يوقّعها عند العرض،
+   ويُظهر هيكل تحميل مكانها، ويعيد التوقيع مرّةً واحدة إن انتهى الرابط في
+   اختبارٍ طويل، ويتجاهل الردّ المتأخّر إن انتقل الطالب لسؤالٍ آخر. والرابط
+   يُحفظ في ذاكرته حتى قبيل انتهائه، فالتنقّل ذهاباً وإياباً لا يعيد التوقيع. */
+function resolveExamImages(){
     const nodes = Array.from(document.querySelectorAll("#se-area img[data-exam-img]"));
-    if(!nodes.length) return;
-    if(!sb){ nodes.forEach(el => markExamImageFailed(el, "NO_CLIENT")); return; }
+    if(typeof mountExamImage !== "function"){ nodes.forEach(el => markExamImageFailed(el, "NO_CLIENT")); return; }
+    nodes.forEach(el => mountExamImage(el, markExamImageFailed));
+}
 
-    await Promise.all(nodes.map(async el => {
-        const path = el.getAttribute("data-exam-img");
-        let url = seImgCache.get(path) || null, why = "";
-        for(let attempt = 0; attempt < 2 && !url; attempt++){
-            try{
-                const { data, error } = await sb.storage.from("exam-images").createSignedUrl(path, 3600);
-                if(error) throw error;
-                url = (data && (data.signedUrl || data.signedURL)) || null;
-                if(url) seImgCache.set(path, url); else why = "NO_URL_IN_RESPONSE";
-            }catch(e){
-                why = (e && (e.message || e.error || e.name)) || "UNKNOWN";
-                console.warn("[خُطى] تعذّر توقيع رابط الصورة:", path, e);
-            }
-        }
-        if(!url){ markExamImageFailed(el, why); return; }
-        el.addEventListener("error", () => markExamImageFailed(el, "IMAGE_LOAD_FAILED"), { once:true });
-        el.addEventListener("load", () => el.classList.add("is-ready"), { once:true });
-        el.removeAttribute("hidden");
-        el.src = url;
-    }));
+/** تكبير صورة السؤال أو الشرح بملء الشاشة — الرسم الهندسي الدقيق لا يُقرأ
+ *  على جوّال بعرض ٣٦٠ بكسل. لمسةٌ أو Esc تغلقه. صور الخيارات لا تُكبَّر:
+ *  لمسها يختار الخيار، وهذا أهمّ. */
+function seZoomImage(img){
+    if(!img || !img.classList.contains("is-ready")) return;
+    const ov = document.createElement("div");
+    ov.className = "se-zoom";
+    ov.setAttribute("role", "dialog");
+    const big = document.createElement("img");
+    big.src = img.currentSrc || img.src;
+    big.alt = img.alt || "";
+    ov.appendChild(big);
+    const close = () => { ov.remove(); document.removeEventListener("keydown", onKey); };
+    const onKey = (e) => { if(e.key === "Escape") close(); };
+    ov.addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(ov);
 }
 
 /** يضع مكان الصورة التي تعذّر عرضها لوحةً تقول السبب — لا فراغاً.
@@ -361,7 +395,8 @@ function markExamImageFailed(el, why){
     box.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ` +
         `<span>${seLabel("تعذّر عرض صورة هذا السؤال", "This question's image could not load")}</span>` +
         `<small>${escapeHtml(String(why || "").slice(0, 120))}</small>`;
-    if(el.parentElement) el.parentElement.replaceChild(box, el);
+    const at = el.closest(".kimg") || el;     // الغلاف كلّه لا الصورة وحدها
+    if(at.parentElement) at.parentElement.replaceChild(box, at);
 }
 
 /* ---------- المؤقّت ---------- */
@@ -408,6 +443,13 @@ async function submitStudentExam(auto){
             p_exam: seExam.id, p_answers: seAnswers,
         });
         if(error) throw error;
+        /* ⚠️ can_review قُرئ عند الفتح — قبل وجود المحاولة، فكان «لا» دائماً في
+           أول محاولة (التدريب، والاختبار «فور تسليمه»)، فلا يظهر زرّ المراجعة
+           بعد التسليم. نسأل الخادم من جديد بعد أن صارت المحاولة موجودة. */
+        try{
+            const r = await sb.rpc("may_review_exam", { p_exam: seExam.id });
+            if(!r.error && r.data !== null && r.data !== undefined) seExam.can_review = !!r.data;
+        }catch(e){ /* يبقى القديم — الخادم يرفض المراجعة غير المسموحة على أي حال */ }
         await showStudentExamResult(data, false);
     }catch(e){
         console.error("[خُطى] تعذّر تسليم الاختبار:", e);
@@ -431,22 +473,83 @@ async function showStudentExamResult(res, wasEarlier){
             <div class="se-result-card">
                 <h2 style="margin-bottom:6px;">${escapeHtml((seExam && seExam.title) || seLabel("النتيجة","Result"))}</h2>
                 <p class="card-sub">${wasEarlier
-                    ? seLabel("سلّمتَ هذا الاختبار من قبل.","You already submitted this exam.")
-                    : seLabel("سُلّم اختبارك.","Your exam was submitted.")}</p>
+                    ? (seIsHomework() ? seLabel("سلّمتَ هذا الواجب من قبل.","You already submitted this homework.")
+                                      : seLabel("سلّمتَ هذا الاختبار من قبل.","You already submitted this exam."))
+                    : (seIsHomework() ? seLabel("سُلّم واجبك.","Your homework was submitted.")
+                                      : seLabel("سُلّم اختبارك.","Your exam was submitted."))}</p>
+                ${res.late ? `<p class="se-late-note">${seLabel("سُلِّم متأخراً","Submitted late")}</p>` : ""}
+                ${seIsPractice() ? `<p class="hint">${seLabel("تدريب — لا تُسجَّل درجة عند معلّمك، ويرى فقط أنك تدرّبت.",
+                    "Practice — no score is recorded for your teacher.")}</p>` : ""}
                 <div class="se-score">${pct}%</div>
                 <div class="card-sub">${score} ${seLabel("من","of")} ${total} ${seLabel("إجابة صحيحة","correct")}</div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:22px;">
                     ${canReview ? `<button type="button" class="btn acc-btn" onclick="openExamReview()">
                         <i class="fa-solid fa-list-check"></i> ${seLabel("راجع إجاباتك","Review answers")}</button>` : ""}
+                    ${seIsPractice() ? `<button type="button" class="btn btn-outline acc-btn" onclick="restartPractice()">
+                        <i class="fa-solid fa-rotate-right"></i> ${seLabel("تدرّب مجدداً","Practice again")}</button>` : ""}
                     <button type="button" class="btn btn-outline acc-btn" onclick="closeStudentExam()">
                         <i class="fa-solid fa-check"></i> ${seLabel("تم","Done")}</button>
                 </div>
                 ${canReview ? "" : `<p class="hint" style="margin-top:16px;">${
-                    seExam && seExam.due_at
+                    seIsHomework()
+                        ? seLabel(`يظهر الحلّ النموذجي للجميع بعد انتهاء مهلة التسليم (${seDueText(seExam.close_at || seExam.due_at)}).`,
+                                  `The model solution appears after the deadline (${seDueText(seExam.close_at || seExam.due_at)}).`)
+                    : seExam && seExam.due_at
                         ? seLabel(`تظهر لك إجاباتك الصحيحة بعد موعد التسليم (${seDueText(seExam.due_at)}).`,
                                   `Correct answers appear after the due date (${seDueText(seExam.due_at)}).`)
                         : seLabel("معلّمك اختار ألّا تُعرض الإجابات الصحيحة لهذا الاختبار.",
                                   "Your teacher chose not to show the correct answers for this exam.")}</p>`}
+            </div>
+        </div>`;
+}
+
+/** التدريب: محاولاته السابقة (له وحده) وزرّا «محاولة جديدة» و«راجع آخر محاولة». */
+function showPracticeIntro(){
+    const ov = ensureStudentExamOverlay();
+    const x = seExam || {};
+    const list = (x.attempts || []).slice(0, 10);
+    ov.innerHTML = `
+        <div class="se-result">
+            <div class="se-result-card">
+                <h2 style="margin-bottom:6px;">${escapeHtml(x.title || "")}</h2>
+                <p class="card-sub">${seLabel("تدريب — أعده متى شئت. محاولاتك لك وحدك.","Practice — retake anytime. Your attempts are yours alone.")}</p>
+                <div class="se-attempts">${list.map((a, k) => `
+                    <div><span>${k === 0 ? seLabel("آخر محاولة","Last") : seDueText(a.at)}</span>
+                         <b>${escapeHtml(String(Number(a.score)))} / ${escapeHtml(String(a.total))}</b></div>`).join("")}</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:18px;">
+                    <button type="button" class="btn acc-btn" onclick="restartPractice()">
+                        <i class="fa-solid fa-play"></i> ${seLabel("محاولة جديدة","New attempt")}</button>
+                    ${x.can_review ? `<button type="button" class="btn btn-outline acc-btn" onclick="openExamReview()">
+                        <i class="fa-solid fa-list-check"></i> ${seLabel("راجع آخر محاولة","Review last attempt")}</button>` : ""}
+                    <button type="button" class="btn btn-outline acc-btn" onclick="closeStudentExam()">${seLabel("إغلاق","Close")}</button>
+                </div>
+            </div>
+        </div>`;
+}
+
+function restartPractice(){
+    if(!seIsPractice()) return;
+    seAnswers = {}; seMarked = new Set(); seIndex = 0; seReview = null;
+    renderExamShell();
+}
+
+/** واجب انتهت مهلته ولم يسلّمه الطالب: لا تسليم، لكن الحلّ متاح له
+ *  (قرار المالك: من فاته الواجب يرى الحلّ بعد الموعد ليتعلّم منه). */
+function showMissedHomework(){
+    const ov = ensureStudentExamOverlay();
+    const x = seExam || {};
+    ov.innerHTML = `
+        <div class="se-result">
+            <div class="se-result-card">
+                <h2 style="margin-bottom:6px;">${escapeHtml(x.title || "")}</h2>
+                <p class="card-sub">${seLabel("انتهت مهلة تسليم هذا الواجب ولم تسلّمه.","This homework's deadline passed and you didn't submit it.")}</p>
+                <div class="se-score" style="color:var(--text-3);">—</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:22px;">
+                    ${x.can_review ? `<button type="button" class="btn acc-btn" onclick="openExamReview()">
+                        <i class="fa-solid fa-lightbulb"></i> ${seLabel("اطّلع على الحلّ","See the solution")}</button>` : ""}
+                    <button type="button" class="btn btn-outline acc-btn" onclick="closeStudentExam()">
+                        <i class="fa-solid fa-check"></i> ${seLabel("إغلاق","Close")}</button>
+                </div>
             </div>
         </div>`;
 }

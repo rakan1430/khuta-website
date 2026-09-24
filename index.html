@@ -314,6 +314,7 @@
             </p>
 
             <p id="areq-entry-note" class="hint" style="display:none; margin-bottom:10px; font-weight:700; color:var(--gold-text);"></p>
+            <p id="areq-school" class="uni-note" style="display:none; margin-bottom:12px; font-weight:700;"></p>
 
             <!-- ⚠️ لا طلب بلا حساب: الإدارة توافق على بريد، والنظام يربط الحساب
                  بالعضوية حين يتطابق البريد. فلو كُتب باليد وأخطأ حرفاً واحداً
@@ -856,6 +857,7 @@
 
         <p class="hint" style="margin-top:14px;">إدارة قائمة المشرفين نفسها تتم من Supabase Table Editor مباشرة (جدول app_admins) — أضف أي حساب Google تريد منحه هذه الصلاحية.</p>
         <div class="divider"></div>
+        <button type="button" class="btn btn-sm btn-block acc-btn" onclick="openOwnerSchools()"><i class="fa-solid fa-school"></i> إدارة المدارس — الإنشاء والمديرون والحدود</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" onclick="openErrorLogsPanel()"><i class="fa-solid fa-bug"></i> سجل الأخطاء البرمجية</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openAnalyticsPanel()"><i class="fa-solid fa-chart-line"></i> لوحة التحليلات</button>
         <button type="button" class="btn btn-sm btn-outline btn-block" style="margin-top:8px;" onclick="openLiveUsersPanel()"><i class="fa-solid fa-signal"></i> المتصلون الآن بالتفصيل</button>
@@ -1328,10 +1330,17 @@
             <div data-modes="khuta school" class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i> <span data-i18n="nav.dashboard">الخطة والجدول</span></div>
             <div data-modes="khuta" class="nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i> <span data-i18n="nav.calculator">حساب الموزونة</span></div>
             <div data-modes="khuta" class="nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i> <span data-i18n="nav.links">الروابط المباشرة</span></div>
+            <div data-modes="khuta school" class="nav-item" data-tab="myfiles" onclick="switchTab('myfiles',this)" role="button" tabindex="0"><i class="fa-solid fa-folder-open"></i> <span data-i18n="nav.myFiles">ملفاتي</span></div>
             <div data-modes="khuta school" class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
             <div data-modes="khuta school" class="nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i> <span data-i18n="nav.settings">الإعدادات</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolwork" onclick="switchTab(&#39;schoolwork&#39;,this)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.schoolWork">منصة المدرسة</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolexams" onclick="switchTab('schoolexams',this)" role="button" tabindex="0"><i class="fa-solid fa-clipboard-question"></i> <span data-i18n="nav.schoolExams">الاختبارات</span></div>
+            <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolhw" onclick="switchTab('schoolhw',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.schoolHw">الواجبات</span></div>
+            <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolrecord" onclick="switchTab('schoolrecord',this)" role="button" tabindex="0"><i class="fa-solid fa-table-cells"></i> <span data-i18n="nav.schoolRecord">السجلّ</span></div>
+            <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoollib" onclick="switchTab('schoollib',this)" role="button" tabindex="0"><i class="fa-solid fa-book"></i> <span data-i18n="nav.schoolLib">المكتبة</span></div>
+            <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolgat" onclick="switchTab('schoolgat',this)" role="button" tabindex="0"><i class="fa-solid fa-brain"></i> <span data-i18n="nav.schoolGat">مساحة القدرات</span></div>
+            <!-- لا data-school-member: يظهر للمدير وللمرشد وحدهما (initCounselorAccess في js/40) -->
+            <div data-modes="school" class="nav-item" id="nav-counselor" style="display:none;" data-tab="schoolcounselor" onclick="switchTab('schoolcounselor',this)" role="button" tabindex="0"><i class="fa-solid fa-user-shield"></i> <span data-i18n="nav.counselor">لوحة المرشد</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schooltt" onclick="switchTab('schooltt',this)" role="button" tabindex="0"><i class="fa-solid fa-table-list"></i> <span data-i18n="nav.schoolSchedule">الجدول الدراسي</span></div>
             <div data-modes="school" class="nav-item" data-school-role="admin" data-school-member style="display:none;" data-tab="schooladmin" onclick="switchTab('schooladmin',this)" role="button" tabindex="0"><i class="fa-solid fa-school"></i> <span data-i18n="nav.schoolAdmin">إدارة المدرسة</span> <span id="admin-requests-count" class="pill" style="display:none;">0</span></div>
             <div data-modes="khuta" class="nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
@@ -1346,6 +1355,8 @@
 
     <nav class="mobile-nav">
         <div data-modes="khuta school" class="mobile-nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i><span data-i18n="nav.dashboardShort">الجدول</span></div>
+        <!-- كل الأقسام التي يراها المستخدم (الشريط الجانبي مخفيّ على الجوّال) — openNavSheet في js/05 -->
+        <div data-modes="khuta school" class="mobile-nav-item" id="mobile-nav-sections" onclick="openNavSheet()" role="button" tabindex="0"><i class="fa-solid fa-grip"></i><span data-i18n="nav.sectionsShort">الأقسام</span></div>
         <div data-modes="khuta" class="mobile-nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i><span data-i18n="nav.calcShort">الموزونة</span></div>
         <div data-modes="khuta" class="mobile-nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i><span data-i18n="nav.linksShort">المصادر</span></div>
         <div data-modes="khuta" class="mobile-nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i><span data-i18n="nav.specialtiesShort">التخصصات</span></div>
@@ -2157,7 +2168,7 @@
             </div>
 
             <!-- ===================== الدخول السريع للمعلّم ===================== -->
-            <div class="card" data-school-role="teacher,admin" style="display:none;">
+            <div class="card" id="card-quick" data-collapsible data-school-role="teacher,admin" style="display:none;">
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-bolt"></i> <span data-i18n="school.quickTitle">الدخول السريع على السبورة</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.quickSub">
                     اضبط كلمة مرور لحسابك نفسه لتدخل بها بسرعة على سبورة الفصل بدل كتابة بيانات Google كل حصة.
@@ -2195,10 +2206,12 @@
                 <p class="card-sub" style="margin-bottom:14px;" data-school-role="teacher,admin" data-i18n="school.examsSub">أنشئ اختباراً وأرسله لفصلك وقت ما تشاء.</p>
                 <p class="card-sub" style="margin-bottom:14px; display:none;" data-school-role="student" data-i18n="school.examsSubStudent">الاختبارات التي أرسلها لك معلّموك.</p>
 
-                <div data-school-role="teacher,admin" style="display:none;">
+                <div id="sexams-builder-host">
+                <!-- منشئ واحد للاختبار والواجب: يُنقل بين التبويبين (setExamWorkKind في js/18) -->
+                <div id="exam-builder-wrap" data-school-role="teacher,admin" style="display:none;">
                     <div class="input-row">
-                        <div class="form-group"><label data-i18n="school.examTitle">عنوان الاختبار</label><input type="text" id="exam-title" maxlength="120" placeholder="اختبار الفصل الأول"></div>
-                        <div class="form-group"><label data-i18n="school.examSubject">المادة</label><input type="text" id="exam-subject" maxlength="60" placeholder="الرياضيات"></div>
+                        <div class="form-group"><label id="exam-title-label">عنوان الاختبار</label><input type="text" id="exam-title" maxlength="120" placeholder="اختبار الفصل الأول"></div>
+                        <div class="form-group"><label data-i18n="school.examSubject">المادة</label><select id="exam-subject"></select></div>
                     </div>
                     <div class="input-row">
                         <div class="form-group"><label data-i18n="school.examGrade">الصف</label>
@@ -2210,6 +2223,32 @@
                         </div>
                         <div class="form-group"><label data-i18n="school.examDuration">المدة بالدقائق (اختياري)</label><input type="number" id="exam-duration" min="1" max="300" placeholder="45"></div>
                     </div>
+                    <div class="input-row">
+                        <label class="consent-row" style="flex:1;">
+                            <input type="checkbox" id="exam-shuffle">
+                            <span data-i18n="school.examShuffle">اخلط ترتيب الأسئلة والخيارات لكل طالب</span>
+                        </label>
+                        <div class="form-group" id="exam-late-wrap" style="display:none;">
+                            <label for="exam-late-days" data-i18n="school.hwLate">التسليم المتأخر</label>
+                            <select id="exam-late-days">
+                                <option value="0" selected data-i18n="school.hwLateOff">غير مسموح</option>
+                                <option value="1" data-i18n="school.hwLate1">حتى يوم بعد الموعد</option>
+                                <option value="2" data-i18n="school.hwLate2">حتى يومين</option>
+                                <option value="3" data-i18n="school.hwLate3">حتى ٣ أيام</option>
+                                <option value="7" data-i18n="school.hwLate7">حتى أسبوع</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="exam-gat-wrap" style="display:none;">
+                        <label for="exam-gat-section" data-i18n="gat.section">قسم القدرات</label>
+                        <select id="exam-gat-section">
+                            <option value="verbal" data-i18n="gat.verbal">لفظي</option>
+                            <option value="quant" data-i18n="gat.quant">كمّي</option>
+                            <option value="mixed" selected data-i18n="gat.mixed">مختلط</option>
+                        </select>
+                    </div>
+                    <p class="hint" id="exam-practice-hint" style="display:none; margin-bottom:10px;" data-i18n="gat.practiceHint">تدريب بلا درجات لكل طلاب المدرسة: يعيده الطالب متى شاء ويرى الحل بعد كل محاولة، ولا ترى أنت إلا عدد من اختبره — بلا أسماء ولا درجات.</p>
+                    <p class="hint" id="exam-hw-hint" style="display:none; margin-bottom:10px;" data-i18n="school.hwHint">الحلّ النموذجي يظهر للطلاب بعد انتهاء مهلة التسليم فقط — لا بعد تسليم كلٍّ منهم، كي لا يُنقل الحلّ لمن لم يسلّم.</p>
 
                     <!-- تحويل ملف إلى أسئلة: بالذكاء الاصطناعي، أو معاينة للنسخ اليدوي -->
                     <details class="exq-import" open>
@@ -2250,12 +2289,86 @@
 
                     <div id="exam-parse-errors" class="uni-note" style="display:none; margin:12px 0;"></div>
                     <button type="button" id="exam-save" class="btn acc-btn" style="margin-top:12px;" onclick="saveExamDraft()">
-                        <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="school.examSave">حفظ الاختبار</span>
+                        <i class="fa-solid fa-floppy-disk"></i> <span id="exam-save-label">حفظ الاختبار</span>
                     </button>
                     <hr style="border:none; border-top:1px solid var(--border); margin:18px 0;">
                 </div>
+                </div>
 
                 <div id="sexams-list"></div>
+            </div>
+        </section>
+
+        <section data-modes="school" id="view-schoolhw" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-book-open-reader" style="color:var(--gold-text);"></i> <span data-i18n="school.hwTitle">الواجبات</span></h2>
+            </div>
+
+            <div class="card">
+                <p class="card-sub" style="margin-bottom:14px;" data-school-role="teacher,admin" data-i18n="school.hwSub">واجب إلكتروني يُصحَّح تلقائياً، بموعد تسليم إلزامي.</p>
+                <p class="card-sub" style="margin-bottom:14px; display:none;" data-school-role="student" data-i18n="school.hwSubStudent">واجباتك ومواعيد تسليمها.</p>
+                <div id="shw-builder-host"></div>
+                <div id="shw-list"></div>
+            </div>
+        </section>
+
+        <section data-modes="school" id="view-schoolrecord" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-table-cells" style="color:var(--gold-text);"></i> <span data-i18n="school.recTitle">السجلّ</span></h2>
+                <p class="card-sub" data-school-role="teacher,admin" data-i18n="school.recSub">طلاب الفصل في المادة: واجباتهم واختباراتهم على المنصّة، ودرجاتهم الرسمية من نور كما هي.</p>
+                <p class="card-sub" data-school-role="student" style="display:none;" data-i18n="school.recSubStudent">أعمالك على المنصّة ودرجاتك الرسمية.</p>
+            </div>
+            <div class="card">
+                <div id="rec-controls"></div>
+                <div id="rec-book"></div>
+            </div>
+        </section>
+
+        <section data-modes="school" id="view-schoollib" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-book" style="color:var(--gold-text);"></i> <span data-i18n="school.libTitle">المكتبة</span></h2>
+                <p class="card-sub" data-i18n="school.libSub">كتب المدرسة بروابطها في منصة عين، ودروسها بشرحها واختباراتها.</p>
+            </div>
+            <div class="card">
+                <div id="lib-editor"></div>
+                <div id="lib-filters"></div>
+                <div id="lib-list"></div>
+            </div>
+        </section>
+
+        <section data-modes="school" id="view-schoolcounselor" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-shield" style="color:var(--gold-text);"></i> <span data-i18n="cns.title">لوحة المرشد الطلابي</span></h2>
+                <p class="card-sub" data-i18n="cns.sub">مواطن الضعف في كل فصل حسب المادة، والطلاب الذين يحتاجون متابعة.</p>
+            </div>
+            <div class="card"><div id="cns-body"></div></div>
+        </section>
+
+        <section data-modes="khuta school" id="view-myfiles" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-folder-open" style="color:var(--gold-text);"></i> <span data-i18n="myf.title">ملفاتي</span></h2>
+                <p class="card-sub" data-i18n="myf.sub">مساحتك الخاصة: ٣٠ ميجا لملفات PDF والصور، لا يراها غيرك.</p>
+            </div>
+            <div class="card"><div id="myfiles-body"></div></div>
+        </section>
+
+        <section data-modes="school" id="view-schoolgat" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-brain" style="color:var(--gold-text);"></i> <span data-i18n="gat.title">مساحة القدرات</span></h2>
+                <p class="card-sub" data-i18n="gat.sub">تدريب بلا درجات: اختبارات قدرات تعيدها متى شئت، وملفات وروابط شرح من معلّميك.</p>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:10px;"><i class="fa-solid fa-brain"></i> <span data-i18n="gat.tests">اختبارات التدريب</span></h3>
+                <div id="sgat-builder-host"></div>
+                <div id="sgat-tests"></div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:10px;"><i class="fa-solid fa-circle-play"></i> <span data-i18n="gat.resources">شروح وملفات</span></h3>
+                <div id="sgat-forms"></div>
+                <div class="exq-toolbar" style="margin-top:10px;"><b data-i18n="gat.videos">فيديو وروابط</b></div>
+                <div id="sgat-links"></div>
+                <div class="exq-toolbar" style="margin-top:14px;"><b data-i18n="gat.files">ملفات</b></div>
+                <div id="sgat-files"></div>
             </div>
         </section>
 
@@ -2304,7 +2417,7 @@
         <!-- ===================== إرسال الاختبار: فصول / مراحل / طلاب ===================== -->
         <div id="exam-send-modal" class="overlay-screen" style="display:none;">
             <div class="wizard-card" style="max-width:520px;">
-                <h3 style="margin-bottom:4px;" data-i18n="school.sendTitle">إرسال الاختبار</h3>
+                <h3 style="margin-bottom:4px;">إرسال الاختبار</h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.sendSub">اختر فصولاً أو مراحل أو طلاباً بأعيانهم. يمكنك الجمع بينها.</p>
 
                 <div class="exq-tabs">
@@ -2324,12 +2437,12 @@
                 <!-- إعدادات هذا الإرسال: الموعد، وكشف الإجابات، والمؤقّت -->
                 <div class="send-settings">
                     <div class="form-group">
-                        <label for="exam-send-due" data-i18n="school.dueLabel">موعد التسليم (اختياري)</label>
+                        <label for="exam-send-due" id="exam-send-due-label">موعد التسليم (اختياري)</label>
                         <input type="datetime-local" id="exam-send-due">
-                        <p class="hint" data-i18n="school.dueHint">اتركه فارغاً لواجب بلا موعد. وهو الموعد الذي تُكشف بعده الإجابات الصحيحة.</p>
+                        <p class="hint" id="exam-send-due-hint">اتركه فارغاً لواجب بلا موعد. وهو الموعد الذي تُكشف بعده الإجابات الصحيحة.</p>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="exam-send-reveal-wrap">
                         <label for="exam-send-reveal" data-i18n="school.revealLabel">متى يرى الطالب الإجابات الصحيحة؟</label>
                         <select id="exam-send-reveal">
                             <option value="after_due" selected data-i18n="school.revealAfterDue">بعد موعد التسليم (موصى به)</option>
@@ -2384,9 +2497,16 @@
                 </button>
             </div>
 
+            <!-- روابط الانضمام الخاصة بهذه المدرسة، ومراحلها وموادها — js/34-school-settings.js -->
+            <div class="card" id="card-setup" data-collapsible>
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-sliders"></i> <span data-i18n="school.setupTitle">إعداد المدرسة: الروابط والمراحل والمواد</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.setupSub">روابط الانضمام خاصة بمدرستك. والمراحل والمواد تظهر في كل قوائم المنصّة — الفصول والاختبارات والملفات وإسناد المعلّمين.</p>
+                <div id="school-settings-admin"></div>
+            </div>
+
             <!-- ⚠️ الفصول أساس كل شيء: الجدول الدراسي، ورؤية الطالب لملفات
                  معلّميه، واستهداف الاختبارات. بلا فصل لا يعمل أيٌّ منها. -->
-            <div class="card">
+            <div class="card" id="card-classes" data-collapsible>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-chalkboard"></i> <span data-i18n="school.classesTitle">الفصول</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.classesSub">
                     أنشئ فصول المدرسة أولاً. بدونها لا يعمل الجدول الدراسي، ولا يرى الطالب ملفات معلّميه، ولا يجد المعلّم فصلاً يرسل له اختباراً.
@@ -2417,23 +2537,7 @@
             </div>
 
             <!-- ===================== نهاية السنة الدراسية ===================== -->
-            <div class="card" id="year-card">
-                <div class="card-head">
-                    <div>
-                        <h3 style="margin-bottom:4px;"><i class="fa-solid fa-graduation-cap"></i>
-                            <span data-i18n="year.title">السنة الدراسية</span></h3>
-                        <div class="card-sub" data-i18n="year.sub">ترقية جماعية في آخر السنة، مع إبقاء من تريد في مرحلته.</div>
-                    </div>
-                    <button type="button" class="btn btn-sm acc-btn" onclick="openYearPromotion()">
-                        <i class="fa-solid fa-forward"></i> <span data-i18n="year.promote">ترقية السنة</span></button>
-                </div>
-                <div id="year-status"></div>
-                <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="loadAdminClasses()">
-                    <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span>
-                </button>
-            </div>
-
-            <div class="card" id="admin-import-card">
+            <div class="card" id="admin-import-card" data-collapsible>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-file-import"></i> استيراد الطلاب من ملف</h3>
                 <p class="card-sub" style="margin-bottom:14px;">
                     اسحب ملف طلابك (Excel أو CSV) من نظام نور. سنسألك عن الأعمدة مرة واحدة فقط، ونتذكّرها بعدها.
@@ -2457,7 +2561,7 @@
             </div>
 
             <!-- ===================== الغياب من ملفّ نور ===================== -->
-            <div class="card">
+            <div class="card" id="card-attendance" data-collapsible>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-user-clock"></i>
                     <span data-i18n="att.title">الغياب من نور</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="att.sub">ارفع كشف الغياب من نور ليظهر بجانب درجات الطلاب. لا تحضير هنا — نور هو السجلّ الرسمي.</p>
@@ -2479,7 +2583,28 @@
                 <div id="att-mapper"></div>
             </div>
 
-            <div class="card">
+            <!-- ===================== الدرجات الرسمية من ملفّ نور ===================== -->
+            <div class="card" id="card-official" data-collapsible>
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-file-circle-check"></i>
+                    <span data-i18n="og.title">الدرجات الرسمية من نور</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="og.sub">ارفع كشف درجات الفترة أو النهائي من نور. تُعرض كما هي تماماً — المنصّة لا تحسب درجة ولا معدّلاً.</p>
+                <div class="uni-note" style="margin-bottom:14px;">
+                    <b data-i18n="og.idTitle">أين يذهب رقم الهوية؟</b>
+                    <p style="margin:6px 0 0;" data-i18n="og.idBody">
+                        لا يُحفظ إطلاقاً. يُحوَّل في الخادم إلى بصمة الاستيراد نفسها، فتُطابَق بها، ثم يُرمى.
+                        ويُحفظ من الملف الأعمدة التي تختارها فقط، بعناوينها وقيمها كما هي.
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="og.file">كشف الدرجات (‎.xlsx أو ‎.xls أو ‎.csv)</label>
+                    <input type="file" id="og-file" accept=".csv,.txt,.xlsx,.xls" onchange="onOfficialFilePicked(event)">
+                </div>
+                <p id="og-status" class="hint" style="margin:0;"></p>
+                <div id="og-mapper"></div>
+                <div id="og-batches"></div>
+            </div>
+
+            <div class="card" id="card-members" data-collapsible data-open>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-users-gear"></i> <span data-i18n="school.membersTitle">المدرّسون والطلاب</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.membersSub">إيقاف العضو يمنع دخوله فوراً ويُبقي ملفاته وسجلّه — أأمن من الحذف.</p>
 
@@ -2525,6 +2650,26 @@
                     <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span>
                 </button>
             </div>
+        
+            <!-- ===================== إجراءات حساسة ===================== -->
+            <!-- ⚠️ قول المالك: «الأزرار التي تقوم بإجراء حساس كهذا لن تظهر في الواجهة بهذه
+                 البساطة، بل في مكان أكثر أماناً، وعليها طبقة أمان إضافية: رمز تحقق يُرسل
+                 لإيميل الإداري». فهي هنا مطويّة في آخر الصفحة، والترقية لا تتمّ إلا برمز
+                 من البريد تتحقّق منه قاعدة البيانات نفسها (sql/PHASE6_FIXES.sql §٣). -->
+            <div class="card card-danger" id="year-card" data-collapsible>
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-shield-halved"></i>
+                    <span data-i18n="sens.title">إجراءات حساسة</span></h3>
+                <p class="card-sub" style="margin-bottom:12px;" data-i18n="sens.sub">إجراءات تمسّ بيانات المدرسة كلّها. كل منها يتطلّب رمز تحقق يُرسل إلى بريدك الإداري.</p>
+                <h4 style="margin:6px 0 4px;"><i class="fa-solid fa-graduation-cap"></i> <span data-i18n="year.title">السنة الدراسية</span></h4>
+                <div class="card-sub" data-i18n="year.sub">ترقية جماعية في آخر السنة، مع إبقاء من تريد في مرحلته.</div>
+                <div id="year-status"></div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+                    <button type="button" class="btn btn-sm btn-outline btn-danger-outline" onclick="openYearPromotion()">
+                        <i class="fa-solid fa-lock"></i> <span data-i18n="year.promoteSafe">بدء ترقية السنة (برمز تحقق)</span></button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="loadAdminClasses()">
+                        <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span></button>
+                </div>
+            </div>
         </section>
 
         <!-- ===================== إسناد عضو إلى فصل ===================== -->
@@ -2539,7 +2684,8 @@
                 </div>
                 <div class="form-group" id="assign-subject-group">
                     <label data-i18n="school.assignSubject">المادة (للمعلّم)</label>
-                    <input type="text" id="assign-subject" maxlength="40" placeholder="رياضيات">
+                    <select id="assign-subject"></select>
+                    <p class="hint" data-i18n="school.assignSubjectHint">المواد من إعدادات المدرسة — يضيفها المدير من «مراحل المدرسة وموادها».</p>
                 </div>
                 <button type="button" id="assign-class-btn" class="btn btn-block acc-btn" onclick="assignMemberToClass()">
                     <i class="fa-solid fa-plus"></i> <span data-i18n="school.assignAdd">إسناد</span>
@@ -2839,6 +2985,87 @@
      مرئية لبعضها كما لو كانت ملفاً واحداً.
 
      عند إضافة ملف جديد: أضِف وسم <script> له هنا بنفس نمط الترتيب. -->
+<!-- ============================================================
+     تحميل ملفات المدرسة عند الحاجة — على الجوّال وحده
+     ------------------------------------------------------------
+     قرار المالك: «لا يحمّل أي شيء إلا عندما يُفتح… محصور مع الهواتف فقط،
+     في الكمبيوتر سيتم تحميل كل شيء، كما أنه أيضاً في التطبيق المحمّل».
+
+     ملفات المدرسة ≈ ربع الجافاسكربت، وطالب خُطى على جوّاله لا يحتاج منها
+     سطراً. فعلى الجوّال (في المتصفّح) لا تُحمَّل إلا بعد أن يثبت أن الحساب
+     عضو مدرسة (applySchoolRoleUI في js/13-school.js).
+
+     ⚠️ على الكمبيوتر والتطبيق المثبَّت: كل وسم khutaEager أدناه يكتب وسم
+     ‎<script defer>‎ نفسه **في موضعه الأصلي** عبر document.write أثناء تحليل
+     الصفحة — فيبقى الترتيب والسلوك مطابقَين لما قبل هذا التعديل حرفياً.
+     (document.write لوسم defer من نفس الأصل آمن ولا يحجب التحليل.)
+
+     ⚠️ ولا يُكسر شيء بغياب الملف: فحصٌ آلي أكّد أن أيّاً منها لا يُنفّذ
+     شيئاً عند تحميله (دوالّ وثوابت فقط)، وأن كل نداء لها من الملفات
+     الدائمة محروس بـtypeof أو يقع داخل أقسام المدرسة التي لا تظهر إلا بعد
+     تحميلها. الاستثناء الوحيد schoolBusy نُقلت إلى 13-school.js.
+     ============================================================ -->
+<script>
+(function(){
+    var ua = navigator.userAgent || "";
+    var phone = (navigator.userAgentData && navigator.userAgentData.mobile === true)
+             || /Android.+Mobile|iPhone|iPod|Windows Phone|IEMobile|Opera Mini/i.test(ua);
+    var installed = false;
+    try{
+        installed = window.matchMedia("(display-mode: standalone)").matches
+                 || window.matchMedia("(display-mode: fullscreen)").matches
+                 || navigator.standalone === true;
+    }catch(e){}
+    var lazy = phone && !installed;
+    try{ if(new URLSearchParams(location.search).get("lazy") === "0") lazy = false; }catch(e){}
+    window.KHUTA_LAZY = lazy;
+    window.KHUTA_GROUPS = {
+        school: ["js/14-school-work.js", "js/18-exam-builder.js", "js/19-exam-send.js", "js/21-classes.js", "js/23-school-home.js", "js/24-student-exam.js", "js/25-import.js", "js/28-report.js", "js/30-parent-links.js", "js/31-year.js", "js/32-member-leave.js", "js/33-attendance.js", "js/34-school-settings.js", "js/36-records.js", "js/37-library.js", "js/38-gat-space.js", "js/40-counselor.js"],
+        owner:  ["js/34-school-settings.js", "js/35-owner-schools.js"],
+        myfiles: ["js/39-my-files.js"]
+    };
+    var loaded = {}, groupPromises = {};
+    window.khutaEager = function(src){
+        if(lazy) return;
+        loaded[src] = true;
+        document.write('<script src="' + src + '" defer><\/script>');
+    };
+    function loadOne(src){
+        if(loaded[src]) return loaded[src] === true ? Promise.resolve() : loaded[src];
+        loaded[src] = new Promise(function(resolve, reject){
+            var s = document.createElement("script");
+            s.src = src;
+            s.async = false;          // يحفظ ترتيب التنفيذ بين ملفات المجموعة
+            s.onload = function(){ loaded[src] = true; resolve(); };
+            s.onerror = function(){ delete loaded[src]; reject(new Error("LOAD_FAILED " + src)); };
+            document.head.appendChild(s);
+        });
+        return loaded[src];
+    }
+    /** يحمّل مجموعة مرة واحدة ويعيد وعداً يكتمل بتنفيذ كل ملفاتها. */
+    window.khutaLoadGroup = function(name){
+        if(!lazy) return Promise.resolve();
+        if(groupPromises[name]) return groupPromises[name];
+        var files = window.KHUTA_GROUPS[name] || [];
+        groupPromises[name] = Promise.all(files.map(loadOne)).catch(function(e){
+            delete groupPromises[name];
+            throw e;
+        });
+        return groupPromises[name];
+    };
+    window.khutaGroupReady = function(name){
+        return !lazy || (window.KHUTA_GROUPS[name] || []).every(function(f){ return loaded[f] === true; });
+    };
+    // زرّ «إدارة المدارس» في أدوات المشرف: الملف يُحمَّل عند أول ضغطة.
+    // حين يُحمَّل يستبدل تصريحُ الدالّة فيه هذا البديلَ تلقائياً.
+    if(lazy){
+        window.openOwnerSchools = function(){
+            return window.khutaLoadGroup("owner").then(function(){ return window.openOwnerSchools(); })
+                .catch(function(e){ console.error("[خُطى]", e); alert("تعذّر تحميل اللوحة — تحقّق من الاتصال."); });
+        };
+    }
+})();
+</script>
 <!-- ⚠️ 00-tenant.js يجب أن يبقى أول ملف: منه يعرف الموقع أي نسخة هو
      (خُطى للقدرات، أو نسخة مدرسة)، وأي قاعدة بيانات يستعمل. -->
 <script src="js/00-tenant.js" defer></script>
@@ -2855,26 +3082,33 @@
 <script src="js/11-community.js" defer></script>
 <script src="js/12-ai.js" defer></script>
 <script src="js/13-school.js" defer></script>
-<script src="js/14-school-work.js" defer></script>
+<script>khutaEager("js/14-school-work.js")</script>
 <script src="js/15-demo.js" defer></script>
 <script src="js/16-qr.js" defer></script>
 <script src="js/17-qr-login.js" defer></script>
-<script src="js/18-exam-builder.js" defer></script>
-<script src="js/19-exam-send.js" defer></script>
+<script>khutaEager("js/18-exam-builder.js")</script>
+<script>khutaEager("js/19-exam-send.js")</script>
 <script src="js/20-entry.js" defer></script>
-<script src="js/21-classes.js" defer></script>
+<script>khutaEager("js/21-classes.js")</script>
 <script src="js/22-errors.js" defer></script>
-<script src="js/23-school-home.js" defer></script>
-<script src="js/24-student-exam.js" defer></script>
-<script src="js/25-import.js" defer></script>
+<script>khutaEager("js/23-school-home.js")</script>
+<script>khutaEager("js/24-student-exam.js")</script>
+<script>khutaEager("js/25-import.js")</script>
 <script src="js/26-mode.js" defer></script>
 <script src="js/27-alias.js" defer></script>
-<script src="js/28-report.js" defer></script>
+<script>khutaEager("js/28-report.js")</script>
 <script src="js/29-moderation.js" defer></script>
-<script src="js/30-parent-links.js" defer></script>
-<script src="js/31-year.js" defer></script>
-<script src="js/32-member-leave.js" defer></script>
-<script src="js/33-attendance.js" defer></script>
+<script>khutaEager("js/30-parent-links.js")</script>
+<script>khutaEager("js/31-year.js")</script>
+<script>khutaEager("js/32-member-leave.js")</script>
+<script>khutaEager("js/33-attendance.js")</script>
+<script>khutaEager("js/34-school-settings.js")</script>
+<script>khutaEager("js/35-owner-schools.js")</script>
+<script>khutaEager("js/36-records.js")</script>
+<script>khutaEager("js/37-library.js")</script>
+<script>khutaEager("js/38-gat-space.js")</script>
+<script>khutaEager("js/39-my-files.js")</script>
+<script>khutaEager("js/40-counselor.js")</script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

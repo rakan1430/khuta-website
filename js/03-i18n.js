@@ -73,6 +73,9 @@ ar:{
 "nav.schoolWork":"منصة المدرسة",
 "nav.schoolExams":"الاختبارات",
 "nav.schoolSchedule":"الجدول الدراسي",
+"school.setupTitle":"إعداد المدرسة: الروابط والمراحل والمواد",
+"school.setupSub":"روابط الانضمام خاصة بمدرستك. والمراحل والمواد تظهر في كل قوائم المنصّة — الفصول والاختبارات والملفات وإسناد المعلّمين.",
+"school.assignSubjectHint":"المواد من إعدادات المدرسة — يضيفها المدير من «مراحل المدرسة وموادها».",
 "dash.deepReport":"التقرير المتعمّق",
 "school.workTitle":"منصة المدرسة",
 "school.filterAllRoles":"كل الأدوار","school.filterAllGrades":"كل المراحل",
@@ -160,6 +163,14 @@ ar:{
 "school.ttClass":"الفصل","school.ttDay":"اليوم","school.ttPeriod":"الحصة",
 "school.ttSubject":"المادة","school.ttRoom":"القاعة (اختياري)","school.ttAdd":"إضافة حصة",
 "school.sun":"الأحد","school.mon":"الاثنين","school.tue":"الثلاثاء","school.wed":"الأربعاء","school.thu":"الخميس",
+"nav.schoolHw":"الواجبات","school.hwTitle":"الواجبات","school.hwSub":"واجب إلكتروني يُصحَّح تلقائياً، بموعد تسليم إلزامي.","school.hwSubStudent":"واجباتك ومواعيد تسليمها.","school.examShuffle":"اخلط ترتيب الأسئلة والخيارات لكل طالب","school.hwLate":"التسليم المتأخر","school.hwLateOff":"غير مسموح","school.hwLate1":"حتى يوم بعد الموعد","school.hwLate2":"حتى يومين","school.hwLate3":"حتى ٣ أيام","school.hwLate7":"حتى أسبوع","school.hwHint":"الحلّ النموذجي يظهر للطلاب بعد انتهاء مهلة التسليم فقط — لا بعد تسليم كلٍّ منهم، كي لا يُنقل الحلّ لمن لم يسلّم.",
+"nav.schoolRecord":"السجلّ","school.recTitle":"السجلّ","school.recSub":"طلاب الفصل في المادة: واجباتهم واختباراتهم على المنصّة، ودرجاتهم الرسمية من نور كما هي.","school.recSubStudent":"أعمالك على المنصّة ودرجاتك الرسمية.","og.title":"الدرجات الرسمية من نور","og.sub":"ارفع كشف درجات الفترة أو النهائي من نور. تُعرض كما هي تماماً — المنصّة لا تحسب درجة ولا معدّلاً.","og.idTitle":"أين يذهب رقم الهوية؟","og.idBody":"لا يُحفظ إطلاقاً. يُحوَّل في الخادم إلى بصمة الاستيراد نفسها، فتُطابَق بها، ثم يُرمى. ويُحفظ من الملف الأعمدة التي تختارها فقط، بعناوينها وقيمها كما هي.","og.file":"كشف الدرجات (‎.xlsx أو ‎.xls أو ‎.csv)",
+"nav.schoolLib":"المكتبة","school.libTitle":"المكتبة","school.libSub":"كتب المدرسة بروابطها في منصة عين، ودروسها بشرحها واختباراتها.",
+"nav.schoolGat":"مساحة القدرات","gat.title":"مساحة القدرات","gat.sub":"تدريب بلا درجات: اختبارات قدرات تعيدها متى شئت، وملفات وروابط شرح من معلّميك.","gat.tests":"اختبارات التدريب","gat.resources":"شروح وملفات","gat.videos":"فيديو وروابط","gat.files":"ملفات","gat.section":"قسم القدرات","gat.verbal":"لفظي","gat.quant":"كمّي","gat.mixed":"مختلط","gat.practiceHint":"تدريب بلا درجات لكل طلاب المدرسة: يعيده الطالب متى شاء ويرى الحل بعد كل محاولة، ولا ترى أنت إلا عدد من اختبره — بلا أسماء ولا درجات.",
+"nav.myFiles":"ملفاتي","myf.title":"ملفاتي","myf.sub":"مساحتك الخاصة: ٣٠ ميجا لملفات PDF والصور، لا يراها غيرك.",
+"nav.sectionsShort":"الأقسام",
+"sens.title":"إجراءات حساسة","sens.sub":"إجراءات تمسّ بيانات المدرسة كلّها. كل منها يتطلّب رمز تحقق يُرسل إلى بريدك الإداري.","year.promoteSafe":"بدء ترقية السنة (برمز تحقق)",
+"nav.counselor":"لوحة المرشد","cns.title":"لوحة المرشد الطلابي","cns.sub":"مواطن الضعف في كل فصل حسب المادة، والطلاب الذين يحتاجون متابعة.",
 "school.examsTitle":"الاختبارات","school.examsSub":"أنشئ اختباراً وأرسله لفصلك وقت ما تشاء.",
 "school.examFileTitle":"حوّل ملفاً إلى أسئلة",
 "school.examFileHint":"ارفع ورقة عمل أو محتوى شرح (صورة أو PDF، حتى ٤ ميجا). الذكاء الاصطناعي يستخرج أسئلتها الجاهزة أو يولّد أسئلة من محتواها مباشرة في المسودّة أدناه للمراجعة — أو عاينه فقط وانسخ أسئلته بنفسك.",
@@ -393,6 +404,9 @@ en:{
 "nav.schoolWork":"School platform",
 "nav.schoolExams":"Exams",
 "nav.schoolSchedule":"Schedule",
+"school.setupTitle":"School setup: links, grades and subjects",
+"school.setupSub":"Join links are specific to your school. Grades and subjects appear in every list — classes, exams, files and teacher assignments.",
+"school.assignSubjectHint":"Subjects come from the school setup — the admin adds them there.",
 "dash.deepReport":"Deep report",
 "school.workTitle":"School platform",
 "school.filterAllRoles":"All roles","school.filterAllGrades":"All grades",
@@ -480,6 +494,14 @@ en:{
 "school.ttClass":"Class","school.ttDay":"Day","school.ttPeriod":"Period",
 "school.ttSubject":"Subject","school.ttRoom":"Room (optional)","school.ttAdd":"Add period",
 "school.sun":"Sunday","school.mon":"Monday","school.tue":"Tuesday","school.wed":"Wednesday","school.thu":"Thursday",
+"nav.schoolHw":"Homework","school.hwTitle":"Homework","school.hwSub":"Auto-graded online homework with a required due date.","school.hwSubStudent":"Your homework and due dates.","school.examShuffle":"Shuffle questions and choices per student","school.hwLate":"Late submission","school.hwLateOff":"Not allowed","school.hwLate1":"Up to 1 day late","school.hwLate2":"Up to 2 days","school.hwLate3":"Up to 3 days","school.hwLate7":"Up to a week","school.hwHint":"The model solution is shown only after the deadline — not after each submission — so it can't be passed to those who haven't submitted.",
+"nav.schoolRecord":"Record","school.recTitle":"Record","school.recSub":"Class students in the subject: their homework and exams on the platform, and official Noor grades as-is.","school.recSubStudent":"Your work on the platform and your official grades.","og.title":"Official grades from Noor","og.sub":"Upload a term or final grade sheet from Noor. Shown exactly as-is — the platform never computes grades or averages.","og.idTitle":"Where does the ID go?","og.idBody":"It is never stored. The server turns it into the same import fingerprint, matches, then discards it. Only the columns you pick are stored, with their headers and values as-is.","og.file":"Grade sheet (.xlsx, .xls or .csv)",
+"nav.schoolLib":"Library","school.libTitle":"Library","school.libSub":"School books linked to the Ein platform, with lessons, videos and quizzes.",
+"nav.schoolGat":"GAT space","gat.title":"GAT space","gat.sub":"Practice without grades: GAT tests you can retake anytime, plus files and videos from your teachers.","gat.tests":"Practice tests","gat.resources":"Videos & files","gat.videos":"Videos & links","gat.files":"Files","gat.section":"GAT section","gat.verbal":"Verbal","gat.quant":"Quantitative","gat.mixed":"Mixed","gat.practiceHint":"Practice without grades: students retake anytime and see the solution after each attempt; you only see how many took it — no names or scores.",
+"nav.myFiles":"My files","myf.title":"My files","myf.sub":"Your private space: 30 MB for PDFs and images, visible to you only.",
+"nav.sectionsShort":"Sections",
+"sens.title":"Sensitive actions","sens.sub":"Actions affecting all school data. Each requires a verification code sent to your admin email.","year.promoteSafe":"Start year promotion (with code)",
+"nav.counselor":"Counselor","cns.title":"Student counselor","cns.sub":"Weak spots per class by subject, and students who need follow-up.",
 "school.examsTitle":"Exams","school.examsSub":"Create an exam and send it to your class whenever you want.",
 "school.examFileTitle":"Turn a file into questions",
 "school.examFileHint":"Upload a worksheet or lesson content (image or PDF, up to 4 MB). AI extracts its ready-made questions or generates questions from its content, straight into the draft below for review — or just preview it and copy questions yourself.",
@@ -672,6 +694,8 @@ function applyI18n(){
     renderProgress();
     updateWelcomeText();
     applyContentNumbers();
+    // قوائم المراحل والمواد تُبنى من إعدادات المدرسة بلا data-i18n، فتُعاد هنا
+    if(typeof applySchoolSettingsUI === "function"){ try{ applySchoolSettingsUI(); }catch(e){} }
     renderGamification();
     renderBadges();
     renderHeaderMiniAvatar();

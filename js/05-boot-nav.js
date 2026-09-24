@@ -787,6 +787,114 @@ function finalizeSetup(){
 /* ============================================================
    6) التنقل بين الأقسام
    ============================================================ */
+/* ============================================================
+   قائمة الأقسام على الجوّال
+   ------------------------------------------------------------
+   وصف المالك: «على الهاتف القوائم الجديدة كلها لا تظهر». السبب: الشريط
+   الجانبي مخفيّ تحت ٩٩٢ بكسل، وشريط الجوّال السفلي فيه أربعة أقسام ثابتة —
+   فكل قسم أُضيف للشريط الجانبي وحده (الواجبات، السجلّ، المكتبة، القدرات،
+   ملفاتي، المرشد) لا طريق إليه من الهاتف.
+   ⚠️ فالقائمة تُبنى من الشريط الجانبي نفسه لحظة فتحها، بما هو ظاهر للمستخدم
+   فعلاً (الوضع والدور والعضوية) — فأي قسم يُضاف لاحقاً يظهر هنا تلقائياً،
+   ولا تتباعد القائمتان أبداً.
+   ============================================================ */
+function navItemVisible(el){
+    if(el.classList.contains("mode-hidden") || el.classList.contains("disabled")) return false;
+    for(let n = el; n && n !== document.body; n = n.parentElement){
+        if(n.style && n.style.display === "none") return false;
+        if(n.classList && n.classList.contains("mode-hidden")) return false;
+    }
+    return true;
+}
+
+function openNavSheet(){
+    closeNavSheet();
+    const current = (document.querySelector(".view-section.active") || {}).id || "";
+    const items = [...document.querySelectorAll(".sidebar .nav-item[data-tab]")].filter(navItemVisible);
+    const sheet = document.createElement("div");
+    sheet.id = "nav-sheet";
+    sheet.className = "nav-sheet";
+    sheet.addEventListener("click", e => { if(e.target === sheet) closeNavSheet(); });
+    const card = document.createElement("div");
+    card.className = "nav-sheet-card";
+    const head = document.createElement("div");
+    head.className = "nav-sheet-head";
+    head.innerHTML = `<b>${currentLang === "ar" ? "الأقسام" : "Sections"}</b>`;
+    const close = document.createElement("button");
+    close.type = "button"; close.className = "btn btn-ghost btn-sm";
+    close.setAttribute("aria-label", currentLang === "ar" ? "إغلاق" : "Close");
+    close.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+    close.addEventListener("click", closeNavSheet);
+    head.appendChild(close);
+    const grid = document.createElement("div");
+    grid.className = "nav-sheet-grid";
+    items.forEach(el => {
+        const tab = el.getAttribute("data-tab");
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "nav-sheet-item" + (current === "view-" + tab ? " active" : "");
+        const icon = el.querySelector("i");
+        const label = el.querySelector("span[data-i18n], span");
+        // النصّ والأيقونة منسوخان كنصّ وصنف — لا innerHTML من عنصر آخر
+        const i = document.createElement("i");
+        i.className = icon ? icon.className : "fa-solid fa-circle";
+        const t = document.createElement("span");
+        t.textContent = label ? label.textContent.trim() : tab;
+        b.append(i, t);
+        b.addEventListener("click", () => { closeNavSheet(); switchTab(tab); });
+        grid.appendChild(b);
+    });
+    card.append(head, grid);
+    sheet.appendChild(card);
+    document.body.appendChild(sheet);
+}
+
+function closeNavSheet(){
+    const s = document.getElementById("nav-sheet");
+    if(s) s.remove();
+}
+
+/* ============================================================
+   بطاقات قابلة للطيّ
+   ------------------------------------------------------------
+   قول المالك: «اجعلها فيها إمكانية طيّ، لأن تمتلئ الشاشة بشيء لا يحتاجه
+   المستخدم». البطاقة المعلَّمة data-collapsible يصير عنوانها (h3) زرّاً يطويها،
+   وتُطوى افتراضياً إلا إن حملت data-open. ويُحفظ اختيار كل مستخدم لكل بطاقة
+   (في متصفّحه) — ما فتحه يبقى مفتوحاً في الزيارة التالية.
+   ============================================================ */
+const COLLAPSE_KEY = "khuta_collapsed_v1";
+function collapsePrefs(){
+    try{ return JSON.parse(localStorage.getItem(COLLAPSE_KEY) || "{}") || {}; }catch(e){ return {}; }
+}
+function setCardCollapsed(card, collapsed){
+    card.classList.toggle("is-collapsed", collapsed);
+    const head = card.querySelector(":scope > h3");
+    if(head) head.setAttribute("aria-expanded", collapsed ? "false" : "true");
+}
+function initCollapsibleCards(root){
+    const prefs = collapsePrefs();
+    (root || document).querySelectorAll(".card[data-collapsible]").forEach(card => {
+        if(card.dataset.collapsibleReady) return;
+        const head = card.querySelector(":scope > h3");
+        if(!head) return;
+        card.dataset.collapsibleReady = "1";
+        head.classList.add("collapse-head");
+        head.setAttribute("role", "button");
+        head.setAttribute("tabindex", "0");
+        const key = card.id || card.getAttribute("data-collapsible");
+        const saved = key && Object.prototype.hasOwnProperty.call(prefs, key) ? prefs[key] : null;
+        setCardCollapsed(card, saved !== null ? saved : !card.hasAttribute("data-open"));
+        const toggle = () => {
+            const now = !card.classList.contains("is-collapsed");
+            setCardCollapsed(card, now);
+            if(key){ const p = collapsePrefs(); p[key] = now; try{ localStorage.setItem(COLLAPSE_KEY, JSON.stringify(p)); }catch(e){} }
+        };
+        head.addEventListener("click", toggle);
+        head.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); toggle(); } });
+    });
+}
+document.addEventListener("DOMContentLoaded", () => initCollapsibleCards());
+
 function switchTab(tabId, element){
     document.querySelectorAll(".view-section").forEach(el => el.classList.remove("active"));
     document.getElementById("view-" + tabId).classList.add("active");
@@ -798,6 +906,17 @@ function switchTab(tabId, element){
     if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); if(typeof renderAliasBox === "function") renderAliasBox(); }
     if(tabId === "settings") renderSettings();
     if(tabId === "tutors") renderTutors();
+    if((tabId === "schoolexams" || tabId === "schoolhw") && typeof setExamWorkKind === "function")
+        setExamWorkKind(tabId === "schoolhw" ? "homework" : "exam");
+    if(tabId === "schoolrecord" && typeof renderRecordTab === "function") renderRecordTab();
+    if(tabId === "schoollib" && typeof renderLibraryTab === "function") renderLibraryTab();
+    if(tabId === "schoolgat" && typeof renderGatTab === "function") renderGatTab();
+    if(tabId === "schoolcounselor" && typeof renderCounselorTab === "function") renderCounselorTab();
+    /* «ملفاتي» لطلاب خُطى كلّهم: على الجوّال تُحمَّل عند أول فتح (js/39) */
+    if(tabId === "myfiles" && typeof khutaLoadGroup === "function"){
+        khutaLoadGroup("myfiles").then(() => { if(typeof renderMyFilesTab === "function") renderMyFilesTab(); })
+            .catch(e => console.error("[خُطى] تعذّر تحميل ملفاتي:", e));
+    }
     /* ⚠️ يُعاد التطبيق بعد كل انتقال: بعض الأقسام تُعيد رسم محتواها هنا
        (renderProfileStats مثلاً)، فيعود ما أخفيناه للمعلّم لو طبّقناه مرة
        واحدة عند الدخول فقط. وهذا سبب عودة أشياء ظننّاها أُخفيت. */

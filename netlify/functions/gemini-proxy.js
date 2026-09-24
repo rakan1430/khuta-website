@@ -368,10 +368,33 @@ function startOfWeekUTC(date){
     return d.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
+/* حدّ المدرسة لعضوها — يضبطه المالك من لوحته (schools.ai_daily_per_member).
+   يحلّ محلّ الحدّ الافتراضي لكل استخدام هذا الحساب، لأن الحصّة للحساب لا
+   للميزة. null = ليس عضو مدرسة لها حدّ، فيبقى الافتراضي. وأي فشل في القراءة
+   يُرجع null أيضاً: لا نُسقط الذكاء كلّه لعطل مؤقت في قراءة إعداد. */
+async function schoolAiLimits(userId, serviceKey){
+    try{
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/ai_daily_limit_for`, {
+            method: "POST",
+            headers: { "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ p_uid: userId }),
+        });
+        if(!res.ok) return null;
+        const daily = await res.json();
+        if(!Number.isInteger(daily) || daily < 0) return null;
+        return { daily, weekly: daily * 5 };
+    }catch(e){
+        console.error("[gemini-proxy] تعذّر قراءة حد المدرسة:", e);
+        return null;
+    }
+}
+
 // يتحقق من حدّي اليوم/الأسبوع لمستخدم مسجَّل ويزيدهما إن سُمح بالطلب —
 // قراءة-ثم-كتابة (نفس أسلوب checkRateLimit أعلاه بالضبط)، سباق نادر جداً
 // ومقبول هنا (لا يستحق تعقيد RPC إضافي لهذا الحجم من الاستخدام)
-async function checkAndIncrementAiQuota(userId, serviceKey){
+async function checkAndIncrementAiQuota(userId, serviceKey, limits){
+    const dailyLimit = limits ? limits.daily : AI_DAILY_LIMIT;
+    const weeklyLimit = limits ? limits.weekly : AI_WEEKLY_LIMIT;
     const restHeaders = {
         "apikey": serviceKey,
         "Authorization": `Bearer ${serviceKey}`,
@@ -389,6 +412,8 @@ async function checkAndIncrementAiQuota(userId, serviceKey){
         const row = rows[0];
 
         if(!row){
+            // حدّ صفر من المدرسة يعني لا استخدام أصلاً — حتى أول مرّة
+            if(dailyLimit <= 0) return { allowed: false, reason: "day" };
             // أول استخدام إطلاقاً لهذا المستخدم — صف جديد بعدّاد 1/1
             await fetch(restBase, {
                 method: "POST",
@@ -402,8 +427,8 @@ async function checkAndIncrementAiQuota(userId, serviceKey){
         const dayCount = row.day_date === today ? row.day_count : 0;
         const weekCount = row.week_start === thisWeekStart ? row.week_count : 0;
 
-        if(dayCount >= AI_DAILY_LIMIT) return { allowed: false, reason: "day" };
-        if(weekCount >= AI_WEEKLY_LIMIT) return { allowed: false, reason: "week" };
+        if(dayCount >= dailyLimit) return { allowed: false, reason: "day" };
+        if(weekCount >= weeklyLimit) return { allowed: false, reason: "week" };
 
         await fetch(`${restBase}?user_id=eq.${encodeURIComponent(userId)}`, {
             method: "PATCH",
@@ -541,15 +566,18 @@ exports.handler = async function (event) {
 
     if(!isAdmin){
         if(serviceKey){
-            const quota = await checkAndIncrementAiQuota(user.id, serviceKey);
+            const schoolLimits = await schoolAiLimits(user.id, serviceKey);
+            const quota = await checkAndIncrementAiQuota(user.id, serviceKey, schoolLimits);
             if(!quota.allowed){
                 const isWeekly = quota.reason === "week";
+                const dayN  = schoolLimits ? schoolLimits.daily  : AI_DAILY_LIMIT;
+                const weekN = schoolLimits ? schoolLimits.weekly : AI_WEEKLY_LIMIT;
                 return {
                     statusCode: 429,
                     body: JSON.stringify({
                         error: isWeekly
-                            ? `بلغت حدّك الأسبوعي من استخدام الذكاء الاصطناعي (${AI_WEEKLY_LIMIT} استخدام) — يتجدد الحد الأسبوع القادم`
-                            : `بلغت حدّك اليومي من استخدام الذكاء الاصطناعي (${AI_DAILY_LIMIT} استخدامات) — يتجدد الحد غداً`,
+                            ? `بلغت حدّك الأسبوعي من استخدام الذكاء الاصطناعي (${weekN} استخدام) — يتجدد الحد الأسبوع القادم`
+                            : `بلغت حدّك اليومي من استخدام الذكاء الاصطناعي (${dayN} استخدامات) — يتجدد الحد غداً`,
                         code: isWeekly ? "WEEKLY_LIMIT" : "DAILY_LIMIT",
                     }),
                 };

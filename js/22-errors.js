@@ -25,6 +25,12 @@ function schoolError(e, action){
     const status = (e && (e.status || e.statusCode)) || 0;
     const act = action || (ar ? "العملية" : "the action");
 
+    // ٠) طلب علق فقطعته المهلة (khutaFetchWithTimeout في js/01-core-config.js)
+    if(/REQUEST_TIMEOUT|TimeoutError|Failed to fetch|NetworkError|Load failed/i.test(raw)){
+        return ar ? `الاتصال بطيء أو انقطع فلم تكتمل ${act}. تحقّق من الإنترنت وأعد المحاولة — لا حاجة لإعادة تحميل الصفحة.`
+                  : `The connection is slow or dropped. Check your internet and try again.`;
+    }
+
     // ١) الجلسة انتهت أو لم تُستعد — أشيع سبب وأكثره إرباكاً
     if(status === 401 || /jwt expired|invalid jwt|not authenticated|refresh_token|session_not_found/i.test(raw)){
         return ar ? `انتهت مهلة جلستك. حدّث الصفحة وسجّل دخولك ثم أعد ${act}.`
@@ -45,6 +51,20 @@ function schoolError(e, action){
     }
 
     // ٤) قيود واضحة يفهمها المستخدم
+    // حدود المدرسة ومراحلها (sql/PHASE0_FOUNDATION.sql)
+    if(/STUDENT_LIMIT/i.test(raw))
+        return ar ? "بلغت المدرسة الحدّ الأعلى لعدد الطلاب في باقتها. تواصل مع إدارة خُطى لرفع الحد."
+                  : "The school reached its student limit. Contact Khuta to raise it.";
+    if(/GRADE_IN_USE/i.test(raw))
+        return ar ? "لا يمكن حذف هذه المرحلة: فيها طلاب أو فصول. انقلهم لمرحلة أخرى أولاً."
+                  : "This grade has students or classes. Move them first.";
+    // الواجبات (sql/PHASE1_HOMEWORK_GRADES.sql)
+    if(/HOMEWORK_NEEDS_DUE/i.test(raw))
+        return ar ? "الواجب يحتاج موعد تسليم." : "Homework needs a due date.";
+    if(/PAST_DUE/i.test(raw))
+        return ar ? "انتهى موعد التسليم." : "The deadline has passed.";
+    if(/GRADE_CODE_IMMUTABLE/i.test(raw))
+        return ar ? "لا يمكن تغيير رمز المرحلة — عدّل اسمها فقط." : "A grade's code can't change — edit its name.";
     /* حارس طلبات الحسابات (account_requests_guard في قاعدة البيانات) —
        أُضيف لأن باب الطلبات العلني كان مفتوحاً بلا حدّ، فأي زائر يغرق قائمة
        الإدارة بآلاف الطلبات. ورفضٌ بلا سبب مفهوم = شكوى "الموقع معطّل". */
