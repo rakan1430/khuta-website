@@ -21,10 +21,67 @@ const USERNAME_EMAIL_DOMAIN = "gmail.com"; // نُستخدم كنطاق بريد
 // المستخدم (انظر usernameToEmail أدناه) فاحتمال تعارضه مع بريد Gmail حقيقي لأي شخص شبه معدوم،
 // وعلى أي حال لن نرسل له أي بريد فعلي أبداً (تأكيد البريد معطّل).
 
+/* ============================================================
+   مهلة لكل طلب إلى Supabase — علاج «جارٍ التحميل… للأبد»
+   ------------------------------------------------------------
+   وصف المالك (٢٤ سبتمبر): «بعض الخيارات تعلق على جارٍ التحميل، ولا تعمل إلا
+   بإعادة تحميل الصفحة أو تغيير المتصفح، وكأن الموقع كلّه يتجمّد».
+
+   السبب: طلبٌ لا يعود أبداً — لا نجاح ولا خطأ. أشهر مصادره سفاري الآيباد
+   والآيفون بعد رجوع التبويب من الخلفية أو استيقاظ الجهاز: أول اتصال يعلق
+   على مقبس ميّت. ولأن كل طلب ينتظر جلسة الدخول، يعلق تجديد الجلسة فتعلق
+   خلفه كل الطلبات = «الموقع كلّه تجمّد». وكل شاشاتنا تعالج الخطأ برسالة،
+   لكنها لا تستطيع معالجة ما لا يعود.
+
+   فالآن لكل طلب حدّ، ثم خطأ حقيقي تعرضه الشاشة («الاتصال بطيء… أعد
+   المحاولة») بدل الانتظار الأبدي:
+   • القراءة (GET): ١٠ ثوانٍ للمحاولة — ومكتبة Supabase نفسها تعيد القراءة
+     ٣ مرات بعد ١ ثم ٢ ثم ٤ ثوانٍ على اتصال جديد، وأغلب التعليق يزول هناك.
+     (كانت لي إعادة إضافية فوقها فصارت ٨ محاولات — أُزيلت.)
+   • الكتابة ونداءات الدوال: ٢٠ ثانية مرة واحدة، بلا إعادة: قد تكون وصلت
+     الخادم فعلاً، وإعادتها تكرّر الفعل (تسليم، رفع درجات…).
+   ⚠️ رفع الملفات مستثنى: ملف كبير على شبكة بطيئة قد يحتاج أكثر بحق.
+   ============================================================ */
+const SB_READ_TIMEOUT_MS = 10000;
+const SB_WRITE_TIMEOUT_MS = 20000;
+
+function khutaFetchWithTimeout(input, init){
+    init = init || {};
+    const body = init.body;
+    const isUpload = (typeof Blob !== "undefined" && body instanceof Blob)
+        || (typeof FormData !== "undefined" && body instanceof FormData)
+        || (typeof ArrayBuffer !== "undefined" && (body instanceof ArrayBuffer || ArrayBuffer.isView(body)));
+    if(isUpload || typeof AbortController === "undefined") return fetch(input, init);
+
+    const method = String(init.method || (input && input.method) || "GET").toUpperCase();
+    const limit = (method === "GET" || method === "HEAD") ? SB_READ_TIMEOUT_MS : SB_WRITE_TIMEOUT_MS;
+    const ctrl = new AbortController();
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, limit);
+    // إن ألغى المستدعي طلبه بنفسه، نحترم ذلك
+    const outer = init.signal;
+    if(outer){
+        if(outer.aborted) ctrl.abort();
+        else outer.addEventListener("abort", () => ctrl.abort(), { once:true });
+    }
+    return fetch(input, Object.assign({}, init, { signal: ctrl.signal }))
+        .then(res => { clearTimeout(timer); return res; })
+        .catch(err => {
+            clearTimeout(timer);
+            if(timedOut){
+                console.warn("[خُطى] طلب علق فقُطع بعد " + (limit / 1000) + " ث:", String((input && input.url) || input).split("?")[0]);
+                throw Object.assign(new Error("REQUEST_TIMEOUT"), { name:"TimeoutError", timedOut:true });
+            }
+            throw err;
+        });
+}
+
 let sb = null;
 try{
     if(window.supabase && typeof window.supabase.createClient === "function"){
-        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            global: { fetch: khutaFetchWithTimeout },
+        });
     } else {
         // مكتبة Supabase لم تُحمَّل أصلاً. الموقع سيعمل كضيف (كل شيء محلي) لكن
         // الحساب والمزامنة والمجتمع ستُعطَّل. السبب الأرجح: بصمة integrity في
@@ -69,7 +126,11 @@ let __pendingAuthEvents = [];
 
 function initOAuthListener(){
     if(!sb) return;
-    sb.auth.onAuthStateChange(async (event, session) => {
+    /* ⚠️ المستمع لا يُنتظَر ولا ينتظر: مكتبة Supabase تنتظر كل مستمع قبل أن
+       تُكمل عملها على الجلسة (رجوع التبويب، تجديد الرمز، تبويب آخر)، وتوصي
+       نصّاً بألّا يُستدعى Supabase من داخله. معالجتنا تستدعيه (user_data)،
+       فنؤجّلها لدورة لاحقة بـsetTimeout — لا تمسك الجلسة ولا تعلق عليها. */
+    sb.auth.onAuthStateChange((event, session) => {
         if(event === "PASSWORD_RECOVERY"){
             document.getElementById("login-overlay").style.display = "none";
             document.getElementById("password-recovery-overlay").style.display = "flex";
@@ -79,7 +140,10 @@ function initOAuthListener(){
             __pendingAuthEvents.push({ event, session });
             return;
         }
-        await handleAuthStateEvent(event, session);
+        setTimeout(() => {
+            handleAuthStateEvent(event, session)
+                .catch(e => console.error("[خُطى] تعذّرت معالجة حدث مصادقة:", e));
+        }, 0);
     });
 }
 
