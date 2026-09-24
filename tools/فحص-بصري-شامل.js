@@ -182,7 +182,8 @@ async function main(){
                 ok("ضابط: الفحص يلتقط التجاوز والتباين والتحميل العالق والنصّ المنضغط المزروعة",
                     ctl.overflow.length > 0 && ctl.contrast.length > 0 && ctl.stuck.length > 0 && ctl.squeezed.length > 0, JSON.stringify(ctl));
 
-                for(const role of ["student", "teacher", "admin"]){
+                // SWEEP_ONLY=overlays: النوافذ وحدها (دقيقتان بدل ٢٥) للتحقّق السريع من إصلاحٍ فيها
+                for(const role of (process.env.SWEEP_ONLY === "overlays" ? [] : ["student", "teacher", "admin"])){
                     console.log(`\n${size.key} · ${theme} · ${role}`);
                     const tabs = await page.evaluate(async (role) => {
                         switchDemoRole(role);
@@ -240,6 +241,13 @@ async function main(){
                         switchDemoRole(ov.role);
                         await new Promise(r => setTimeout(r, 400));
                         if(ov.tab){ switchTab(ov.tab); await new Promise(r => setTimeout(r, 1800)); }
+                        const bigSet = () => new Set([...document.querySelectorAll("body *")].filter(el => {
+                            const cs = getComputedStyle(el);
+                            if(cs.position !== "fixed" || cs.display === "none" || cs.visibility === "hidden") return false;
+                            const r = el.getBoundingClientRect();
+                            return r.width * r.height > innerWidth * innerHeight * 0.35;
+                        }));
+                        const s0 = bigSet();
                         const n0 = big();
                         if(ov.click){
                             const b = [...document.querySelectorAll(`[onclick^="${ov.click}"]`)].find(x => x.offsetParent !== null);
@@ -247,12 +255,28 @@ async function main(){
                             b.click();
                         }else (0, eval)(ov.run);
                         await new Promise(r => setTimeout(r, 2000));
-                        return big() > n0 ? "OPEN" : "NOT_OPEN";
+                        if(big() <= n0) return "NOT_OPEN";
+                        // مغطّاة؟ لكل عنوان ونصّ وزرّ ظاهر في النافذة: هل هي فعلاً ما يقع
+                        // تحت مركزه؟ (هكذا غطّى شريط «دخول سريع» رأس نافذة النتائج)
+                        const win = [...bigSet()].filter(el => !s0.has(el)).pop();
+                        const covered = [];
+                        if(win) win.querySelectorAll("h1, h2, h3, h4, p, button, label").forEach(el => {
+                            if(covered.length >= 3) return;
+                            const r = el.getBoundingClientRect();
+                            if(!r.width || !r.height || r.bottom < 0 || r.top > innerHeight) return;
+                            const cs = getComputedStyle(el);
+                            if(cs.visibility === "hidden" || +cs.opacity === 0) return;
+                            const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+                            if(top && !win.contains(top) && !top.closest(".demo-bar"))
+                                covered.push(`«${(el.textContent || "").trim().slice(0, 18)}» تحت ${top.id || top.className || top.tagName}`);
+                        });
+                        return covered.length ? "COVERED: " + covered.join(" · ") : "OPEN";
                     }, ov);
                     const r = await page.evaluate(inspect, "body");
                     const newErrs = errs.slice(before);
                     const bad = [];
-                    if(opened !== "OPEN") bad.push(opened === "NO_BUTTON" ? "لا زرّ يفتحها في بيانات العرض" : "لم تُفتح");
+                    if(opened !== "OPEN") bad.push(opened === "NO_BUTTON" ? "لا زرّ يفتحها في بيانات العرض"
+                        : opened.startsWith("COVERED") ? "مغطّاة: " + opened.slice(9) : "لم تُفتح");
                     if(r.overflow.length) bad.push("تجاوز: " + r.overflow.join(" · "));
                     if(r.stuck.length) bad.push("تحميل عالق: " + r.stuck.join(" · "));
                     if(r.broken.length) bad.push("صورة مكسورة: " + r.broken.join(" · "));
