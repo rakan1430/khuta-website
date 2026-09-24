@@ -668,6 +668,10 @@ function applyExamKindLabels(){
     show("exam-hw-hint", hw);
     show("exam-gat-wrap", pr);
     show("exam-practice-hint", pr);
+    /* التدريب يصل لكل طلاب المدرسة وليس مادة مدرسية: لا مادة ولا صفّ ولا خلط
+       (قول المالك: «لماذا يوجد خانة اختيار مادة؟ … ولا يحتاج فيها ميزة خلط») */
+    const group = id => { const el = document.getElementById(id); return el && (el.closest(".form-group") || el.closest("label")); };
+    [group("exam-subject"), group("exam-grade"), group("exam-shuffle")].forEach(el => { if(el) el.style.display = pr ? "none" : ""; });
 }
 
 /* المواد: ما يدرّسه المعلّم أولاً (من إسناد الإدارة)، ثم بقية مواد
@@ -756,7 +760,7 @@ async function saveExamDraft(){
         showToast(currentLang==='ar' ? (hw ? 'اكتب عنوان الواجب' : 'اكتب عنوان الاختبار') : 'Enter a title');
         return;
     }
-    const subjectId = ((document.getElementById("exam-subject") || {}).value || "") || null;
+    const subjectId = pr ? null : (((document.getElementById("exam-subject") || {}).value || "") || null);
     const subject = subjectId ? schoolSubjectsList(true).find(x => x.id === subjectId) : null;
     /* ⚠️ الواجب بلا مادة لا يظهر في سجلّ المادة عند المعلّم ولا في ملف
        الطالب — وهو ما بُني الواجب لأجله. */
@@ -794,9 +798,9 @@ async function saveExamDraft(){
             subject_id: subject ? subject.id : null,
             kind: examWorkKind,
             gat_section: pr ? ((document.getElementById("exam-gat-section") || {}).value || "mixed") : null,
-            shuffle: !!(document.getElementById("exam-shuffle") || {}).checked,
+            shuffle: !pr && !!(document.getElementById("exam-shuffle") || {}).checked,
             late_days: hw ? (parseInt((document.getElementById("exam-late-days") || {}).value, 10) || 0) : 0,
-            grade: (document.getElementById("exam-grade") || {}).value || null,
+            grade: pr ? null : ((document.getElementById("exam-grade") || {}).value || null),
             duration_min: parseInt((document.getElementById("exam-duration") || {}).value, 10) || null,
             questions,
             published: false,

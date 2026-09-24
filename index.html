@@ -1355,6 +1355,8 @@
 
     <nav class="mobile-nav">
         <div data-modes="khuta school" class="mobile-nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i><span data-i18n="nav.dashboardShort">الجدول</span></div>
+        <!-- كل الأقسام التي يراها المستخدم (الشريط الجانبي مخفيّ على الجوّال) — openNavSheet في js/05 -->
+        <div data-modes="khuta school" class="mobile-nav-item" id="mobile-nav-sections" onclick="openNavSheet()" role="button" tabindex="0"><i class="fa-solid fa-grip"></i><span data-i18n="nav.sectionsShort">الأقسام</span></div>
         <div data-modes="khuta" class="mobile-nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i><span data-i18n="nav.calcShort">الموزونة</span></div>
         <div data-modes="khuta" class="mobile-nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i><span data-i18n="nav.linksShort">المصادر</span></div>
         <div data-modes="khuta" class="mobile-nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i><span data-i18n="nav.specialtiesShort">التخصصات</span></div>
@@ -2166,7 +2168,7 @@
             </div>
 
             <!-- ===================== الدخول السريع للمعلّم ===================== -->
-            <div class="card" data-school-role="teacher,admin" style="display:none;">
+            <div class="card" id="card-quick" data-collapsible data-school-role="teacher,admin" style="display:none;">
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-bolt"></i> <span data-i18n="school.quickTitle">الدخول السريع على السبورة</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.quickSub">
                     اضبط كلمة مرور لحسابك نفسه لتدخل بها بسرعة على سبورة الفصل بدل كتابة بيانات Google كل حصة.
@@ -2245,7 +2247,7 @@
                             <option value="mixed" selected data-i18n="gat.mixed">مختلط</option>
                         </select>
                     </div>
-                    <p class="hint" id="exam-practice-hint" style="display:none; margin-bottom:10px;" data-i18n="gat.practiceHint">تدريب بلا درجات: يعيده الطالب متى شاء ويرى الحل بعد كل محاولة، ولا ترى أنت إلا عدد من اختبره — بلا أسماء ولا درجات.</p>
+                    <p class="hint" id="exam-practice-hint" style="display:none; margin-bottom:10px;" data-i18n="gat.practiceHint">تدريب بلا درجات لكل طلاب المدرسة: يعيده الطالب متى شاء ويرى الحل بعد كل محاولة، ولا ترى أنت إلا عدد من اختبره — بلا أسماء ولا درجات.</p>
                     <p class="hint" id="exam-hw-hint" style="display:none; margin-bottom:10px;" data-i18n="school.hwHint">الحلّ النموذجي يظهر للطلاب بعد انتهاء مهلة التسليم فقط — لا بعد تسليم كلٍّ منهم، كي لا يُنقل الحلّ لمن لم يسلّم.</p>
 
                     <!-- تحويل ملف إلى أسئلة: بالذكاء الاصطناعي، أو معاينة للنسخ اليدوي -->
@@ -2496,7 +2498,7 @@
             </div>
 
             <!-- روابط الانضمام الخاصة بهذه المدرسة، ومراحلها وموادها — js/34-school-settings.js -->
-            <div class="card">
+            <div class="card" id="card-setup" data-collapsible>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-sliders"></i> <span data-i18n="school.setupTitle">إعداد المدرسة: الروابط والمراحل والمواد</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.setupSub">روابط الانضمام خاصة بمدرستك. والمراحل والمواد تظهر في كل قوائم المنصّة — الفصول والاختبارات والملفات وإسناد المعلّمين.</p>
                 <div id="school-settings-admin"></div>
@@ -2504,7 +2506,7 @@
 
             <!-- ⚠️ الفصول أساس كل شيء: الجدول الدراسي، ورؤية الطالب لملفات
                  معلّميه، واستهداف الاختبارات. بلا فصل لا يعمل أيٌّ منها. -->
-            <div class="card">
+            <div class="card" id="card-classes" data-collapsible>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-chalkboard"></i> <span data-i18n="school.classesTitle">الفصول</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.classesSub">
                     أنشئ فصول المدرسة أولاً. بدونها لا يعمل الجدول الدراسي، ولا يرى الطالب ملفات معلّميه، ولا يجد المعلّم فصلاً يرسل له اختباراً.
@@ -2535,23 +2537,7 @@
             </div>
 
             <!-- ===================== نهاية السنة الدراسية ===================== -->
-            <div class="card" id="year-card">
-                <div class="card-head">
-                    <div>
-                        <h3 style="margin-bottom:4px;"><i class="fa-solid fa-graduation-cap"></i>
-                            <span data-i18n="year.title">السنة الدراسية</span></h3>
-                        <div class="card-sub" data-i18n="year.sub">ترقية جماعية في آخر السنة، مع إبقاء من تريد في مرحلته.</div>
-                    </div>
-                    <button type="button" class="btn btn-sm acc-btn" onclick="openYearPromotion()">
-                        <i class="fa-solid fa-forward"></i> <span data-i18n="year.promote">ترقية السنة</span></button>
-                </div>
-                <div id="year-status"></div>
-                <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="loadAdminClasses()">
-                    <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span>
-                </button>
-            </div>
-
-            <div class="card" id="admin-import-card">
+            <div class="card" id="admin-import-card" data-collapsible>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-file-import"></i> استيراد الطلاب من ملف</h3>
                 <p class="card-sub" style="margin-bottom:14px;">
                     اسحب ملف طلابك (Excel أو CSV) من نظام نور. سنسألك عن الأعمدة مرة واحدة فقط، ونتذكّرها بعدها.
@@ -2575,7 +2561,7 @@
             </div>
 
             <!-- ===================== الغياب من ملفّ نور ===================== -->
-            <div class="card">
+            <div class="card" id="card-attendance" data-collapsible>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-user-clock"></i>
                     <span data-i18n="att.title">الغياب من نور</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="att.sub">ارفع كشف الغياب من نور ليظهر بجانب درجات الطلاب. لا تحضير هنا — نور هو السجلّ الرسمي.</p>
@@ -2598,7 +2584,7 @@
             </div>
 
             <!-- ===================== الدرجات الرسمية من ملفّ نور ===================== -->
-            <div class="card">
+            <div class="card" id="card-official" data-collapsible>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-file-circle-check"></i>
                     <span data-i18n="og.title">الدرجات الرسمية من نور</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="og.sub">ارفع كشف درجات الفترة أو النهائي من نور. تُعرض كما هي تماماً — المنصّة لا تحسب درجة ولا معدّلاً.</p>
@@ -2618,7 +2604,7 @@
                 <div id="og-batches"></div>
             </div>
 
-            <div class="card">
+            <div class="card" id="card-members" data-collapsible data-open>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-users-gear"></i> <span data-i18n="school.membersTitle">المدرّسون والطلاب</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.membersSub">إيقاف العضو يمنع دخوله فوراً ويُبقي ملفاته وسجلّه — أأمن من الحذف.</p>
 
@@ -2663,6 +2649,26 @@
                 <button type="button" class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="loadSchoolMembers()">
                     <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span>
                 </button>
+            </div>
+        
+            <!-- ===================== إجراءات حساسة ===================== -->
+            <!-- ⚠️ قول المالك: «الأزرار التي تقوم بإجراء حساس كهذا لن تظهر في الواجهة بهذه
+                 البساطة، بل في مكان أكثر أماناً، وعليها طبقة أمان إضافية: رمز تحقق يُرسل
+                 لإيميل الإداري». فهي هنا مطويّة في آخر الصفحة، والترقية لا تتمّ إلا برمز
+                 من البريد تتحقّق منه قاعدة البيانات نفسها (sql/PHASE6_FIXES.sql §٣). -->
+            <div class="card card-danger" id="year-card" data-collapsible>
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-shield-halved"></i>
+                    <span data-i18n="sens.title">إجراءات حساسة</span></h3>
+                <p class="card-sub" style="margin-bottom:12px;" data-i18n="sens.sub">إجراءات تمسّ بيانات المدرسة كلّها. كل منها يتطلّب رمز تحقق يُرسل إلى بريدك الإداري.</p>
+                <h4 style="margin:6px 0 4px;"><i class="fa-solid fa-graduation-cap"></i> <span data-i18n="year.title">السنة الدراسية</span></h4>
+                <div class="card-sub" data-i18n="year.sub">ترقية جماعية في آخر السنة، مع إبقاء من تريد في مرحلته.</div>
+                <div id="year-status"></div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+                    <button type="button" class="btn btn-sm btn-outline btn-danger-outline" onclick="openYearPromotion()">
+                        <i class="fa-solid fa-lock"></i> <span data-i18n="year.promoteSafe">بدء ترقية السنة (برمز تحقق)</span></button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="loadAdminClasses()">
+                        <i class="fa-solid fa-rotate"></i> <span data-i18n="common.refresh">تحديث</span></button>
+                </div>
             </div>
         </section>
 

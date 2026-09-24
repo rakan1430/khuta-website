@@ -702,10 +702,13 @@ async function loadTeacherExams(){
                 </div>
                 ${iAmStudent ? (pr ? practiceActions(x, w) : studentWorkActions(x, w, hw)) : ""}
                 ${iCanManage ? `<div class="sfile-actions">
-                    <button type="button" class="btn btn-sm" onclick="openExamSend('${escapeHtml(x.id)}')">
+                    ${pr ? `<button type="button" class="btn btn-sm ${x.published ? "btn-outline" : "acc-btn"}" onclick="publishPractice('${escapeHtml(x.id)}', ${x.published ? "false" : "true"})">
+                        <i class="fa-solid ${x.published ? "fa-eye-slash" : "fa-bullhorn"}"></i> ${x.published
+                            ? (ar?'إيقاف النشر':'Unpublish') : (ar?'انشر لكل طلاب المدرسة':'Publish to all students')}</button>`
+                    : `<button type="button" class="btn btn-sm" onclick="openExamSend('${escapeHtml(x.id)}')">
                         <i class="fa-solid fa-paper-plane"></i> ${x.published
                             ? (ar?'إرسال لمزيد':'Send to more')
-                            : (ar?'إرسال':'Send')}</button>
+                            : (ar?'إرسال':'Send')}</button>`}
                     ${pr ? `<span class="pill" title="${ar?'بلا أسماء ولا درجات — تدريب':'No names or scores — practice'}">
                         <i class="fa-solid fa-users"></i> ${ar ? `اختبره ${takers.get(x.id) || 0} طالباً` : `${takers.get(x.id) || 0} took it`}</span>`
                     : `<button type="button" class="btn btn-outline btn-sm" onclick="openSchoolExamResults('${escapeHtml(x.id)}')">

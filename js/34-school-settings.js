@@ -57,6 +57,8 @@ function joinLinksHtml(slug){
          + row("teacher", "رابط انضمام المعلّمين", "Teacher join link");
 }
 
+const ssOpenSecs = new Set();   // أقسام الإعداد التي فتحها المدير (تبقى مفتوحة بعد إعادة الرسم)
+
 async function renderSchoolSettingsAdmin(){
     const box = document.getElementById("school-settings-admin");
     if(!box || !schoolCtx || schoolCtx.role !== "admin") return;
@@ -64,14 +66,25 @@ async function renderSchoolSettingsAdmin(){
     const grades = schoolGradesList();
     const subjects = schoolSubjectsList(true);
 
+    /* ⚠️ الأقسام الثلاثة مطويّة افتراضياً (قول المالك: «المواد كثيرة ومرصوصة ولا
+       يحتاج أن يراها المدير في كل مرة»). ونحفظ ما فتحه المدير عبر إعادة الرسم —
+       كل تعديل مادة يعيد رسم البطاقة، ولو طُويت عند كل تعديل لكان أسوأ من قبل. */
+    box.querySelectorAll("details.ss-sec[open]").forEach(d => ssOpenSecs.add(d.dataset.sec));
+    box.querySelectorAll("details.ss-sec:not([open])").forEach(d => ssOpenSecs.delete(d.dataset.sec));
+    const openAttr = sec => ssOpenSecs.has(sec) ? "open" : "";
+    const count = n => `<span class="pill">${n}</span>`;
+
     box.innerHTML = `
-        <h4 class="ss-head"><i class="fa-solid fa-link"></i> ${ssLabel("روابط الانضمام", "Join links")}</h4>
+        <details class="ss-sec" data-sec="links" ${openAttr("links")}>
+        <summary class="ss-head"><i class="fa-solid fa-link"></i> ${ssLabel("روابط الانضمام", "Join links")}</summary>
         <p class="hint" style="margin-bottom:8px;">${ssLabel(
             "وزّعها على طلاب مدرستك ومعلّميها. من يفتحها يرسل طلب انضمام يصلك هنا.",
             "Share them with your students and teachers. Requests arrive here.")}</p>
         ${joinLinksHtml(slug)}
+        </details>
 
-        <h4 class="ss-head"><i class="fa-solid fa-layer-group"></i> ${ssLabel("المراحل", "Grades")}</h4>
+        <details class="ss-sec" data-sec="grades" ${openAttr("grades")}>
+        <summary class="ss-head"><i class="fa-solid fa-layer-group"></i> ${ssLabel("المراحل", "Grades")} ${count(grades.length)}</summary>
         <p class="hint" style="margin-bottom:8px;">${ssLabel(
             "الترتيب يحدّد الترقية آخر السنة: كل مرحلة تصعد للتي تليها، والأخيرة تتخرّج.",
             "Order drives the year-end promotion: each grade moves to the next; the last graduates.")}</p>
@@ -93,8 +106,10 @@ async function renderSchoolSettingsAdmin(){
             <input type="text" id="ss-new-grade" maxlength="40" placeholder="${ssLabel("مرحلة جديدة، مثل: رابع ابتدائي", "New grade")}">
             <button type="button" class="btn btn-sm acc-btn" onclick="addSchoolGrade()"><i class="fa-solid fa-plus"></i> ${ssLabel("إضافة", "Add")}</button>
         </div>
+        </details>
 
-        <h4 class="ss-head"><i class="fa-solid fa-book"></i> ${ssLabel("المواد", "Subjects")}</h4>
+        <details class="ss-sec" data-sec="subjects" ${openAttr("subjects")}>
+        <summary class="ss-head"><i class="fa-solid fa-book"></i> ${ssLabel("المواد", "Subjects")} ${count(subjects.length)}</summary>
         <p class="hint" style="margin-bottom:8px;">${ssLabel(
             "منها يُختار ما يدرّسه كل معلّم في كل فصل. المادة المُعطَّلة تختفي من القوائم ويبقى ما سبق ربطه بها.",
             "Teachers are assigned subjects from this list. Disabled subjects disappear from lists but keep past links.")}</p>
@@ -114,7 +129,8 @@ async function renderSchoolSettingsAdmin(){
         <div class="input-row" style="grid-template-columns:1fr auto; margin-top:8px;">
             <input type="text" id="ss-new-subject" maxlength="60" placeholder="${ssLabel("مادة جديدة، مثل: الكيمياء", "New subject")}">
             <button type="button" class="btn btn-sm acc-btn" onclick="addSchoolSubject()"><i class="fa-solid fa-plus"></i> ${ssLabel("إضافة", "Add")}</button>
-        </div>`;
+        </div>
+        </details>`;
 }
 
 /** بعد أي تعديل: تُعاد قراءة الإعدادات من القاعدة، فتتحدّث كل القوائم معاً. */

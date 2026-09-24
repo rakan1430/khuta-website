@@ -68,6 +68,8 @@ async function main(){
         });
 
         console.log("\n١) رفع كشف نور");
+        // البطاقة مطويّة افتراضياً (ملاحظة المالك: الطيّ) — يفتحها المدير أولاً
+        await page.evaluate(() => { const c = document.getElementById("card-official"); if(c && c.classList.contains("is-collapsed")) c.querySelector(":scope > h3").click(); });
         await page.setInputFiles("#og-file", csv);
         await page.waitForSelector("#og-submit", { timeout:5000 });
         const map = await page.evaluate(() => ({

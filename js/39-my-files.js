@@ -72,6 +72,10 @@ function myfGoogleGate(msg){
 }
 
 function renderMyFilesBody(){
+    /* المالك (مدير خُطى) لا يرى مساحة شخصية هنا — بل إدارة «ملفات من خُطى» وحدها.
+       قوله: «لماذا يظهر لي أن أرفع ملفات لي؟ المفترض فقط رفع ملفات لطلاب القدرات».
+       ولا تظهر هذه الإدارة لإدارات المدارس ولا للمعلّمين: is_app_admin وحده. */
+    if(myfIsOwnerAdmin()) return renderKhutaFilesSection(true);
     const used = Number(myfStatus.used) || 0, limit = Number(myfStatus.limit) || MYF_LIMIT;
     const pct = Math.min(100, Math.round(used * 100 / limit));
     const full = used >= limit;
@@ -106,9 +110,15 @@ function renderMyFilesBody(){
             </div>
         </div>`).join("") : `<p class="card-sub">${myfL("لا ملفات بعد.", "No files yet.")}</p>`}
 
+    ${renderKhutaFilesSection(false)}`;
+}
+
+/** «ملفات من خُطى»: للطالب قائمة، وللمالك معها نموذج النشر والحذف. */
+function renderKhutaFilesSection(owner){
+    return `
     <h3 style="margin:22px 0 8px;"><i class="fa-solid fa-star" style="color:var(--gold-text);"></i> ${myfL("ملفات من خُطى", "From Khuta")}</h3>
-    ${myfIsOwnerAdmin() ? `
-    <details class="exq-import">
+    ${owner ? `
+    <details class="exq-import" open>
         <summary>${myfL("أضف ملفاً لكل طلاب خُطى (المالك)", "Add a file for all students (owner)")}</summary>
         <p class="hint" style="margin:10px 0;">${myfL("افحص الملف قبل رفعه: بلا شعارات لأحد، ومحتوى يحق لخُطى نشره.", "Check it first: no third-party logos; content Khuta may publish.")}</p>
         <div class="input-row">
@@ -124,7 +134,7 @@ function renderMyFilesBody(){
                 <div><b>${escapeHtml(f.title)}</b>${f.description ? `<div class="card-sub">${escapeHtml(f.description)}</div>` : ""}</div></div>
             <div class="sfile-actions">
                 <button type="button" class="btn btn-sm" onclick="openKhutaFile(${i})"><i class="fa-solid fa-up-right-from-square"></i> ${myfL("فتح", "Open")}</button>
-                ${myfIsOwnerAdmin() ? `<button type="button" class="btn btn-ghost btn-sm" style="color:var(--rose);" onclick="deleteKhutaFile(${i})"><i class="fa-solid fa-trash"></i></button>` : ""}
+                ${owner ? `<button type="button" class="btn btn-ghost btn-sm" style="color:var(--rose);" onclick="deleteKhutaFile(${i})"><i class="fa-solid fa-trash"></i></button>` : ""}
             </div>
         </div>`).join("") : `<p class="card-sub">${myfL("لا ملفات بعد — ستُضاف قريباً.", "Nothing yet.")}</p>`}`;
 }

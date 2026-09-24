@@ -171,3 +171,19 @@ async function deleteGatLink(id){
         loadGatResources();
     }catch(e){ console.error("[خُطى] تعذّر الحذف:", e); showSchoolError(e, gatL("الحذف", "the delete")); }
 }
+
+/* اختبار التدريب لا يُرسل لفصول: نشره = وصوله لكل طلاب المدرسة (exam_is_assigned_to_me
+   في القاعدة تعدّ التدريب المنشور مُسنَداً للجميع — sql/PHASE6_FIXES.sql). */
+async function publishPractice(id, on){
+    if(!sb || !schoolCtx) return;
+    if(on && !confirm(gatL("سيصل هذا التدريب لكل طلاب المدرسة. أنشره؟", "Publish to every student in the school?"))) return;
+    try{
+        const { error } = await sb.from("teacher_exams").update({ published: !!on }).eq("id", id);
+        if(error) throw error;
+        showToast(on ? gatL("نُشر لكل طلاب المدرسة ✅", "Published ✅") : gatL("أُوقف النشر", "Unpublished"));
+        if(typeof loadTeacherExams === "function") loadTeacherExams();
+    }catch(e){
+        console.error("[خُطى] تعذّر نشر التدريب:", e);
+        showSchoolError(e, gatL("النشر", "publishing"));
+    }
+}

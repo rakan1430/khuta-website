@@ -3580,19 +3580,16 @@ body:not(.dark-mode) select{ background-color:#FFFFFF; }
    فالتمييز مشروط بـbody.is-school-student، ولا يمسّ طالب خُطى العادي ولا
    المعلّم (منصة المدرسة عنده هي عمله كلّه، فلا معنى لتمييزها عن نفسها).
    ============================================================ */
+/* ⚠️ «منصة المدرسة» وحدها — كان «الاختبارات» مميَّزاً معها بلا سبب (نبّه المالك) */
 body.is-school-student .nav-item[data-tab="schoolwork"],
-body.is-school-student .mobile-nav-item[data-tab="schoolwork"],
-body.is-school-student .nav-item[data-tab="schoolexams"],
-body.is-school-student .mobile-nav-item[data-tab="schoolexams"]{
+body.is-school-student .mobile-nav-item[data-tab="schoolwork"]{
     background: linear-gradient(135deg, rgba(201,150,46,.16), rgba(201,150,46,.06));
     border: 1.5px solid var(--gold-soft);
     border-radius: 14px;
     font-weight: 800;
 }
-body.is-school-student .nav-item[data-tab="schoolwork"] i,
-body.is-school-student .nav-item[data-tab="schoolexams"] i{ color: var(--gold-text); }
-body.is-school-student .nav-item[data-tab="schoolwork"]::after,
-body.is-school-student .nav-item[data-tab="schoolexams"]::after{
+body.is-school-student .nav-item[data-tab="schoolwork"] i{ color: var(--gold-text); }
+body.is-school-student .nav-item[data-tab="schoolwork"]::after{
     content: "•"; color: var(--gold-text); margin-inline-start: auto; font-size: 18px; line-height: 1;
 }
 
@@ -3708,8 +3705,7 @@ body.is-school-student .nav-item[data-tab="schoolexams"]::after{
 .mode-btn i{ font-size: 13px; }
 
 /* في وضع المدرسة لا حاجة لتمييز القسم — الشاشة كلها له */
-body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after,
-body[data-mode="school"] .nav-item[data-tab="schoolexams"]::after{ content: none; }
+body[data-mode="school"] .nav-item[data-tab="schoolwork"]::after{ content: none; }
 
 /* إخفاء الوضع — خانة مستقلّة عن style.display كي لا يتنازع نظاما الإظهار.
    انظر شرح applyMode في js/26-mode.js. */
@@ -4078,3 +4074,52 @@ body[data-mode="school"] .nav-item[data-tab="schoolexams"]::after{ content: none
 .cns-chip{ font-size:12px; border-radius:999px; padding:2px 10px; background:rgba(127,127,127,.12); }
 .cns-chip.weak{ background:rgba(192,57,43,.14); color:var(--rose, #c0392b); font-weight:700; }
 .cns-chip.watch{ background:rgba(212,160,23,.16); color:var(--gold-text); font-weight:700; }
+
+
+/* ── قائمة الأقسام على الجوّال (js/05-boot-nav.js: openNavSheet) ── */
+.nav-sheet{ position:fixed; inset:0; z-index:5000; display:flex; align-items:flex-end; justify-content:center;
+    background:rgba(0,0,0,.45); }
+.nav-sheet-card{ width:100%; max-width:560px; max-height:78vh; overflow-y:auto; background:var(--surface);
+    border-radius:22px 22px 0 0; padding:14px 14px calc(18px + env(safe-area-inset-bottom)); box-shadow:var(--shadow-lg); }
+.nav-sheet-head{ display:flex; justify-content:space-between; align-items:center; margin:2px 4px 10px; }
+.nav-sheet-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+.nav-sheet-item{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px; border-radius:14px;
+    border:1px solid var(--border); background:transparent; color:inherit; font:inherit; font-size:12.5px; cursor:pointer; text-align:center; }
+.nav-sheet-item i{ font-size:19px; color:var(--gold-text); }
+.nav-sheet-item.active{ border-color:var(--gold-soft); background:rgba(201,150,46,.10); font-weight:800; }
+
+/* عارض كتب المكتبة (js/37-library.js) */
+.lib-viewer{ position:fixed; inset:0; z-index:6000; background:var(--bg); display:flex; flex-direction:column; }
+.lib-viewer-bar{ display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px;
+    padding:10px 14px; border-bottom:1px solid var(--border); background:var(--surface); }
+.lib-viewer-title{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60vw; }
+.lib-viewer-tools{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.lib-colors{ display:inline-flex; gap:6px; margin-inline:4px; }
+.lib-color{ width:24px; height:24px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0; }
+.lib-color.is-on{ border-color:var(--gold-text); box-shadow:0 0 0 2px var(--surface) inset; }
+.lib-viewer-note{ margin:6px 14px 0; font-size:12px; color:var(--text-3); }
+.lib-viewer-pages{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px; display:flex; flex-direction:column; align-items:center; gap:12px; }
+.lib-page{ position:relative; width:100%; max-width:900px; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.15); border-radius:4px; overflow:hidden; }
+.lib-page canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.lib-page canvas.lib-ink{ pointer-events:none; }
+.lib-viewer.is-drawing .lib-page canvas.lib-ink{ cursor:crosshair; }
+
+/* بطاقات قابلة للطيّ (initCollapsibleCards في js/05) */
+.card[data-collapsible] > h3.collapse-head{ cursor:pointer; display:flex; align-items:center; gap:8px; user-select:none; }
+.card[data-collapsible] > h3.collapse-head::after{ content:"\f078"; font-family:"Font Awesome 6 Free"; font-weight:900; font-size:13px;
+    margin-inline-start:auto; transition:transform .2s; color:var(--text-3); }
+.card[data-collapsible].is-collapsed > h3.collapse-head::after{ transform:rotate(90deg); }
+html[dir="rtl"] .card[data-collapsible].is-collapsed > h3.collapse-head::after{ transform:rotate(-90deg); }
+.card[data-collapsible].is-collapsed > :not(h3){ display:none !important; }
+.card[data-collapsible].is-collapsed > h3{ margin-bottom:0 !important; }
+
+/* أقسام بطاقة إعداد المدرسة (js/34) */
+details.ss-sec{ border-top:1px dashed var(--border); padding:6px 0; }
+details.ss-sec > summary.ss-head{ cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px; }
+details.ss-sec > summary.ss-head::-webkit-details-marker{ display:none; }
+details.ss-sec > summary.ss-head::after{ content:"+"; margin-inline-start:auto; font-weight:800; color:var(--text-3); }
+details.ss-sec[open] > summary.ss-head::after{ content:"−"; }
+
+/* الإجراءات الحساسة */
+.card-danger{ border:1px solid rgba(192,57,43,.35); }
+.btn-danger-outline{ color:var(--rose, #c0392b) !important; border-color:rgba(192,57,43,.5) !important; }

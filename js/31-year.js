@@ -20,6 +20,8 @@
 let yearStatus = null;
 let yearHoldBack = new Set();
 let yearStudents = [];
+let yearCodeSentTo = null;      // بعد إرسال الرمز: البريد المقنَّع — تظهر خانة الرمز
+let yearCodeResendAt = 0;
 
 function yrLabel(ar, en){ return currentLang === "ar" ? ar : en; }
 
@@ -146,6 +148,7 @@ function ensureYearModal(){
 }
 
 function closeYearModal(){
+    yearCodeSentTo = null;
     const m = document.getElementById("year-modal");
     if(m){ m.style.display = "none"; m.innerHTML = ""; }
     yearHoldBack = new Set();
@@ -217,20 +220,89 @@ function renderYearPromotion(){
             "وتُخفى بيانات العام الماضي عن الطلاب فوراً، وتُحذف نهائياً بعد أسبوع. والمتخرّج يخرج من منصّة المدرسة ويبقى حسابه في خُطى.",
             "Last year's data is hidden from students immediately and permanently deleted after a week.")}</p>
 
+        <!-- ⚠️ طبقة الأمان: رمز من بريد المدير، تتحقّق منه قاعدة البيانات نفسها -->
+        <div class="year-code">
+            ${yearCodeSentTo ? `
+            <p class="hint" style="margin:0 0 8px;">${yrLabel(
+                `أُرسل رمز من ٦ أرقام إلى ${escapeHtml(yearCodeSentTo)} — صالح ١٠ دقائق ولمرة واحدة.`,
+                `A 6-digit code was sent to ${escapeHtml(yearCodeSentTo)} — valid 10 minutes, once.`)}</p>
+            <div class="form-group"><label for="year-code-input">${yrLabel("رمز التحقق","Verification code")}</label>
+                <input type="text" id="year-code-input" inputmode="numeric" autocomplete="one-time-code" maxlength="7" dir="ltr"
+                       placeholder="••••••" style="letter-spacing:6px; font-size:20px; text-align:center;"></div>` : `
+            <p class="hint" style="margin:0 0 8px;">${yrLabel(
+                "لن تُنفَّذ الترقية إلا برمز تحقق يُرسل إلى بريدك الإداري.",
+                "Promotion needs a code sent to your admin email.")}</p>`}
+        </div>
+
         <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
-            <button type="button" id="year-confirm" class="btn acc-btn" style="flex:1; min-width:150px;"
+            ${yearCodeSentTo ? `
+            <button type="button" id="year-confirm" class="btn btn-danger-outline btn-outline" style="flex:1; min-width:150px;"
                     onclick="confirmYearPromotion()">
-                <i class="fa-solid fa-forward"></i> ${yrLabel("نفّذ الترقية","Promote")}</button>
+                <i class="fa-solid fa-lock-open"></i> ${yrLabel("تأكيد الترقية بالرمز","Confirm with code")}</button>
+            <button type="button" id="year-resend" class="btn btn-ghost btn-sm" onclick="sendYearCode()">
+                ${yrLabel("أعد إرسال الرمز","Resend code")}</button>` : `
+            <button type="button" id="year-send-code" class="btn btn-outline" style="flex:1; min-width:150px;"
+                    onclick="sendYearCode()">
+                <i class="fa-solid fa-envelope"></i> ${yrLabel("أرسل رمز التحقق إلى بريدي","Email me a code")}</button>`}
             <button type="button" class="btn btn-outline acc-btn" style="flex:1; min-width:120px;"
                     onclick="closeYearModal()">${yrLabel("إلغاء","Cancel")}</button>
         </div>
     </div>`;
 }
 
+async function sendYearCode(){
+    if(!sb || !schoolCtx || schoolCtx.role !== "admin") return;
+    if(Date.now() < yearCodeResendAt){
+        showToast(yrLabel("انتظر دقيقة قبل طلب رمز جديد.", "Wait a minute before requesting another code."));
+        return;
+    }
+    const btn = document.getElementById("year-send-code") || document.getElementById("year-resend");
+    if(typeof schoolBusy === "function") schoolBusy(btn, true);
+    // نحفظ ما كتبه المدير قبل إعادة الرسم
+    const label = ((document.getElementById("year-label-input") || {}).value || "");
+    try{
+        const { data: sess } = await sb.auth.getSession();
+        const token = sess && sess.session && sess.session.access_token;
+        if(!token) throw Object.assign(new Error("NO_SESSION"), { code:"NO_SESSION" });
+        const res = await fetch("/.netlify/functions/sensitive-code", {
+            method:"POST", headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ accessToken: token, action: "promote_year" }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if(!res.ok) throw Object.assign(new Error(data.error || "FAILED"), { code: data.error });
+        yearCodeSentTo = data.sentTo || yrLabel("بريدك", "your email");
+        yearCodeResendAt = Date.now() + 60000;
+        renderYearPromotion();
+        const li = document.getElementById("year-label-input"); if(li) li.value = label;
+        const ci = document.getElementById("year-code-input"); if(ci) ci.focus();
+    }catch(e){
+        console.error("[خُطى] تعذّر إرسال رمز التحقق:", e);
+        showToast(yearCodeError(e.code || e.message));
+    }finally{
+        if(typeof schoolBusy === "function") schoolBusy(btn, false);
+    }
+}
+
+function yearCodeError(code){
+    const c = String(code || "");
+    if(/NEEDS_GOOGLE/.test(c))   return yrLabel("يتطلّب تأكيد هويتك بحساب Google.", "Requires Google sign-in.");
+    if(/NOT_ADMIN/.test(c))      return yrLabel("هذا الإجراء لإدارة المدرسة.", "Admins only.");
+    if(/CODE_TOO_SOON/.test(c))  return yrLabel("أُرسل رمز قبل أقل من دقيقة — انتظر قليلاً.", "Wait a minute.");
+    if(/CODE_TOO_MANY/.test(c))  return yrLabel("طلبات رموز كثيرة خلال ساعة — حاول لاحقاً.", "Too many codes this hour.");
+    if(/CODE_INVALID/.test(c))   return yrLabel("الرمز غير صحيح. تحقّق منه في بريدك (٥ محاولات ثم يُقفل).", "Wrong code (5 tries, then locked).");
+    if(/CODE_LOCKED/.test(c))    return yrLabel("أُقفل الرمز بعد ٥ محاولات خاطئة — اطلب رمزاً جديداً.", "Code locked — request a new one.");
+    if(/CODE_MISSING/.test(c))   return yrLabel("انتهت صلاحية الرمز أو استُعمل — اطلب رمزاً جديداً.", "Code expired or used — request a new one.");
+    if(/MAIL/.test(c))           return yrLabel("تعذّر إرسال البريد الآن — حاول بعد قليل.", "Could not send the email.");
+    if(/NO_SESSION/.test(c))     return yrLabel("سجّل الدخول أولاً.", "Sign in first.");
+    return yrLabel("تعذّر إرسال الرمز.", "Could not send the code.");
+}
+
 async function confirmYearPromotion(){
     if(!sb || !schoolCtx) return;
     const out = yearOutcome();
     const label = ((document.getElementById("year-label-input") || {}).value || "").trim();
+    const code = ((document.getElementById("year-code-input") || {}).value || "").replace(/\D/g, "");
+    if(code.length !== 6){ showToast(yrLabel("اكتب الرمز المكوّن من ٦ أرقام من بريدك.", "Enter the 6-digit code.")); return; }
 
     /* ⚠️ تأكيدٌ يذكر الأرقام لا "هل أنت متأكد؟". من قرأ "٢١ يتخرّجون"
        يتوقّف إن كان الرقم خاطئاً — ومن قرأ "هل أنت متأكد" يضغط نعم. */
@@ -247,8 +319,12 @@ async function confirmYearPromotion(){
             p_school: schoolCtx.schoolId,
             p_year_label: label || null,
             p_hold_back: [...yearHoldBack],
+            p_code: code,
         });
         if(error) throw error;
+        // رمز خاطئ/منتهٍ: يُرجَع خطأً لا استثناءً (كي يُحسب في عدّاد المحاولات)
+        if(data && data.error){ showToast(yearCodeError(data.error)); return; }
+        yearCodeSentTo = null;
         closeYearModal();
         showToast(yrLabel(
             `تمّت الترقية: ${data.promoted} مُرقَّى، ${data.graduated} متخرّج.`,

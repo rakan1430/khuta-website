@@ -74,10 +74,11 @@ async function main(){
         const add = await page.evaluate(async () => {
             const toasts = []; const realToast = showToast; showToast = m => { toasts.push(m); realToast(m); };
             const before = libBooks.length;
-            document.getElementById("lib-b-title").value = "كتاب مرفوع";
-            document.getElementById("lib-b-url").value = "https://drive.google.com/book.pdf";
+            /* قرار المالك (٢٤ سبتمبر): أي رابط https مقبول — الشرط الوحيد https */
+            document.getElementById("lib-b-title").value = "رابط غير آمن";
+            document.getElementById("lib-b-url").value = "javascript:alert(1)";
             await saveLibraryBook();
-            const rejected = libBooks.length === before && /منصة عين/.test(toasts.join(" "));
+            const rejected = libBooks.length === before && /https/.test(toasts.join(" "));
             document.getElementById("lib-b-title").value = "<img src=x onerror=window.__xss=1>";
             document.getElementById("lib-b-url").value = "https://ien.edu.sa/#/book/9";
             await saveLibraryBook();
@@ -98,8 +99,8 @@ async function main(){
             return { rejected, added, xss: !!window.__xss, html: document.getElementById("lib-list").innerHTML.includes("&lt;img"),
                      badVideo, three, order };
         });
-        ok("رابط غير منصة عين يُرفض قبل الإرسال", add.rejected);
-        ok("كتاب برابط منصة عين يُضاف", add.added);
+        ok("رابط غير https (javascript:) يُرفض قبل الإرسال", add.rejected);
+        ok("كتاب برابط https يُضاف", add.added);
         ok("عنوانٌ فيه وسم يُعرض نصاً", !add.xss && add.html);
         ok("رابط فيديو javascript: يُرفض", add.badVideo);
         ok("الدرس الثالث أُضيف آخراً", add.three.length === 3 && add.three[2] === "درس جديد", add.three.join("، "));
