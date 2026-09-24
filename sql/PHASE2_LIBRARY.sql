@@ -102,3 +102,8 @@ create policy lessons_write on school_lessons for all to authenticated
                                           and can_edit_subject_books(b.school_id, b.subject_id)))
     with check (google_verified() and exists (select 1 from school_books b where b.id = book_id
                                                and can_edit_subject_books(b.school_id, b.subject_id)));
+
+-- تشديد بعد فحص Supabase: دالّتا الزناد لا تُستدعيان مباشرةً، ومسار البحث ثابت
+revoke all on function trg_school_lesson_guard() from public, anon, authenticated;
+revoke all on function trg_school_book_touch() from public, anon, authenticated;
+alter function trg_school_book_touch() set search_path = public;

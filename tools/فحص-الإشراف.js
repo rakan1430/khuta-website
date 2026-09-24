@@ -56,7 +56,9 @@ function serve(){
 const QUEUE = [
     { id: 501, author_name:"صقر مثابر 42", message:"مشاركه أُبلغ عنها",
       created_at:"2026-09-08T10:00:00Z", hidden_at:"2026-09-09T10:00:00Z",
-      purge_after:"2026-09-16T10:00:00Z", reports:5, reasons:["إعلان","إساءة"] },
+      /* ⚠️ نسبيٌّ لا ثابت: كان "2026-09-16" فمضى التاريخ فصار الصفّ «عاجلاً»
+         وفشل الفحص بلا أي تغيير في الموقع */
+      purge_after: new Date(Date.now() + 864e5 * 7).toISOString(), reports:5, reasons:["إعلان","إساءة"] },
     { id: 502, author_name:"نجم هادئ 17", message:"مشاركه ثانيه",
       created_at:"2026-09-01T10:00:00Z", hidden_at:"2026-09-02T10:00:00Z",
       /* مهلتها توشك أن تنتهي — يجب أن تُميَّز */
