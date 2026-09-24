@@ -798,6 +798,8 @@ function switchTab(tabId, element){
     if(tabId === "profile"){ renderProfileStats(); renderMistakeBank(); if(typeof renderAliasBox === "function") renderAliasBox(); }
     if(tabId === "settings") renderSettings();
     if(tabId === "tutors") renderTutors();
+    if((tabId === "schoolexams" || tabId === "schoolhw") && typeof setExamWorkKind === "function")
+        setExamWorkKind(tabId === "schoolhw" ? "homework" : "exam");
     /* ⚠️ يُعاد التطبيق بعد كل انتقال: بعض الأقسام تُعيد رسم محتواها هنا
        (renderProfileStats مثلاً)، فيعود ما أخفيناه للمعلّم لو طبّقناه مرة
        واحدة عند الدخول فقط. وهذا سبب عودة أشياء ظننّاها أُخفيت. */

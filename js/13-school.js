@@ -133,7 +133,7 @@ function fillSubjectDatalist(){
         o.value = s.name_ar;
         dl.appendChild(o);
     });
-    ["tfile-subject", "exam-subject", "tt-subject"].forEach(id => {
+    ["tfile-subject", "tt-subject"].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.setAttribute("list", "school-subjects-list");
     });
@@ -163,6 +163,8 @@ function applySchoolSettingsUI(){
     GRADE_SELECTS.forEach(([id, empty]) => fillGradeSelect(document.getElementById(id), empty));
     fillSubjectDatalist();
     fillSubjectSelect(document.getElementById("assign-subject"));
+    if(typeof fillExamSubjectSelect === "function") fillExamSubjectSelect();
+    if(typeof applyExamKindLabels === "function") applyExamKindLabels();
 }
 
 /* فحص المساحة قبل الرفع. سياسة الرفع في القاعدة هي الحارس الحقيقي، لكن

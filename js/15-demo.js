@@ -81,10 +81,12 @@ const DEMO_DATA = {
         { id:"N3", on_date: demoDateOf(3), kind:"note", text:"مراجعة شاملة قبل الاختبار", color:null },
     ],
     teacher_exams: [
-        { id:"X1", title:"اختبار الوحدة الثانية", subject:"الرياضيات", grade:"1",
-          questions:new Array(10).fill(0), published:true, owner_id:"M1", created_at:new Date().toISOString() },
-        { id:"X2", title:"اختبار قصير — المتتاليات", subject:"الرياضيات", grade:"1",
-          questions:new Array(5).fill(0), published:false, owner_id:"M1", created_at:new Date().toISOString() },
+        { id:"X1", title:"اختبار الوحدة الثانية", subject:"الرياضيات", grade:"1", kind:"exam",
+          question_count:10, published:true, owner_id:"M1", created_at:new Date().toISOString() },
+        { id:"X2", title:"اختبار قصير — المتتاليات", subject:"الرياضيات", grade:"1", kind:"exam",
+          question_count:5, published:false, owner_id:"M1", created_at:new Date().toISOString() },
+        { id:"X3", title:"واجب الدرس الثالث", subject:"الرياضيات", grade:"1", kind:"homework", late_days:1, shuffle:true,
+          question_count:6, published:true, owner_id:"M1", created_at:new Date().toISOString() },
     ],
     account_requests: [
         { id:"R1", full_name:"عبدالله محمد الشمري", role_wanted:"student", grade:"1", section:"أ",

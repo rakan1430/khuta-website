@@ -4009,3 +4009,9 @@ body[data-mode="school"] .nav-item[data-tab="schoolexams"]::after{ content: none
 .owner-school summary::-webkit-details-marker{ display:none; }
 .owner-school summary::before{ content:"+"; font-weight:800; color:var(--gold-text); width:14px; text-align:center; }
 .owner-school details[open] > summary::before{ content:"−"; }
+
+/* الواجبات: شارة التسليم المتأخر (js/24 و js/14) */
+.se-late-note{
+    display: inline-block; color: var(--gold-text); font-weight: 700;
+    background: rgba(212,160,23,.12); border-radius: 999px; padding: 2px 10px; font-size: 12.5px;
+}

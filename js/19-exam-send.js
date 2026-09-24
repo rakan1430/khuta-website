@@ -16,6 +16,7 @@ let examSendTarget = null;      // معرّف الاختبار الجاري إر
 let examSendMode = "classes";   // classes | grades | students
 let examSendPicked = { classes:new Set(), grades:new Set(), students:new Set() };
 let examStudentsCache = [];
+let examSendIsHw = false;       // واجب: الموعد إلزامي والحلّ بعد المهلة دائماً
 
 /* المراحل من إعدادات المدرسة (js/13-school.js) لا قائمة ثابتة — كانت هنا
    «أول/ثاني/ثالث ثانوي» حرفياً، فمدرسة متوسطة ترسل لمراحل غير موجودة. */
@@ -65,6 +66,27 @@ function resetExamSendSettings(){
     const dur = document.getElementById("exam-send-duration");
     if(dur) dur.value = "30";
     toggleExamSendTimer(false);
+    applyExamSendKind(false);
+}
+
+/* الواجب يختلف في أمرين: الموعد إلزامي (بلا موعد لا يُعرف متى يُكشف
+   الحلّ ومتى يُغلق التسليم)، وكشف الإجابات ليس خياراً — يظهر للجميع بعد
+   المهلة (قرار المالك). وقاعدة البيانات تفرض الأمرين أيضاً
+   (HOMEWORK_NEEDS_DUE وhomework_reveal)، فهذا للوضوح لا للحماية. */
+function applyExamSendKind(hw){
+    examSendIsHw = !!hw;
+    const ar = currentLang === 'ar';
+    const title = document.querySelector("#exam-send-modal h3");
+    if(title) title.textContent = hw ? (ar ? "إرسال الواجب" : "Send homework") : (ar ? "إرسال الاختبار" : "Send exam");
+    const label = document.getElementById("exam-send-due-label");
+    if(label) label.textContent = hw ? (ar ? "موعد التسليم (إلزامي)" : "Due date (required)")
+                                     : (ar ? "موعد التسليم (اختياري)" : "Due date (optional)");
+    const hint = document.getElementById("exam-send-due-hint");
+    if(hint) hint.textContent = hw
+        ? (ar ? "بعده يُغلق التسليم (إلا مهلة التأخير إن فعّلتها)، ويظهر الحلّ النموذجي للجميع." : "Submissions close after it, then the solution is shown to everyone.")
+        : (ar ? "اتركه فارغاً لواجب بلا موعد. وهو الموعد الذي تُكشف بعده الإجابات الصحيحة." : "Leave empty for no deadline. Answers are revealed after it.");
+    const reveal = document.getElementById("exam-send-reveal-wrap");
+    if(reveal) reveal.style.display = hw ? "none" : "";
 }
 
 function toggleExamSendTimer(on){
@@ -76,9 +98,10 @@ async function loadExamSendSettings(examId){
     if(!sb || !examId) return;
     try{
         const { data, error } = await sb.from("teacher_exams")
-            .select("timed, duration_min, reveal_mode").eq("id", examId).maybeSingle();
+            .select("timed, duration_min, reveal_mode, kind").eq("id", examId).maybeSingle();
         if(error) throw error;
         if(!data) return;
+        applyExamSendKind(data.kind === "homework");
         const reveal = document.getElementById("exam-send-reveal");
         if(reveal && data.reveal_mode) reveal.value = data.reveal_mode;
         const timed = document.getElementById("exam-send-timed");
@@ -105,6 +128,12 @@ function readExamSendSettings(){
             return { error: currentLang==='ar' ? 'موعد التسليم غير صالح' : 'Invalid due date' };
         }
         dueAt = d.toISOString();
+        if(examSendIsHw && d.getTime() < Date.now()){
+            return { error: currentLang==='ar' ? 'موعد التسليم مضى — اختر موعداً قادماً' : 'The due date has passed' };
+        }
+    }
+    if(examSendIsHw && !dueAt){
+        return { error: currentLang==='ar' ? 'حدّد موعد تسليم الواجب' : 'Set the homework due date' };
     }
 
     const timed = !!(document.getElementById("exam-send-timed") || {}).checked;
@@ -120,7 +149,7 @@ function readExamSendSettings(){
 
     const revealEl = document.getElementById("exam-send-reveal");
     let reveal = (revealEl && revealEl.value) || "after_due";
-    if(!["after_due","immediately","never"].includes(reveal)) reveal = "after_due";
+    if(!["after_due","immediately","never"].includes(reveal) || examSendIsHw) reveal = "after_due";
 
     return { dueAt, timed, duration, reveal };
 }
@@ -313,7 +342,8 @@ async function confirmExamSend(){
         const raw = (e && e.message) || "";
         showToast(/google|amr|policy|row-level/i.test(raw)
             ? (currentLang==='ar' ? 'الإرسال يتطلّب تأكيد هويتك بحساب Google.' : 'Sending requires Google confirmation.')
-            : (currentLang==='ar' ? 'تعذّر الإرسال' : 'Could not send'));
+            : ((typeof schoolError === "function") ? schoolError(e, currentLang==='ar' ? 'الإرسال' : 'sending')
+                                                  : (currentLang==='ar' ? 'تعذّر الإرسال' : 'Could not send')));
     }finally{ schoolBusy(btn, false); }
 }
 
@@ -336,7 +366,7 @@ async function openSchoolExamResults(examId){
 
     try{
         const { data, error } = await sb.from("exam_attempts")
-            .select("id, student_id, score, total, started_at, finished_at, school_members!exam_attempts_student_id_fkey(full_name, grade, section)")
+            .select("id, student_id, score, total, started_at, finished_at, late, school_members!exam_attempts_student_id_fkey(full_name, grade, section)")
             .eq("exam_id", examId)
             .order("finished_at", { ascending:false, nullsFirst:false })
             .limit(500);
@@ -408,7 +438,8 @@ function attemptChip(a){
         currentLang==='ar' ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB",
         { day:"numeric", month:"short" }) : "";
     return `<span class="res-chip ${scoreClass(p)}" title="${escapeHtml(date)}">
-        ${p == null ? "—" : p + "%"}<small>${escapeHtml(date)}</small></span>`;
+        ${p == null ? "—" : p + "%"}<small>${escapeHtml(date)}${a.late
+            ? ` · ${currentLang==='ar' ? 'متأخر' : 'late'}` : ""}</small></span>`;
 }
 
 function closeSchoolExamResults(){

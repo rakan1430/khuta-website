@@ -52,6 +52,11 @@ function schoolError(e, action){
     if(/GRADE_IN_USE/i.test(raw))
         return ar ? "لا يمكن حذف هذه المرحلة: فيها طلاب أو فصول. انقلهم لمرحلة أخرى أولاً."
                   : "This grade has students or classes. Move them first.";
+    // الواجبات (sql/PHASE1_HOMEWORK_GRADES.sql)
+    if(/HOMEWORK_NEEDS_DUE/i.test(raw))
+        return ar ? "الواجب يحتاج موعد تسليم." : "Homework needs a due date.";
+    if(/PAST_DUE/i.test(raw))
+        return ar ? "انتهى موعد التسليم." : "The deadline has passed.";
     if(/GRADE_CODE_IMMUTABLE/i.test(raw))
         return ar ? "لا يمكن تغيير رمز المرحلة — عدّل اسمها فقط." : "A grade's code can't change — edit its name.";
     /* حارس طلبات الحسابات (account_requests_guard في قاعدة البيانات) —

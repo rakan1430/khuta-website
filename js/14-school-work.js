@@ -612,9 +612,13 @@ async function deleteDayNote(id){
 const teacherExamTitles = new Map();
 
 async function loadTeacherExams(){
-    const box = document.getElementById("sexams-list");
+    /* الاختبارات والواجبات جدول واحد (kind)، ولكلٍّ تبويبه وقائمته */
+    const kind = (typeof examWorkKind !== "undefined" && examWorkKind === "homework") ? "homework" : "exam";
+    const hw = kind === "homework";
+    const box = document.getElementById(hw ? "shw-list" : "sexams-list");
     if(!box || !schoolCtx || !sb) return;
-    box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'جارٍ التحميل…':'Loading…'}</p>`;
+    const ar = currentLang === 'ar';
+    box.innerHTML = `<p class="card-sub">${ar?'جارٍ التحميل…':'Loading…'}</p>`;
     try{
         // ⚠️ questions لا يُقرأ هنا عمداً منذ ٢٠٢٦-٠٩-٢٢: كان يصل هذا الاستعلامَ
         // كاملاً (بإجاباته الصحيحة وشروحها) لكل طالب فور فتح تبويب الاختبارات
@@ -623,30 +627,37 @@ async function loadTeacherExams(){
         // (انظر sql/EXAM_FUNCTIONS.sql)، وlength وحده هو ما احتجناه أصلاً —
         // فجاء question_count عمود مولَّد بدلاً منه.
         const { data, error } = await sb.from("teacher_exams")
-            .select("id, title, subject, grade, question_count, published, owner_id, created_at")
+            .select("id, title, subject, grade, question_count, published, owner_id, created_at, kind, late_days, shuffle")
+            .eq("kind", kind)
             .order("created_at", { ascending:false }).limit(100);
         if(error) throw error;
         if(!data || !data.length){
-            box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'لا توجد اختبارات بعد.':'No exams yet.'}</p>`;
+            box.innerHTML = `<p class="card-sub">${hw ? (ar?'لا توجد واجبات بعد.':'No homework yet.')
+                                                    : (ar?'لا توجد اختبارات بعد.':'No exams yet.')}</p>`;
             return;
         }
-        teacherExamTitles.clear();
         data.forEach(x => teacherExamTitles.set(x.id, x.title));
 
         /* ⚠️ ما سلّمه الطالب لا يُعرض له "ابدأ الاختبار" بعد اليوم.
            وصف المالك: "عند انتهاء الطالب من الاختبار لا يبقى لديه مكتوباً
            ابدأ الاختبار… بل يبقى بزر إظهار النتيجة". وهو محق — الزرّ نفسه
            يوحي بأن المحاولة متاحة، ثم يُرفض عند الضغط. الوعد الكاذب أسوأ
-           من المنع الصريح. */
-        const myAttempts = new Map();
+           من المنع الصريح.
+           والحالة كلها (الموعد الخاص بفصله، المهلة، التسليم، المراجعة) من
+           my_assigned_work بنداء واحد — الموعد يختلف بين فصل وآخر فلا يُحسب
+           من هنا. */
+        const myWork = new Map();
         if(schoolCtx.role === "student"){
             try{
-                const { data: at } = await sb.from("exam_attempts")
-                    .select("exam_id, score, total").limit(300);
-                (at || []).forEach(a => myAttempts.set(a.exam_id, a));
-            }catch(e){ console.warn("[خُطى] تعذّر جلب محاولاتي:", e); }
+                const { data: w, error: we } = await sb.rpc("my_assigned_work", { p_school: schoolCtx.schoolId });
+                if(we) throw we;
+                (w || []).forEach(a => myWork.set(a.exam_id, a));
+            }catch(e){ console.warn("[خُطى] تعذّر جلب حالة أعمالي:", e); }
         }
-        box.innerHTML = renderSchoolList(data, x => {
+        const rows = hw && schoolCtx.role === "student"
+            ? sortHomeworkForStudent(data, myWork) : data;
+
+        box.innerHTML = renderSchoolList(rows, x => {
             const n = x.question_count || 0;
             const mine = x.owner_id === schoolCtx.memberId;
             /* ⚠️ خطأ أدخلتُه أنا في الدفعة السابقة: جعلتُ زرّ "ابدأ الاختبار"
@@ -659,47 +670,102 @@ async function loadTeacherExams(){
                التحكم بها كما تريد". (وصلاحيات القراءة في قاعدة البيانات
                تطابق هذا أصلاً: المعلّم لا يرى إلا اختباراته هو.) */
             const iCanManage = mine || schoolCtx.role === "admin";
+            const w = myWork.get(x.id);
+            const extras = [
+                x.shuffle && !iAmStudent ? (ar?'مخلوط':'shuffled') : "",
+                hw && !iAmStudent && x.late_days ? (ar?`تأخير حتى ${x.late_days} يوم`:`late up to ${x.late_days}d`) : "",
+            ].filter(Boolean).map(t => ` · ${t}`).join("");
             return `
             <div class="sfile-row">
                 <div class="sfile-main">
-                    <i class="fa-solid fa-clipboard-question"></i>
+                    <i class="fa-solid ${hw ? 'fa-book-open-reader' : 'fa-clipboard-question'}"></i>
                     <div>
                         <b>${escapeHtml(x.title)}</b>
-                        <div class="card-sub">${escapeHtml(x.subject || "")} · ${n} ${currentLang==='ar'?'سؤالاً':'questions'}
-                            ${x.published ? `· <span style="color:var(--teal-text); font-weight:700;">${currentLang==='ar'?'منشور':'published'}</span>`
-                                          : `· ${currentLang==='ar'?'مسودة':'draft'}`}${schoolSourceLine(x.owner_id)}</div>
+                        <div class="card-sub">${escapeHtml(x.subject || "")} · ${n} ${ar?'سؤالاً':'questions'}
+                            ${iAmStudent ? "" : (x.published ? `· <span style="color:var(--teal-text); font-weight:700;">${ar?'منشور':'published'}</span>`
+                                          : `· ${ar?'مسودة':'draft'}`)}${extras}${schoolSourceLine(x.owner_id)}</div>
+                        ${iAmStudent && w && w.due_at ? `<div class="card-sub">${workDueLine(w)}</div>` : ""}
                     </div>
                 </div>
-                ${iAmStudent ? (() => {
-                    const done = myAttempts.get(x.id);
-                    if(done){
-                        const pct = done.total ? Math.round((done.score / done.total) * 100) : 0;
-                        return `<div class="sfile-actions">
-                            <span class="pill" style="background:var(--teal-soft, rgba(30,132,73,.15)); color:var(--teal-text);">${pct}%</span>
-                            <button type="button" class="btn btn-outline btn-sm" onclick="openStudentExam('${escapeHtml(x.id)}')">
-                                <i class="fa-solid fa-chart-simple"></i> ${currentLang==='ar'?'إظهار النتيجة':'Show result'}</button>
-                        </div>`;
-                    }
-                    return `<div class="sfile-actions">
-                        <button type="button" class="btn btn-sm acc-btn" onclick="openStudentExam('${escapeHtml(x.id)}')">
-                            <i class="fa-solid fa-pen-to-square"></i> ${currentLang==='ar'?'ابدأ الاختبار':'Start'}</button>
-                    </div>`;
-                })() : ""}
+                ${iAmStudent ? studentWorkActions(x, w, hw) : ""}
                 ${iCanManage ? `<div class="sfile-actions">
                     <button type="button" class="btn btn-sm" onclick="openExamSend('${escapeHtml(x.id)}')">
                         <i class="fa-solid fa-paper-plane"></i> ${x.published
-                            ? (currentLang==='ar'?'إرسال لمزيد':'Send to more')
-                            : (currentLang==='ar'?'إرسال':'Send')}</button>
+                            ? (ar?'إرسال لمزيد':'Send to more')
+                            : (ar?'إرسال':'Send')}</button>
                     <button type="button" class="btn btn-outline btn-sm" onclick="openSchoolExamResults('${escapeHtml(x.id)}')">
-                        <i class="fa-solid fa-chart-simple"></i> ${currentLang==='ar'?'النتائج':'Results'}</button>
+                        <i class="fa-solid fa-chart-simple"></i> ${ar?'النتائج':'Results'}</button>
                     <button type="button" class="btn btn-outline btn-sm" onclick="deleteExam('${escapeHtml(x.id)}')"><i class="fa-solid fa-trash"></i></button>
                 </div>` : ""}
             </div>`;
         });
     }catch(e){
         console.error("[خُطى] تعذّر تحميل الاختبارات:", e);
-        box.innerHTML = `<p class="card-sub">${currentLang==='ar'?'تعذّر تحميل الاختبارات.':'Could not load exams.'}</p>`;
+        box.innerHTML = `<p class="card-sub">${hw ? (ar?'تعذّر تحميل الواجبات.':'Could not load homework.')
+                                                : (ar?'تعذّر تحميل الاختبارات.':'Could not load exams.')}</p>`;
     }
+}
+
+/* الواجبات للطالب: ما لم يُسلَّم وموعده أقرب أولاً، ثم المُسلَّم، ثم الفائت. */
+function sortHomeworkForStudent(rows, work){
+    const rank = x => {
+        const w = work.get(x.id);
+        if(!w) return [3, 0];
+        if(w.done) return [1, -new Date(w.due_at || 0).getTime()];
+        if(workClosed(w)) return [2, -new Date(w.due_at || 0).getTime()];
+        return [0, new Date(w.due_at || 8.64e15).getTime()];
+    };
+    return [...rows].sort((a, b) => {
+        const ra = rank(a), rb = rank(b);
+        return ra[0] - rb[0] || ra[1] - rb[1];
+    });
+}
+
+/* المهلة تُغلق التسليم في الواجب وحده؛ الاختبار سلوكه القديم لم يتغيّر */
+function workClosed(w){
+    if(!w || w.kind !== "homework") return false;
+    const end = w.close_at || w.due_at;
+    return !!(end && new Date(end).getTime() < Date.now());
+}
+
+/** سطر الموعد وحالته للطالب — ميلادي صراحةً مثل seDueText. */
+function workDueLine(w){
+    const ar = currentLang === 'ar';
+    let when = "";
+    try{
+        when = new Date(w.due_at).toLocaleString(ar ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
+            { dateStyle: "medium", timeStyle: "short" });
+    }catch(e){}
+    const left = new Date(w.due_at).getTime() - Date.now();
+    let state = "";
+    if(w.done) state = w.late ? `<span class="se-late-note">${ar?'سُلِّم متأخراً':'late'}</span>` : "";
+    else if(workClosed(w)) state = `<span style="color:var(--rose); font-weight:700;">${ar?'فات الموعد':'missed'}</span>`;
+    else if(left < 0 && w.kind === "homework") state = `<span class="se-late-note">${ar?'متأخر — ما زال يُقبل':'late — still accepted'}</span>`;
+    else if(left < 86400000) state = `<span style="color:var(--gold-text); font-weight:700;">${ar?'ينتهي اليوم':'due today'}</span>`;
+    return `<i class="fa-regular fa-clock"></i> ${ar?'التسليم':'Due'}: ${escapeHtml(when)} ${state}`;
+}
+
+function studentWorkActions(x, w, hw){
+    const ar = currentLang === 'ar';
+    const id = escapeHtml(x.id);
+    if(w && w.done){
+        const pct = w.total ? Math.round((Number(w.score) / w.total) * 100) : 0;
+        return `<div class="sfile-actions">
+            <span class="pill" style="background:var(--teal-soft, rgba(30,132,73,.15)); color:var(--teal-text);">${pct}%</span>
+            <button type="button" class="btn btn-outline btn-sm" onclick="openStudentExam('${id}')">
+                <i class="fa-solid fa-chart-simple"></i> ${ar?'إظهار النتيجة':'Show result'}</button>
+        </div>`;
+    }
+    if(hw && w && workClosed(w)){
+        return w.can_review ? `<div class="sfile-actions">
+            <button type="button" class="btn btn-outline btn-sm" onclick="openStudentExam('${id}')">
+                <i class="fa-solid fa-lightbulb"></i> ${ar?'الحلّ':'Solution'}</button>
+        </div>` : "";
+    }
+    return `<div class="sfile-actions">
+        <button type="button" class="btn btn-sm acc-btn" onclick="openStudentExam('${id}')">
+            <i class="fa-solid fa-pen-to-square"></i> ${hw ? (ar?'ابدأ الواجب':'Start') : (ar?'ابدأ الاختبار':'Start')}</button>
+    </div>`;
 }
 
 /* المدرّس يلصق أسئلته بصيغة بسيطة، سطر لكل سؤال:
@@ -735,7 +801,7 @@ function parseExamQuestions(raw){
 
 async function deleteExam(id){
     if(!sb || !schoolCtx) return;
-    if(!confirm(currentLang==='ar' ? "حذف هذا الاختبار ومحاولات الطلاب عليه؟" : "Delete this exam and its attempts?")) return;
+    if(!confirm(currentLang==='ar' ? "حذفه مع محاولات الطلاب عليه؟" : "Delete it and its attempts?")) return;
     try{
         const { error } = await sb.from("teacher_exams").delete().eq("id", id);
         if(error) throw error;

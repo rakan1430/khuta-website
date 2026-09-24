@@ -632,6 +632,66 @@ function importExamFromText(){
     renderExamBuilder();
 }
 
+/* ---------- اختبار أم واجب؟ ----------
+   منشئ واحد للنوعين (المالك: «الواجب مبني على محرّك الاختبار»)، يُنقل
+   عنصره نفسه بين تبويبَي «الاختبارات» و«الواجبات» فلا تتكرّر الواجهة ولا
+   تضيع مسودّة المعلّم إن تنقّل بينهما. */
+let examWorkKind = "exam";
+
+function setExamWorkKind(kind){
+    examWorkKind = kind === "homework" ? "homework" : "exam";
+    const hw = examWorkKind === "homework";
+    const wrap = document.getElementById("exam-builder-wrap");
+    const host = document.getElementById(hw ? "shw-builder-host" : "sexams-builder-host");
+    if(wrap && host && wrap.parentElement !== host) host.appendChild(wrap);
+    applyExamKindLabels();
+    if(typeof loadTeacherExams === "function") loadTeacherExams();
+}
+
+/** نصوص المنشئ حسب النوع — تُعاد عند تبديل اللغة أيضاً (applySchoolSettingsUI). */
+function applyExamKindLabels(){
+    const hw = examWorkKind === "homework";
+    const ar = currentLang === "ar";
+    const set = (id, text) => { const el = document.getElementById(id); if(el) el.textContent = text; };
+    set("exam-title-label", hw ? (ar ? "عنوان الواجب" : "Homework title") : (ar ? "عنوان الاختبار" : "Exam title"));
+    set("exam-save-label",  hw ? (ar ? "حفظ الواجب" : "Save homework") : (ar ? "حفظ الاختبار" : "Save exam"));
+    const title = document.getElementById("exam-title");
+    if(title) title.placeholder = hw ? (ar ? "واجب الدرس الثالث" : "Lesson 3 homework") : (ar ? "اختبار الفصل الأول" : "Term 1 exam");
+    const late = document.getElementById("exam-late-wrap");
+    if(late) late.style.display = hw ? "" : "none";
+    const hint = document.getElementById("exam-hw-hint");
+    if(hint) hint.style.display = hw ? "" : "none";
+}
+
+/* المواد: ما يدرّسه المعلّم أولاً (من إسناد الإدارة)، ثم بقية مواد
+   المدرسة — فالمعلّم الذي يدرّس مادة واحدة لا يختار شيئاً. */
+let myTeachingRows = null;
+
+async function fillExamSubjectSelect(){
+    const sel = document.getElementById("exam-subject");
+    if(!sel || typeof schoolSubjectsList !== "function") return;
+    if(myTeachingRows === null && sb && schoolCtx && schoolCtx.role !== "student"){
+        myTeachingRows = [];
+        try{
+            const { data, error } = await sb.rpc("my_teaching", { p_school: schoolCtx.schoolId });
+            if(error) throw error;
+            myTeachingRows = data || [];
+        }catch(e){ console.warn("[خُطى] تعذّر جلب موادّي:", e); }
+    }
+    const mine = new Set((myTeachingRows || []).map(r => r.subject_id).filter(Boolean));
+    const all = schoolSubjectsList(false);
+    const prev = sel.value;
+    sel.textContent = "";
+    const add = (value, text) => {
+        const o = document.createElement("option");
+        o.value = value; o.textContent = text; sel.appendChild(o);
+    };
+    if(!mine.size) add("", currentLang === "ar" ? "— اختر المادة —" : "— choose subject —");
+    [...all.filter(x => mine.has(x.id)), ...all.filter(x => !mine.has(x.id))]
+        .forEach(x => add(x.id, subjectName(x)));
+    if(prev && [...sel.options].some(o => o.value === prev)) sel.value = prev;
+}
+
 /* ---------- الحفظ ---------- */
 
 /** يحوّل المسودّة إلى الشكل المخزَّن، أو يعيد قائمة أخطاء. */
@@ -683,8 +743,17 @@ async function saveExamDraft(){
     if(!sb || !schoolCtx || schoolCtx.role === "student") return;
     const titleEl = document.getElementById("exam-title");
     const title = (titleEl && titleEl.value || "").trim();
+    const hw = examWorkKind === "homework";
     if(title.length < 2){
-        showToast(currentLang==='ar' ? 'اكتب عنوان الاختبار' : 'Enter a title');
+        showToast(currentLang==='ar' ? (hw ? 'اكتب عنوان الواجب' : 'اكتب عنوان الاختبار') : 'Enter a title');
+        return;
+    }
+    const subjectId = ((document.getElementById("exam-subject") || {}).value || "") || null;
+    const subject = subjectId ? schoolSubjectsList(true).find(x => x.id === subjectId) : null;
+    /* ⚠️ الواجب بلا مادة لا يظهر في سجلّ المادة عند المعلّم ولا في ملف
+       الطالب — وهو ما بُني الواجب لأجله. */
+    if(hw && !subject){
+        showToast(currentLang==='ar' ? 'اختر مادة الواجب' : 'Choose the subject');
         return;
     }
 
@@ -712,7 +781,12 @@ async function saveExamDraft(){
             school_id: schoolCtx.schoolId,
             owner_id: schoolCtx.memberId,
             title,
-            subject: ((document.getElementById("exam-subject") || {}).value || "").trim() || null,
+            /* النصّ يبقى للواجهة القديمة المنشورة وللعرض؛ والمعرّف هو المرجع */
+            subject: subject ? subject.name_ar : null,
+            subject_id: subject ? subject.id : null,
+            kind: hw ? "homework" : "exam",
+            shuffle: !!(document.getElementById("exam-shuffle") || {}).checked,
+            late_days: hw ? (parseInt((document.getElementById("exam-late-days") || {}).value, 10) || 0) : 0,
             grade: (document.getElementById("exam-grade") || {}).value || null,
             duration_min: parseInt((document.getElementById("exam-duration") || {}).value, 10) || null,
             questions,
@@ -721,6 +795,8 @@ async function saveExamDraft(){
         if(error) throw error;
 
         if(titleEl) titleEl.value = "";
+        const shuf = document.getElementById("exam-shuffle"); if(shuf) shuf.checked = false;
+        const lateSel = document.getElementById("exam-late-days"); if(lateSel) lateSel.value = "0";
         examDraft = null;
         renderExamBuilder();
         showToast(currentLang==='ar' ? `حُفظ ${questions.length} سؤالاً ✅` : `Saved ${questions.length} questions ✅`);
