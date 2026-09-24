@@ -638,11 +638,14 @@ function importExamFromText(){
    تضيع مسودّة المعلّم إن تنقّل بينهما. */
 let examWorkKind = "exam";
 
+/* وثالثها «تدريب» (المرحلة ٣ — مساحة القدرات): بلا درجات، يعيده الطالب متى
+   شاء، ولا يرى المعلّم إلا عدد من اختبره. */
+const EXAM_KIND_HOSTS = { exam:"sexams-builder-host", homework:"shw-builder-host", practice:"sgat-builder-host" };
+
 function setExamWorkKind(kind){
-    examWorkKind = kind === "homework" ? "homework" : "exam";
-    const hw = examWorkKind === "homework";
+    examWorkKind = EXAM_KIND_HOSTS[kind] ? kind : "exam";
     const wrap = document.getElementById("exam-builder-wrap");
-    const host = document.getElementById(hw ? "shw-builder-host" : "sexams-builder-host");
+    const host = document.getElementById(EXAM_KIND_HOSTS[examWorkKind]);
     if(wrap && host && wrap.parentElement !== host) host.appendChild(wrap);
     applyExamKindLabels();
     if(typeof loadTeacherExams === "function") loadTeacherExams();
@@ -650,17 +653,21 @@ function setExamWorkKind(kind){
 
 /** نصوص المنشئ حسب النوع — تُعاد عند تبديل اللغة أيضاً (applySchoolSettingsUI). */
 function applyExamKindLabels(){
-    const hw = examWorkKind === "homework";
+    const hw = examWorkKind === "homework", pr = examWorkKind === "practice";
     const ar = currentLang === "ar";
+    const pick = (h, p, e) => hw ? h : pr ? p : e;
     const set = (id, text) => { const el = document.getElementById(id); if(el) el.textContent = text; };
-    set("exam-title-label", hw ? (ar ? "عنوان الواجب" : "Homework title") : (ar ? "عنوان الاختبار" : "Exam title"));
-    set("exam-save-label",  hw ? (ar ? "حفظ الواجب" : "Save homework") : (ar ? "حفظ الاختبار" : "Save exam"));
+    set("exam-title-label", pick(ar ? "عنوان الواجب" : "Homework title", ar ? "عنوان اختبار التدريب" : "Practice test title", ar ? "عنوان الاختبار" : "Exam title"));
+    set("exam-save-label",  pick(ar ? "حفظ الواجب" : "Save homework", ar ? "حفظ اختبار التدريب" : "Save practice test", ar ? "حفظ الاختبار" : "Save exam"));
     const title = document.getElementById("exam-title");
-    if(title) title.placeholder = hw ? (ar ? "واجب الدرس الثالث" : "Lesson 3 homework") : (ar ? "اختبار الفصل الأول" : "Term 1 exam");
-    const late = document.getElementById("exam-late-wrap");
-    if(late) late.style.display = hw ? "" : "none";
-    const hint = document.getElementById("exam-hw-hint");
-    if(hint) hint.style.display = hw ? "" : "none";
+    if(title) title.placeholder = pick(ar ? "واجب الدرس الثالث" : "Lesson 3 homework",
+                                       ar ? "تدريب التناظر اللفظي ١" : "Verbal analogy drill 1",
+                                       ar ? "اختبار الفصل الأول" : "Term 1 exam");
+    const show = (id, on) => { const el = document.getElementById(id); if(el) el.style.display = on ? "" : "none"; };
+    show("exam-late-wrap", hw);
+    show("exam-hw-hint", hw);
+    show("exam-gat-wrap", pr);
+    show("exam-practice-hint", pr);
 }
 
 /* المواد: ما يدرّسه المعلّم أولاً (من إسناد الإدارة)، ثم بقية مواد
@@ -744,6 +751,7 @@ async function saveExamDraft(){
     const titleEl = document.getElementById("exam-title");
     const title = (titleEl && titleEl.value || "").trim();
     const hw = examWorkKind === "homework";
+    const pr = examWorkKind === "practice";
     if(title.length < 2){
         showToast(currentLang==='ar' ? (hw ? 'اكتب عنوان الواجب' : 'اكتب عنوان الاختبار') : 'Enter a title');
         return;
@@ -784,7 +792,8 @@ async function saveExamDraft(){
             /* النصّ يبقى للواجهة القديمة المنشورة وللعرض؛ والمعرّف هو المرجع */
             subject: subject ? subject.name_ar : null,
             subject_id: subject ? subject.id : null,
-            kind: hw ? "homework" : "exam",
+            kind: examWorkKind,
+            gat_section: pr ? ((document.getElementById("exam-gat-section") || {}).value || "mixed") : null,
             shuffle: !!(document.getElementById("exam-shuffle") || {}).checked,
             late_days: hw ? (parseInt((document.getElementById("exam-late-days") || {}).value, 10) || 0) : 0,
             grade: (document.getElementById("exam-grade") || {}).value || null,

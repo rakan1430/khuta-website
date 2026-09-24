@@ -32,6 +32,7 @@ async function loadTeacherFiles(){
         const { data, error } = await sb
             .from("teacher_files")
             .select("id, title, subject, grade, storage_path, external_url, size_bytes, shared, owner_id, short_code, created_at")
+            .eq("space", "general")   // ملفات مساحة القدرات في تبويبها (js/38)
             .order("created_at", { ascending:false })
             .limit(200);
         if(error) throw error;
@@ -187,6 +188,7 @@ async function loadTeacherLinks(){
     try{
         const { data, error } = await sb.from("teacher_links")
             .select("id, label, url, icon, sort_order, shared, owner_id")
+            .eq("space", "general")   // روابط مساحة القدرات في تبويبها، ولها حدّها (js/38)
             .order("sort_order").limit(200);
         if(error) throw error;
 
@@ -613,9 +615,9 @@ const teacherExamTitles = new Map();
 
 async function loadTeacherExams(){
     /* الاختبارات والواجبات جدول واحد (kind)، ولكلٍّ تبويبه وقائمته */
-    const kind = (typeof examWorkKind !== "undefined" && examWorkKind === "homework") ? "homework" : "exam";
-    const hw = kind === "homework";
-    const box = document.getElementById(hw ? "shw-list" : "sexams-list");
+    const kind = (typeof examWorkKind !== "undefined" && ["homework","practice"].includes(examWorkKind)) ? examWorkKind : "exam";
+    const hw = kind === "homework", pr = kind === "practice";
+    const box = document.getElementById(hw ? "shw-list" : pr ? "sgat-tests" : "sexams-list");
     if(!box || !schoolCtx || !sb) return;
     const ar = currentLang === 'ar';
     box.innerHTML = `<p class="card-sub">${ar?'جارٍ التحميل…':'Loading…'}</p>`;
@@ -627,12 +629,13 @@ async function loadTeacherExams(){
         // (انظر sql/EXAM_FUNCTIONS.sql)، وlength وحده هو ما احتجناه أصلاً —
         // فجاء question_count عمود مولَّد بدلاً منه.
         const { data, error } = await sb.from("teacher_exams")
-            .select("id, title, subject, grade, question_count, published, owner_id, created_at, kind, late_days, shuffle")
+            .select("id, title, subject, grade, question_count, published, owner_id, created_at, kind, late_days, shuffle, gat_section")
             .eq("kind", kind)
             .order("created_at", { ascending:false }).limit(100);
         if(error) throw error;
         if(!data || !data.length){
             box.innerHTML = `<p class="card-sub">${hw ? (ar?'لا توجد واجبات بعد.':'No homework yet.')
+                                                  : pr ? (ar?'لا توجد اختبارات تدريب بعد.':'No practice tests yet.')
                                                     : (ar?'لا توجد اختبارات بعد.':'No exams yet.')}</p>`;
             return;
         }
@@ -654,6 +657,15 @@ async function loadTeacherExams(){
                 (w || []).forEach(a => myWork.set(a.exam_id, a));
             }catch(e){ console.warn("[خُطى] تعذّر جلب حالة أعمالي:", e); }
         }
+        /* التدريب: الطاقم يرى عدد المختبرين فقط (practice_takers) — لا أسماء ولا درجات */
+        const takers = new Map();
+        if(pr && schoolCtx.role !== "student"){
+            try{
+                const { data: tk, error: te } = await sb.rpc("practice_takers", { p_school: schoolCtx.schoolId });
+                if(te) throw te;
+                (tk || []).forEach(t => takers.set(t.exam_id, t.takers));
+            }catch(e){ console.warn("[خُطى] تعذّر جلب عدد المختبرين:", e); }
+        }
         const rows = hw && schoolCtx.role === "student"
             ? sortHomeworkForStudent(data, myWork) : data;
 
@@ -672,13 +684,14 @@ async function loadTeacherExams(){
             const iCanManage = mine || schoolCtx.role === "admin";
             const w = myWork.get(x.id);
             const extras = [
+                pr && x.gat_section ? gatSectionName(x.gat_section) : "",
                 x.shuffle && !iAmStudent ? (ar?'مخلوط':'shuffled') : "",
                 hw && !iAmStudent && x.late_days ? (ar?`تأخير حتى ${x.late_days} يوم`:`late up to ${x.late_days}d`) : "",
             ].filter(Boolean).map(t => ` · ${t}`).join("");
             return `
             <div class="sfile-row">
                 <div class="sfile-main">
-                    <i class="fa-solid ${hw ? 'fa-book-open-reader' : 'fa-clipboard-question'}"></i>
+                    <i class="fa-solid ${hw ? 'fa-book-open-reader' : pr ? 'fa-brain' : 'fa-clipboard-question'}"></i>
                     <div>
                         <b>${escapeHtml(x.title)}</b>
                         <div class="card-sub">${escapeHtml(x.subject || "")} · ${n} ${ar?'سؤالاً':'questions'}
@@ -687,14 +700,16 @@ async function loadTeacherExams(){
                         ${iAmStudent && w && w.due_at ? `<div class="card-sub">${workDueLine(w)}</div>` : ""}
                     </div>
                 </div>
-                ${iAmStudent ? studentWorkActions(x, w, hw) : ""}
+                ${iAmStudent ? (pr ? practiceActions(x, w) : studentWorkActions(x, w, hw)) : ""}
                 ${iCanManage ? `<div class="sfile-actions">
                     <button type="button" class="btn btn-sm" onclick="openExamSend('${escapeHtml(x.id)}')">
                         <i class="fa-solid fa-paper-plane"></i> ${x.published
                             ? (ar?'إرسال لمزيد':'Send to more')
                             : (ar?'إرسال':'Send')}</button>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="openSchoolExamResults('${escapeHtml(x.id)}')">
-                        <i class="fa-solid fa-chart-simple"></i> ${ar?'النتائج':'Results'}</button>
+                    ${pr ? `<span class="pill" title="${ar?'بلا أسماء ولا درجات — تدريب':'No names or scores — practice'}">
+                        <i class="fa-solid fa-users"></i> ${ar ? `اختبره ${takers.get(x.id) || 0} طالباً` : `${takers.get(x.id) || 0} took it`}</span>`
+                    : `<button type="button" class="btn btn-outline btn-sm" onclick="openSchoolExamResults('${escapeHtml(x.id)}')">
+                        <i class="fa-solid fa-chart-simple"></i> ${ar?'النتائج':'Results'}</button>`}
                     <button type="button" class="btn btn-outline btn-sm" onclick="deleteExam('${escapeHtml(x.id)}')"><i class="fa-solid fa-trash"></i></button>
                 </div>` : ""}
             </div>`;
@@ -704,6 +719,22 @@ async function loadTeacherExams(){
         box.innerHTML = `<p class="card-sub">${hw ? (ar?'تعذّر تحميل الواجبات.':'Could not load homework.')
                                                 : (ar?'تعذّر تحميل الاختبارات.':'Could not load exams.')}</p>`;
     }
+}
+
+function gatSectionName(s){
+    const ar = currentLang === 'ar';
+    return s === "verbal" ? (ar ? "لفظي" : "Verbal") : s === "quant" ? (ar ? "كمّي" : "Quant") : (ar ? "مختلط" : "Mixed");
+}
+
+/* التدريب للطالب: يبدأ أو يعيد متى شاء — نتيجته له وحده */
+function practiceActions(x, w){
+    const ar = currentLang === 'ar';
+    const id = escapeHtml(x.id);
+    const last = w && w.done && w.total ? `<span class="pill">${ar ? "آخر محاولة" : "Last"}: ${escapeHtml(String(Number(w.score)))} / ${escapeHtml(String(w.total))}</span>` : "";
+    return `<div class="sfile-actions">${last}
+        <button type="button" class="btn btn-sm acc-btn" onclick="openStudentExam('${id}')">
+            <i class="fa-solid ${w && w.done ? 'fa-rotate-right' : 'fa-play'}"></i> ${w && w.done ? (ar ? 'تدرّب مجدداً' : 'Practice again') : (ar ? 'ابدأ التدريب' : 'Start')}</button>
+    </div>`;
 }
 
 /* الواجبات للطالب: ما لم يُسلَّم وموعده أقرب أولاً، ثم المُسلَّم، ثم الفائت. */

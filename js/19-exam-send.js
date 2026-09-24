@@ -17,6 +17,7 @@ let examSendMode = "classes";   // classes | grades | students
 let examSendPicked = { classes:new Set(), grades:new Set(), students:new Set() };
 let examStudentsCache = [];
 let examSendIsHw = false;       // واجب: الموعد إلزامي والحلّ بعد المهلة دائماً
+let examSendIsPractice = false; // تدريب: بلا موعد، والحلّ فور كل محاولة
 
 /* المراحل من إعدادات المدرسة (js/13-school.js) لا قائمة ثابتة — كانت هنا
    «أول/ثاني/ثالث ثانوي» حرفياً، فمدرسة متوسطة ترسل لمراحل غير موجودة. */
@@ -66,18 +67,25 @@ function resetExamSendSettings(){
     const dur = document.getElementById("exam-send-duration");
     if(dur) dur.value = "30";
     toggleExamSendTimer(false);
-    applyExamSendKind(false);
+    applyExamSendKind("exam");
 }
 
 /* الواجب يختلف في أمرين: الموعد إلزامي (بلا موعد لا يُعرف متى يُكشف
    الحلّ ومتى يُغلق التسليم)، وكشف الإجابات ليس خياراً — يظهر للجميع بعد
    المهلة (قرار المالك). وقاعدة البيانات تفرض الأمرين أيضاً
    (HOMEWORK_NEEDS_DUE وhomework_reveal)، فهذا للوضوح لا للحماية. */
-function applyExamSendKind(hw){
-    examSendIsHw = !!hw;
+function applyExamSendKind(kind){
+    const hw = kind === "homework" || kind === true;
+    const pr = kind === "practice";
+    examSendIsHw = hw;
+    examSendIsPractice = pr;
     const ar = currentLang === 'ar';
     const title = document.querySelector("#exam-send-modal h3");
-    if(title) title.textContent = hw ? (ar ? "إرسال الواجب" : "Send homework") : (ar ? "إرسال الاختبار" : "Send exam");
+    if(title) title.textContent = hw ? (ar ? "إرسال الواجب" : "Send homework")
+        : pr ? (ar ? "إرسال اختبار التدريب" : "Send practice test") : (ar ? "إرسال الاختبار" : "Send exam");
+    /* التدريب بلا موعد ولا خيار كشف: يعيده الطالب متى شاء ويرى الحل بعد كل محاولة */
+    const dueWrap = document.getElementById("exam-send-due") && document.getElementById("exam-send-due").closest(".form-group");
+    if(dueWrap) dueWrap.style.display = pr ? "none" : "";
     const label = document.getElementById("exam-send-due-label");
     if(label) label.textContent = hw ? (ar ? "موعد التسليم (إلزامي)" : "Due date (required)")
                                      : (ar ? "موعد التسليم (اختياري)" : "Due date (optional)");
@@ -86,7 +94,7 @@ function applyExamSendKind(hw){
         ? (ar ? "بعده يُغلق التسليم (إلا مهلة التأخير إن فعّلتها)، ويظهر الحلّ النموذجي للجميع." : "Submissions close after it, then the solution is shown to everyone.")
         : (ar ? "اتركه فارغاً لواجب بلا موعد. وهو الموعد الذي تُكشف بعده الإجابات الصحيحة." : "Leave empty for no deadline. Answers are revealed after it.");
     const reveal = document.getElementById("exam-send-reveal-wrap");
-    if(reveal) reveal.style.display = hw ? "none" : "";
+    if(reveal) reveal.style.display = (hw || pr) ? "none" : "";
 }
 
 function toggleExamSendTimer(on){
@@ -101,7 +109,7 @@ async function loadExamSendSettings(examId){
             .select("timed, duration_min, reveal_mode, kind").eq("id", examId).maybeSingle();
         if(error) throw error;
         if(!data) return;
-        applyExamSendKind(data.kind === "homework");
+        applyExamSendKind(data.kind || "exam");
         const reveal = document.getElementById("exam-send-reveal");
         if(reveal && data.reveal_mode) reveal.value = data.reveal_mode;
         const timed = document.getElementById("exam-send-timed");
@@ -132,6 +140,7 @@ function readExamSendSettings(){
             return { error: currentLang==='ar' ? 'موعد التسليم مضى — اختر موعداً قادماً' : 'The due date has passed' };
         }
     }
+    if(examSendIsPractice) dueAt = null;
     if(examSendIsHw && !dueAt){
         return { error: currentLang==='ar' ? 'حدّد موعد تسليم الواجب' : 'Set the homework due date' };
     }
@@ -150,6 +159,7 @@ function readExamSendSettings(){
     const revealEl = document.getElementById("exam-send-reveal");
     let reveal = (revealEl && revealEl.value) || "after_due";
     if(!["after_due","immediately","never"].includes(reveal) || examSendIsHw) reveal = "after_due";
+    if(examSendIsPractice) reveal = "immediately";
 
     return { dueAt, timed, duration, reveal };
 }

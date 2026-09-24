@@ -130,6 +130,8 @@ function makeDemoClient(){
     // الاستعلامات الحقيقية تُرشّح بـschool_id، فنضعه على كل صف وإلا عادت
     // القوائم فارغة أمام الحضور (وقع هذا فعلاً في أول تجربة للوحة الإدارة).
     Object.keys(store).forEach(t => store[t].forEach(r => { r.school_id = "DEMO-SCHOOL"; }));
+    // عمود space (المرحلة ٣) بقيمته الافتراضية في القاعدة — وإلا أخفى فلتر «العام» كل شيء
+    ["teacher_files", "teacher_links"].forEach(t => (store[t] || []).forEach(r => { if(!r.space) r.space = "general"; }));
     let seq = 100;
 
     function table(name){
@@ -152,7 +154,8 @@ function makeDemoClient(){
                 if(name === "teacher_links" && rows().filter(r => r.owner_id === row.owner_id).length >= 9){
                     return Promise.resolve({ error:{ message:"LINKS_LIMIT_REACHED" } });
                 }
-                store[name] = rows().concat([Object.assign({ id:"D" + (seq++) }, row)]);
+                const defaults = (name === "teacher_files" || name === "teacher_links") ? { space:"general" } : {};
+                store[name] = rows().concat([Object.assign({ id:"D" + (seq++) }, defaults, row)]);
                 return Promise.resolve({ error:null });
             },
             update(patch){

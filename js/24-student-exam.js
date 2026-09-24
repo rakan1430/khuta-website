@@ -70,6 +70,12 @@ async function openStudentExam(examId){
         seAnswers = {}; seMarked = new Set(); seIndex = 0; seReview = null;
         seImgCache.clear();
 
+        if(data.kind === "practice"){
+            // التدريب: يُعاد متى شاء — شاشة محاولاته السابقة إن وُجدت، وإلا ابدأ
+            if(Array.isArray(data.attempts) && data.attempts.length) showPracticeIntro();
+            else renderExamShell();
+            return;
+        }
         if(data.attempt){
             // سلّمه من قبل — نعرض نتيجته، ومراجعته إن سمح معلّمه
             await showStudentExamResult({ score: data.attempt.score, total: data.attempt.total,
@@ -99,6 +105,7 @@ function studentExamError(e){
     if(/NOT_IN_SCHOOL/i.test(raw))     return seLabel("حسابك غير مرتبط بمدرسة.","Your account isn't linked to a school.");
     if(/EXAM_NOT_FOUND/i.test(raw))    return seLabel("لم نجد هذا الاختبار — ربما حذفه معلّمك.","Exam not found — your teacher may have deleted it.");
     if(/REVIEW_NOT_ALLOWED/i.test(raw))return seLabel("المراجعة غير متاحة الآن.","Review isn't available yet.");
+    if(/TOO_MANY_ATTEMPTS/i.test(raw)) return seLabel("محاولات كثيرة خلال ساعة — خذ استراحة ثم عُد.","Too many attempts this hour — take a break.");
     if(/PAST_DUE/i.test(raw))          return seLabel("انتهى موعد تسليم هذا الواجب — لم يُقبل التسليم.","This homework's deadline has passed — not accepted.");
     if(/ARCHIVED_YEAR/i.test(raw))     return seLabel("هذا العمل من عام دراسي مؤرشف.","This belongs to an archived school year.");
     return (typeof schoolError === "function")
@@ -150,9 +157,12 @@ function renderExamShell(){
             <div class="exam-palette-grid" id="se-palette"></div>
 
             <div class="exam-sidebar-actions">
-                ${seReview ? "" : `<button type="button" class="btn-examside" onclick="submitStudentExam()">
+                ${seReview ? (seIsPractice() ? `<button type="button" class="btn-examside" onclick="restartPractice()">
+                    <i class="fa-solid fa-rotate-right"></i> ${seLabel("تدرّب مجدداً","Practice again")}</button>` : "")
+                  : `<button type="button" class="btn-examside" onclick="submitStudentExam()">
                     <i class="fa-solid fa-paper-plane"></i> ${seIsHomework()
-                        ? seLabel("تسليم الواجب","Submit homework") : seLabel("تسليم الاختبار","Submit")}</button>`}
+                        ? seLabel("تسليم الواجب","Submit homework")
+                        : seIsPractice() ? seLabel("إنهاء التدريب","Finish practice") : seLabel("تسليم الاختبار","Submit")}</button>`}
                 <button type="button" class="btn-examside outline" onclick="closeStudentExam()">
                     <i class="fa-solid fa-right-from-bracket"></i> ${seLabel("خروج","Exit")}</button>
             </div>
@@ -208,6 +218,7 @@ function seDueText(iso){
 /* ---------- التنقّل والعرض ---------- */
 
 function seIsHomework(){ return !!(seExam && seExam.kind === "homework"); }
+function seIsPractice(){ return !!(seExam && seExam.kind === "practice"); }
 
 /* ⚠️ الإجابة تُحفظ برقم السؤال والخيار **الأصليين** لا بموضعهما على
    الشاشة: مع خلط الأسئلة يختلف الموضع من طالب لآخر، والتصحيح في قاعدة
@@ -433,6 +444,13 @@ async function submitStudentExam(auto){
             p_exam: seExam.id, p_answers: seAnswers,
         });
         if(error) throw error;
+        /* ⚠️ can_review قُرئ عند الفتح — قبل وجود المحاولة، فكان «لا» دائماً في
+           أول محاولة (التدريب، والاختبار «فور تسليمه»)، فلا يظهر زرّ المراجعة
+           بعد التسليم. نسأل الخادم من جديد بعد أن صارت المحاولة موجودة. */
+        try{
+            const r = await sb.rpc("may_review_exam", { p_exam: seExam.id });
+            if(!r.error && r.data !== null && r.data !== undefined) seExam.can_review = !!r.data;
+        }catch(e){ /* يبقى القديم — الخادم يرفض المراجعة غير المسموحة على أي حال */ }
         await showStudentExamResult(data, false);
     }catch(e){
         console.error("[خُطى] تعذّر تسليم الاختبار:", e);
@@ -461,11 +479,15 @@ async function showStudentExamResult(res, wasEarlier){
                     : (seIsHomework() ? seLabel("سُلّم واجبك.","Your homework was submitted.")
                                       : seLabel("سُلّم اختبارك.","Your exam was submitted."))}</p>
                 ${res.late ? `<p class="se-late-note">${seLabel("سُلِّم متأخراً","Submitted late")}</p>` : ""}
+                ${seIsPractice() ? `<p class="hint">${seLabel("تدريب — لا تُسجَّل درجة عند معلّمك، ويرى فقط أنك تدرّبت.",
+                    "Practice — no score is recorded for your teacher.")}</p>` : ""}
                 <div class="se-score">${pct}%</div>
                 <div class="card-sub">${score} ${seLabel("من","of")} ${total} ${seLabel("إجابة صحيحة","correct")}</div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:22px;">
                     ${canReview ? `<button type="button" class="btn acc-btn" onclick="openExamReview()">
                         <i class="fa-solid fa-list-check"></i> ${seLabel("راجع إجاباتك","Review answers")}</button>` : ""}
+                    ${seIsPractice() ? `<button type="button" class="btn btn-outline acc-btn" onclick="restartPractice()">
+                        <i class="fa-solid fa-rotate-right"></i> ${seLabel("تدرّب مجدداً","Practice again")}</button>` : ""}
                     <button type="button" class="btn btn-outline acc-btn" onclick="closeStudentExam()">
                         <i class="fa-solid fa-check"></i> ${seLabel("تم","Done")}</button>
                 </div>
@@ -480,6 +502,36 @@ async function showStudentExamResult(res, wasEarlier){
                                   "Your teacher chose not to show the correct answers for this exam.")}</p>`}
             </div>
         </div>`;
+}
+
+/** التدريب: محاولاته السابقة (له وحده) وزرّا «محاولة جديدة» و«راجع آخر محاولة». */
+function showPracticeIntro(){
+    const ov = ensureStudentExamOverlay();
+    const x = seExam || {};
+    const list = (x.attempts || []).slice(0, 10);
+    ov.innerHTML = `
+        <div class="se-result">
+            <div class="se-result-card">
+                <h2 style="margin-bottom:6px;">${escapeHtml(x.title || "")}</h2>
+                <p class="card-sub">${seLabel("تدريب — أعده متى شئت. محاولاتك لك وحدك.","Practice — retake anytime. Your attempts are yours alone.")}</p>
+                <div class="se-attempts">${list.map((a, k) => `
+                    <div><span>${k === 0 ? seLabel("آخر محاولة","Last") : seDueText(a.at)}</span>
+                         <b>${escapeHtml(String(Number(a.score)))} / ${escapeHtml(String(a.total))}</b></div>`).join("")}</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:18px;">
+                    <button type="button" class="btn acc-btn" onclick="restartPractice()">
+                        <i class="fa-solid fa-play"></i> ${seLabel("محاولة جديدة","New attempt")}</button>
+                    ${x.can_review ? `<button type="button" class="btn btn-outline acc-btn" onclick="openExamReview()">
+                        <i class="fa-solid fa-list-check"></i> ${seLabel("راجع آخر محاولة","Review last attempt")}</button>` : ""}
+                    <button type="button" class="btn btn-outline acc-btn" onclick="closeStudentExam()">${seLabel("إغلاق","Close")}</button>
+                </div>
+            </div>
+        </div>`;
+}
+
+function restartPractice(){
+    if(!seIsPractice()) return;
+    seAnswers = {}; seMarked = new Set(); seIndex = 0; seReview = null;
+    renderExamShell();
 }
 
 /** واجب انتهت مهلته ولم يسلّمه الطالب: لا تسليم، لكن الحلّ متاح له

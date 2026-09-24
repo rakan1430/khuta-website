@@ -4050,3 +4050,8 @@ body[data-mode="school"] .nav-item[data-tab="schoolexams"]::after{ content: none
     background:rgba(212,160,23,.14); color:var(--gold-text); font-weight:800; font-size:13px; flex-shrink:0; }
 .lib-lesson-form{ margin-top:12px; padding:12px; border-radius:12px; background:rgba(127,127,127,.06); }
 .lib-book a.btn{ text-decoration:none; }
+
+/* مساحة القدرات: محاولات الطالب السابقة (js/24) */
+.se-attempts{ margin-top:14px; text-align:start; }
+.se-attempts > div{ display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed var(--border); }
+.se-attempts b{ font-family:var(--font-mono); direction:ltr; unicode-bidi:isolate; }
