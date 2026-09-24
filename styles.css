@@ -246,11 +246,15 @@ html[dir="rtl"] .app-container.sidebar-collapsed .sidebar{ transform:translateX(
 .sidebar-toggle:hover i{ transform:translateX(-3px); }
 html[dir="rtl"] .sidebar-toggle:hover i{ transform:translateX(3px); }
 @keyframes khuta-toggle-spin{ to{ transform:rotate(360deg); } }
-.app-container.sidebar-collapsed .sidebar-toggle{ left:0; transform:translateX(-50%) rotate(180deg); }
-.app-container.sidebar-collapsed .sidebar-toggle:hover{ transform:translateX(-50%) rotate(180deg) scale(1.08); }
+/* ⚠️ مطويّة: الزرّ كله داخل الشاشة (كان نصفه خارجها: translateX(-50%) على حافة الحاوية،
+   وهي حافة الشاشة نفسها في أي شاشة أضيق من 1560px — التقطه الفحص البصري الشامل).
+   2px: داخل الشاشة ولا يلمس حافة بطاقة الترحيب (تبدأ بعد 22px)، وz-index 56 فوق
+   شريط الفتح الجانبي (55) الذي يقع تحت طرفه فيبقى الزرّ كله قابلاً للضغط. */
+.app-container.sidebar-collapsed .sidebar-toggle{ left:2px; transform:rotate(180deg); z-index:56; }
+.app-container.sidebar-collapsed .sidebar-toggle:hover{ transform:rotate(180deg) scale(1.08); }
 html[dir="rtl"] .sidebar-toggle{ left:auto; right:264px; transform:translateX(50%); }
-html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle{ right:0; transform:translateX(50%) rotate(180deg); }
-html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transform:translateX(50%) rotate(180deg) scale(1.08); }
+html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle{ right:2px; transform:rotate(180deg); }
+html[dir="rtl"] .app-container.sidebar-collapsed .sidebar-toggle:hover{ transform:rotate(180deg) scale(1.08); }
 
 @media (max-width:992px){
     .app-container{ grid-template-columns:1fr; padding:12px; padding-top:calc(12px + env(safe-area-inset-top)); padding-bottom:100px; }
@@ -3101,10 +3105,12 @@ body.is-school input[type="radio"],
     border-bottom: 1px solid var(--border);
 }
 .sfile-row:last-child, .slink-row:last-child{ border-bottom: none; }
-.sfile-main{ display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+/* ⚠️ أساسٌ 220px لا 0: بأساس صفر كان النصّ ينكمش إلى عمودٍ بكلمة في كل سطر بجانب
+   الأزرار على الجوّال بدل أن تنزل الأزرار لسطرٍ تحته (flex-wrap لا يعمل إلا بأساس). */
+.sfile-main{ display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 220px; }
 .sfile-main i{ color: var(--gold-text); font-size: 18px; flex-shrink: 0; }
 .sfile-main b{ word-break: break-word; }
-.sfile-actions{ display: flex; gap: 8px; flex-shrink: 0; }
+.sfile-actions{ display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
 
 .slink-open{
     display: flex; align-items: center; gap: 10px;
@@ -3146,8 +3152,10 @@ body.is-school input[type="radio"],
     min-height: 44px;
 }
 .tt-corner{ font-size: 12px; }
+    /* ⚠️ ‎--gold-btn‎ لا ‎--gold-text‎: الثاني يصير ذهبياً فاتحاً في الوضع الداكن
+       (لونٌ للنصّ لا للخلفية) فكان الأبيض فوقه 1.63:1 — التقطه الفحص البصري الشامل. */
 .tt-dayhead{
-    background: var(--gold-text); color: #fff;
+    background: var(--gold-btn); color: #fff;
     font-weight: 800; min-height: 44px;
     flex-direction: row; gap: 6px;
 }
@@ -3250,7 +3258,7 @@ body.is-school input[type="radio"],
     background: var(--bg-alt); color: var(--text-1);
     font-family: inherit; font-weight: 700; font-size: 13px; cursor: pointer;
 }
-.demo-role-btn.is-on{ background: var(--gold-text); color: #fff; border-color: var(--gold-text); }
+.demo-role-btn.is-on{ background: var(--gold-btn); color: #fff; border-color: var(--gold-btn); }
 /* نُفسح للشريط كي لا يغطي آخر بطاقة، ونرفع تنقّل الجوال فوقه */
 body.has-demo-bar{ padding-block-end: 76px; }
 body.has-demo-bar .mobile-nav{ inset-block-end: 68px; }
@@ -3367,13 +3375,13 @@ body.has-demo-bar .mobile-nav{ inset-block-end: 68px; }
     border:1px solid var(--border); background:var(--bg); color:var(--text-2);
     font-weight:700; font-size:13px; min-height:44px;
 }
-.exq-tab.is-active{ background:var(--gold-text); color:#fff; border-color:var(--gold-text); }
+.exq-tab.is-active{ background:var(--gold-btn); color:#fff; border-color:var(--gold-btn); }
 
 .pick-list{ max-height:46vh; overflow-y:auto; margin-top:10px; display:flex; flex-direction:column; gap:6px; }
 .pick-row{
     display:flex; align-items:center; gap:10px; width:100%; text-align:start;
     padding:10px 12px; min-height:52px; cursor:pointer;
-    border:1px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text);
+    border:1px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text-1);
 }
 .pick-row.is-on{ border-color:var(--teal-text); background:color-mix(in srgb, var(--teal-text) 8%, transparent); }
 
@@ -3430,7 +3438,7 @@ body.has-demo-bar .mobile-nav{ inset-block-end: 68px; }
     display:flex; align-items:center; gap:12px; flex-wrap:wrap;
     padding:10px 16px; font-size:13px; font-weight:600;
     background:color-mix(in srgb, var(--gold-text) 12%, var(--bg));
-    border-block-end:1px solid var(--border); color:var(--text);
+    border-block-end:1px solid var(--border); color:var(--text-1);
 }
 .limited-bar i{ color:var(--gold-text); }
 .limited-bar span{ flex:1; min-width:200px; }
