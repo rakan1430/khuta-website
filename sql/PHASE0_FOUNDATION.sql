@@ -487,6 +487,13 @@ begin
         'errors', v_errors);
 end $function$;
 
+-- ⚠️ لا تُنادى إلا من الخادم (netlify/functions/school-import.js بمفتاح الخدمة، بعد
+-- التحقق من أن المستدعي مدير بإثبات Google). p_admin_member يمرّره الخادم لا المتصفّح.
+-- (create or replace يُبقي صلاحيات الدالّة كما كانت؛ كتبناها هنا صراحةً كي لا يظنّ
+-- قارئ الملف — أو مدقّق — أنها مفتوحة. نبّه عليه تدقيق خارجي ٢٤ سبتمبر.)
+revoke all on function public.import_school_students(uuid, uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.import_school_students(uuid, uuid, jsonb) to service_role;
+
 -- حدّ الذكاء الاصطناعي اليومي لعضو مدرسة. تقرؤه gemini-proxy.js بمفتاح
 -- الخدمة وحده — لا حاجة لأي مستخدم أن يناديها.
 create or replace function ai_daily_limit_for(p_uid uuid)
