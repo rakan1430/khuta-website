@@ -800,6 +800,7 @@ function switchTab(tabId, element){
     if(tabId === "tutors") renderTutors();
     if((tabId === "schoolexams" || tabId === "schoolhw") && typeof setExamWorkKind === "function")
         setExamWorkKind(tabId === "schoolhw" ? "homework" : "exam");
+    if(tabId === "schoolrecord" && typeof renderRecordTab === "function") renderRecordTab();
     /* ⚠️ يُعاد التطبيق بعد كل انتقال: بعض الأقسام تُعيد رسم محتواها هنا
        (renderProfileStats مثلاً)، فيعود ما أخفيناه للمعلّم لو طبّقناه مرة
        واحدة عند الدخول فقط. وهذا سبب عودة أشياء ظننّاها أُخفيت. */

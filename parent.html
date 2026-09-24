@@ -60,6 +60,18 @@ h2{ font-size:15px; margin:22px 0 8px; }
 .score{ font-weight:800; font-size:16px; white-space:nowrap; }
 .good{ color:var(--teal); } .mid{ color:var(--gold); } .low{ color:var(--rose); }
 .none{ color:var(--text-3); font-size:12.5px; font-weight:700; }
+/* الدرجات الرسمية من نور — كما هي */
+.og{ background:var(--surface, #fff); border:1px solid var(--border, #e5e5e5); border-radius:14px; padding:12px 14px; margin-bottom:10px; }
+.og h3{ font-size:14px; margin:0 0 8px; }
+.og-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:6px 0; border-top:1px dashed var(--border, #e5e5e5); }
+.og-row:first-of-type{ border-top:0; }
+.og-sub{ font-weight:700; min-width:100px; }
+.og-it{ display:inline-flex; flex-direction:column; align-items:center; border:1px solid var(--border, #e5e5e5); border-radius:10px; padding:3px 8px; min-width:56px; }
+.og-it small{ font-size:11px; color:var(--text-3); }
+.kind{ font-size:11px; font-weight:700; border-radius:999px; padding:1px 8px; background:rgba(0,0,0,.06); margin-inline-start:4px; }
+.late{ color:#b7791f; font-weight:700; }
+.log{ font-size:13px; }
+.log div{ display:flex; justify-content:space-between; gap:8px; padding:5px 0; border-top:1px dashed var(--border, #e5e5e5); }
 .note{ font-size:12.5px; color:var(--text-3); margin-top:16px; text-align:center; line-height:1.9; }
 .att-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
 .att-row div{ text-align:center; border:1px dashed var(--border); border-radius:12px; padding:10px 6px; }
@@ -183,18 +195,47 @@ function render(d){
                    : (x.due_at ? "موعد التسليم " + fmtDate(x.due_at) : "بلا موعد محدَّد");
         return `<div class="exam">
             <div class="exam-main">
-                <b>${esc(x.title || "")}</b>
-                <span>${esc(x.subject || "")}${x.teacher ? " · " + esc(x.teacher) : ""} · ${esc(when)}</span>
+                <b>${esc(x.title || "")}${x.kind === "homework" ? '<span class="kind">واجب</span>' : x.kind === "exam" ? '<span class="kind">اختبار</span>' : ""}</b>
+                <span>${esc(x.subject || "")}${x.teacher ? " · " + esc(x.teacher) : ""} · ${esc(when)}${x.late ? ' · <span class="late">سُلّم متأخراً</span>' : ""}</span>
             </div>
             <div class="score ${b.cls}">${esc(b.text)}</div>
         </div>`;
     }).join("") : `<p class="note">لم يصل الطالب أي واجب أو اختبار بعد.</p>`}
+
+    ${officialHtml(d.official)}
+    ${logHtml(d.access_log)}
 
     <p class="note">
         هذه الصفحة للاطّلاع فقط، وتُحدَّث تلقائياً.<br>
         الرابط خاصٌّ بابنك — لا تُشاركه، فمن يملكه يرى هذه الصفحة.<br>
         وللمدرسة أن تُلغيه وتُصدر غيره متى شاءت.
     </p>`;
+}
+
+const TERMS = { t1:"الفصل الدراسي الأول", t2:"الفصل الدراسي الثاني", t3:"الفصل الدراسي الثالث", final:"نهاية العام" };
+
+/* ⚠️ الدرجات الرسمية تُعرض كما رفعتها المدرسة من نور حرفياً — لا نحسب
+   منها شيئاً (قرار المالك). ولا يظهر القسم إن لم يُرفع شيء. */
+function officialHtml(rows){
+    const list = Array.isArray(rows) ? rows : [];
+    if(!list.length) return "";
+    const groups = new Map();
+    list.forEach(r => { const k = (TERMS[r.term] || r.term) + " · " + r.year; if(!groups.has(k)) groups.set(k, []); groups.get(k).push(r); });
+    return `<h2>الدرجات الرسمية (من نور)</h2>` + [...groups.entries()].map(([k, rs]) => `
+        <div class="og"><h3>${esc(k)}</h3>
+            ${rs.map(r => `<div class="og-row"><span class="og-sub">${esc(r.subject || "كشف شامل")}</span>
+                ${(Array.isArray(r.items) ? r.items : []).map(it => `<span class="og-it"><small>${esc(it.label || "")}</small><b>${esc(it.value || "—")}</b></span>`).join("")}
+            </div>`).join("")}
+        </div>`).join("");
+}
+
+/* من اطّلع على ملف ابنك من طاقم المدرسة — شفافيةٌ طلبها المالك */
+function logHtml(rows){
+    const list = Array.isArray(rows) ? rows : [];
+    if(!list.length) return "";
+    const role = r => r === "admin" ? "الإدارة" : r === "teacher" ? "معلّم" : "";
+    return `<h2>من اطّلع على ملفه</h2><div class="og log">${list.map(l =>
+        `<div><span>${esc(l.name || "عضو سابق")} <span class="kind">${esc(role(l.role))}</span></span><span>${esc(fmtDate(l.at))}</span></div>`).join("")}</div>`;
 }
 
 load();

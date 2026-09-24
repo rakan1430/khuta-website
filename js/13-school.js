@@ -580,6 +580,9 @@ async function loadSchoolMembers(){
                   </div>
                 </div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    ${m.role === "student" ? `<button type="button" class="btn btn-outline btn-sm"
+                        onclick="openStudentFile('${escapeHtml(m.id)}')">
+                        <i class="fa-solid fa-id-card"></i> ${currentLang==='ar'?'الملف':'File'}</button>` : ""}
                     ${m.role !== "admin" ? `<button type="button" class="btn btn-outline btn-sm"
                         onclick="openAssignClass('${escapeHtml(m.id)}')">
                         <i class="fa-solid fa-chalkboard"></i> ${currentLang==='ar'?'الفصول':'Classes'}</button>` : ""}
@@ -707,6 +710,7 @@ function applySchoolRoleUI(){
     ready.finally(() => {
         if(typeof loadSchoolWorkspace === "function") loadSchoolWorkspace();
         if(role === "admin" && typeof renderSchoolSettingsAdmin === "function") renderSchoolSettingsAdmin();
+        if(role === "admin" && typeof loadOfficialBatches === "function") loadOfficialBatches();
     });
 }
 

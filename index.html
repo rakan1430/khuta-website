@@ -1335,6 +1335,7 @@
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolwork" onclick="switchTab(&#39;schoolwork&#39;,this)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.schoolWork">منصة المدرسة</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolexams" onclick="switchTab('schoolexams',this)" role="button" tabindex="0"><i class="fa-solid fa-clipboard-question"></i> <span data-i18n="nav.schoolExams">الاختبارات</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolhw" onclick="switchTab('schoolhw',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.schoolHw">الواجبات</span></div>
+            <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolrecord" onclick="switchTab('schoolrecord',this)" role="button" tabindex="0"><i class="fa-solid fa-table-cells"></i> <span data-i18n="nav.schoolRecord">السجلّ</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schooltt" onclick="switchTab('schooltt',this)" role="button" tabindex="0"><i class="fa-solid fa-table-list"></i> <span data-i18n="nav.schoolSchedule">الجدول الدراسي</span></div>
             <div data-modes="school" class="nav-item" data-school-role="admin" data-school-member style="display:none;" data-tab="schooladmin" onclick="switchTab('schooladmin',this)" role="button" tabindex="0"><i class="fa-solid fa-school"></i> <span data-i18n="nav.schoolAdmin">إدارة المدرسة</span> <span id="admin-requests-count" class="pill" style="display:none;">0</span></div>
             <div data-modes="khuta" class="nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
@@ -2295,6 +2296,18 @@
             </div>
         </section>
 
+        <section data-modes="school" id="view-schoolrecord" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-table-cells" style="color:var(--gold-text);"></i> <span data-i18n="school.recTitle">السجلّ</span></h2>
+                <p class="card-sub" data-school-role="teacher,admin" data-i18n="school.recSub">طلاب الفصل في المادة: واجباتهم واختباراتهم على المنصّة، ودرجاتهم الرسمية من نور كما هي.</p>
+                <p class="card-sub" data-school-role="student" style="display:none;" data-i18n="school.recSubStudent">أعمالك على المنصّة ودرجاتك الرسمية.</p>
+            </div>
+            <div class="card">
+                <div id="rec-controls"></div>
+                <div id="rec-book"></div>
+            </div>
+        </section>
+
         <section data-modes="school" id="view-schooltt" class="view-section">
             <div class="card settings-hero">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-table-list" style="color:var(--gold-text);"></i> <span data-i18n="school.ttTitle">الجدول الدراسي</span></h2>
@@ -2520,6 +2533,27 @@
                 </div>
                 <p id="att-status" class="hint" style="margin:0;"></p>
                 <div id="att-mapper"></div>
+            </div>
+
+            <!-- ===================== الدرجات الرسمية من ملفّ نور ===================== -->
+            <div class="card">
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-file-circle-check"></i>
+                    <span data-i18n="og.title">الدرجات الرسمية من نور</span></h3>
+                <p class="card-sub" style="margin-bottom:14px;" data-i18n="og.sub">ارفع كشف درجات الفترة أو النهائي من نور. تُعرض كما هي تماماً — المنصّة لا تحسب درجة ولا معدّلاً.</p>
+                <div class="uni-note" style="margin-bottom:14px;">
+                    <b data-i18n="og.idTitle">أين يذهب رقم الهوية؟</b>
+                    <p style="margin:6px 0 0;" data-i18n="og.idBody">
+                        لا يُحفظ إطلاقاً. يُحوَّل في الخادم إلى بصمة الاستيراد نفسها، فتُطابَق بها، ثم يُرمى.
+                        ويُحفظ من الملف الأعمدة التي تختارها فقط، بعناوينها وقيمها كما هي.
+                    </p>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="og.file">كشف الدرجات (‎.xlsx أو ‎.xls أو ‎.csv)</label>
+                    <input type="file" id="og-file" accept=".csv,.txt,.xlsx,.xls" onchange="onOfficialFilePicked(event)">
+                </div>
+                <p id="og-status" class="hint" style="margin:0;"></p>
+                <div id="og-mapper"></div>
+                <div id="og-batches"></div>
             </div>
 
             <div class="card">
@@ -2918,7 +2952,7 @@
     try{ if(new URLSearchParams(location.search).get("lazy") === "0") lazy = false; }catch(e){}
     window.KHUTA_LAZY = lazy;
     window.KHUTA_GROUPS = {
-        school: ["js/14-school-work.js", "js/18-exam-builder.js", "js/19-exam-send.js", "js/21-classes.js", "js/23-school-home.js", "js/24-student-exam.js", "js/25-import.js", "js/28-report.js", "js/30-parent-links.js", "js/31-year.js", "js/32-member-leave.js", "js/33-attendance.js", "js/34-school-settings.js"],
+        school: ["js/14-school-work.js", "js/18-exam-builder.js", "js/19-exam-send.js", "js/21-classes.js", "js/23-school-home.js", "js/24-student-exam.js", "js/25-import.js", "js/28-report.js", "js/30-parent-links.js", "js/31-year.js", "js/32-member-leave.js", "js/33-attendance.js", "js/34-school-settings.js", "js/36-records.js"],
         owner:  ["js/34-school-settings.js", "js/35-owner-schools.js"]
     };
     var loaded = {}, groupPromises = {};
@@ -3001,6 +3035,7 @@
 <script>khutaEager("js/33-attendance.js")</script>
 <script>khutaEager("js/34-school-settings.js")</script>
 <script>khutaEager("js/35-owner-schools.js")</script>
+<script>khutaEager("js/36-records.js")</script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>
