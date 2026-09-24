@@ -803,6 +803,11 @@ function switchTab(tabId, element){
     if(tabId === "schoolrecord" && typeof renderRecordTab === "function") renderRecordTab();
     if(tabId === "schoollib" && typeof renderLibraryTab === "function") renderLibraryTab();
     if(tabId === "schoolgat" && typeof renderGatTab === "function") renderGatTab();
+    /* «ملفاتي» لطلاب خُطى كلّهم: على الجوّال تُحمَّل عند أول فتح (js/39) */
+    if(tabId === "myfiles" && typeof khutaLoadGroup === "function"){
+        khutaLoadGroup("myfiles").then(() => { if(typeof renderMyFilesTab === "function") renderMyFilesTab(); })
+            .catch(e => console.error("[خُطى] تعذّر تحميل ملفاتي:", e));
+    }
     /* ⚠️ يُعاد التطبيق بعد كل انتقال: بعض الأقسام تُعيد رسم محتواها هنا
        (renderProfileStats مثلاً)، فيعود ما أخفيناه للمعلّم لو طبّقناه مرة
        واحدة عند الدخول فقط. وهذا سبب عودة أشياء ظننّاها أُخفيت. */

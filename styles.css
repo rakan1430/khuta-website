@@ -4055,3 +4055,10 @@ body[data-mode="school"] .nav-item[data-tab="schoolexams"]::after{ content: none
 .se-attempts{ margin-top:14px; text-align:start; }
 .se-attempts > div{ display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed var(--border); }
 .se-attempts b{ font-family:var(--font-mono); direction:ltr; unicode-bidi:isolate; }
+
+/* «ملفاتي» (js/39-my-files.js) */
+.myf-quota{ margin-bottom:14px; }
+.myf-quota-bar{ height:10px; border-radius:999px; background:rgba(127,127,127,.18); overflow:hidden; margin-bottom:6px; }
+.myf-quota-bar > span{ display:block; height:100%; background:var(--teal-text, #1e8449); border-radius:inherit; transition:width .3s; }
+.myf-quota-bar > span.is-high{ background:var(--rose, #c0392b); }
+.myf-upload{ padding:12px; border-radius:12px; background:rgba(127,127,127,.06); }

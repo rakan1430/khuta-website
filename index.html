@@ -1330,6 +1330,7 @@
             <div data-modes="khuta school" class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i> <span data-i18n="nav.dashboard">الخطة والجدول</span></div>
             <div data-modes="khuta" class="nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i> <span data-i18n="nav.calculator">حساب الموزونة</span></div>
             <div data-modes="khuta" class="nav-item" data-tab="links" onclick="switchTab('links',this)" role="button" tabindex="0"><i class="fa-solid fa-link"></i> <span data-i18n="nav.links">الروابط المباشرة</span></div>
+            <div data-modes="khuta school" class="nav-item" data-tab="myfiles" onclick="switchTab('myfiles',this)" role="button" tabindex="0"><i class="fa-solid fa-folder-open"></i> <span data-i18n="nav.myFiles">ملفاتي</span></div>
             <div data-modes="khuta school" class="nav-item" id="nav-profile-desktop" data-tab="profile" onclick="switchTab('profile',this)" role="button" tabindex="0"><i class="fa-solid fa-user"></i> <span data-i18n="nav.profile">الملف الشخصي</span></div>
             <div data-modes="khuta school" class="nav-item" data-tab="settings" onclick="switchTab('settings',this)" role="button" tabindex="0"><i class="fa-solid fa-gear"></i> <span data-i18n="nav.settings">الإعدادات</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolwork" onclick="switchTab(&#39;schoolwork&#39;,this)" role="button" tabindex="0"><i class="fa-solid fa-chalkboard-user"></i> <span data-i18n="nav.schoolWork">منصة المدرسة</span></div>
@@ -2331,6 +2332,14 @@
             </div>
         </section>
 
+        <section data-modes="khuta school" id="view-myfiles" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-folder-open" style="color:var(--gold-text);"></i> <span data-i18n="myf.title">ملفاتي</span></h2>
+                <p class="card-sub" data-i18n="myf.sub">مساحتك الخاصة: ٣٠ ميجا لملفات PDF والصور، لا يراها غيرك.</p>
+            </div>
+            <div class="card"><div id="myfiles-body"></div></div>
+        </section>
+
         <section data-modes="school" id="view-schoolgat" class="view-section">
             <div class="card settings-hero">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-brain" style="color:var(--gold-text);"></i> <span data-i18n="gat.title">مساحة القدرات</span></h2>
@@ -2996,7 +3005,8 @@
     window.KHUTA_LAZY = lazy;
     window.KHUTA_GROUPS = {
         school: ["js/14-school-work.js", "js/18-exam-builder.js", "js/19-exam-send.js", "js/21-classes.js", "js/23-school-home.js", "js/24-student-exam.js", "js/25-import.js", "js/28-report.js", "js/30-parent-links.js", "js/31-year.js", "js/32-member-leave.js", "js/33-attendance.js", "js/34-school-settings.js", "js/36-records.js", "js/37-library.js", "js/38-gat-space.js"],
-        owner:  ["js/34-school-settings.js", "js/35-owner-schools.js"]
+        owner:  ["js/34-school-settings.js", "js/35-owner-schools.js"],
+        myfiles: ["js/39-my-files.js"]
     };
     var loaded = {}, groupPromises = {};
     window.khutaEager = function(src){
@@ -3081,6 +3091,7 @@
 <script>khutaEager("js/36-records.js")</script>
 <script>khutaEager("js/37-library.js")</script>
 <script>khutaEager("js/38-gat-space.js")</script>
+<script>khutaEager("js/39-my-files.js")</script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>
