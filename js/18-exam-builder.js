@@ -23,8 +23,11 @@ const MIN_EXAM_CHOICES     = 2;
 
 // مسودّة الاختبار في الذاكرة. لا تُحفظ إلا بضغطة "حفظ".
 let examDraft = null;
-// ذاكرة الروابط الموقَّعة: إصدار رابط لكل صورة في كل رسم مكلف وبطيء
+// ذاكرة الروابط الموقَّعة: إصدار رابط لكل صورة في كل رسم مكلف وبطيء.
+// path → { url, until } — تُنسى قبل انتهاء الرابط بخمس دقائق لا بعده.
 const examImgUrlCache = new Map();
+const EXAM_IMG_TTL = 3600;              // عمر الرابط الموقَّع بالثواني
+const EXAM_IMG_MAX_SIDE = 1600;         // أطول ضلع لصورة تُرفع أو رسمٍ يُصدَّر
 
 function newExamQuestion(){
     return {
@@ -44,17 +47,108 @@ function ensureExamDraft(){
 
 /* ---------- الصور ---------- */
 
+/** رابط موقَّع لمسار في دلو exam-images: { url } أو { why } بسبب الفشل.
+ *  fresh = تجاهل الذاكرة (يُستعمل حين يفشل تحميل رابطٍ محفوظ). */
+async function signExamImage(path, fresh){
+    if(!path) return { why: "NO_PATH" };
+    if(!sb) return { why: "NO_CLIENT" };
+    const hit = examImgUrlCache.get(path);
+    if(!fresh && hit && hit.until > Date.now()) return { url: hit.url };
+    let why = "UNKNOWN";
+    for(let attempt = 0; attempt < 2; attempt++){        // تعثّر الشبكة لحظةً لا يُسقط الصورة
+        try{
+            const { data, error } = await sb.storage.from("exam-images").createSignedUrl(path, EXAM_IMG_TTL);
+            if(error) throw error;
+            const url = data && (data.signedUrl || data.signedURL);
+            if(!url){ why = "NO_URL_IN_RESPONSE"; continue; }
+            examImgUrlCache.set(path, { url, until: Date.now() + (EXAM_IMG_TTL - 300) * 1000 });
+            return { url };
+        }catch(e){
+            why = (e && (e.message || e.error || e.name)) || "UNKNOWN";
+            console.warn("[خُطى] تعذّر توقيع رابط الصورة:", path, e);
+        }
+    }
+    return { why };
+}
+
 async function examImageUrl(path){
-    if(!path || !sb) return null;
-    if(examImgUrlCache.has(path)) return examImgUrlCache.get(path);
+    return (await signExamImage(path)).url || null;
+}
+
+/* ============================================================
+   عرض صورة مخزَّنة — مكوّنٌ واحد للمنشئ ولشاشة الطالب
+   ------------------------------------------------------------
+   (دليل المالك، الجزء الثاني §٥) ما يفعله، وسبب كلٍّ منها:
+   • حالة تحميل: الغلاف .kimg يرسم هيكلاً خافتاً بارتفاعٍ ثابت حتى تصل
+     الصورة — لا قفزة في الصفحة ولا مربّعاً أبيض بأيقونة مستند.
+   • إعادة توقيع **مرّةً واحدة** عند فشل التحميل: اختبار مدّته ساعة، ورابطٌ
+     محفوظ قد ينتهي قبل السؤال الأخير. فإن فشلت الثانية أيضاً فالخطأ حقيقي
+     (ملفّ محذوف أو ممنوع) فتظهر رسالة — لا حلقة طلبات بلا نهاية.
+   • علم alive: الطالب ينتقل لسؤالٍ آخر قبل وصول الرابط، فيُستبدل العنصر.
+     بلا هذا الحارس يُكمل الردّ المتأخّر عمله على عنصرٍ لم يعد معروضاً.
+   • loading="lazy": منشئ فيه ٤٠ سؤالاً لا يحمّل ٤٠ صورة دفعةً واحدة.
+   img يحمل data-exam-img="<المسار>" ويبدأ hidden؛ onFail(img, why) للفشل.
+   ============================================================ */
+let kimgSeq = 0;
+function mountExamImage(img, onFail){
+    const path = img.getAttribute("data-exam-img");
+    const token = ++kimgSeq;
+    img._kimg = token;
+    const alive = () => img.isConnected && img._kimg === token;
+    const wrap = img.closest(".kimg");
+    if(wrap) wrap.classList.add("is-loading");
+    let retried = false;
+
+    const fail = (why) => {
+        if(!alive()) return;
+        img._kimg = 0;
+        if(wrap) wrap.classList.remove("is-loading");
+        onFail(img, why);
+    };
+    const show = (url) => {
+        if(!alive()) return;
+        img.hidden = false;
+        img.src = url;
+    };
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.onload = () => {
+        if(!alive()) return;
+        img.classList.add("is-ready");
+        if(wrap) wrap.classList.remove("is-loading");
+    };
+    img.onerror = async () => {
+        if(!alive()) return;
+        if(retried){ fail("IMAGE_LOAD_FAILED"); return; }
+        retried = true;
+        const r = await signExamImage(path, true);
+        r.url ? show(r.url) : fail(r.why);
+    };
+    signExamImage(path).then(r => r.url ? show(r.url) : fail(r.why));
+}
+
+/** يصغّر الصورة الكبيرة قبل رفعها: صورة جوّال ٤٠٠٠ بكسل و٨ ميجا تُرفض
+ *  عند حدّ الدلو (٥ ميجا)، وإن قُبلت حمّلها الطالب على جوّاله ببطء بلا
+ *  فائدة — الشاشة لا تعرض أكثر من ذلك أصلاً. يحافظ على النسبة والنوع؛
+ *  وأيّ تعثّر يعيد الملفّ الأصلي كما هو. GIF لا يُمسّ (قد يكون متحرّكاً). */
+async function shrinkExamImage(file){
+    if(!file || file.type === "image/gif" || typeof createImageBitmap !== "function") return file;
     try{
-        const { data, error } = await sb.storage.from("exam-images").createSignedUrl(path, 3600);
-        if(error) throw error;
-        examImgUrlCache.set(path, data.signedUrl);
-        return data.signedUrl;
+        const bmp = await createImageBitmap(file);
+        const side = Math.max(bmp.width, bmp.height);
+        if(side <= EXAM_IMG_MAX_SIDE && file.size <= 1.5 * 1024 * 1024){ bmp.close && bmp.close(); return file; }
+        const k = Math.min(1, EXAM_IMG_MAX_SIDE / side);
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(bmp.width * k));
+        c.height = Math.max(1, Math.round(bmp.height * k));
+        const ctx = c.getContext("2d");
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(bmp, 0, 0, c.width, c.height);
+        bmp.close && bmp.close();
+        const out = await new Promise(res => c.toBlob(res, file.type, 0.88));
+        return (out && out.type === file.type && out.size < file.size) ? out : file;
     }catch(e){
-        console.warn("[خُطى] تعذّر إصدار رابط للصورة:", e);
-        return null;
+        return file;
     }
 }
 
@@ -66,6 +160,7 @@ async function uploadExamImage(file){
         showToast(currentLang==='ar' ? 'الصورة يجب أن تكون PNG أو JPG أو WEBP' : 'Image must be PNG, JPG or WEBP');
         return null;
     }
+    file = await shrinkExamImage(file);
     if(file.size > MAX_EXAM_IMAGE_BYTES){
         showToast(currentLang==='ar' ? 'حجم الصورة أكبر من ٥ ميجا' : 'Image larger than 5 MB');
         return null;
@@ -227,8 +322,8 @@ function renderExamBuilder(){
 
             <div class="exq-img-row">
                 ${q.image
-                    ? `<div class="exq-img" data-img-path="${escapeHtml(q.image)}">
-                           <img alt="${currentLang==='ar'?'صورة السؤال':'Question image'}" hidden>
+                    ? `<div class="exq-img kimg">
+                           <img data-exam-img="${escapeHtml(q.image)}" alt="${currentLang==='ar'?'صورة السؤال':'Question image'}" hidden>
                            <button type="button" class="exq-img-x" onclick="removeExamImage(${qi}, null)" title="${currentLang==='ar'?'إزالة الصورة':'Remove image'}"><i class="fa-solid fa-xmark"></i></button>
                        </div>`
                     : `<button type="button" class="btn btn-outline btn-sm" onclick="pickExamImage(${qi}, null)">
@@ -247,8 +342,8 @@ function renderExamBuilder(){
                                placeholder="${currentLang==='ar' ? `الخيار ${ci + 1}` : `Choice ${ci + 1}`}"
                                oninput="updateExamText(${qi}, ${ci}, this.value)">
                         ${c.image
-                            ? `<div class="exq-img exq-img-sm" data-img-path="${escapeHtml(c.image)}">
-                                   <img alt="${currentLang==='ar'?'صورة الخيار':'Choice image'}" hidden>
+                            ? `<div class="exq-img exq-img-sm kimg kimg-sm">
+                                   <img data-exam-img="${escapeHtml(c.image)}" alt="${currentLang==='ar'?'صورة الخيار':'Choice image'}" hidden>
                                    <button type="button" class="exq-img-x" onclick="removeExamImage(${qi}, ${ci})"><i class="fa-solid fa-xmark"></i></button>
                                </div>`
                             : `<button type="button" class="btn-ghost btn-sm" onclick="pickExamImage(${qi}, ${ci})"
@@ -279,19 +374,14 @@ function renderExamBuilder(){
 }
 
 /* الروابط الموقَّعة تُجلب بعد الرسم: الرسم متزامن والتوقيع غير متزامن،
-   فلو انتظرناه لتجمّدت الواجهة عند كل ضغطة. */
-async function hydrateExamImages(root){
-    const nodes = root.querySelectorAll("[data-img-path]");
-    for(const node of nodes){
-        const img = node.querySelector("img");
-        if(!img) continue;
-        /* ⚠️ الصورة تبقى hidden حتى يصل رابطها الموقَّع. لولا ذلك لظهرت
-           <img> بلا src، وكروم يرسمها **مربّعاً أبيض بأيقونة مستند** —
-           وهو أحد مصادر "المربّع الأبيض" الذي لاحظه المالك. */
-        const url = await examImageUrl(node.getAttribute("data-img-path"));
-        if(url){ img.src = url; img.hidden = false; }
-        else node.classList.add("exq-img-broken");
-    }
+   فلو انتظرناه لتجمّدت الواجهة عند كل ضغطة. الصورة تبقى hidden حتى يصل
+   رابطها (لولا ذلك لرسمها كروم مربّعاً أبيض بأيقونة مستند)، والغلاف .kimg
+   يُظهر هيكل التحميل مكانها — انظر mountExamImage. */
+function hydrateExamImages(root){
+    root.querySelectorAll("img[data-exam-img]").forEach(img => mountExamImage(img, (el) => {
+        const box = el.closest(".exq-img");
+        if(box) box.classList.add("exq-img-broken");
+    }));
 }
 
 /* ============================================================
@@ -354,104 +444,336 @@ function removeExplanationImage(qi){
     renderExamBuilder();
 }
 
-/* ---------- لوحة الرسم بخط اليد ---------- */
-let edQi = null, edCtx = null, edDrawing = false, edLastX = 0, edLastY = 0;
+/* ============================================================
+   لوحة الرسم بخطّ اليد — مبنيّة على دليل المالك (الجزء الأوّل)
+   ------------------------------------------------------------
+   كانت اللوحة تكتب البكسلات مباشرة على القماش، فلا تراجع، ولا ممحاة،
+   وتصغير النافذة أو تدوير الجوّال يمطّ الرسم، والتصدير = لقطة القماش
+   بدقّته المنخفضة. الآن:
+   • الرسم **بيانات لا بكسلات**: كل خطّ نقاطٌ نسبية 0..1 من العرض والطول
+     (وعرض القلم نسبةٌ من العرض أيضاً) — فيصمد أمام أي تغيّر في المقاس،
+     ويُصدَّر بأي دقّة بلا تشويه.
+   • paintStrokes دالّةٌ واحدة للعرض الحيّ وللتصدير معاً، فما يراه المعلّم
+     هو بالضبط ما يُحفظ — نسختان من منطق الرسم تفترقان يوماً بصمت.
+   • الممحاة تمحو إلى الشفافية (destination-out)، والتصدير طبقتان: الخطوط
+     على طبقة شفّافة ثم تُركَّب فوق ورقة بيضاء. لو رُسم فوق الأبيض مباشرة
+     لثقبت الممحاة الورقة نفسها فظهرت فجوات سوداء في الوضع الليلي.
+   • الورق أبيض والحبر داكن ثابتان بلا ارتباطٍ بالسمة: الصورة تُحفظ مرّة
+     وتُعرض في الوضعين، وحبرٌ فاتح يختفي تماماً على ورقٍ فاتح.
+   • أحداث المؤشّر (Pointer) لإصبعٍ وقلمٍ وفأرة معاً، مع setPointerCapture
+     (الخطّ لا ينقطع إن خرج الإصبع من الحافّة) و touch-action:none (السحب
+     يرسم لا يمرّر الصفحة)، وتجاهل إصبعٍ ثانٍ أو راحة اليد أثناء الكتابة.
+   • الحركة لا تعيد رسم كل شيء: الخطوط المكتملة مرسومة مرّةً على طبقة
+     خلفية، ومع كل إطار يُضاف فوقها الخطّ الجاري وحده.
+   ============================================================ */
+const ED_INKS = ["#16202A", "#C0392B", "#1F5FBF"];   // داكن · أحمر للتنبيه · أزرق
+const ED_ERASER_PX = 22;
+const ED_MIN_STEP = 0.0015;                          // أقلّ مسافة بين نقطتين (نسبةً)
+
+let edQi = null;                // رقم السؤال المفتوح
+let edStrokes = [];             // الخطوط المكتملة
+let edLive = null;              // الخطّ الجاري تحت الإصبع
+let edCleared = null;           // ما مُسح بـ«مسح الكل» — ليرجع بالتراجع
+let edPointer = null;           // المؤشّر الذي يرسم الآن (لا غيره)
+let edTool = "pen", edInk = ED_INKS[0];
+let edAspect = 760 / 420;       // نسبة العرض للطول، تُثبَّت عند الفتح
+let edDirty = false;            // تغيّر منذ آخر حفظ؟
+let edBase = null;              // طبقة الخطوط المكتملة
+let edFrame = 0;
+const edMemory = new Map();     // خطوط كل سؤال في هذه الجلسة، ليُكمل المعلّم رسمه
+
+/** الرسم الوحيد في الملفّ — للشاشة وللتصدير. نقاطٌ وعروضٌ نسبية × المقاس. */
+function paintStrokes(ctx, strokes, width, height){
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    for(const s of strokes){
+        if(!s || !s.points.length) continue;
+        ctx.globalCompositeOperation = s.erase ? "destination-out" : "source-over";
+        ctx.strokeStyle = s.erase ? "#000" : (s.ink || ED_INKS[0]);
+        ctx.lineWidth = Math.max(1, s.w * width);
+        const p0 = s.points[0];
+        ctx.beginPath();
+        ctx.moveTo(p0.x * width, p0.y * height);
+        if(s.points.length === 1){
+            // نقطة واحدة = خطّ بلا طول لا يُرسم؛ نُزيحها ذرّةً فتظهر نقطة
+            ctx.lineTo(p0.x * width + 0.1, p0.y * height);
+        }else if(s.points.length === 2){
+            ctx.lineTo(s.points[1].x * width, s.points[1].y * height);
+        }else{
+            // منحنيات بين منتصفات النقاط: خطّ ناعم بدل الزوايا المكسّرة
+            for(let i = 1; i < s.points.length - 1; i++){
+                const a = s.points[i], b = s.points[i + 1];
+                ctx.quadraticCurveTo(a.x * width, a.y * height,
+                                     (a.x + b.x) / 2 * width, (a.y + b.y) / 2 * height);
+            }
+            const last = s.points[s.points.length - 1];
+            ctx.lineTo(last.x * width, last.y * height);
+        }
+        ctx.stroke();
+    }
+    ctx.globalCompositeOperation = "source-over";
+}
+
+function edClamp(v){ return Math.min(1, Math.max(0, v)); }
+
+/** موضع المؤشّر نسبةً من القماش المعروض، محصوراً في 0..1. */
+function edPoint(canvas, e){
+    const r = canvas.getBoundingClientRect();
+    return {
+        x: Math.round(edClamp((e.clientX - r.left) / (r.width  || 1)) * 10000) / 10000,
+        y: Math.round(edClamp((e.clientY - r.top)  / (r.height || 1)) * 10000) / 10000,
+    };
+}
+
+function edPenPx(){
+    const el = document.getElementById("explain-pen-size");
+    return (el && parseInt(el.value, 10)) || 4;
+}
+
+function beginStroke(canvas, p){
+    const cssW = canvas.getBoundingClientRect().width || 1;
+    const erase = edTool === "eraser";
+    return { points: [p], erase, ink: erase ? null : edInk, w: (erase ? ED_ERASER_PX : edPenPx()) / cssW };
+}
+
+/** يضيف نقطة للخطّ — إلا إن كانت ملاصقةً للسابقة (ارتعاش لا حركة). */
+function extendStroke(s, p){
+    if(!s) return;
+    const q = s.points[s.points.length - 1];
+    if(Math.abs(p.x - q.x) < ED_MIN_STEP && Math.abs(p.y - q.y) < ED_MIN_STEP) return;
+    s.points.push(p);
+}
+
+/** يضبط دقّة القماش على مقاسه الفعلي × كثافة الشاشة، ويعيد الرسم من البيانات. */
+function sizeExplainCanvas(){
+    const canvas = document.getElementById("explain-draw-canvas");
+    if(!canvas) return;
+    canvas.style.aspectRatio = String(edAspect);
+    const r = canvas.getBoundingClientRect();
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
+    if(canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
+    if(!edBase) edBase = document.createElement("canvas");
+    edBase.width = w; edBase.height = h;
+    repaintExplainBase();
+}
+
+function repaintExplainBase(){
+    if(!edBase) return;
+    const b = edBase.getContext("2d");
+    b.clearRect(0, 0, edBase.width, edBase.height);
+    paintStrokes(b, edStrokes, edBase.width, edBase.height);
+    drawExplainFrame();
+    updateExplainTools();
+}
+
+function drawExplainFrame(){
+    edFrame = 0;
+    const canvas = document.getElementById("explain-draw-canvas");
+    if(!canvas || !edBase) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(edBase, 0, 0);
+    if(edLive) paintStrokes(ctx, [edLive], canvas.width, canvas.height);
+}
+
+function scheduleExplainFrame(){
+    if(!edFrame) edFrame = requestAnimationFrame(drawExplainFrame);
+}
+
+function updateExplainTools(){
+    const undo = document.getElementById("ed-undo");
+    if(undo) undo.disabled = !edStrokes.length && !edCleared;
+    const clear = document.getElementById("ed-clear");
+    if(clear) clear.disabled = !edStrokes.length;
+    document.querySelectorAll("#explain-draw-modal [data-ed-tool]").forEach(b =>
+        b.classList.toggle("is-active", b.getAttribute("data-ed-tool") === edTool));
+    document.querySelectorAll("#explain-draw-modal [data-ed-ink]").forEach(b =>
+        b.classList.toggle("is-active", edTool === "pen" && b.getAttribute("data-ed-ink") === edInk));
+}
+
+function setExplainTool(tool){ edTool = tool === "eraser" ? "eraser" : "pen"; updateExplainTools(); }
+function setExplainInk(ink){ if(ED_INKS.includes(ink)){ edInk = ink; edTool = "pen"; } updateExplainTools(); }
+
+function undoExplainStroke(){
+    if(edStrokes.length) edStrokes.pop();
+    else if(edCleared){ edStrokes = edCleared; edCleared = null; }
+    edDirty = true;
+    repaintExplainBase();
+}
+
+function clearExplanationCanvas(){
+    if(!edStrokes.length) return;
+    edCleared = edStrokes;          // «مسح الكل» يُتراجَع عنه كأي خطوة
+    edStrokes = [];
+    edDirty = true;
+    repaintExplainBase();
+}
 
 function ensureExplainDrawModal(){
     let modal = document.getElementById("explain-draw-modal");
     if(modal) return modal;
+    const ar = currentLang === 'ar';
     modal = document.createElement("div");
     modal.id = "explain-draw-modal";
     modal.className = "overlay-screen";
     modal.style.display = "none";
     modal.innerHTML = `
-        <div class="wizard-card" style="max-width:760px;">
-            <h3 style="margin-bottom:4px;"><i class="fa-solid fa-pen-nib"></i> ${currentLang==='ar' ? 'اكتب الشرح بخط يدك' : "Write the explanation by hand"}</h3>
-            <p class="card-sub" style="margin-bottom:12px;">${currentLang==='ar' ? 'ارسم بإصبعك أو بقلم الشاشة، ثم احفظ.' : 'Draw with your finger or a stylus, then save.'}</p>
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                <button type="button" class="btn btn-outline btn-sm acc-btn" onclick="clearExplanationCanvas()">
-                    <i class="fa-solid fa-eraser"></i> ${currentLang==='ar' ? 'مسح' : 'Clear'}</button>
-                <label class="hint" style="display:flex; align-items:center; gap:6px;">
-                    ${currentLang==='ar' ? 'سُمك القلم' : 'Pen size'}
+        <div class="wizard-card ed-card">
+            <h3 style="margin-bottom:4px;"><i class="fa-solid fa-pen-nib"></i> ${ar ? 'اكتب الشرح بخط يدك' : "Write the explanation by hand"}</h3>
+            <p class="card-sub" id="ed-sub" style="margin-bottom:12px;"></p>
+            <div class="ed-tools" role="toolbar">
+                <button type="button" class="ed-btn" data-ed-tool="pen" onclick="setExplainTool('pen')" title="${ar?'قلم':'Pen'}"><i class="fa-solid fa-pen"></i></button>
+                <button type="button" class="ed-btn" data-ed-tool="eraser" onclick="setExplainTool('eraser')" title="${ar?'ممحاة':'Eraser'}"><i class="fa-solid fa-eraser"></i></button>
+                <span class="ed-sep"></span>
+                ${ED_INKS.map(c => `<button type="button" class="ed-ink" data-ed-ink="${c}" style="--ink:${c}" onclick="setExplainInk('${c}')" aria-label="${c}"></button>`).join("")}
+                <span class="ed-sep"></span>
+                <label class="ed-size" title="${ar?'سُمك القلم':'Pen size'}">
+                    <i class="fa-solid fa-circle" style="font-size:7px;"></i>
                     <input type="range" id="explain-pen-size" min="2" max="14" value="4">
+                    <i class="fa-solid fa-circle" style="font-size:13px;"></i>
                 </label>
+                <span class="ed-sep"></span>
+                <button type="button" class="ed-btn" id="ed-undo" onclick="undoExplainStroke()" title="${ar?'تراجع':'Undo'}"><i class="fa-solid fa-rotate-left"></i></button>
+                <button type="button" class="ed-btn" id="ed-clear" onclick="clearExplanationCanvas()" title="${ar?'مسح الكل':'Clear all'}"><i class="fa-solid fa-trash-can"></i></button>
             </div>
-            <canvas id="explain-draw-canvas" width="760" height="420"
-                style="background:#fff; border-radius:14px; touch-action:none; width:100%; max-width:760px; border:1px solid var(--border); cursor:crosshair;"></canvas>
+            <canvas id="explain-draw-canvas" class="ed-canvas"></canvas>
             <div style="display:flex; gap:10px; margin-top:14px;">
-                <button type="button" class="btn btn-outline btn-block acc-btn" onclick="closeExplanationDraw()">${currentLang==='ar' ? 'إلغاء' : 'Cancel'}</button>
-                <button type="button" class="btn acc-btn btn-block" onclick="saveExplanationDraw()">
-                    <i class="fa-solid fa-floppy-disk"></i> ${currentLang==='ar' ? 'حفظ الشرح' : 'Save'}</button>
+                <button type="button" class="btn btn-outline btn-block acc-btn" onclick="closeExplanationDraw()">${ar ? 'إلغاء' : 'Cancel'}</button>
+                <button type="button" class="btn acc-btn btn-block" id="ed-save" onclick="saveExplanationDraw()">
+                    <i class="fa-solid fa-floppy-disk"></i> ${ar ? 'حفظ الشرح' : 'Save'}</button>
             </div>
         </div>`;
     document.body.appendChild(modal);
+    bindExplainCanvasEvents(document.getElementById("explain-draw-canvas"));
+    window.addEventListener("resize", () => { if(edQi != null) sizeExplainCanvas(); });
+    document.addEventListener("keydown", (e) => {
+        if(edQi == null) return;
+        if(e.key === "Escape"){ e.preventDefault(); closeExplanationDraw(); }
+        else if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z"){ e.preventDefault(); undoExplainStroke(); }
+    });
     return modal;
 }
 
-function explainCanvasPos(canvas, e){
-    const r = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / r.width, scaleY = canvas.height / r.height;
-    return { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY };
-}
-
 function bindExplainCanvasEvents(canvas){
-    if(canvas.dataset.bound) return;
+    if(!canvas || canvas.dataset.bound) return;
     canvas.dataset.bound = "1";
     canvas.addEventListener("pointerdown", (e) => {
-        edDrawing = true;
+        if(edPointer !== null) return;                       // إصبع ثانٍ أو راحة اليد
+        if(e.pointerType === "mouse" && e.button !== 0) return;
+        e.preventDefault();
+        edPointer = e.pointerId;
         try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
-        const p = explainCanvasPos(canvas, e);
-        edLastX = p.x; edLastY = p.y;
+        edLive = beginStroke(canvas, edPoint(canvas, e));
+        scheduleExplainFrame();
     });
     canvas.addEventListener("pointermove", (e) => {
-        if(!edDrawing || !edCtx) return;
-        const sizeEl = document.getElementById("explain-pen-size");
-        edCtx.lineWidth = (sizeEl && parseInt(sizeEl.value, 10)) || 4;
-        edCtx.lineCap = "round"; edCtx.lineJoin = "round"; edCtx.strokeStyle = "#1a1a1a";
-        const p = explainCanvasPos(canvas, e);
-        edCtx.beginPath(); edCtx.moveTo(edLastX, edLastY); edCtx.lineTo(p.x, p.y); edCtx.stroke();
-        edLastX = p.x; edLastY = p.y;
+        if(e.pointerId !== edPointer || !edLive) return;
+        // الأحداث المدمجة: المتصفح يجمع حركات القلم السريعة في حدثٍ واحد —
+        // قراءتها كلها تعطي خطّاً ناعماً بدل خطوطٍ مستقيمة متكسّرة.
+        const evs = (typeof e.getCoalescedEvents === "function" && e.getCoalescedEvents()) || [];
+        (evs.length ? evs : [e]).forEach(ev => extendStroke(edLive, edPoint(canvas, ev)));
+        scheduleExplainFrame();
     });
-    ["pointerup", "pointerleave", "pointercancel"].forEach(ev =>
-        canvas.addEventListener(ev, () => { edDrawing = false; }));
+    const finish = (e) => {
+        if(e.pointerId !== edPointer) return;
+        edPointer = null;
+        try{ canvas.releasePointerCapture(e.pointerId); }catch(err){}
+        if(edLive){
+            edStrokes.push(edLive);
+            edLive = null;
+            edCleared = null;
+            edDirty = true;
+            repaintExplainBase();       // رفعٌ واحد عند الانتهاء، لا مع كل حركة
+        }
+    };
+    canvas.addEventListener("pointerup", finish);
+    canvas.addEventListener("pointercancel", finish);
 }
 
 function openExplanationDraw(qi){
-    ensureExplanation(qi);
+    const ex = ensureExplanation(qi);
+    if(!ex) return;
+    const q = ensureExamDraft().questions[qi];
     edQi = qi;
+    const mem = edMemory.get(q.id || qi);
+    edStrokes = mem ? mem.strokes.map(s => ({ ...s, points: s.points.slice() })) : [];
+    edLive = null; edCleared = null; edPointer = null; edDirty = false;
+    edTool = "pen";
+    // النسبة تُثبَّت عند الفتح (أعرض على الحاسوب، أطول على الجوّال) وتبقى
+    // كما هي حتى لو دار الجوّال — وإلا انمطّ ما رُسم.
+    edAspect = mem ? mem.aspect : (window.innerWidth < 640 ? 4 / 3.4 : 760 / 420);
+
     const modal = ensureExplainDrawModal();
+    const sub = document.getElementById("ed-sub");
+    if(sub){
+        sub.textContent = (ex.image && !mem)
+            ? (currentLang==='ar' ? 'للسؤال شرحٌ مرسوم سابقاً — ما ترسمه الآن يحلّ محلّه عند الحفظ.' : 'This question already has a drawing — saving replaces it.')
+            : (currentLang==='ar' ? 'اكتب بإصبعك أو بقلم الشاشة. تراجَع بـ↶ أو امحُ بالممحاة، ثم احفظ.' : 'Write with a finger or stylus. Undo with ↶ or use the eraser, then save.');
+    }
     modal.style.display = "flex";
-    const canvas = document.getElementById("explain-draw-canvas");
-    edCtx = canvas.getContext("2d");
-    edCtx.fillStyle = "#fff";
-    edCtx.fillRect(0, 0, canvas.width, canvas.height);
-    bindExplainCanvasEvents(canvas);
+    requestAnimationFrame(sizeExplainCanvas);   // المقاس الحقيقي بعد أن يظهر
 }
 
-function clearExplanationCanvas(){
-    if(!edCtx) return;
-    edCtx.fillStyle = "#fff";
-    edCtx.fillRect(0, 0, edCtx.canvas.width, edCtx.canvas.height);
-}
-
-function closeExplanationDraw(){
+function closeExplanationDraw(force){
+    if(!force && edDirty && edStrokes.length &&
+       !confirm(currentLang==='ar' ? 'لم تحفظ الرسم. إغلاق بلا حفظ؟' : 'Close without saving the drawing?')) return;
     const modal = document.getElementById("explain-draw-modal");
     if(modal) modal.style.display = "none";
-    edQi = null; edCtx = null;
+    edQi = null; edLive = null; edPointer = null; edDirty = false;
+    if(edFrame){ cancelAnimationFrame(edFrame); edFrame = 0; }
+}
+
+/** مقاس التصدير من القماش الفعلي × المقياس، بحدٍّ أعلى للضلع يحفظ النسبة. */
+function exportSize(cssWidth, cssHeight, scale, maxSide){
+    const w = Math.max(1, cssWidth) * Math.max(1, scale);
+    const h = Math.max(1, cssHeight) * Math.max(1, scale);
+    const shrink = Math.min(1, maxSide / Math.max(w, h));
+    return { width: Math.round(w * shrink), height: Math.round(h * shrink) };
+}
+
+/** طبقتان: الخطوط على شفّاف، ثم تُركَّب فوق ورقة بيضاء. PNG. */
+function strokesToPng(strokes, size){
+    const layer = document.createElement("canvas");
+    layer.width = size.width; layer.height = size.height;
+    paintStrokes(layer.getContext("2d"), strokes, size.width, size.height);
+
+    const sheet = document.createElement("canvas");
+    sheet.width = size.width; sheet.height = size.height;
+    const sctx = sheet.getContext("2d");
+    sctx.fillStyle = "#FFFFFF";
+    sctx.fillRect(0, 0, sheet.width, sheet.height);
+    sctx.drawImage(layer, 0, 0);
+    return new Promise(res => sheet.toBlob(b => res(b), "image/png"));
 }
 
 async function saveExplanationDraw(){
     const canvas = document.getElementById("explain-draw-canvas");
     const qi = edQi;
     if(qi == null || !canvas) return;
-    const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+    if(!edStrokes.some(s => !s.erase)){
+        showToast(currentLang==='ar' ? 'اكتب الشرح أولاً' : 'Draw something first');
+        return;
+    }
+    const r = canvas.getBoundingClientRect();
+    // مقياس ٢ على الأقل: الحاسوب كثافته ١، والطالب يراه على جوّالٍ كثافته ٣
+    const size = exportSize(r.width, r.height, Math.max(2, window.devicePixelRatio || 1), EXAM_IMG_MAX_SIDE);
+    const blob = await strokesToPng(edStrokes, size);
     if(!blob){ showToast(currentLang==='ar' ? 'تعذّر حفظ الرسم' : 'Could not save the drawing'); return; }
+
+    const btn = document.getElementById("ed-save");
+    if(btn) btn.disabled = true;
     showToast(currentLang==='ar' ? 'جارٍ الرفع…' : 'Uploading…');
-    const path = await uploadExamImage(blob);
+    const path = await uploadExamImage(new File([blob], "drawing.png", { type: "image/png" }));
+    if(btn) btn.disabled = false;
     if(!path) return;
+
+    const q = ensureExamDraft().questions[qi];
     const ex = ensureExplanation(qi);
+    if(!q || !ex) return;
     ex.image = path; ex.type = "drawing";
-    closeExplanationDraw();
+    edMemory.set(q.id || qi, { strokes: edStrokes.map(s => ({ ...s, points: s.points.slice() })), aspect: edAspect });
+    closeExplanationDraw(true);
     renderExamBuilder();
 }
 
@@ -476,8 +798,8 @@ function renderExplanationBlock(q, qi){
             oninput="updateExplanationText(${qi}, this.value)">${escapeHtml((ex && ex.text) || "")}</textarea>` : ""}
         ${(type==='image' || type==='drawing') ? (
             ex.image
-            ? `<div class="exq-img" data-img-path="${escapeHtml(ex.image)}">
-                   <img alt="${currentLang==='ar'?'شرح الحل':'Explanation'}" hidden>
+            ? `<div class="exq-img exq-img-explain kimg">
+                   <img data-exam-img="${escapeHtml(ex.image)}" alt="${currentLang==='ar'?'شرح الحل':'Explanation'}" hidden>
                    <button type="button" class="exq-img-x" onclick="removeExplanationImage(${qi})"><i class="fa-solid fa-xmark"></i></button>
                </div>`
             : (type==='image'

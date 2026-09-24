@@ -34,7 +34,6 @@ let seFontStep = 0;         // -1 / 0 / +1
 let seTimer = null;
 let seLeft = 0;
 let seReview = null;        // بيانات المراجعة بعد التسليم
-const seImgCache = new Map();
 
 function seLabel(ar, en){ return currentLang === "ar" ? ar : en; }
 
@@ -68,7 +67,6 @@ async function openStudentExam(examId){
         if(error) throw error;
         seExam = data;
         seAnswers = {}; seMarked = new Set(); seIndex = 0; seReview = null;
-        seImgCache.clear();
 
         if(data.kind === "practice"){
             // التدريب: يُعاد متى شاء — شاشة محاولاته السابقة إن وُجدت، وإلا ابدأ
@@ -250,7 +248,7 @@ function renderSeQuestion(){
 
     area.innerHTML = `
         ${q.text ? `<div class="exam-question-text">${escapeHtml(q.text)}</div>` : ""}
-        ${q.image ? `<img class="se-q-img" data-exam-img="${escapeHtml(q.image)}" alt="" hidden>` : ""}
+        ${q.image ? `<span class="kimg kimg-q"><img class="se-q-img" data-exam-img="${escapeHtml(q.image)}" alt="${seLabel("صورة السؤال","Question image")}" hidden onclick="seZoomImage(this)"></span>` : ""}
         <div class="exam-choices">
             ${(q.choices || []).map((c, j) => {
                 const txt = (typeof c === "string") ? c : (c.text || "");
@@ -264,7 +262,7 @@ function renderSeQuestion(){
                 return `
                 <label class="${cls}" ${seReview ? "" : `onclick="sePick(${seCKey(c, j)})"`}>
                     <span>${escapeHtml(txt)}
-                        ${img ? `<img class="se-c-img" data-exam-img="${escapeHtml(img)}" alt="" hidden>` : ""}</span>
+                        ${img ? `<span class="kimg kimg-sm"><img class="se-c-img" data-exam-img="${escapeHtml(img)}" alt="${seLabel("صورة الخيار","Choice image")}" hidden></span>` : ""}</span>
                     <span class="choice-letter">${seChoiceLetter(j)}</span>
                 </label>`;
             }).join("")}
@@ -273,7 +271,7 @@ function renderSeQuestion(){
         <div class="se-explain">
             <div class="se-explain-head"><i class="fa-solid fa-lightbulb"></i> ${seLabel("شرح المعلّم","Teacher's explanation")}</div>
             ${q.explanation.text ? `<p>${escapeHtml(q.explanation.text)}</p>` : ""}
-            ${q.explanation.image ? `<img class="se-explain-img" data-exam-img="${escapeHtml(q.explanation.image)}" alt="" hidden>` : ""}
+            ${q.explanation.image ? `<span class="kimg kimg-q"><img class="se-explain-img" data-exam-img="${escapeHtml(q.explanation.image)}" alt="${seLabel("شرح المعلّم","Teacher's explanation")}" hidden onclick="seZoomImage(this)"></span>` : ""}
         </div>` : ""}`;
 
     const mark = document.getElementById("se-mark");
@@ -360,33 +358,33 @@ function seSetFont(step, silent){
 /* ---------- الصور ---------- */
 
 /* ⚠️ الصور مسارات في دلو خاص لا روابط عامة، فوضعها في src مباشرة يعطي
-   صورةً مكسورة. نوقّعها ونُظهرها، ونحفظ الرابط كي لا يُوقَّع مرتين حين
-   يتنقّل الطالب بين الأسئلة ذهاباً وإياباً. */
-async function resolveExamImages(){
+   صورةً مكسورة. mountExamImage (js/18-exam-builder.js) يوقّعها عند العرض،
+   ويُظهر هيكل تحميل مكانها، ويعيد التوقيع مرّةً واحدة إن انتهى الرابط في
+   اختبارٍ طويل، ويتجاهل الردّ المتأخّر إن انتقل الطالب لسؤالٍ آخر. والرابط
+   يُحفظ في ذاكرته حتى قبيل انتهائه، فالتنقّل ذهاباً وإياباً لا يعيد التوقيع. */
+function resolveExamImages(){
     const nodes = Array.from(document.querySelectorAll("#se-area img[data-exam-img]"));
-    if(!nodes.length) return;
-    if(!sb){ nodes.forEach(el => markExamImageFailed(el, "NO_CLIENT")); return; }
+    if(typeof mountExamImage !== "function"){ nodes.forEach(el => markExamImageFailed(el, "NO_CLIENT")); return; }
+    nodes.forEach(el => mountExamImage(el, markExamImageFailed));
+}
 
-    await Promise.all(nodes.map(async el => {
-        const path = el.getAttribute("data-exam-img");
-        let url = seImgCache.get(path) || null, why = "";
-        for(let attempt = 0; attempt < 2 && !url; attempt++){
-            try{
-                const { data, error } = await sb.storage.from("exam-images").createSignedUrl(path, 3600);
-                if(error) throw error;
-                url = (data && (data.signedUrl || data.signedURL)) || null;
-                if(url) seImgCache.set(path, url); else why = "NO_URL_IN_RESPONSE";
-            }catch(e){
-                why = (e && (e.message || e.error || e.name)) || "UNKNOWN";
-                console.warn("[خُطى] تعذّر توقيع رابط الصورة:", path, e);
-            }
-        }
-        if(!url){ markExamImageFailed(el, why); return; }
-        el.addEventListener("error", () => markExamImageFailed(el, "IMAGE_LOAD_FAILED"), { once:true });
-        el.addEventListener("load", () => el.classList.add("is-ready"), { once:true });
-        el.removeAttribute("hidden");
-        el.src = url;
-    }));
+/** تكبير صورة السؤال أو الشرح بملء الشاشة — الرسم الهندسي الدقيق لا يُقرأ
+ *  على جوّال بعرض ٣٦٠ بكسل. لمسةٌ أو Esc تغلقه. صور الخيارات لا تُكبَّر:
+ *  لمسها يختار الخيار، وهذا أهمّ. */
+function seZoomImage(img){
+    if(!img || !img.classList.contains("is-ready")) return;
+    const ov = document.createElement("div");
+    ov.className = "se-zoom";
+    ov.setAttribute("role", "dialog");
+    const big = document.createElement("img");
+    big.src = img.currentSrc || img.src;
+    big.alt = img.alt || "";
+    ov.appendChild(big);
+    const close = () => { ov.remove(); document.removeEventListener("keydown", onKey); };
+    const onKey = (e) => { if(e.key === "Escape") close(); };
+    ov.addEventListener("click", close);
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(ov);
 }
 
 /** يضع مكان الصورة التي تعذّر عرضها لوحةً تقول السبب — لا فراغاً.
@@ -397,7 +395,8 @@ function markExamImageFailed(el, why){
     box.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ` +
         `<span>${seLabel("تعذّر عرض صورة هذا السؤال", "This question's image could not load")}</span>` +
         `<small>${escapeHtml(String(why || "").slice(0, 120))}</small>`;
-    if(el.parentElement) el.parentElement.replaceChild(box, el);
+    const at = el.closest(".kimg") || el;     // الغلاف كلّه لا الصورة وحدها
+    if(at.parentElement) at.parentElement.replaceChild(box, at);
 }
 
 /* ---------- المؤقّت ---------- */
