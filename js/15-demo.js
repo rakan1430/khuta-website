@@ -88,6 +88,14 @@ const DEMO_DATA = {
         { id:"X3", title:"واجب الدرس الثالث", subject:"الرياضيات", grade:"1", kind:"homework", late_days:1, shuffle:true,
           question_count:6, published:true, owner_id:"M1", created_at:new Date().toISOString() },
     ],
+    school_books: [
+        { id:"B1", subject_id:"S-MATH", grade:"1", term:"t1", title:"الرياضيات ١ — الفصل الأول",
+          ein_url:"https://ien.edu.sa/", sort_order:0 },
+    ],
+    school_lessons: [
+        { id:"L1", book_id:"B1", title:"المتتاليات الحسابية", pages:"ص ١٢–١٨", video_url:"https://www.youtube.com/", exam_id:"X1", file_id:null, sort_order:0 },
+        { id:"L2", book_id:"B1", title:"المتسلسلات", pages:"ص ١٩–٢٤", video_url:null, exam_id:null, file_id:null, sort_order:1 },
+    ],
     account_requests: [
         { id:"R1", full_name:"عبدالله محمد الشمري", role_wanted:"student", grade:"1", section:"أ",
           contact:"05xxxxxxxx", note:null, status:"pending", created_at:new Date().toISOString() },
@@ -105,6 +113,18 @@ const DEMO_DATA = {
 
 /* عميل وهمي بنفس شكل عميل Supabase. الكتابة تعدّل الذاكرة فقط، فيستطيع
    الحاضر أن يجرّب الإضافة والحذف ويرى النتيجة حيّة دون أن يُحفظ شيء. */
+const DEMO_SETTINGS = {
+    grades: [
+        { code:"1", label_ar:"أول ثانوي", label_en:"Grade 10", sort:1 },
+        { code:"2", label_ar:"ثاني ثانوي", label_en:"Grade 11", sort:2 },
+        { code:"3", label_ar:"ثالث ثانوي", label_en:"Grade 12", sort:3 },
+    ],
+    subjects: [
+        { id:"S-MATH", name_ar:"الرياضيات", name_en:"Math", sort:1, active:true },
+        { id:"S-PHYS", name_ar:"الفيزياء", name_en:"Physics", sort:2, active:true },
+    ],
+};
+
 function makeDemoClient(){
     const store = JSON.parse(JSON.stringify(DEMO_DATA));
     // الاستعلامات الحقيقية تُرشّح بـschool_id، فنضعه على كل صف وإلا عادت
@@ -118,11 +138,15 @@ function makeDemoClient(){
             _filters: [],
             select(){ return api; },
             eq(col, val){ api._filters.push([col, val]); return api; },
+            in(col, vals){ api._filters.push([col, vals, "in"]); return api; },
+            // يُنتظَر الاستعلام مباشرةً بلا limit (كما في العميل الحقيقي)
+            then(res, rej){ return Promise.resolve({ data: api._apply(), error:null }).then(res, rej); },
             order(){ return api; },
             limit(){ return Promise.resolve({ data: api._apply(), error:null }); },
             maybeSingle(){ return Promise.resolve({ data: api._apply()[0] || null, error:null }); },
             _apply(){
-                return rows().filter(r => api._filters.every(([c, v]) => r[c] === v || v === undefined));
+                return rows().filter(r => api._filters.every(([c, v, op]) =>
+                    op === "in" ? (v || []).includes(r[c]) : (r[c] === v || v === undefined)));
             },
             insert(row){
                 if(name === "teacher_links" && rows().filter(r => r.owner_id === row.owner_id).length >= 9){
@@ -147,7 +171,9 @@ function makeDemoClient(){
     return {
         __demo: true,
         from: table,
-        rpc: async (fn) => fn === "school_id_by_slug" ? { data:"DEMO-SCHOOL", error:null } : { data:0, error:null },
+        rpc: async (fn) => fn === "school_id_by_slug" ? { data:"DEMO-SCHOOL", error:null }
+            : fn === "school_settings" ? { data: DEMO_SETTINGS, error:null }
+            : { data:0, error:null },
         auth: {
             getUser: async () => ({ data:{ user:{ id:"DEMO-USER", is_anonymous:false } } }),
             getSession: async () => ({ data:{ session:null } }),
