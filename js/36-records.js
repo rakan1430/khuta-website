@@ -528,11 +528,13 @@ function renderStudentFile(d){
     const s = (d && d.student) || {};
     const att = d && d.attendance;
     const isAdmin = d && d.viewer_role === "admin";
-    const roleName = r => r === "admin" ? recL("الإدارة", "Admin") : r === "teacher" ? recL("معلّم", "Teacher") : String(r || "");
+    const roleName = r => r === "admin" ? recL("الإدارة", "Admin") : r === "teacher" ? recL("معلّم", "Teacher")
+                        : r === "counselor" ? recL("مرشد", "Counselor") : String(r || "");
     return `
         <h3 style="margin-bottom:2px;"><i class="fa-solid fa-id-card"></i> ${escapeHtml(s.name || "")}</h3>
         <p class="card-sub">${escapeHtml(gradeName(s.grade))}${s.section ? " / " + escapeHtml(s.section) : ""}${s.class ? " · " + escapeHtml(s.class) : ""}</p>
-        ${isAdmin ? "" : `<p class="hint">${recL("تظهر لك موادّك فقط. واطّلاعك على الملف يُسجَّل لدى الإدارة.",
+        ${d && d.viewer_role === "counselor" ? `<p class="hint">${recL("اطّلاعك على الملف يُسجَّل لدى الإدارة.", "Your view is logged for the school.")}</p>` : ""}
+        ${isAdmin || (d && d.viewer_role === "counselor") ? "" : `<p class="hint">${recL("تظهر لك موادّك فقط. واطّلاعك على الملف يُسجَّل لدى الإدارة.",
             "Only your subjects are shown. Your view is logged for the school.")}</p>`}
 
         ${att ? `<div class="leave-facts" style="margin:12px 0;">

@@ -55,7 +55,7 @@ function serve(){
 
 const SCHOOL_FILES = ["14-school-work","18-exam-builder","19-exam-send","21-classes","23-school-home",
     "24-student-exam","25-import","28-report","30-parent-links","31-year","32-member-leave",
-    "33-attendance","34-school-settings","36-records","37-library","38-gat-space"].map(n => `js/${n}.js`);
+    "33-attendance","34-school-settings","36-records","37-library","38-gat-space","40-counselor"].map(n => `js/${n}.js`);
 
 /** ملفات جافاسكربت الموقع التي طلبها المتصفّح فعلاً، بالترتيب. */
 function trackScripts(page){

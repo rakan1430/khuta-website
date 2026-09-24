@@ -4062,3 +4062,19 @@ body[data-mode="school"] .nav-item[data-tab="schoolexams"]::after{ content: none
 .myf-quota-bar > span{ display:block; height:100%; background:var(--teal-text, #1e8449); border-radius:inherit; transition:width .3s; }
 .myf-quota-bar > span.is-high{ background:var(--rose, #c0392b); }
 .myf-upload{ padding:12px; border-radius:12px; background:rgba(127,127,127,.06); }
+
+/* لوحة المرشد (js/40-counselor.js) */
+.cns-heat td.cns-cell{ text-align:center; min-width:84px; }
+.cns-cell b{ display:block; font-family:var(--font-mono); direction:ltr; }
+.cns-cell small{ display:block; font-size:11px; opacity:.8; }
+.cns-cell.weak{ background:rgba(192,57,43,.14); color:var(--rose, #c0392b); }
+.cns-cell.watch{ background:rgba(212,160,23,.16); color:var(--gold-text); }
+.cns-cell.ok{ background:rgba(30,132,73,.12); color:var(--teal-text, #1e8449); }
+.cns-cell.none{ color:var(--text-3); font-size:12px; }
+.cns-subj{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:8px 12px; border-radius:10px; margin-bottom:6px; border:1px solid var(--border); }
+.cns-subj.weak{ border-color:rgba(192,57,43,.4); }
+.cns-subj.watch{ border-color:rgba(212,160,23,.5); }
+.cns-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.cns-chip{ font-size:12px; border-radius:999px; padding:2px 10px; background:rgba(127,127,127,.12); }
+.cns-chip.weak{ background:rgba(192,57,43,.14); color:var(--rose, #c0392b); font-weight:700; }
+.cns-chip.watch{ background:rgba(212,160,23,.16); color:var(--gold-text); font-weight:700; }

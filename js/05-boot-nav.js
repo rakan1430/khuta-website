@@ -803,6 +803,7 @@ function switchTab(tabId, element){
     if(tabId === "schoolrecord" && typeof renderRecordTab === "function") renderRecordTab();
     if(tabId === "schoollib" && typeof renderLibraryTab === "function") renderLibraryTab();
     if(tabId === "schoolgat" && typeof renderGatTab === "function") renderGatTab();
+    if(tabId === "schoolcounselor" && typeof renderCounselorTab === "function") renderCounselorTab();
     /* «ملفاتي» لطلاب خُطى كلّهم: على الجوّال تُحمَّل عند أول فتح (js/39) */
     if(tabId === "myfiles" && typeof khutaLoadGroup === "function"){
         khutaLoadGroup("myfiles").then(() => { if(typeof renderMyFilesTab === "function") renderMyFilesTab(); })

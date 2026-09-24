@@ -233,7 +233,7 @@ function officialHtml(rows){
 function logHtml(rows){
     const list = Array.isArray(rows) ? rows : [];
     if(!list.length) return "";
-    const role = r => r === "admin" ? "الإدارة" : r === "teacher" ? "معلّم" : "";
+    const role = r => r === "admin" ? "الإدارة" : r === "teacher" ? "معلّم" : r === "counselor" ? "المرشد الطلابي" : "";
     return `<h2>من اطّلع على ملفه</h2><div class="og log">${list.map(l =>
         `<div><span>${esc(l.name || "عضو سابق")} <span class="kind">${esc(role(l.role))}</span></span><span>${esc(fmtDate(l.at))}</span></div>`).join("")}</div>`;
 }

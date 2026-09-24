@@ -1339,6 +1339,8 @@
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolrecord" onclick="switchTab('schoolrecord',this)" role="button" tabindex="0"><i class="fa-solid fa-table-cells"></i> <span data-i18n="nav.schoolRecord">السجلّ</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoollib" onclick="switchTab('schoollib',this)" role="button" tabindex="0"><i class="fa-solid fa-book"></i> <span data-i18n="nav.schoolLib">المكتبة</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schoolgat" onclick="switchTab('schoolgat',this)" role="button" tabindex="0"><i class="fa-solid fa-brain"></i> <span data-i18n="nav.schoolGat">مساحة القدرات</span></div>
+            <!-- لا data-school-member: يظهر للمدير وللمرشد وحدهما (initCounselorAccess في js/40) -->
+            <div data-modes="school" class="nav-item" id="nav-counselor" style="display:none;" data-tab="schoolcounselor" onclick="switchTab('schoolcounselor',this)" role="button" tabindex="0"><i class="fa-solid fa-user-shield"></i> <span data-i18n="nav.counselor">لوحة المرشد</span></div>
             <div data-modes="school" class="nav-item" data-school-member style="display:none;" data-tab="schooltt" onclick="switchTab('schooltt',this)" role="button" tabindex="0"><i class="fa-solid fa-table-list"></i> <span data-i18n="nav.schoolSchedule">الجدول الدراسي</span></div>
             <div data-modes="school" class="nav-item" data-school-role="admin" data-school-member style="display:none;" data-tab="schooladmin" onclick="switchTab('schooladmin',this)" role="button" tabindex="0"><i class="fa-solid fa-school"></i> <span data-i18n="nav.schoolAdmin">إدارة المدرسة</span> <span id="admin-requests-count" class="pill" style="display:none;">0</span></div>
             <div data-modes="khuta" class="nav-item" data-feature="gat" data-tab="specialties" onclick="switchTab('specialties',this)" role="button" tabindex="0"><i class="fa-solid fa-book-open-reader"></i> <span data-i18n="nav.specialties">دليل التخصصات</span></div>
@@ -2332,6 +2334,14 @@
             </div>
         </section>
 
+        <section data-modes="school" id="view-schoolcounselor" class="view-section">
+            <div class="card settings-hero">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-user-shield" style="color:var(--gold-text);"></i> <span data-i18n="cns.title">لوحة المرشد الطلابي</span></h2>
+                <p class="card-sub" data-i18n="cns.sub">مواطن الضعف في كل فصل حسب المادة، والطلاب الذين يحتاجون متابعة.</p>
+            </div>
+            <div class="card"><div id="cns-body"></div></div>
+        </section>
+
         <section data-modes="khuta school" id="view-myfiles" class="view-section">
             <div class="card settings-hero">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-folder-open" style="color:var(--gold-text);"></i> <span data-i18n="myf.title">ملفاتي</span></h2>
@@ -3004,7 +3014,7 @@
     try{ if(new URLSearchParams(location.search).get("lazy") === "0") lazy = false; }catch(e){}
     window.KHUTA_LAZY = lazy;
     window.KHUTA_GROUPS = {
-        school: ["js/14-school-work.js", "js/18-exam-builder.js", "js/19-exam-send.js", "js/21-classes.js", "js/23-school-home.js", "js/24-student-exam.js", "js/25-import.js", "js/28-report.js", "js/30-parent-links.js", "js/31-year.js", "js/32-member-leave.js", "js/33-attendance.js", "js/34-school-settings.js", "js/36-records.js", "js/37-library.js", "js/38-gat-space.js"],
+        school: ["js/14-school-work.js", "js/18-exam-builder.js", "js/19-exam-send.js", "js/21-classes.js", "js/23-school-home.js", "js/24-student-exam.js", "js/25-import.js", "js/28-report.js", "js/30-parent-links.js", "js/31-year.js", "js/32-member-leave.js", "js/33-attendance.js", "js/34-school-settings.js", "js/36-records.js", "js/37-library.js", "js/38-gat-space.js", "js/40-counselor.js"],
         owner:  ["js/34-school-settings.js", "js/35-owner-schools.js"],
         myfiles: ["js/39-my-files.js"]
     };
@@ -3092,6 +3102,7 @@
 <script>khutaEager("js/37-library.js")</script>
 <script>khutaEager("js/38-gat-space.js")</script>
 <script>khutaEager("js/39-my-files.js")</script>
+<script>khutaEager("js/40-counselor.js")</script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

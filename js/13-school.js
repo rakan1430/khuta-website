@@ -543,7 +543,7 @@ async function loadSchoolMembers(){
     try{
         const { data, error } = await sb
             .from("school_members")
-            .select("id, full_name, email, role, grade, section, active")
+            .select("id, full_name, email, role, grade, section, active, is_counselor")
             .eq("school_id", schoolCtx.schoolId)
             .order("role").order("full_name")
             .limit(500);
@@ -575,11 +575,17 @@ async function loadSchoolMembers(){
                   <div>
                     <b>${escapeHtml(m.full_name)}</b>
                     <span class="pill">${escapeHtml(schoolRoleLabel(m.role))}</span>
+                    ${m.is_counselor ? `<span class="pill" style="color:var(--gold-text);">${currentLang==='ar'?'مرشد':'Counselor'}</span>` : ""}
                     ${m.grade ? `<span class="card-sub"> · ${escapeHtml(gradeName(m.grade))}${m.section ? " / " + escapeHtml(m.section) : ""}</span>` : ""}
                     ${m.role === "student" && !m.section ? `<span class="card-sub" style="color:var(--gold-text);"> · ${currentLang==='ar'?'⚠️ بلا شعبة':'⚠️ no section'}</span>` : ""}
                   </div>
                 </div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    ${m.role === "teacher" ? `<button type="button" class="btn btn-ghost btn-sm"
+                        onclick="toggleCounselor('${escapeHtml(m.id)}', ${m.is_counselor ? "false" : "true"})">
+                        <i class="fa-solid fa-user-shield"></i> ${m.is_counselor
+                            ? (currentLang==='ar'?'إلغاء المرشد':'Remove counselor')
+                            : (currentLang==='ar'?'اجعله مرشداً':'Make counselor')}</button>` : ""}
                     ${m.role === "student" ? `<button type="button" class="btn btn-outline btn-sm"
                         onclick="openStudentFile('${escapeHtml(m.id)}')">
                         <i class="fa-solid fa-id-card"></i> ${currentLang==='ar'?'الملف':'File'}</button>` : ""}
@@ -711,6 +717,7 @@ function applySchoolRoleUI(){
         if(typeof loadSchoolWorkspace === "function") loadSchoolWorkspace();
         if(role === "admin" && typeof renderSchoolSettingsAdmin === "function") renderSchoolSettingsAdmin();
         if(role === "admin" && typeof loadOfficialBatches === "function") loadOfficialBatches();
+        if(typeof initCounselorAccess === "function") initCounselorAccess();
     });
 }
 
