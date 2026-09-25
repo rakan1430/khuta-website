@@ -57,8 +57,8 @@ function htmlPage(title, message, ok){
      — فكان يُرفض، ولا يعمل الزرّ الذي وعدنا به (RFC 8058).
    الآن: GET يعرض صفحة تأكيد بزرّ، والزرّ وزرّ Gmail كلاهما POST يُلغي.
    ============================================================ */
-function confirmPage(uid, token){
-    const action = `?uid=${encodeURIComponent(uid)}&token=${encodeURIComponent(token)}`;
+function confirmPage(uid, token, isSchool){
+    const action = `?uid=${encodeURIComponent(uid)}${isSchool ? "&scope=school" : ""}&token=${encodeURIComponent(token)}`;
     return `<!DOCTYPE html>
 <html lang="ar" dir="rtl"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -71,8 +71,8 @@ function confirmPage(uid, token){
   button{background:#C9962E; color:#121826; border:0; border-radius:12px; padding:12px 22px; font-size:15px; font-weight:700; cursor:pointer;}
 </style></head>
 <body><div class="card">
-  <h1>إلغاء الاشتراك في رسائل خُطى</h1>
-  <p>اضغط الزرّ لتأكيد إيقاف الرسائل التذكيرية. تقدر تعيد تفعيلها متى شئت من إعدادات ملفك الشخصي.</p>
+  <h1>${isSchool ? "إيقاف رسائل إدارة المدرسة" : "إلغاء الاشتراك في رسائل خُطى"}</h1>
+  <p>${isSchool ? "اضغط الزرّ لتأكيد إيقاف رسائل إدارة المدرسة بالبريد." : "اضغط الزرّ لتأكيد إيقاف الرسائل التذكيرية. تقدر تعيد تفعيلها متى شئت من إعدادات ملفك الشخصي."}</p>
   <form method="POST" action="${action}"><input type="hidden" name="confirm" value="1">
     <button type="submit">تأكيد إلغاء الاشتراك</button></form>
 </div></body></html>`;
@@ -94,11 +94,14 @@ exports.handler = async function (event) {
     const params = event.queryStringParameters || {};
     const uid = params.uid;
     const token = params.token;
+    // scope=school: رسائل إدارة المدرسة وحدها — توقيعها على «uid:school» فلا
+    // يصلح رابط رسائل خُطى لها ولا العكس (send-email.js: buildUnsubscribeUrl)
+    const isSchool = params.scope === "school";
     if (!uid || !token) {
         return { statusCode: 400, headers: HTML, body: htmlPage("رابط غير مكتمل", "هذا الرابط ناقص — استخدم رابط إلغاء الاشتراك كما وصلك بالضبط في الرسالة.", false) };
     }
 
-    const expected = buildUnsubscribeToken(uid, serviceKey);
+    const expected = buildUnsubscribeToken(isSchool ? `${uid}:school` : uid, serviceKey);
     // مقارنة بزمن ثابت لتفادي هجمات توقيت نظرية على التوقيع
     const validSignature = expected.length === token.length &&
         crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(token));
@@ -108,7 +111,7 @@ exports.handler = async function (event) {
 
     // GET: تأكيد فقط — لا تغيير في الحالة
     if (method === "GET") {
-        return { statusCode: 200, headers: HTML, body: confirmPage(uid, token) };
+        return { statusCode: 200, headers: HTML, body: confirmPage(uid, token, isSchool) };
     }
 
     // POST: من زرّ صفحة التأكيد، أو من زرّ «إلغاء الاشتراك» في Gmail/Outlook
@@ -116,6 +119,29 @@ exports.handler = async function (event) {
     let body = event.body || "";
     if (event.isBase64Encoded) { try { body = Buffer.from(body, "base64").toString("utf8"); } catch (e) { body = ""; } }
     const oneClick = /List-Unsubscribe=One-Click/i.test(body);
+
+    if (isSchool) {
+        try {
+            // إيقاف بقرار الطالب نفسه (source=self) — المالك لا يرفعه من لوحته
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/notify_optouts`, {
+                method: "POST",
+                headers: {
+                    "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}`,
+                    "Content-Type": "application/json", "Prefer": "resolution=merge-duplicates",
+                },
+                body: JSON.stringify({ uid, scope: "school", source: "self" }),
+            });
+            if (!res.ok) {
+                console.error("[unsubscribe] فشل إيقاف رسائل المدرسة:", res.status, await res.text());
+                return { statusCode: 502, headers: HTML, body: htmlPage("تعذّر الإيقاف الآن", "حدث خلل مؤقت — جرّب مجدداً بعد قليل.", false) };
+            }
+        } catch (e) {
+            console.error("[unsubscribe] خطأ غير متوقع:", e);
+            return { statusCode: 500, headers: HTML, body: htmlPage("تعذّر الإيقاف الآن", "حدث خلل مؤقت — جرّب مجدداً بعد قليل.", false) };
+        }
+        if (oneClick) return { statusCode: 200, headers: { "Content-Type": "text/plain; charset=utf-8" }, body: "unsubscribed" };
+        return { statusCode: 200, headers: HTML, body: htmlPage("أُوقفت رسائل المدرسة", "لن تصلك رسائل إدارة المدرسة بالبريد بعد الآن. واجباتك واختباراتك تبقى تظهر في خُطى كالمعتاد.", true) };
+    }
 
     try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/user_data?id=eq.${encodeURIComponent(uid)}`, {

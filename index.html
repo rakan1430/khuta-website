@@ -876,6 +876,7 @@
         <div class="campaign-tabs">
             <button type="button" class="campaign-tab active" onclick="switchCampaignTab('list', this)">الرسائل</button>
             <button type="button" class="campaign-tab" onclick="switchCampaignTab('new', this)">رسالة جديدة</button>
+            <button type="button" class="campaign-tab" onclick="switchCampaignTab('people', this)">المستلمون</button>
             <button type="button" class="campaign-tab" onclick="switchCampaignTab('log', this)">سجل الإرسال</button>
         </div>
 
@@ -893,6 +894,21 @@
             </div>
             <div class="input-row">
                 <div class="form-group">
+                    <label for="campaign-audience">لمن تصل</label>
+                    <select id="campaign-audience" onchange="onCampaignAudienceChange()">
+                        <option value="all">الكل — طلاب خُطى وطلاب المدارس</option>
+                        <option value="khuta">طلاب خُطى فقط</option>
+                        <option value="school">طلاب منصّة المدرسة فقط</option>
+                    </select>
+                </div>
+                <div class="form-group" id="campaign-school-group" style="display:none;">
+                    <label for="campaign-school">أيّ مدرسة</label>
+                    <select id="campaign-school" onchange="updateCampaignReach()"><option value="">كل المدارس</option></select>
+                </div>
+            </div>
+            <p class="hint" id="campaign-reach" style="margin:-4px 0 12px;"></p>
+            <div class="input-row">
+                <div class="form-group">
                     <label>نمط الإرسال</label>
                     <select id="campaign-mode" onchange="onCampaignModeChange()">
                         <option value="broadcast">جماعي — لكل من وافق</option>
@@ -906,7 +922,7 @@
             </div>
             <div class="input-row">
                 <div class="form-group"><label>المناسبة (لتنظيمك)</label><input type="text" id="campaign-occasion" placeholder="عام"></div>
-                <div class="form-group"><label>لا تُرسل قبل (اختياري)</label><input type="date" id="campaign-send-after"></div>
+                <div class="form-group"><label for="campaign-send-after">أرسلها تلقائياً في (اختياري)</label><input type="datetime-local" id="campaign-send-after"></div>
             </div>
             <button type="button" class="btn btn-block" onclick="saveCampaignMessage()"><i class="fa-solid fa-floppy-disk"></i> حفظ الرسالة</button>
 
@@ -917,6 +933,16 @@
                 <p class="hint" style="margin-top:6px;">يُرسل لهذه العناوين فقط — لن يصل أي طالب حقيقي، وستظهر الرسالة موسومة كتجريبية.</p>
             </div>
             <button type="button" class="btn btn-outline btn-block" onclick="sendCampaignTest()"><i class="fa-solid fa-flask"></i> أرسل تجريبياً الآن</button>
+        </div>
+
+        <!-- المستلمون: من تصله رسائل خُطى ورسائل المدارس، وإيقافها لطالب بعينه -->
+        <div id="campaign-pane-people" class="campaign-pane" style="display:none;">
+            <div id="campaign-counts" class="campaign-counts"></div>
+            <p class="hint" style="margin:10px 0;">رسائل خُطى تصل من وافق فقط. رسائل إدارة المدرسة تصل طلابها إلا من أوقفها. «موقوفة منه» قرار الطالب نفسه ولا يُرفع من هنا.</p>
+            <div class="form-group">
+                <input type="search" id="campaign-people-q" placeholder="ابحث بالاسم أو البريد أو المدرسة…" oninput="searchCampaignPeople()">
+            </div>
+            <div id="campaign-people-list" class="campaign-list"></div>
         </div>
 
         <!-- سجل الإرسال -->
@@ -2604,6 +2630,32 @@
                 <div id="og-batches"></div>
             </div>
 
+            <!-- ===================== رسائل البريد لطلاب المدرسة — js/41-school-messages.js ===================== -->
+            <div class="card" id="card-school-msgs" data-collapsible>
+                <h3 style="margin-bottom:4px;"><i class="fa-solid fa-envelope"></i>
+                    <span data-i18n="smsg.title">رسائل البريد لطلاب المدرسة</span></h3>
+                <p class="card-sub" style="margin-bottom:10px;" data-i18n="smsg.sub">رسالة تصل بريد طلاب مدرستكم وحدهم — الآن أو في موعد تختارونه.</p>
+                <p class="hint" id="smsg-reach" style="margin:0 0 12px;"></p>
+                <div class="form-group">
+                    <label for="smsg-subject" data-i18n="smsg.subject">العنوان</label>
+                    <input type="text" id="smsg-subject" maxlength="150" placeholder="مثال: اختبار الرياضيات يوم الأحد">
+                </div>
+                <div class="form-group">
+                    <label for="smsg-body" data-i18n="smsg.body">نص الرسالة</label>
+                    <textarea id="smsg-body" rows="5" maxlength="4000" placeholder="اكتب الرسالة كما تكتبها في رسالة جوال…"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="smsg-when" data-i18n="smsg.when">أرسلها تلقائياً في (اختياري)</label>
+                    <input type="datetime-local" id="smsg-when">
+                    <p class="hint" style="margin-top:6px;" data-i18n="smsg.whenHint">اتركه فارغاً لترسلها بنفسك من القائمة أدناه. الموعد يُرسَل خلال ربع ساعة منه.</p>
+                </div>
+                <button type="button" class="btn btn-block" id="smsg-save" onclick="saveSchoolMessage()">
+                    <i class="fa-solid fa-floppy-disk"></i> <span data-i18n="smsg.save">احفظ الرسالة</span></button>
+                <p class="hint" style="margin:10px 0 0;" data-i18n="smsg.rules">٣ رسائل كحدّ أقصى في اليوم. نصّ عادي فقط، ويصل مع رابط يوقف به الطالب رسائل المدرسة.</p>
+                <div class="divider"></div>
+                <div id="smsg-list"></div>
+            </div>
+
             <div class="card" id="card-members" data-collapsible data-open>
                 <h3 style="margin-bottom:4px;"><i class="fa-solid fa-users-gear"></i> <span data-i18n="school.membersTitle">المدرّسون والطلاب</span></h3>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="school.membersSub">إيقاف العضو يمنع دخوله فوراً ويُبقي ملفاته وسجلّه — أأمن من الحذف.</p>
@@ -3020,7 +3072,7 @@
     try{ if(new URLSearchParams(location.search).get("lazy") === "0") lazy = false; }catch(e){}
     window.KHUTA_LAZY = lazy;
     window.KHUTA_GROUPS = {
-        school: ["js/14-school-work.js", "js/18-exam-builder.js", "js/19-exam-send.js", "js/21-classes.js", "js/23-school-home.js", "js/24-student-exam.js", "js/25-import.js", "js/28-report.js", "js/30-parent-links.js", "js/31-year.js", "js/32-member-leave.js", "js/33-attendance.js", "js/34-school-settings.js", "js/36-records.js", "js/37-library.js", "js/38-gat-space.js", "js/40-counselor.js"],
+        school: ["js/14-school-work.js", "js/18-exam-builder.js", "js/19-exam-send.js", "js/21-classes.js", "js/23-school-home.js", "js/24-student-exam.js", "js/25-import.js", "js/28-report.js", "js/30-parent-links.js", "js/31-year.js", "js/32-member-leave.js", "js/33-attendance.js", "js/34-school-settings.js", "js/36-records.js", "js/37-library.js", "js/38-gat-space.js", "js/40-counselor.js", "js/41-school-messages.js"],
         owner:  ["js/34-school-settings.js", "js/35-owner-schools.js"],
         myfiles: ["js/39-my-files.js"]
     };
@@ -3109,6 +3161,7 @@
 <script>khutaEager("js/38-gat-space.js")</script>
 <script>khutaEager("js/39-my-files.js")</script>
 <script>khutaEager("js/40-counselor.js")</script>
+<script>khutaEager("js/41-school-messages.js")</script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>

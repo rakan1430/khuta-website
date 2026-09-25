@@ -458,7 +458,8 @@ async function loadAccountRequests(){
             return;
         }
         box.innerHTML = data.map(r => {
-            const when = new Date(r.created_at).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US');
+            // بلا تاريخ (بيانات العرض التجريبي) ← فراغ لا «Invalid Date»
+            const when = r.created_at ? new Date(r.created_at).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US') : "";
             const cls = r.grade ? `${escapeHtml(gradeName(r.grade))}${r.section ? " / " + escapeHtml(r.section) : ""}` : "—";
             return `
             <div class="areq-card">

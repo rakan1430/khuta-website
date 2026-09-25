@@ -618,7 +618,130 @@ async function openCampaignPanel(){
     document.getElementById("admin-overlay").style.display = "none";
     document.getElementById("campaign-overlay").style.display = "flex";
     switchCampaignTab("list", document.querySelector(".campaign-tab"));
-    await renderCampaignList();
+    loadCampaignCounts();
+}
+
+/* ============================================================
+   لمن تصل الرسالة (٢٥ سبتمبر) — طلب المالك: «خانة يختار بها أن تصل لطلاب
+   منصّة المدرسة فقط، أو لطلاب خُطى فقط، أو للكل». القاعدة نفسها في القاعدة
+   (campaign_pool في sql/PHASE8_MESSAGES.sql) — هنا نعرض أرقامها فقط:
+   رسالة خُطى تصل من وافق وحده، طالب مدرسة أو غيره.
+   ============================================================ */
+let campaignCounts = null;
+
+async function loadCampaignCounts(){
+    if(!sb) return;
+    try{
+        const { data, error } = await sb.rpc("campaign_audience_counts", {});
+        if(error) throw error;
+        campaignCounts = (data && typeof data === "object") ? data : null;
+    }catch(e){ campaignCounts = null; }
+    const sel = document.getElementById("campaign-school");
+    if(sel && campaignCounts && Array.isArray(campaignCounts.schools)){
+        const cur = sel.value;
+        sel.innerHTML = `<option value="">كل المدارس</option>` + campaignCounts.schools
+            .map(sc => `<option value="${escapeHtml(sc.id)}">${escapeHtml(sc.name || "")}</option>`).join("");
+        sel.value = cur;
+    }
+    updateCampaignReach();
+}
+
+function onCampaignAudienceChange(){
+    const aud = document.getElementById("campaign-audience").value;
+    document.getElementById("campaign-school-group").style.display = aud === "school" ? "block" : "none";
+    updateCampaignReach();
+}
+
+function updateCampaignReach(){
+    const el = document.getElementById("campaign-reach");
+    if(!el) return;
+    if(!campaignCounts){ el.textContent = ""; return; }
+    const aud = document.getElementById("campaign-audience").value;
+    const sid = document.getElementById("campaign-school").value;
+    let n = campaignCounts[aud];
+    if(aud === "school" && sid){
+        const sc = (campaignCounts.schools || []).find(x => x.id === sid);
+        n = sc ? sc.reach_owner : 0;
+    }
+    el.textContent = `تصل الآن ${n ?? 0} طالباً — ممن وافقوا على رسائل خُطى ولم يوقفوها.`;
+}
+
+function campaignAudienceLabel(m){
+    if(m.origin === "school") return "من إدارة مدرسة لطلابها";
+    if(m.audience === "khuta") return "طلاب خُطى";
+    if(m.audience === "school"){
+        const sc = campaignCounts && (campaignCounts.schools || []).find(x => x.id === m.school_id);
+        return m.school_id ? `طلاب ${sc ? sc.name : "مدرسة"}` : "طلاب كل المدارس";
+    }
+    return "الكل";
+}
+
+async function renderCampaignPeople(){
+    const counts = document.getElementById("campaign-counts");
+    if(counts){
+        await loadCampaignCounts();
+        const c = campaignCounts;
+        counts.innerHTML = !c ? "" : `
+            <div class="campaign-count"><b>${c.khuta ?? 0}</b><span>طالب خُطى وافق</span></div>
+            <div class="campaign-count"><b>${c.school ?? 0}</b><span>طالب مدرسة وافق</span></div>
+            ${(c.schools || []).map(sc => `<div class="campaign-count"><b>${sc.reach_school}/${sc.students}</b>
+                <span>${escapeHtml(sc.name || "")} — تصلهم رسائل إدارتها</span></div>`).join("")}`;
+    }
+    searchCampaignPeople();
+}
+
+let campaignPeopleSeq = 0, campaignPeopleTimer = null;
+function searchCampaignPeople(){
+    clearTimeout(campaignPeopleTimer);
+    campaignPeopleTimer = setTimeout(runCampaignPeopleSearch, 250);
+}
+
+async function runCampaignPeopleSearch(){
+    const box = document.getElementById("campaign-people-list");
+    if(!box || !sb) return;
+    const seq = ++campaignPeopleSeq;
+    const q = (document.getElementById("campaign-people-q").value || "").trim();
+    box.innerHTML = "<p class='hint'>جاري التحميل…</p>";
+    try{
+        const { data, error } = await sb.rpc("notify_people", { p_query: q });
+        if(seq !== campaignPeopleSeq) return;
+        if(error) throw error;
+        const rows = Array.isArray(data) ? data : [];
+        if(!rows.length){ box.innerHTML = "<p class='hint'>لا نتائج.</p>"; return; }
+        const stopBtn = (r, scope, src) => {
+            if(src === "self") return `<span class="pill" title="قرار الطالب نفسه — لا يُرفع من هنا">موقوفة منه</span>`;
+            const on = !src;
+            return `<button type="button" class="btn btn-sm ${on ? "btn-outline" : "acc-btn"}"
+                onclick="toggleCampaignPerson('${escapeHtml(r.uid)}', '${scope}', ${on})">${on ? "إيقاف" : "إعادة"}</button>`;
+        };
+        box.innerHTML = rows.map(r => {
+            const inSchool = r.grp !== "خُطى";
+            return `<div class="campaign-row">
+                <div class="campaign-row-main">
+                    <b>${escapeHtml(r.name || "—")}</b>
+                    <span class="campaign-meta">${escapeHtml(r.email)} · ${escapeHtml(r.grp)} · ${r.consent ? "✅ وافق على رسائل خُطى" : "لم يوافق على رسائل خُطى"}</span>
+                </div>
+                <div class="campaign-row-actions">
+                    <span class="campaign-meta">خُطى:</span> ${stopBtn(r, "khuta", r.stop_khuta)}
+                    ${inSchool ? `<span class="campaign-meta">المدرسة:</span> ${stopBtn(r, "school", r.stop_school)}` : ""}
+                </div>
+            </div>`;
+        }).join("");
+    }catch(e){
+        if(seq !== campaignPeopleSeq) return;
+        box.innerHTML = "<p class='hint'>تعذّر التحميل: " + escapeHtml(String(e.message || e)) + "</p>";
+    }
+}
+
+async function toggleCampaignPerson(uid, scope, stop){
+    try{
+        const { data, error } = await sb.rpc("set_notify_optout", { p_uid: uid, p_scope: scope, p_stop: stop });
+        if(error) throw error;
+        if(data === "self_optout") showToast("الطالب أوقفها بنفسه — لا تُعاد من هنا");
+        else showToast(stop ? "⏸️ أُوقفت رسائله" : "▶️ أُعيدت رسائله");
+        runCampaignPeopleSearch();
+        loadCampaignCounts();
+    }catch(e){ showToast("تعذّر: " + (e.message || e)); }
 }
 
 function switchCampaignTab(pane, btn){
@@ -628,6 +751,7 @@ function switchCampaignTab(pane, btn){
     if(btn) btn.classList.add("active");
     if(pane === "list") renderCampaignList();
     if(pane === "log") renderCampaignLog();
+    if(pane === "people") renderCampaignPeople();
 }
 
 function onCampaignModeChange(){
@@ -643,19 +767,25 @@ async function renderCampaignList(){
         const { data, error } = await sb.from("marketing_messages").select("*").order("created_at", { ascending:false });
         if(error) throw error;
         if(!data || data.length === 0){ box.innerHTML = "<p class='hint'>لا توجد رسائل بعد — أنشئ واحدة من تبويب \"رسالة جديدة\"</p>"; return; }
+        const when = (iso) => new Date(iso).toLocaleString("ar-SA", { dateStyle:"medium", timeStyle:"short" });
         box.innerHTML = data.map(m => {
             const modeLabel = m.send_mode === "behavior" ? `ذكي (غاب ${m.inactive_days || 5} أيام)` : "جماعي";
-            const statusLabel = m.sent_at ? `أُرسلت ${new Date(m.sent_at).toLocaleDateString("ar-SA")}`
-                : (m.send_after && new Date(m.send_after) > new Date()) ? `مجدولة بعد ${new Date(m.send_after).toLocaleDateString("ar-SA")}`
+            const r = m.send_result || {};
+            const statusLabel = m.sending_started_at && !m.sent_at ? "⏳ قيد الإرسال"
+                : m.sent_at ? `أُرسلت ${when(m.sent_at)}${r.total != null ? ` (${r.sent || 0} من ${r.total})` : ""}`
+                : r.error === "over_quota" ? `⚠️ تجاوزت حصّة اليوم (${r.total} مستلماً، بقي ${r.remaining})`
+                : m.send_after ? `⏰ تُرسل تلقائياً ${when(m.send_after)}`
                 : "جاهزة";
+            // رسالة المدرسة ورسالة مجدولة أُرسلت: لا تُعاد (الخادم يرفضها أصلاً)
+            const canSend = !(m.origin === "school" && (m.sent_at || m.sending_started_at));
             return `<div class="campaign-row">
                 <div class="campaign-row-main">
                     <b>${escapeHtml(m.subject)}</b>
-                    <span class="campaign-meta">${modeLabel} · ${escapeHtml(m.occasion || "عام")} · ${statusLabel} · ${m.active ? "مفعّلة" : "معطّلة"}</span>
+                    <span class="campaign-meta">${escapeHtml(campaignAudienceLabel(m))} · ${modeLabel} · ${escapeHtml(m.occasion || "عام")} · ${statusLabel} · ${m.active ? "مفعّلة" : "معطّلة"}</span>
                 </div>
                 <div class="campaign-row-actions">
-                    <button type="button" class="btn btn-sm" onclick="sendCampaignNow(${m.id})">إرسال الآن</button>
-                    <button type="button" class="btn btn-sm btn-outline" onclick="toggleCampaignActive(${m.id}, ${!m.active})">${m.active ? "تعطيل" : "تفعيل"}</button>
+                    ${canSend ? `<button type="button" class="btn btn-sm" onclick="sendCampaignNow(${Number(m.id)})">إرسال الآن</button>` : ""}
+                    <button type="button" class="btn btn-sm btn-outline" onclick="toggleCampaignActive(${Number(m.id)}, ${!m.active})">${m.active ? "تعطيل" : "تفعيل"}</button>
                 </div>
             </div>`;
         }).join("");
@@ -689,6 +819,9 @@ async function saveCampaignMessage(){
     const bodyHtml = document.getElementById("campaign-body").value.trim();
     if(!subject || !bodyHtml){ showToast("العنوان والمحتوى مطلوبان"); return; }
     const sendAfterVal = document.getElementById("campaign-send-after").value;
+    const audience = document.getElementById("campaign-audience").value;
+    const schoolId = audience === "school" ? (document.getElementById("campaign-school").value || null) : null;
+    if(sendAfterVal && new Date(sendAfterVal).getTime() < Date.now() - 60000){ showToast("الموعد مضى — اختر وقتاً قادماً"); return; }
     try{
         const { error } = await sb.from("marketing_messages").insert({
             subject, body_html: bodyHtml,
@@ -696,10 +829,12 @@ async function saveCampaignMessage(){
             send_mode: document.getElementById("campaign-mode").value,
             inactive_days: parseInt(document.getElementById("campaign-inactive-days").value) || 5,
             send_after: sendAfterVal ? new Date(sendAfterVal).toISOString() : null,
+            audience, school_id: schoolId, origin: "owner", body_format: "html",
             active: true,
         });
         if(error) throw error;
-        showToast("✅ حُفظت الرسالة");
+        document.getElementById("campaign-send-after").value = "";
+        showToast(sendAfterVal ? "✅ حُفظت، وتُرسل تلقائياً في موعدها" : "✅ حُفظت الرسالة");
         document.getElementById("campaign-subject").value = "";
         document.getElementById("campaign-body").value = "";
         switchCampaignTab("list", document.querySelector(".campaign-tab"));
@@ -752,23 +887,25 @@ async function sendCampaignNow(messageId){
     try{
         const { data, error } = await sb.from("marketing_messages").select("*").eq("id", messageId).single();
         if(error) throw error;
-        const modeLabel = data.send_mode === "behavior" ? `الطلاب الغائبين ${data.inactive_days || 5} أيام فأكثر` : "كل الطلاب الموافقين";
-        if(!confirm(`سترسل "${data.subject}" إلى ${modeLabel}.\n\nهذه رسالة حقيقية ستصل طلاباً فعليين. متأكد؟`)) return;
+        await loadCampaignCounts();
+        const who = campaignAudienceLabel(data) + (data.send_mode === "behavior" ? ` — من غاب ${data.inactive_days || 5} أيام فأكثر` : "");
+        if(!confirm(`سترسل "${data.subject}" إلى: ${who}.\n\nهذه رسالة حقيقية ستصل طلاباً فعليين. متأكد؟`)) return;
         showToast("⏳ جاري الإرسال…");
-        const result = await callAdminEmail("adminSendCampaign", {
-            subject: data.subject, bodyHtml: data.body_html, messageId: data.id,
-            message: { send_mode: data.send_mode, inactive_days: data.inactive_days },
+        // المستلمون يُحسبون في الخادم من الرسالة المحفوظة نفسها — لا يُرسل المتصفّح قائمة
+        const { data: sess } = await sb.auth.getSession();
+        const accessToken = sess && sess.session && sess.session.access_token;
+        if(!accessToken){ showToast("سجّل دخولك أولاً"); return; }
+        const res = await fetch("/.netlify/functions/send-email", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "adminSendCampaign", accessToken, messageId: data.id }),
         });
-        if(result){
-            if(result.sent === 0 && result.note){ showToast("ℹ️ " + result.note); }
-            else{
-                showToast(`✅ أُرسلت لـ${result.sent} طالب${result.failed ? ` (فشل ${result.failed})` : ""}`);
-                if(data.send_mode === "broadcast"){
-                    await sb.from("marketing_messages").update({ sent_at: new Date().toISOString() }).eq("id", messageId);
-                }
-                renderCampaignList();
-            }
-        }
+        const result = await res.json().catch(() => ({}));
+        if(result.error === "over_quota") showToast(`⚠️ تتجاوز حصّة اليوم: ${result.total} مستلماً وبقي ${result.remaining} — لم تُرسل`);
+        else if(result.error === "already_sending_or_sent") showToast("ℹ️ تُرسل الآن أو أُرسلت من قبل");
+        else if(!res.ok) showToast("فشل: " + (result.error || res.status));
+        else if(result.total === 0) showToast("ℹ️ " + (result.note || "لا يوجد مستلمون مستحقون حالياً"));
+        else showToast(`✅ أُرسلت لـ${result.sent} طالب${result.failed ? ` (فشل ${result.failed})` : ""}`);
+        renderCampaignList();
     }catch(e){ showToast("تعذّر الإرسال: " + (e.message || e)); }
 }
 
