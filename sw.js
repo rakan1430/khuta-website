@@ -7,7 +7,7 @@
    لتفادي أي احتمال لعرض بيانات قديمة مخزَّنة مؤقتاً.
    ============================================================ */
 // ارفع رقم النسخة مع أي تغيير في قائمة الملفات أدناه.
-const CACHE_NAME = "khuta-shell-v42";
+const CACHE_NAME = "khuta-shell-v43";
 // app.js قُسّم إلى js/*.js فصار لا بد من سردها بالاسم هنا.
 //
 // ملاحظة للمطوّر: لست مضطراً لتذكّر تحديث هذه القائمة. لو أضفت ملفاً جديداً
@@ -58,6 +58,7 @@ const SHELL_FILES = [
   "./js/38-gat-space.js",
   "./js/39-my-files.js",
   "./js/40-counselor.js",
+  "./js/41-school-messages.js",
   "./js/99-boot-flush.js",
 ];
 
@@ -109,7 +110,9 @@ self.addEventListener("fetch", (event) => {
    وهذا الجزء هنا فقط يستقبله ويعرضه للطالب.
    ============================================================ */
 self.addEventListener("push", (event) => {
-  let payload = { title: "خُطى", body: "لا تنسَ جلستك اليوم!" };
+  // التذكير اليومي (netlify/functions/send-reminders.js) يصل بلا محتوى عمداً —
+  // فهذا النصّ هو ما يراه الطالب. ولو وصل محتوى JSON يُعرض هو بدلاً منه.
+  let payload = { title: "خُطى 🚀", body: "لا تنسَ جلستك اليوم — حتى 20 دقيقة تفرق!" };
   try { if (event.data) payload = event.data.json(); } catch (e) { /* نص عادي بدل JSON */ }
 
   event.waitUntil(
