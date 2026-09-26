@@ -395,7 +395,7 @@ async function refreshForum(){
             <div style="flex:1;">
                 ${isPinned ? `<span style="font-size:10.5px; color:var(--gold-text); font-weight:700;"><i class="fa-solid fa-thumbtack"></i> ${currentLang==='ar'?'مثبَّت':'Pinned'}</span><br>` : ""}
                 <div style="font-size:13.5px;">${escapeHtml(row.message)}</div>
-                <div style="font-size:11px; color:var(--text-3); margin-top:4px;">${escapeHtml(row.author_name)} · ${new Date(row.created_at).toLocaleDateString(currentLang==='ar'?"ar-SA":"en-US")}</div>
+                <div style="font-size:11px; color:var(--text-3); margin-top:4px;">${escapeHtml(row.author_name)} · ${new Date(row.created_at).toLocaleDateString(khutaLocale())}</div>
             </div>
             <div style="display:flex; gap:6px; flex-shrink:0;">
                 ${!isPinned ? `<button type="button" class="icon-action" title="${currentLang==='ar'?`تثبيت (${PIN_FORUM_COST} XP)`:`Pin (${PIN_FORUM_COST} XP)`}" onclick="pinForumPostWithXP(${row.id})"><i class="fa-solid fa-thumbtack"></i></button>` : ""}

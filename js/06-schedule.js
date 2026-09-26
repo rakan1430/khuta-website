@@ -611,7 +611,7 @@ function renderActivityHeatmap(){
         if(mins >= 30) level = 2;
         if(mins >= 60) level = 3;
         if(mins >= 120) level = 4;
-        const dateLabel = d.toLocaleDateString(currentLang==='ar' ? 'ar-SA' : 'en-US', {month:'short', day:'numeric'});
+        const dateLabel = d.toLocaleDateString(khutaLocale(), {month:'short', day:'numeric'});
         const minLabel = currentLang==='ar' ? `${mins} دقيقة` : `${mins} min`;
         cells.push(`<div class="ov-heat-cell" data-level="${level}" title="${dateLabel} — ${minLabel}"></div>`);
     }

@@ -67,6 +67,12 @@ function aiGreeting(){
         "Hey champ! 👋 I can solve and explain any Quant or Verbal question (on the board too), quiz you, and take you anywhere in Khuta — just ask.");
 }
 
+/** صفحة «الروابط» (وفيها واتساب خُطى) لطلاب خُطى وحدهم — لا تُذكر لمن لا يراها. */
+function aiHasLinksTab(){
+    const el = document.querySelector('.nav-item[data-tab="links"]');
+    return !!el && getComputedStyle(el).display !== "none";
+}
+
 /** هل صاحب الجلسة معلّم أو إدارة؟ (تُستعمل لتبديل نصوص المساعد والسبورة) */
 function aiIsStaff(){
     return !!(typeof schoolCtx !== "undefined" && schoolCtx &&
@@ -146,8 +152,11 @@ function answerLocally(text, viaFallback){
     // مطابقة صارمة أولاً (الكلمة المفتاحية كاملة)، ثم مطابقة بجذر الكلمة (أول
     // 4 أحرف على الأقل) لتغطية اختلاف اللواحق العربية— مثال: "موزونتي" تُطابق
     // كلمة "موزونة" رغم اختلاف اللاحقة، لأن نفس الجذر الأول موجود في الجملة
-    let match = FAQ_BOT.find(f => f.kw.some(k => lower.includes(normalizeArabic(k))));
-    if(!match){
+    // الأجوبة الجاهزة كلها عن رحلة القدرات — لا تُعرض لمعلّم أو إدارة
+    // («جدول» عندهم الجدول الدراسي، لا «كم ساعة أذاكر»)
+    const staffUser = aiIsStaff();
+    let match = staffUser ? null : FAQ_BOT.find(f => f.kw.some(k => lower.includes(normalizeArabic(k))));
+    if(!match && !staffUser){
         match = FAQ_BOT.find(f => f.kw.some(k => {
             const nk = normalizeArabic(k);
             return nk.length >= 4 && lower.includes(nk.slice(0, Math.max(4, nk.length - 2)));
@@ -160,12 +169,12 @@ function answerLocally(text, viaFallback){
             // نوضّح بصراحة أن هذا تعطّل مؤقت بالذكاء الاصطناعي، لا قصوراً دائماً
             // في المساعد — حتى لا يظن الطالب أن الميزة غير موجودة أصلاً
             addChatbotMessage(currentLang==='ar'
-                ? "😕 مساعدك الذكي غير متاح مؤقتاً الآن (مشكلة اتصال). جرّب ترسل سؤالك مرة ثانية بعد قليل، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط."
-                : "😕 Your smart assistant is temporarily unavailable (connection issue). Try sending your question again shortly, or reach us directly via WhatsApp from the Links page.", "bot");
+                ? "😕 مساعدك الذكي غير متاح مؤقتاً الآن (مشكلة اتصال). جرّب ترسل سؤالك مرة ثانية بعد قليل" + (aiHasLinksTab() ? "، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط." : ".")
+                : "😕 Your smart assistant is temporarily unavailable (connection issue). Try sending your question again shortly" + (aiHasLinksTab() ? ", or reach us directly via WhatsApp from the Links page." : "."), "bot");
         } else {
             addChatbotMessage(currentLang==='ar'
-                ? "ما عندي إجابة جاهزة لهذا السؤال تحديداً. جرّب صياغة أخرى، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط."
-                : "I don't have a ready answer for that specific question. Try rephrasing, or reach us directly via WhatsApp from the Links page.", "bot");
+                ? "ما عندي إجابة جاهزة لهذا السؤال تحديداً. جرّب صياغة أخرى" + (aiHasLinksTab() ? "، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط." : ".")
+                : "I don't have a ready answer for that specific question. Try rephrasing" + (aiHasLinksTab() ? ", or reach us directly via WhatsApp from the Links page." : "."), "bot");
         }
     }, 250);
 }
@@ -342,7 +351,7 @@ function renderSavedConversationsList(){
         return;
     }
     box.innerHTML = list.map(c => {
-        const dateStr = new Date(c.updatedAt || c.createdAt).toLocaleDateString(currentLang==='ar' ? 'ar-SA' : 'en-US', { day:"numeric", month:"short" });
+        const dateStr = new Date(c.updatedAt || c.createdAt).toLocaleDateString(khutaLocale(), { day:"numeric", month:"short" });
         const title = c.title || labT("محادثة بلا عنوان بعد…","Untitled conversation…");
         return `
         <div class="chat-history-row ${c.id===currentConversationId?'active':''}">
@@ -463,8 +472,10 @@ function openKhutaBoard(tab, fullMode){
        وتراجع وحفظ باسم — فلم يُبنَ من جديد.) */
     const wantsPad = !tab && typeof isSchoolStaff === "function" && isSchoolStaff();
     switchBoardTab(wantsPad ? "pad" : (tab || "ai"));
-    // المعلّم يفتحها ليكتب أمام صفّه — فتُفتح ملء الشاشة من أول لحظة
-    togglePadMax(wantsPad);
+    // المعلّم يفتحها ليكتب أمام صفّه — فتُفتح ملء الشاشة من أول لحظة.
+    // ⚠️ على شاشة الصف أو الحاسوب فقط: على الجوال فُتحت أكبر من الشاشة واختفى
+    // زرّ الإغلاق (بلاغ المالك ٢٦ سبتمبر) — والجوال لا يُكتب عليه أمام صفّ.
+    togglePadMax(wantsPad && window.innerWidth > 900);
     if(typeof applyStaffBoardText === "function"){
         try{ applyStaffBoardText(typeof isSchoolStaff === "function" && isSchoolStaff()); }
         catch(e){ /* النصوص لا يجوز أن تُسقط فتح السبورة */ }
@@ -758,7 +769,7 @@ function renderSavedBoardsList(){
         <div class="pad-saved-row">
             <button type="button" class="pad-saved-open" onclick="openSavedBoard('${b.id}')" title="${labT("فتح","Open")}">
                 <b>${escapeHtml(b.name)}</b>
-                <span>${new Date(b.date).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US')}</span>
+                <span>${new Date(b.date).toLocaleDateString(khutaLocale())}</span>
             </button>
             <button type="button" class="btn-ghost pad-saved-del" onclick="deleteSavedBoard('${b.id}')" title="${labT("حذف","Delete")}"><i class="fa-solid fa-trash"></i></button>
         </div>`).join("");
@@ -1183,7 +1194,7 @@ function renderExamHistory(){
                 <span class="examhist-pct" style="color:${a.score.pct >= 70 ? 'var(--teal)' : a.score.pct >= 50 ? 'var(--gold)' : 'var(--rose)'}">${a.score.pct}%</span>
                 <span class="examhist-meta">
                     <b>${examTypeLabel(a)}</b>
-                    <span>${new Date(a.date).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US', {weekday:"short", day:"numeric", month:"short"})} · ${a.score.correctCount}/${a.score.total} · ${labT("أخطاء:","Wrong:")} ${a.wrong.length}</span>
+                    <span>${new Date(a.date).toLocaleDateString(khutaLocale(), {weekday:"short", day:"numeric", month:"short"})} · ${a.score.correctCount}/${a.score.total} · ${labT("أخطاء:","Wrong:")} ${a.wrong.length}</span>
                 </span>
                 <i class="fa-solid fa-chevron-down examhist-chev"></i>
             </button>
@@ -1287,7 +1298,7 @@ function renderSavedPlansList(){
         <div class="plan-row">
             <div class="plan-row-info">
                 <b>${escapeHtml(p.name)}</b>
-                <span>${new Date(p.date).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US')} · ${p.snapshot.khuta_plan_days ? p.snapshot.khuta_plan_days + " " + labT("يوم","days") : ""}</span>
+                <span>${new Date(p.date).toLocaleDateString(khutaLocale())} · ${p.snapshot.khuta_plan_days ? p.snapshot.khuta_plan_days + " " + labT("يوم","days") : ""}</span>
             </div>
             <button type="button" class="btn btn-sm btn-outline" onclick="applySavedPlan('${p.id}')">${labT("تفعيل","Activate")}</button>
             <button type="button" class="btn-ghost pad-saved-del" onclick="deleteSavedPlan('${p.id}')"><i class="fa-solid fa-trash"></i></button>
@@ -1517,6 +1528,8 @@ function togglePadMax(force){
     if(!win) return;
     const on = (force === undefined) ? !win.classList.contains("pad-max") : !!force;
     win.classList.toggle("pad-max", on);
+    // الخلفية تعرف أن النافذة ملء الشاشة فتُسقط حشوتها (انظر styles.css)
+    document.getElementById("khuta-board-overlay")?.classList.toggle("pad-max-open", on);
 
     const btn = document.getElementById("pad-max-btn");
     if(btn){

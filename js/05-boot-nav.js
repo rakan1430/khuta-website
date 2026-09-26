@@ -202,10 +202,39 @@ function showIntroIfFirstVisit(onDone){
     introFinishFn = finish;
 }
 
+/* ============================================================
+   هوية المنصة لعضو المدرسة — «خُطى · منصة المتقدمة»
+   ------------------------------------------------------------
+   طلب المالك: اسم خُطى في الأعلى يكون شيئاً يخصّ المدرسة لمعلّميها
+   وإدارتها وطلابها، ويبقى «رفيق القدرات» كما هو لطلاب خُطى.
+   نعدّل قيمة المفتاح في القاموس نفسه (لا نصّ العنصر وحده) كي لا يعيده
+   أوّل تبديل لغة، ونحفظ الأصل لنرجعه عند الخروج من حساب المدرسة.
+   ============================================================ */
+function schoolPlatformName(){
+    if(typeof schoolCtx === "undefined" || !schoolCtx) return null;
+    const raw = String(schoolCtx.schoolName || (typeof TENANT !== "undefined" && TENANT.schoolName) || "").split(/[—–-]/)[0].trim();
+    const core = raw.replace(/^(مدارس|مدرسة|مدرسه)\s+/, "").trim();
+    return core ? { ar: "منصة " + core, en: "School platform" } : { ar: "منصة المدرسة", en: "School platform" };
+}
+function applySchoolBrand(){
+    if(typeof I18N === "undefined") return;
+    if(!window.__brandTagOrig) window.__brandTagOrig = { ar: I18N.ar["brand.tag"], en: I18N.en["brand.tag"] };
+    const p = schoolPlatformName();
+    I18N.ar["brand.tag"] = p ? p.ar : window.__brandTagOrig.ar;
+    I18N.en["brand.tag"] = p ? p.en : window.__brandTagOrig.en;
+    const el = document.getElementById("brand-tag");
+    if(el) el.textContent = t("brand.tag");
+    document.body.classList.toggle("brand-school", !!p);
+    try{ document.title = p ? `خُطى — ${p.ar}` : (TENANT.taglineAr ? `${TENANT.brandAr} — ${TENANT.taglineAr}` : TENANT.brandAr); }catch(e){}
+}
+
 function updateWelcomeText(){
     const name = localStorage.getItem("khuta_name");
     if(name){
-        const greeting = t("welcome", {name});
+        let greeting = t("welcome", {name});
+        /* الصاروخ لطالب في رحلة — لا للمعلّم والإدارة (طلب المالك ٢٦ سبتمبر) */
+        const staff = typeof schoolCtx !== "undefined" && schoolCtx && (schoolCtx.role === "teacher" || schoolCtx.role === "admin");
+        if(staff) greeting = greeting.replace(/\s*🚀/gu, "");
         document.getElementById("welcome-text").textContent = greeting;
         const focusName = document.getElementById("focus-header-name");
         if(focusName) focusName.textContent = greeting;
@@ -1509,7 +1538,7 @@ function importKhutaBackup(event){
             return;
         }
 
-        const when = payload.exportedAt ? new Date(payload.exportedAt).toLocaleDateString(currentLang==='ar'?"ar-SA":"en-US") : "—";
+        const when = payload.exportedAt ? new Date(payload.exportedAt).toLocaleDateString(khutaLocale()) : "—";
         const ok = confirm(labT(
             `استعادة نسخة بتاريخ ${when} (${entries.length} عنصراً).\n\nسيستبدل هذا تقدّمك الحالي على هذا الجهاز. متأكد؟`,
             `Restore backup from ${when} (${entries.length} items).\n\nThis replaces your current progress on this device. Continue?`
@@ -1541,6 +1570,7 @@ function importKhutaBackup(event){
 /* ---------- رسم القسم بالكامل ---------- */
 function renderSettings(){
     renderThemeModeButtons();
+    if(typeof renderCalendarButtons === "function") renderCalendarButtons();
     renderInstallState();
     renderConnectionStatus();
     renderPrivacyCard();   // بطاقة الخصوصية انتقلت من الملف الشخصي إلى هنا

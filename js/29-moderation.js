@@ -133,7 +133,7 @@ function modDate(iso){
     if(!iso) return "";
     try{
         return new Date(iso).toLocaleString(
-            currentLang === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB",
+            khutaLocale(),
             { dateStyle:"medium", timeStyle:"short" });
     }catch(e){ return ""; }
 }

@@ -445,7 +445,7 @@ function attemptChip(a){
     /* ميلادي صراحةً — ليطابق ما في تقرير الفصل وفي موعد التسليم. ولولا
        ذلك لقرأ المدير تاريخين مختلفين للحدث نفسه في شاشتين متجاورتين. */
     const date = when ? new Date(when).toLocaleDateString(
-        currentLang==='ar' ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB",
+        khutaLocale(),
         { day:"numeric", month:"short" }) : "";
     return `<span class="res-chip ${scoreClass(p)}" title="${escapeHtml(date)}">
         ${p == null ? "—" : p + "%"}<small>${escapeHtml(date)}${a.late

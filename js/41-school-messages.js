@@ -30,7 +30,7 @@ function smsgError(e){
 
 function smsgFmtDate(iso){
     if(!iso) return "";
-    try{ return new Date(iso).toLocaleString(currentLang === "ar" ? "ar-SA" : "en-GB", { dateStyle:"medium", timeStyle:"short" }); }
+    try{ return new Date(iso).toLocaleString(khutaLocale(), { dateStyle:"medium", timeStyle:"short" }); }
     catch(e){ return iso; }
 }
 

@@ -878,7 +878,7 @@ function renderAccountUI(){
         document.getElementById("acc-current-username").textContent = session.username;
         const last = localStorage.getItem("khuta_last_sync");
         document.getElementById("acc-last-sync").textContent = last
-            ? (currentLang==='ar' ? "آخر مزامنة: " : "Last synced: ") + new Date(last).toLocaleString(currentLang==='ar'?"ar-SA":"en-US")
+            ? (currentLang==='ar' ? "آخر مزامنة: " : "Last synced: ") + new Date(last).toLocaleString(khutaLocale())
             : (currentLang==='ar' ? "لم تتم المزامنة بعد" : "Not synced yet");
         updateAccountAuthButtonsVisibility();
     } else {

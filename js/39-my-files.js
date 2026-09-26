@@ -140,7 +140,7 @@ function renderKhutaFilesSection(owner){
 }
 
 function myfDate(iso){
-    try{ return new Date(iso).toLocaleDateString(currentLang === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB",
+    try{ return new Date(iso).toLocaleDateString(khutaLocale(),
         { day:"numeric", month:"short", year:"numeric" }); }catch(e){ return ""; }
 }
 

@@ -82,16 +82,14 @@ function crRate(sum){
     return Math.round((Number(sum.submitted) || 0) * 100 / exp);
 }
 
-/* ⚠️ التقويم ميلادي صراحةً. و"ar-SA" وحدها تُعطي هجرياً افتراضاً —
-   رأيتُها في أول ورقة طبعتُها: "٢٧ ربيع الأول ١٤٤٨". والمعلّم أدخل موعد
-   التسليم بالميلادي من حقل التاريخ، والسنة الدراسية ميلادية، فعرضُ
-   الهجري يجعل الورقة تناقض ما أُدخِل — ولا يستطيع أحد مقارنة تاريخين. */
-const CAL_AR = "ar-SA-u-ca-gregory-nu-latn";
+/* ⚠️ التقويم صريح دائماً عبر khutaLocale() (js/04-utils.js): ميلادي افتراضاً،
+   وهجري لمن اختاره. و"ar-SA" وحدها تُعطي هجرياً بلا اختيار — رأيتُها في أول
+   ورقة طبعتُها: "٢٧ ربيع الأول ١٤٤٨" بينما المعلّم أدخل الموعد بالميلادي. */
 
 function crDate(iso, withTime){
     if(!iso) return "—";
     try{
-        return new Date(iso).toLocaleString(currentLang === "ar" ? CAL_AR : "en-GB",
+        return new Date(iso).toLocaleString(khutaLocale(),
             withTime ? { dateStyle:"long", timeStyle:"short" } : { dateStyle:"medium" });
     }catch(e){ return "—"; }
 }

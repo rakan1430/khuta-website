@@ -767,7 +767,7 @@ async function renderCampaignList(){
         const { data, error } = await sb.from("marketing_messages").select("*").order("created_at", { ascending:false });
         if(error) throw error;
         if(!data || data.length === 0){ box.innerHTML = "<p class='hint'>لا توجد رسائل بعد — أنشئ واحدة من تبويب \"رسالة جديدة\"</p>"; return; }
-        const when = (iso) => new Date(iso).toLocaleString("ar-SA", { dateStyle:"medium", timeStyle:"short" });
+        const when = (iso) => new Date(iso).toLocaleString(khutaLocale(), { dateStyle:"medium", timeStyle:"short" });
         box.innerHTML = data.map(m => {
             const modeLabel = m.send_mode === "behavior" ? `ذكي (غاب ${m.inactive_days || 5} أيام)` : "جماعي";
             const r = m.send_result || {};
@@ -805,7 +805,7 @@ async function renderCampaignLog(){
         box.innerHTML = data.map(l => `<div class="campaign-row">
             <div class="campaign-row-main">
                 <b>${escapeHtml(l.recipient_email)}</b>
-                <span class="campaign-meta">${new Date(l.sent_at).toLocaleString("ar-SA")} · ${l.status === "sent" ? "✅ نجحت" : "❌ فشلت"}${l.is_test ? " · تجريبية" : ""}</span>
+                <span class="campaign-meta">${new Date(l.sent_at).toLocaleString(khutaLocale())} · ${l.status === "sent" ? "✅ نجحت" : "❌ فشلت"}${l.is_test ? " · تجريبية" : ""}</span>
             </div>
         </div>`).join("");
     }catch(e){
@@ -926,7 +926,7 @@ async function refreshVisitStats(){
     if(error || !data) return;
     document.getElementById("visit-today-count").textContent = data.today_count ?? 0;
     document.getElementById("visit-last-time").textContent = data.last_visit
-        ? new Date(data.last_visit).toLocaleString("ar-SA")
+        ? new Date(data.last_visit).toLocaleString(khutaLocale())
         : (currentLang==='ar' ? "لا توجد زيارات بعد" : "No visits yet");
 }
 

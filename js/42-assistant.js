@@ -900,9 +900,30 @@ function astRenderChips(){
 
 function astUpdateHeader(){
     const el = document.getElementById("ast-where");
-    if(!el) return;
     const tab = astCurrentTab();
-    el.textContent = tab && AST_TABS[tab] ? astT("أنت في: ","You're in: ") + astName(tab) : "";
+    if(el) el.textContent = tab && AST_TABS[tab] ? astT("أنت في: ","You're in: ") + astName(tab) : "";
+    const input = document.getElementById("chatbot-input");
+    if(input) input.placeholder = astPlaceholder();
+}
+
+/** النصّ الباهت في خانة الكتابة: أمثلة مما يملكه هذا المستخدم فعلاً.
+    ⚠️ كان ثابتاً للجميع «افتح الواجبات…» — وطالب خُطى لا واجبات عنده
+    (ملاحظة المالك ٢٦ سبتمبر). الأمثلة الآن تُبنى من الأقسام الظاهرة له. */
+function astPlaceholder(){
+    const role = astRole(), tabs = astVisibleTabs();
+    const ex = [];
+    if(role === "teacher" || role === "admin"){
+        ex.push(astT("صُغ ٥ أسئلة عن…", "draft 5 questions on…"));
+        if(tabs.includes("schoolexams")) ex.push(astT("افتح الاختبارات", "open exams"));
+    }else if(role === "student"){
+        ex.push(astT("اشرح لي درس…", "explain the lesson…"));
+        if(tabs.includes("schoolhw")) ex.push(astT("افتح الواجبات", "open homework"));
+    }else{
+        ex.push(astT("حلّ لي سؤال كمي…", "solve a quant question…"));
+        if(tabs.includes("calculator")) ex.push(astT("افتح حساب الموزونة", "open the calculator"));
+    }
+    ex.push(document.body.classList.contains("dark-mode") ? astT("الوضع الفاتح", "light mode") : astT("الوضع الداكن", "dark mode"));
+    return astT("اسألني أو اطلب: ", "Ask, or say: ") + ex.join(astT("، ", ", ")) + "…";
 }
 
 /* ============================================================

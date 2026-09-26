@@ -4341,3 +4341,99 @@ details.ss-sec[open] > summary.ss-head::after{ content:"−"; }
     .astq-confetti{ display:none; }
     .ast-tour .ast-spot, .ast-tour-card{ transition:none; }
 }
+
+/* ============================================================
+   أجهزة اللمس — ثبات أثناء التمرير (html.touch-ui، يضعه سكربت في <head>)
+   ------------------------------------------------------------
+   بلاغ المالك (٢٦ سبتمبر): «عند النزول أو الصعود يبدو أحياناً الموقع في
+   التداخل ببعضه، أو اختفاء بعض العناصر وظهورها… في الهاتف والآيباد».
+   الأسباب، وكلها مما يعرف Safari على iOS/iPadOS بالتعثّر فيه:
+   ١) backdrop-filter على ٤٠+ نوعاً من العناصر، منها كل بطاقة وكل حقل إدخال.
+      أثناء التمرير بالزخم يُسقط Safari طبقات الضبابية ويعيدها فتومض البطاقة
+      أو تختفي لحظة.
+   ٢) خلفية الوضع الداكن: طبقتا نجوم مثبّتتان بملء الشاشة تتغيّر شفافيتهما
+      بلا توقف — فيُعاد حساب ضبابية كل بطاقة فوقها في كل إطار.
+   ٣) الرسوم الزخرفية العائمة (صاروخ، كتاب، قلم…) مثبّتة خلف بطاقات شبه
+      شفافة: على الآيباد (أعرض من ٧٦٨ فلم تكن مخفية) تنزلق خلف المحتوى
+      أثناء التمرير فتبدو فوق الحقول — هذا «التداخل».
+   العلاج هنا لأجهزة اللمس وحدها — الحاسوب يبقى بتصميمه الزجاجي كما هو:
+   لا ضبابية، ولا زخارف عائمة، ونجوم ثابتة، وأسطح بألوان مصمتة محسوبة
+   لتطابق شكلها الزجاجي فوق الخلفية (لا يتغيّر المظهر، يتغيّر الثبات).
+   ============================================================ */
+html.touch-ui *, html.touch-ui *::before, html.touch-ui *::after{
+    -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
+}
+html.touch-ui .bg-decor{ display:none !important; }
+html.touch-ui body.dark-mode{ background-attachment:scroll; }
+html.touch-ui body.dark-mode::before, html.touch-ui body.dark-mode::after{ animation:none; }
+html.touch-ui .card{ background:rgba(255,255,255,0.9); }
+/* ألوان البطاقة الزجاجية الداكنة كما تُرى فعلاً فوق خلفية المجرّة، مصمتة */
+html.touch-ui body.dark-mode .card,
+html.touch-ui body.dark-mode .overview-stat-card{ background:linear-gradient(165deg, #292153 0%, #1E1842 45%, #19133D 100%); }
+html.touch-ui body.dark-mode .xp-hero-card{ background:linear-gradient(135deg, #2B2257 0%, #1F1845 55%, #2A2130 100%); }
+/* ما يطفو فوق المحتوى المتحرّك يصير شبه مصمت، وإلا ظهر النصّ من تحته */
+html.touch-ui .mobile-nav, html.touch-ui .chatbot-panel, html.touch-ui .notif-panel,
+html.touch-ui .onboarding-card, html.touch-ui .sidebar{ background:rgba(255,255,255,0.97); }
+html.touch-ui .dark-mode .mobile-nav, html.touch-ui .dark-mode .chatbot-panel,
+html.touch-ui .dark-mode .onboarding-card{ background:rgba(20,24,52,0.97); }
+html.touch-ui body.dark-mode .notif-panel, html.touch-ui body.dark-mode .sidebar{ background:linear-gradient(180deg, #221C4E, #17123A); }
+html.touch-ui .lab-window{ background:linear-gradient(165deg, #2E2666, #1A143A); }
+html.touch-ui .lab-overlay.lab-open{ background:rgba(8,6,24,0.82); }
+/* البطاقة لا ترتفع عند اللمس: hover على اللمس «يعلق» بعد النقر فتقفز البطاقة */
+html.touch-ui .card:hover{ transform:none; }
+
+/* ============================================================
+   السبورة على الجوال: زرّ الإغلاق لا يخرج من الشاشة أبداً
+   ------------------------------------------------------------
+   بلاغ المالك (٢٦ سبتمبر): «عند فتح السبورة تفتح بشكل كبير جداً لدرجة أن
+   زر X يختفي تماماً… والحل بإغلاق الموقع». السبب:
+   ١) ارتفاعها بـvh، وvh على Safari هو ارتفاع الشاشة *بلا* شريطَي المتصفح —
+      أطول من الجزء الظاهر، فيخرج الرأس (وفيه X) فوق الشاشة.
+   ٢) الدفتر ملء الشاشة (للمعلّم) ‎100vw×100vh‎ داخل خلفية لها حشوة ومحاذاة
+      للأسفل: النافذة أكبر من مكانها، فيُدفع رأسها للأعلى خارج الشاشة.
+   العلاج: dvh (الجزء الظاهر فعلاً)، وسقف أعلى لا يتجاوز الشاشة، وخلفية بلا
+   حشوة حين تكون النافذة ملء الشاشة، وهامش المنطقة الآمنة أعلى الآيفون.
+   ============================================================ */
+.board-window{ max-height:calc(100dvh - 20px); }
+.board-window.full-mode{ height:90dvh; }
+@media (max-width:700px){
+    .board-window, .board-window.full-mode{ height:92vh; height:92dvh; }
+}
+@media (max-width:900px){
+    .lab-overlay.pad-max-open{ padding:0; align-items:stretch; }
+    .board-window.pad-max{
+        width:100%; max-width:100%; height:100vh; height:100dvh; max-height:100dvh;
+        border-radius:0; transform:none;
+    }
+    .board-window.pad-max .lab-window-head{ padding-top:max(12px, env(safe-area-inset-top)); }
+}
+
+/* ============================================================
+   ساعة الرأس — ساعات ودقائق في إطار يليق بخُطى (بلا ثوانٍ)
+   ------------------------------------------------------------
+   المالك: «شكل الساعة والدقائق ليس جميلاً… داخل إطار بشكل جميل يليق
+   بخُطى، وخانة الثواني احذفها — ذكرت لك هذا أكثر من مرة».
+   ============================================================ */
+.live-clock{
+    display:inline-flex; align-items:baseline; gap:7px; direction:ltr;
+    padding:7px 16px 8px; border-radius:16px;
+    font-family:var(--font-display); font-size:23px; font-weight:700; line-height:1;
+    font-variant-numeric:tabular-nums; letter-spacing:.5px; color:var(--text-1);
+    background:linear-gradient(160deg, rgba(201,150,46,0.16), rgba(201,150,46,0.04));
+    border:1px solid rgba(201,150,46,0.38);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 14px rgba(201,150,46,0.12);
+}
+.live-clock .lc-hm{ display:inline-flex; align-items:baseline; }
+.live-clock .lc-colon{ margin:0 2px; color:var(--gold-text); animation:lcColon 2s ease-in-out infinite; }
+.live-clock .lc-ampm{ font-family:var(--font-body); font-size:11.5px; font-weight:800; color:var(--gold-text); letter-spacing:0; }
+@keyframes lcColon{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+body.dark-mode .live-clock{
+    color:#FFF4DC;
+    background:linear-gradient(160deg, rgba(255,196,100,0.16), rgba(132,112,240,0.10));
+    border-color:rgba(255,208,124,0.42);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.10), 0 0 22px rgba(255,182,72,0.14);
+}
+@media (max-width:992px){ .live-clock{ font-size:19px; padding:6px 13px 7px; } }
+@media (prefers-reduced-motion: reduce){ .live-clock .lc-colon{ animation:none; } }
+/* اسم منصة المدرسة تحت شعار خُطى: عربي متّصل — بلا تباعد أحرف يقطّع الكلمة */
+body.brand-school .brand small{ letter-spacing:0; font-size:12.5px; font-weight:700; color:var(--gold-text); margin-top:4px; }

@@ -42,6 +42,15 @@
       crossorigin="anonymous" referrerpolicy="no-referrer">
 
 <link rel="stylesheet" href="styles.css">
+<script>
+    /* أجهزة اللمس (جوال، آيباد، سبورة لمس): تُعلَّم قبل أول رسم كي تنطبق
+       عليها قواعد «الثبات أثناء التمرير» في styles.css — انظر touch-ui هناك.
+       الآيباد يقدّم نفسه «Mac» فلا يكفي userAgent؛ نقاط اللمس هي الدليل. */
+    try{
+        if((window.matchMedia && matchMedia("(any-pointer: coarse)").matches) || navigator.maxTouchPoints > 1)
+            document.documentElement.classList.add("touch-ui");
+    }catch(e){}
+</script>
 </head>
 <body>
 <div id="app-loading-screen">
@@ -1340,7 +1349,7 @@
     <div id="chatbot-messages" class="chatbot-messages"></div>
     <div class="chatbot-suggestions" id="chatbot-suggestions"></div>
     <div class="field-inline" style="padding:10px;">
-        <input type="text" id="chatbot-input" placeholder="اكتب سؤالك..." data-i18n-ph="bot.placeholder" onkeydown="if(event.key==='Enter') sendChatbotMessage()">
+        <input type="text" id="chatbot-input" placeholder="اكتب سؤالك..." onkeydown="if(event.key==='Enter') sendChatbotMessage()">
         <button type="button" class="ast-mic" id="ast-mic" hidden title="تحدّث بصوتك" aria-label="تحدّث بصوتك"><i class="fa-solid fa-microphone"></i></button>
         <button type="button" class="btn btn-sm" onclick="sendChatbotMessage()" title="أرسل" aria-label="أرسل"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
@@ -1353,7 +1362,7 @@
     </button>
     <div class="sidebar-hover-zone"></div>
     <aside class="sidebar" id="main-sidebar">
-        <div class="brand">خُطى<span class="dot">.</span><small data-i18n="brand.tag">QUDRAT COMPANION</small></div>
+        <div class="brand">خُطى<span class="dot">.</span><small id="brand-tag" data-i18n="brand.tag">QUDRAT COMPANION</small></div>
         <nav style="display:flex; flex-direction:column; gap:8px;">
             <div data-modes="khuta school" class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard',this)" role="button" tabindex="0"><i class="fa-solid fa-calendar-check"></i> <span data-i18n="nav.dashboard">الخطة والجدول</span></div>
             <div data-modes="khuta" class="nav-item" data-feature="gat" data-tab="calculator" onclick="switchTab('calculator',this)" role="button" tabindex="0"><i class="fa-solid fa-calculator"></i> <span data-i18n="nav.calculator">حساب الموزونة</span></div>
@@ -1431,7 +1440,7 @@
                     <i class="fa-solid fa-fire" style="color:var(--rose);"></i>
                     <div><b id="streak-widget-value">0</b><span data-i18n="streak.label">يوم متتالي 🔥</span></div>
                 </div>
-                <div id="live-clock" class="live-clock">00:00:00</div>
+                <div id="live-clock" class="live-clock" role="timer">--:--</div>
                 <div id="exam-countdown-widget" class="exam-countdown-widget" style="display:none;" title="">
                     <i class="fa-solid fa-hourglass-half"></i>
                     <span id="exam-countdown-value">--</span>
@@ -2768,6 +2777,14 @@
                 <div class="lang-switch" style="margin-top:12px;">
                     <button type="button" id="settings-mode-light-btn" onclick="setThemeMode('light')"><i class="fa-solid fa-sun"></i> <span data-i18n="settings.modeLight">فاتح</span></button>
                     <button type="button" id="settings-mode-dark-btn" onclick="setThemeMode('dark')"><i class="fa-solid fa-moon"></i> <span data-i18n="settings.modeDark">داكن</span></button>
+                </div>
+            </div>
+            <div class="card" id="settings-calendar-card">
+                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-calendar-days" style="color:var(--gold-text);"></i> <span data-i18n="settings.calTitle">التقويم</span></h2>
+                <p class="card-sub" data-i18n="settings.calSub">يُطبَّق على كل تاريخ في الموقع: رأس الصفحة، الجدول، مواعيد الاختبارات والواجبات</p>
+                <div class="lang-switch" style="margin-top:12px;">
+                    <button type="button" id="settings-cal-gregory-btn" class="active" onclick="setCalendar('gregory')"><span data-i18n="settings.calGregory">ميلادي</span></button>
+                    <button type="button" id="settings-cal-hijri-btn" onclick="setCalendar('hijri')"><span data-i18n="settings.calHijri">هجري</span></button>
                 </div>
             </div>
             <div class="card">

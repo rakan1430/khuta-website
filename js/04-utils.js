@@ -300,21 +300,72 @@ async function tryLoadRemoteUniversities(){
 }
 
 /* ============================================================
-   4) الساعة والتاريخ الحيّان
+   4) التقويم — ميلادي افتراضياً، وهجري (أم القرى) لمن يختاره
+   ------------------------------------------------------------
+   طلب المالك (٢٦ سبتمبر): «التاريخ… سيكون بشكل افتراضي بالميلادي، ويمكن
+   تغييره من الإعدادات… وتغيير التاريخ سيكون شاملاً: مواعيد الاختبارات
+   والجدول وأي شيء يعتمد على التاريخ». فكل تاريخ يُعرض في الموقع يمرّ من
+   khutaLocale() — مكان واحد يقرّر التقويم، لا قرار في كل ملف.
+   ⚠️ "ar-SA" وحدها تعطي الهجري افتراضاً — ولهذا كان رأس الصفحة هجرياً
+   بينما مواعيد الاختبارات ميلادية. الآن التقويم صريح دائماً.
+   ⚠️ ما يُعرض فقط يتبع الإعداد. حقول إدخال التاريخ (date/datetime-local)
+   يرسمها المتصفح بتقويمه هو، ولا يمكن تغييرها.
    ============================================================ */
-setInterval(() => {
+function khutaCalendar(){
+    try{ return localStorage.getItem("khuta_calendar") === "hijri" ? "hijri" : "gregory"; }
+    catch(e){ return "gregory"; }
+}
+/** لغة العرض + التقويم المختار + أرقام لاتينية (كبقية أرقام الموقع). */
+function khutaLocale(){
+    const cal = khutaCalendar() === "hijri" ? "islamic-umalqura" : "gregory";
+    return (currentLang === "en" ? "en-GB" : "ar-SA") + "-u-ca-" + cal + "-nu-latn";
+}
+function setCalendar(cal){
+    try{ localStorage.setItem("khuta_calendar", cal === "hijri" ? "hijri" : "gregory"); }catch(e){}
+    renderCalendarButtons();
+    tickHeaderClock();
+    // الجدول في الرئيسية يُعاد رسمه فوراً؛ وبقية الأقسام ترسم تواريخها عند
+    // فتحها (كلها تُرسم من جديد مع كل انتقال)، فتظهر بالتقويم الجديد
+    try{ if(typeof renderDashboardOverview === "function") renderDashboardOverview(); }catch(e){}
+    try{ if(typeof renderActivityHeatmap === "function") renderActivityHeatmap(); }catch(e){}
+}
+function renderCalendarButtons(){
+    const hijri = khutaCalendar() === "hijri";
+    document.getElementById("settings-cal-gregory-btn")?.classList.toggle("active", !hijri);
+    document.getElementById("settings-cal-hijri-btn")?.classList.toggle("active", hijri);
+}
+
+/* ============================================================
+   الساعة والتاريخ في رأس الصفحة
+   ------------------------------------------------------------
+   ⚠️ الساعة ساعات ودقائق فقط، بلا ثوانٍ — طلبها المالك أكثر من مرة.
+   تُرسم في إطار (.live-clock) بخطّ الأرقام الجدولي، وتتحدّث عند تغيّر
+   الدقيقة لا كل ثانية.
+   ============================================================ */
+let __lastClockKey = "";
+function tickHeaderClock(){
     const now = new Date();
-    const locale = currentLang === "ar" ? "ar-SA" : "en-US";
-    const timeStr = now.toLocaleTimeString(locale, {hour:"2-digit", minute:"2-digit", second:"2-digit"});
-    const dateStr = now.toLocaleDateString(locale, { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-    document.getElementById("live-clock").textContent = timeStr;
-    document.getElementById("live-date").textContent = dateStr;
+    const ar = currentLang !== "en";
+    const h24 = now.getHours(), m = now.getMinutes();
+    const h12 = (h24 % 12) || 12;
+    const clock = document.getElementById("live-clock");
+    const key = `${h24}:${m}:${currentLang}:${khutaCalendar()}`;
+    if(clock && key !== __lastClockKey){
+        __lastClockKey = key;
+        const ampm = h24 < 12 ? (ar ? "ص" : "AM") : (ar ? "م" : "PM");
+        clock.innerHTML = `<span class="lc-hm">${String(h12).padStart(2, "0")}<span class="lc-colon">:</span>${String(m).padStart(2, "0")}</span><span class="lc-ampm">${ampm}</span>`;
+        clock.setAttribute("aria-label", now.toLocaleTimeString(khutaLocale(), { hour:"numeric", minute:"2-digit" }));
+    }
+    const dateStr = now.toLocaleDateString(khutaLocale(), { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+    const liveDate = document.getElementById("live-date");
+    if(liveDate) liveDate.textContent = dateStr;
     const focusClock = document.getElementById("focus-header-clock");
     const focusDate = document.getElementById("focus-header-date");
-    // في وضع التركيز الكامل: ساعات ودقائق فقط (بلا ثوانٍ) لتوفير المساحة وتقليل التشتيت
-    if(focusClock) focusClock.textContent = now.toLocaleTimeString(locale, {hour:"2-digit", minute:"2-digit"});
+    if(focusClock) focusClock.textContent = now.toLocaleTimeString(khutaLocale(), {hour:"2-digit", minute:"2-digit"});
     if(focusDate) focusDate.textContent = dateStr;
-}, 1000);
+}
+setInterval(tickHeaderClock, 1000);
+document.addEventListener("DOMContentLoaded", () => { tickHeaderClock(); renderCalendarButtons(); });
 
 // عبارات تتناوب أسفل حلقة التحميل بينما البيانات الحقيقية لا تزال تُجلَب —
 // لمسة بصرية بحتة، لا صلة لها بالتقدّم الفعلي (الحلقة نفسها هي التي تعكسه)
