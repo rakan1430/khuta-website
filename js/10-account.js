@@ -492,71 +492,181 @@ function renderPrivacyCard(){
     box.checked = localStorage.getItem("khuta_marketing_consent") === "1";
 }
 
-const LEGAL_DOCS = {
-    terms: {
-        titleAr: "شروط الاستخدام", titleEn: "Terms of Use",
-        bodyAr: `
-            <h3>١. طبيعة الخدمة</h3>
-            <p>خُطى أداة مساعدة لتنظيم مذاكرة اختبار القدرات العامة (GAT). التطبيق <b>غير تابع لهيئة تقويم التعليم والتدريب (قياس)</b> ولا لأي جهة رسمية، ولا يمثّلها بأي شكل.</p>
-            <h3>٢. دقة المحتوى</h3>
-            <p>بيانات الجامعات وأوزان النسب الموزونة ومتطلبات القبول تقريبية وقد تتغيّر. <b>تحقّق دائماً من الموقع الرسمي للجامعة</b> قبل اتخاذ أي قرار فعلي. الاختبارات المحاكية والأسئلة هي للتدريب فقط ولا تعكس الاختبار الحقيقي حرفياً.</p>
-            <h3>٣. الذكاء الاصطناعي</h3>
-            <p>المساعد الذكي أداة مساعدة قد تُخطئ. لا تعتمد على إجاباته وحدها في قرار مصيري، وراجع دائماً مصادرك الدراسية الأساسية.</p>
-            <h3>٤. حسابك</h3>
-            <p>أنت مسؤول عن الحفاظ على كلمة مرورك. التطبيق يعمل كاملاً بدون حساب (كضيف)، والحساب اختياري لمزامنة تقدّمك بين أجهزتك فقط.</p>
-            <h3>٥. الاستخدام المقبول</h3>
-            <p>يُمنع استخدام التطبيق لأي غرض غير قانوني، أو محاولة تعطيله، أو إساءة استخدام مواردة (مثل الإكثار المتعمّد من طلبات الذكاء الاصطناعي).</p>
-            <h3>٦. التغييرات</h3>
-            <p>قد تُحدَّث هذه الشروط مع تطوّر التطبيق. استمرارك في الاستخدام يعني موافقتك على النسخة المحدّثة.</p>`,
-        bodyEn: `
-            <h3>1. Nature of the service</h3>
-            <p>Khuta is a study-organization tool for the Saudi GAT exam. It is <b>not affiliated with Qiyas (ETEC)</b> or any official body.</p>
-            <h3>2. Content accuracy</h3>
-            <p>University data, weighted-score formulas, and admission requirements are approximate and subject to change. <b>Always verify with the university's official website.</b> Practice exams are for training only.</p>
-            <h3>3. AI assistant</h3>
-            <p>The AI assistant may make mistakes. Don't rely on it alone for important decisions.</p>
-            <h3>4. Your account</h3>
-            <p>You are responsible for your password. The app works fully without an account; accounts are optional and only sync progress across devices.</p>
-            <h3>5. Acceptable use</h3>
-            <p>Don't use the app for unlawful purposes, attempt to disrupt it, or abuse its resources.</p>
-            <h3>6. Changes</h3>
-            <p>These terms may be updated as the app evolves.</p>`,
-    },
-    privacy: {
-        titleAr: "سياسة الخصوصية", titleEn: "Privacy Policy",
-        bodyAr: `
-            <h3>ما الذي نجمعه فعلاً؟</h3>
-            <p><b>إن استخدمت التطبيق كضيف (بدون حساب):</b> لا نجمع عنك شيئاً إطلاقاً على خوادمنا. كل بياناتك (خطتك، تقدّمك، ملاحظاتك) محفوظة <b>داخل متصفحك أنت فقط</b> ولا تغادر جهازك.</p>
-            <p><b>إن أنشأت حساباً:</b> نحفظ اسم المستخدم، وكلمة مرور مشفّرة (لا نراها إطلاقاً)، وبيانات تقدّمك الدراسي (خطتك، ساعات مذاكرتك، نقاط الخبرة، نتائج اختباراتك) لمزامنتها بين أجهزتك.</p>
-            <p><b>البريد الإلكتروني اختياري بالكامل.</b> نستخدمه فقط لاسترجاع كلمة المرور، ولإرسال نتيجة اختبارك المحاكي، وللرسائل التذكيرية <b>إن وافقت عليها صراحةً فقط</b>.</p>
-            <h3>ما الذي لا نجمعه أبداً</h3>
-            <p>لا نجمع اسمك الحقيقي، ولا رقم هويتك، ولا رقم جوالك، ولا موقعك الجغرافي، ولا نبيع بياناتك لأي جهة إطلاقاً.</p>
-            <h3>خدمات خارجية نستخدمها</h3>
-            <p>Supabase (تخزين الحسابات والبيانات)، Netlify (استضافة الموقع)، Google Gemini (المساعد الذكي — تُرسَل أسئلتك له لتوليد الإجابة)، Brevo (إرسال البريد فقط لمن ربط بريده).</p>
-            <h3>حقوقك</h3>
-            <p>تقدر تحذف حسابك وكل بياناته في أي وقت من ملفك الشخصي. تقدر توقف الرسائل التذكيرية في أي لحظة. تقدر تستخدم التطبيق كاملاً بدون أي حساب من الأساس.</p>`,
-        bodyEn: `
-            <h3>What we actually collect</h3>
-            <p><b>As a guest (no account):</b> nothing at all reaches our servers. All your data stays in your own browser.</p>
-            <p><b>With an account:</b> username, an encrypted password (never visible to us), and your study progress, to sync across your devices.</p>
-            <p><b>Email is fully optional</b> — used only for password recovery, exam results, and reminders <b>only if you explicitly consent</b>.</p>
-            <h3>What we never collect</h3>
-            <p>No real name, national ID, phone number, or location. We never sell your data.</p>
-            <h3>Third-party services</h3>
-            <p>Supabase (accounts/data), Netlify (hosting), Google Gemini (AI assistant), Brevo (email delivery only).</p>
-            <h3>Your rights</h3>
-            <p>Delete your account and all data anytime from your profile. Stop reminder emails anytime. Use the app fully without an account.</p>`,
-    },
+/* ============================================================
+   شروط الاستخدام وسياسة الخصوصية
+   ------------------------------------------------------------
+   ⚠️ (٢٦ سبتمبر) أُعيدت كتابتهما بطلب المالك: «أعتقد أنها قديمة جداً الآن».
+   وكانت فعلاً غير صحيحة لا قديمة فقط: قالت «لا نجمع اسمك الحقيقي ولا رقم
+   هويتك» — ومنصة المدارس تحفظ الاسم الكامل، وتستعمل الهوية عند الاستيراد
+   (بصمة مشفّرة)، والدرجات والغياب. النصّ هنا يطابق ما يفعله الموقع اليوم.
+   ⚠️ عند تغيير أيّ منهما: ارفع TERMS_VERSION وTERMS_UPDATED، ثم يرسل المالك
+   الإشعار من «أدوات المشرف ← إشعار تحديث الشروط» (js/43-notices.js).
+   ============================================================ */
+const TERMS_VERSION = "2.0";
+const TERMS_UPDATED = { ar: "٢٦ سبتمبر ٢٠٢٦", en: "26 September 2026" };
+
+/* ⚠️ (٢٦ سبتمبر، الجولة الثانية) شروط لكل فئة لا نصّ واحد للجميع — المالك:
+   «الموضوع يختلف من شخص لشخص ومن مرتبة لمرتبة، ويصعب أن يرى طالب خُطى شروط
+   الخدمة التي يراها المدير». النصّ يُبنى من أقسام، لكل قسم الفئات التي
+   تخصّها: khuta (طالب القدرات أو الضيف) · student (طالب مدرسة) · teacher ·
+   admin. كلٌّ يرى ما يخصّه فقط، والمالك وحده يستعرض النسخ الأربع. */
+const LEGAL_AUDIENCES = {
+    khuta:   { ar: "طالب القدرات",  en: "GAT student" },
+    student: { ar: "طالب المدرسة",  en: "School student" },
+    teacher: { ar: "المعلّم",        en: "Teacher" },
+    admin:   { ar: "إدارة المدرسة", en: "School admin" },
+};
+// أسماء بادئة LG_ عمداً: الثوابت العامة في سكربت كلاسيكي تتصادم بين الملفات
+const LG_ALL = ["khuta", "student", "teacher", "admin"], LG_SCHOOL = ["student", "teacher", "admin"], LG_STAFF = ["teacher", "admin"];
+
+const LEGAL_SECTIONS = {
+    terms: [
+        { who: ["khuta"], ar: ["ما هي خُطى",
+            "خُطى رفيقك لتنظيم مذاكرة اختبار القدرات العامة: خطة يومية، مؤقّت، مصادر، حاسبة الموزونة، اختبارات محاكية، ومجتمع للطلاب. خُطى <b>غير تابعة</b> لهيئة تقويم التعليم والتدريب (قياس) ولا لأي جهة رسمية."],
+          en: ["What Khuta is", "A companion for organising GAT study: daily plan, timer, resources, weighted-score calculator, practice exams and a student community. <b>Not affiliated</b> with Qiyas (ETEC) or any official body."] },
+        { who: LG_SCHOOL, ar: ["ما هي منصة المدرسة",
+            "منصة مدرستك تقدّمها لك مدرستك عبر خُطى: الملفات، الاختبارات، الواجبات، السجلّ، المكتبة، الجدول الدراسي. خُطى <b>غير تابعة</b> لوزارة التعليم، و<b>لا ترتبط بنظام نور</b>: ما يظهر منه (كالدرجات الرسمية والغياب) ترفعه المدرسة بنفسها من ملفاتها."],
+          en: ["The school platform", "Your school provides it through Khuta: files, exams, homework, records, library, timetable. Khuta is <b>not affiliated</b> with the Ministry of Education and <b>is not connected to Noor</b>: official grades and attendance appear only if the school uploads them."] },
+        { who: ["khuta"], ar: ["حسابك",
+            "تستطيع استعمال خُطى ضيفاً بلا حساب؛ والحساب (اسم مستخدم أو Google) اختياري لمزامنة تقدّمك بين أجهزتك. أنت مسؤول عن سرّية كلمة مرورك."],
+          en: ["Your account", "Use Khuta as a guest, or with an optional account to sync across devices. Keep your password private."] },
+        { who: LG_SCHOOL, ar: ["حسابك في المدرسة",
+            "حسابك تنشئه إدارة المدرسة أو توافق عليه، وتستطيع إيقافه. أنت مسؤول عن سرّية دخولك، ولا تُعِر حسابك لغيرك."],
+          en: ["Your school account", "Created or approved by the school, which can suspend it. Keep your sign-in private and don't share your account."] },
+        { who: ["student"], ar: ["الاختبارات والواجبات",
+            "تسلّم في الموعد (ومهلة التأخير إن سمح بها المعلّم). التصحيح آلي حسب الإجابة التي حدّدها معلّمك، ويرى معلّمك وإدارتك إجاباتك ودرجاتك. <b>يُمنع</b> نقل أسئلة اختبار أو إجاباته لغيرك أثناء وقته، أو أي محاولة غشّ أو التفاف على المؤقّت. وأي اعتراض على درجة يكون لمعلّمك أو مدرستك."],
+          en: ["Exams and homework", "Submit on time (late windows only if allowed). Auto-graded against your teacher's key; your teacher and school see your answers and grades. Sharing questions or answers during an exam, or cheating, is prohibited. Grade appeals go to your school."] },
+        { who: ["teacher"], ar: ["مسؤوليتك كمعلّم",
+            "أنت المسؤول عن أسئلتك وإجاباتها الصحيحة ومواعيدها ودرجاتها، وعن الملفات التي تشاركها مع فصولك. بيانات طلابك التي تراها (أعمالهم، درجاتهم، ملفاتهم) <b>سرّية</b>: تُستعمل للتعليم فقط، ولا تُنقل خارج المدرسة. اطّلاعك على ملف طالب يُسجَّل. واحفظ كلمة «الدخول السريع» على سبورة الفصل ولا تتركها ظاهرة للطلاب."],
+          en: ["Your responsibilities", "You own your questions, answer keys, deadlines and grades, and the files you share. Student data you see is <b>confidential</b> — for teaching only, never taken outside the school. Opening a student's file is logged. Keep the classroom quick-login password private."] },
+        { who: ["admin"], ar: ["مسؤولية إدارة المدرسة",
+            "الإدارة تُضيف الحسابات وتوقفها، وتستورد الطلاب، وترفع الدرجات الرسمية والغياب من نور — وهي المسؤولة عن صحّة ما ترفعه وعن أن لها الصلاحية لرفعه. ورسائل البريد لطلاب المدرسة: ٣ في اليوم، نصّ عادي، ويُحترم إيقاف الطالب لها. وروابط وليّ الأمر تصدرها الإدارة وتلغيها. وعند الترقية لعام جديد تُحذف بيانات العام الماضي نهائياً بعد أسبوع — <b>صدّر ما تحتاجه قبلها</b>."],
+          en: ["School admin responsibilities", "Admins add and suspend accounts, import students, and upload official grades and attendance from Noor — and are responsible for their accuracy and authority to upload them. Student emails: 3/day, plain text, opt-outs honoured. Parent links are issued and revoked by the admin. After year promotion, last year's data is deleted a week later — <b>export first</b>."] },
+        { who: LG_ALL, ar: ["ما ترفعه وتكتبه",
+            "أنت مسؤول عمّا ترفعه أو تكتبه. يجب أن يكون تعليمياً ونظامياً، وألّا ينتهك حقوق غيرك أو خصوصيته. ولنا حذف أي محتوى مخالف."],
+          en: ["What you upload", "You are responsible for what you upload or write; it must be educational, lawful and respect others' rights. We may remove violating content."] },
+        { who: ["khuta"], ar: ["المجتمع",
+            "مشاركتك في لوحة الصدارة وحائط الأسئلة باسم مستعار. المشاركة التي يبلّغ عنها خمسة تُخفى وتُراجع وقد تُحذف."],
+          en: ["Community", "You appear under an alias. Posts reported five times are hidden, reviewed and may be removed."] },
+        { who: LG_ALL, ar: ["المساعد الذكي",
+            "المساعد أداة مساعدة قد تُخطئ؛ لا تعتمد عليه وحده في قرار مهم، ولا ترسل له بيانات شخصية حسّاسة. لاستعماله حدّ يومي وأسبوعي."],
+          en: ["AI assistant", "It may make mistakes; don't rely on it alone, and don't send it sensitive personal data. Daily and weekly limits apply."] },
+        { who: LG_STAFF, ar: ["المساعد في عملك",
+            "ما يصوغه المساعد من أسئلة أو شرح <b>مسودّة تراجعها أنت</b> قبل أن تحفظها أو ترسلها — المساعد لا يحفظ ولا يرسل شيئاً بنفسه، والمسؤولية عن المحتوى المرسَل لك."],
+          en: ["AI in your work", "Whatever it drafts is <b>a draft you review</b> before saving or sending — it never saves or sends by itself, and you are responsible for what you send."] },
+        { who: ["khuta"], ar: ["دقّة المعلومات",
+            "بيانات الجامعات وأوزان النسب الموزونة ومتطلبات القبول تقريبية وقد تتغيّر — <b>تحقّق دائماً من الموقع الرسمي للجامعة</b>. والاختبارات المحاكية للتدريب لا تعكس الاختبار الحقيقي حرفياً."],
+          en: ["Accuracy", "University data and formulas are approximate — always verify officially. Practice exams are for training only."] },
+        { who: ["khuta"], ar: ["الرسائل",
+            "الرسائل التذكيرية لا تصلك إلا إن وافقت عليها، وتوقفها متى شئت. ورسائل الخدمة (مثل إشعار تحديث هذه الشروط) تصل كل مستخدم."],
+          en: ["Messages", "Reminders only with your consent, stoppable anytime. Service notices reach everyone."] },
+        { who: LG_SCHOOL, ar: ["الرسائل",
+            "رسائل إدارة المدرسة تصل طلابها، ويستطيع الطالب إيقافها برابط في أسفلها. ورسائل الخدمة (مثل إشعار تحديث هذه الشروط) تصل كل مستخدم."],
+          en: ["Messages", "School messages reach its students, who can stop them from the footer. Service notices reach everyone."] },
+        { who: LG_ALL, ar: ["الاستخدام المقبول",
+            "يُمنع استعمال خُطى لأي غرض غير نظامي، أو الإساءة لأحد، أو محاولة تعطيلها أو تجاوز صلاحياتك، أو إساءة استعمال مواردها (كالإكثار المتعمّد من طلبات الذكاء الاصطناعي أو الرسائل)."],
+          en: ["Acceptable use", "No unlawful use, abuse, attempts to disrupt Khuta or exceed your permissions, or abuse of its resources."] },
+        { who: LG_ALL, ar: ["التغييرات",
+            "قد تُحدَّث هذه الشروط. نُبلغك بالتحديث داخل الموقع، وبالبريد لمن له بريد. استمرارك في الاستعمال بعد الإبلاغ موافقة على النسخة المحدّثة."],
+          en: ["Changes", "We notify you of updates in the app, and by email where available. Continued use after notice means acceptance."] },
+    ],
+    privacy: [
+        { who: ["khuta"], ar: ["ما نحفظه عنك",
+            "<b>ضيفاً:</b> خطتك وتقدّمك في متصفحك أنت، ومعرّف مجهول بلا أي معلومة شخصية لتعمل ميزات المجتمع.<br><b>بحساب:</b> اسم المستخدم أو بريد Google، وكلمة مرور مشفّرة لا نراها، وتقدّمك الدراسي (الخطة، الساعات، النقاط، نتائج الاختبارات المحاكية) للمزامنة، وملفاتك الخاصة في «ملفاتي» (لا يراها غيرك)."],
+          en: ["What we keep", "<b>Guest:</b> your data stays in your browser; an anonymous ID powers community features.<br><b>Account:</b> username or Google email, an encrypted password, your study progress for syncing, and your private “My files”."] },
+        { who: ["student"], ar: ["ما تحفظه مدرستك عنك",
+            "ما أدخلته المدرسة: الاسم الكامل والبريد والصف والشعبة. ورقم الهوية عند الاستيراد <b>لا يُحفظ</b> — تُحفظ منه بصمة مشفّرة للمطابقة فقط. ونحفظ أعمالك (إجاباتك، درجاتك، مواعيد تسليمك)، والدرجات الرسمية والغياب إن رفعتها المدرسة."],
+          en: ["What your school keeps", "What the school entered: full name, email, grade, section. National IDs are <b>not stored</b> — only an encrypted fingerprint. Your work (answers, grades, deadlines), and official grades and attendance if uploaded."] },
+        { who: ["student"], ar: ["من يرى بياناتك",
+            "أنت، ومعلّمو فصولك في موادهم، وإدارة مدرستك، والمرشد الطلابي (مواطن الضعف ومن يحتاج متابعة)، ووليّ أمرك برابط خاص تصدره المدرسة (للقراءة فقط، ويمكن إلغاؤه). اطّلاع المدرسة على ملفك يُسجَّل."],
+          en: ["Who sees your data", "You, your teachers in their subjects, your school admin, the counselor (weak areas), and your parent via a revocable read-only school link. School access to your file is logged."] },
+        { who: LG_STAFF, ar: ["ما نحفظه عنك",
+            "اسمك وبريدك ودورك والمواد والفصول المسندة لك، وما ترفعه من ملفات وأسئلة واختبارات، وسجلّ باطّلاعك على ملفات الطلاب (يراه مديرك)."],
+          en: ["What we keep about you", "Your name, email, role, assigned subjects and classes, what you upload, and a log of the student files you open (visible to your admin)."] },
+        { who: LG_STAFF, ar: ["بيانات الطلاب بين يديك",
+            "ترى من بيانات الطلاب ما تحتاجه لعملك فقط: المعلّم طلاب فصوله في مادته، والإدارة مدرستها. هذه البيانات أمانة: لا تُصوَّر ولا تُنقل خارج المدرسة، ولا تُستعمل لغير التعليم."],
+          en: ["Student data in your hands", "You see only what your work needs: teachers their classes, admins their school. Treat it as confidential — never copy it outside the school or use it for anything but teaching."] },
+        { who: ["admin"], ar: ["ما ترفعه الإدارة",
+            "ملفات الاستيراد وكشوف نور (الدرجات والغياب) تُقرأ في المتصفح وتُحفظ منها القيم اللازمة فقط؛ ورقم الهوية يتحوّل إلى بصمة مشفّرة ولا يُحفظ نصّاً. وتُحفظ رسائل البريد وسجلّ إرسالها، وروابط أولياء الأمور وإلغاؤها. والمدرسة هي صاحبة القرار في سجلّاتها، ونحن نحفظها ونعالجها لحسابها."],
+          en: ["What admins upload", "Import files and Noor sheets are read in the browser and only needed values are kept; national IDs become an encrypted fingerprint. Email messages and their send log, and parent links, are stored. The school controls its records; we store and process them on its behalf."] },
+        { who: LG_ALL, ar: ["المساعد الذكي والصوت",
+            "ما ترسله للمساعد (نص، صورة، ملف) يُرسل إلى Google Gemini ليولّد الرد، ولا نحفظه عندنا؛ نحفظ <b>عدد</b> استعمالاتك فقط لتطبيق الحدّ، ومحادثاتك معه في جهازك. والإدخال بالصوت يعالجه متصفحك وخدمة الكلام التابعة له (Google في كروم، Apple في سفاري) — لا يصلنا الصوت."],
+          en: ["AI and voice", "What you send the assistant goes to Google Gemini; we keep only a usage count, and chats stay on your device. Voice input is processed by your browser's speech service; we never receive audio."] },
+        { who: ["khuta"], ar: ["بنك الأسئلة المشترك",
+            "الأسئلة التي يولّدها الاختبار المحاكي من ملف ترفعه قد يُضاف السليم منها — <b>بلا أي معلومة عنك</b> — إلى بنك أسئلة القدرات ليتدرّب عليه غيرك."],
+          en: ["Shared question bank", "Valid questions generated from a file you upload may be added, with nothing about you, to a shared GAT bank."] },
+        { who: ["khuta"], ar: ["البريد والإشعارات",
+            "نرسل عبر Brevo: نتيجة اختبارك، والتذكيرات لمن وافق، ورسائل الخدمة. وإن فعّلت إشعارات الجوال نحفظ عنوان اشتراك جهازك في الإشعارات فقط."],
+          en: ["Email and notifications", "Via Brevo: exam results, reminders if you consent, and service notices. Push stores only your device's subscription address."] },
+        { who: LG_SCHOOL, ar: ["البريد والإشعارات",
+            "نرسل عبر Brevo رسائل إدارة المدرسة لطلابها، ورسائل الخدمة للجميع. وإن فعّلت إشعارات الجوال نحفظ عنوان اشتراك جهازك فقط."],
+          en: ["Email and notifications", "Via Brevo: school messages to students, and service notices. Push stores only your device's subscription address."] },
+        { who: LG_ALL, ar: ["سجلّات تقنية",
+            "نسجّل الأعطال البرمجية (نصّ الخطأ، الصفحة، نوع المتصفح) لإصلاحها، وعدد الزيارات مجمّعاً — بلا اسم ولا عنوان IP."],
+          en: ["Technical logs", "Error reports (message, page, browser) and aggregate visit counts — no name or IP."] },
+        { who: ["khuta"], ar: ["الحذف",
+            "تستطيع حذف حسابك وكل بياناته في أي وقت من ملفك الشخصي. والمشاركات المخفية بسبب البلاغات تُحذف بعد أسبوع."],
+          en: ["Deletion", "Delete your account and all its data anytime from your profile."] },
+        { who: LG_SCHOOL, ar: ["مدة الحفظ",
+            "بيانات العام الدراسي تُحذف نهائياً بعد أسبوع من بدء العام التالي. وسجلّاتك المدرسية (الدرجات، الغياب) تديرها مدرستك — اطلب تصحيحها منها."],
+          en: ["Retention", "A school year's data is deleted a week after the next year starts. School records are managed by your school — ask it for corrections."] },
+        { who: LG_ALL, ar: ["خدمات نعتمد عليها",
+            "Supabase (البيانات والحسابات والملفات)، Netlify (الاستضافة)، Google (الدخول بحساب Google، وGemini للمساعد)، Brevo (البريد). <b>لا نبيع بياناتك ولا نعرض إعلانات</b>، ولا نجمع موقعك الجغرافي ولا رقم جوالك."],
+          en: ["Providers", "Supabase, Netlify, Google (sign-in, Gemini), Brevo. <b>We never sell data or show ads</b>, and collect no location or phone number."] },
+    ],
 };
 
-function openLegalModal(kind){
-    const doc = LEGAL_DOCS[kind];
-    if(!doc) return;
-    document.getElementById("legal-modal-title").textContent = currentLang==='ar' ? doc.titleAr : doc.titleEn;
-    document.getElementById("legal-modal-body").innerHTML = currentLang==='ar' ? doc.bodyAr : doc.bodyEn;
-    labOverlayOpen("legal-modal");
+/** فئة صاحب الجلسة للشروط: دوره في المدرسة، وإلا طالب قدرات/ضيف. */
+function legalAudience(){
+    const r = (typeof schoolCtx !== "undefined" && schoolCtx) ? schoolCtx.role : null;
+    if(LEGAL_AUDIENCES[r]) return r;
+    /* من يتقدّم عبر رابط انضمام المدرسة (?apply=teacher|student) ليس عضواً
+       بعد — لكنه يوافق على شروط دوره هو، لا شروط طالب القدرات */
+    try{
+        const a = new URLSearchParams(location.search).get("apply");
+        if(a === "teacher" || a === "student") return a;
+    }catch(e){}
+    return "khuta";
+}
+
+function legalBody(kind, aud, lang){
+    const ar = lang !== "en";
+    const nums = "١٢٣٤٥٦٧٨٩";
+    const toAr = n => String(n).split("").map(d => nums[d - 1] || "٠").join("");
+    const parts = (LEGAL_SECTIONS[kind] || []).filter(sec => sec.who.includes(aud));
+    const html = parts.map((sec, i) => {
+        const [h, p] = ar ? sec.ar : sec.en;
+        return `<h3>${ar ? toAr(i + 1) : i + 1}. ${h}</h3><p>${p}</p>`;
+    }).join("");
+    const who = LEGAL_AUDIENCES[aud];
+    return `<p class="legal-for">${ar ? "هذه النسخة لـ" : "This version is for "}<b>${ar ? who.ar : who.en}</b></p>${html}
+        <p class="legal-updated">${ar ? "آخر تحديث" : "Last updated"}: ${ar ? TERMS_UPDATED.ar : TERMS_UPDATED.en} · ${ar ? "النسخة" : "version"} ${TERMS_VERSION}</p>`;
+}
+
+const LEGAL_TITLES = { terms: { ar: "شروط الاستخدام", en: "Terms of Use" }, privacy: { ar: "سياسة الخصوصية", en: "Privacy Policy" } };
+
+function openLegalModal(kind, audience){
+    if(!LEGAL_SECTIONS[kind]) return;
+    const ar = currentLang === "ar";
+    // المالك وحده يستعرض نسخ الفئات الأخرى؛ غيره يرى نسخته هو فقط
+    const owner = typeof isAdmin !== "undefined" && isAdmin;
+    const aud = (owner && LEGAL_AUDIENCES[audience]) ? audience : legalAudience();
+    document.getElementById("legal-modal-title").textContent = ar ? LEGAL_TITLES[kind].ar : LEGAL_TITLES[kind].en;
+    const preview = owner ? `<div class="legal-preview">${ar ? "معاينة المالك:" : "Owner preview:"} ${Object.keys(LEGAL_AUDIENCES).map(k =>
+        `<button type="button" class="${k === aud ? "active" : ""}" onclick="openLegalModal('${kind}','${k}')">${ar ? LEGAL_AUDIENCES[k].ar : LEGAL_AUDIENCES[k].en}</button>`).join("")}</div>` : "";
+    const body = document.getElementById("legal-modal-body");
+    body.innerHTML = preview + legalBody(kind, aud, currentLang);
+    body.scrollTop = 0;
+    const m = document.getElementById("legal-modal");
+    if(m.style.display === "none" || !m.classList.contains("lab-open")) labOverlayOpen("legal-modal");
 }
 function closeLegalModal(){ labOverlayClose("legal-modal"); }
+// مخرجان لا يعتمدان على الزرّ: Escape، والنقر على الخلفية خارج النافذة
+document.addEventListener("keydown", e => {
+    const m = document.getElementById("legal-modal");
+    if(e.key === "Escape" && m && m.style.display !== "none") closeLegalModal();
+});
+document.addEventListener("click", e => { if(e.target && e.target.id === "legal-modal") closeLegalModal(); });
 
 async function sendExamScoreEmail(score){
     try{
@@ -878,7 +988,7 @@ function renderAccountUI(){
         document.getElementById("acc-current-username").textContent = session.username;
         const last = localStorage.getItem("khuta_last_sync");
         document.getElementById("acc-last-sync").textContent = last
-            ? (currentLang==='ar' ? "آخر مزامنة: " : "Last synced: ") + new Date(last).toLocaleString(currentLang==='ar'?"ar-SA":"en-US")
+            ? (currentLang==='ar' ? "آخر مزامنة: " : "Last synced: ") + new Date(last).toLocaleString(khutaLocale())
             : (currentLang==='ar' ? "لم تتم المزامنة بعد" : "Not synced yet");
         updateAccountAuthButtonsVisibility();
     } else {

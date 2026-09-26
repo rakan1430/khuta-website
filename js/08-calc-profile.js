@@ -1068,7 +1068,7 @@ async function openErrorLogsPanel(){
         <div style="padding:10px 12px; background:var(--bg-alt); border-radius:10px; border:1px solid var(--border); font-size:12px;">
             <b style="color:var(--rose);">${escapeHtml(e.message || "")}</b>
             <div style="color:var(--gold-text); margin-top:6px; font-weight:600;">💡 ${explainErrorInArabic(e.message)}</div>
-            <div style="color:var(--text-3); margin-top:4px;">${escapeHtml(e.page_url || "")} · ${new Date(e.created_at).toLocaleString("ar-SA")}</div>
+            <div style="color:var(--text-3); margin-top:4px;">${escapeHtml(e.page_url || "")} · ${new Date(e.created_at).toLocaleString(khutaLocale())}</div>
             ${e.stack_summary ? `<div style="color:var(--text-3); margin-top:4px; font-family:var(--font-mono); font-size:10.5px; white-space:pre-wrap; word-break:break-word;">${escapeHtml(e.stack_summary.slice(0,300))}</div>` : ""}
         </div>`).join("");
 }

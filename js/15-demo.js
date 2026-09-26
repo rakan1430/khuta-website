@@ -202,7 +202,8 @@ const DEMO_ROLES = {
 function switchDemoRole(role){
     if(!isDemoMode() || !DEMO_ROLES[role]) return;
     const r = DEMO_ROLES[role];
-    schoolCtx = { schoolId:"DEMO-SCHOOL", memberId:r.memberId, role, fullName:r.fullName, grade:r.grade, section:r.section };
+    schoolCtx = { schoolId:"DEMO-SCHOOL", memberId:r.memberId, role, fullName:r.fullName, grade:r.grade, section:r.section,
+                  schoolName: (typeof TENANT !== "undefined" && TENANT.schoolName) || "مدارس المتقدمة — فرع الملقا" };
     localStorage.setItem("khuta_name", r.fullName);
     if(typeof updateWelcomeText === "function") updateWelcomeText();
     applySchoolRoleUI();

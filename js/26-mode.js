@@ -59,6 +59,8 @@ function setKhutaMode(mode, opts){
     if(!(opts && opts.silent)) renderModeSwitcher();
 
     renameHomeForMode(mode);
+    // اسم المنصة تحت الشعار يتبع الوضع: «منصة المدرسة» في مدرستي، وخُطى في القدرات
+    if(typeof applySchoolBrand === "function"){ try{ applySchoolBrand(); }catch(e){} }
 
     /* ⚠️ الوجهة عند تبديل الوضع.
        جرّبتُه فوجدتُ الطالب يهبط في وضع "مدرستي" على لوحةٍ شبه فارغة —

@@ -51,7 +51,7 @@ function yrDate(iso){
     if(!iso) return "—";
     try{
         return new Date(iso).toLocaleDateString(
-            currentLang === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-GB",
+            khutaLocale(),
             { dateStyle: "long" });
     }catch(e){ return "—"; }
 }

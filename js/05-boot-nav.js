@@ -202,10 +202,46 @@ function showIntroIfFirstVisit(onDone){
     introFinishFn = finish;
 }
 
+/* ============================================================
+   هوية المنصة لعضو المدرسة — «خُطى · منصة المتقدمة»
+   ------------------------------------------------------------
+   طلب المالك: اسم خُطى في الأعلى يكون شيئاً يخصّ المدرسة لمعلّميها
+   وإدارتها وطلابها، ويبقى «رفيق القدرات» كما هو لطلاب خُطى.
+   نعدّل قيمة المفتاح في القاموس نفسه (لا نصّ العنصر وحده) كي لا يعيده
+   أوّل تبديل لغة، ونحفظ الأصل لنرجعه عند الخروج من حساب المدرسة.
+   ============================================================ */
+function schoolPlatformName(){
+    if(typeof schoolCtx === "undefined" || !schoolCtx) return null;
+    /* طالب المدرسة له وضعان: في «مدرستي» اسم منصّته، وفي «القدرات» خُطى كما
+       هي (طلب المالك ٢٦ سبتمبر). المعلّم والإدارة في منصّة المدرسة دائماً. */
+    const staff = schoolCtx.role === "teacher" || schoolCtx.role === "admin";
+    const mode = (typeof khutaMode !== "undefined" && khutaMode) || (typeof defaultMode === "function" ? defaultMode() : "school");
+    if(!staff && mode !== "school") return null;
+    // الاسم الذي حدّده المالك لهذه المدرسة، وإلا يُشتقّ من اسمها
+    if(schoolCtx.platformNameAr) return { ar: schoolCtx.platformNameAr, en: schoolCtx.platformNameEn || "School platform" };
+    const raw = String(schoolCtx.schoolName || (typeof TENANT !== "undefined" && TENANT.schoolName) || "").split(/[—–-]/)[0].trim();
+    const core = raw.replace(/^(مدارس|مدرسة|مدرسه)\s+/, "").trim();
+    return core ? { ar: "منصة " + core, en: "School platform" } : { ar: "منصة المدرسة", en: "School platform" };
+}
+function applySchoolBrand(){
+    if(typeof I18N === "undefined") return;
+    if(!window.__brandTagOrig) window.__brandTagOrig = { ar: I18N.ar["brand.tag"], en: I18N.en["brand.tag"] };
+    const p = schoolPlatformName();
+    I18N.ar["brand.tag"] = p ? p.ar : window.__brandTagOrig.ar;
+    I18N.en["brand.tag"] = p ? p.en : window.__brandTagOrig.en;
+    const el = document.getElementById("brand-tag");
+    if(el) el.textContent = t("brand.tag");
+    document.body.classList.toggle("brand-school", !!p);
+    try{ document.title = p ? `خُطى — ${p.ar}` : (TENANT.taglineAr ? `${TENANT.brandAr} — ${TENANT.taglineAr}` : TENANT.brandAr); }catch(e){}
+}
+
 function updateWelcomeText(){
     const name = localStorage.getItem("khuta_name");
     if(name){
-        const greeting = t("welcome", {name});
+        let greeting = t("welcome", {name});
+        /* الصاروخ لطالب في رحلة — لا للمعلّم والإدارة (طلب المالك ٢٦ سبتمبر) */
+        const staff = typeof schoolCtx !== "undefined" && schoolCtx && (schoolCtx.role === "teacher" || schoolCtx.role === "admin");
+        if(staff) greeting = greeting.replace(/\s*🚀/gu, "");
         document.getElementById("welcome-text").textContent = greeting;
         const focusName = document.getElementById("focus-header-name");
         if(focusName) focusName.textContent = greeting;
@@ -920,6 +956,7 @@ function switchTab(tabId, element){
     if(tabId === "schoollib" && typeof renderLibraryTab === "function") renderLibraryTab();
     if(tabId === "schoolgat" && typeof renderGatTab === "function") renderGatTab();
     if(tabId === "schoolcounselor" && typeof renderCounselorTab === "function") renderCounselorTab();
+    if(tabId === "schooladmin" && typeof renderSchoolMessages === "function") renderSchoolMessages();
     /* «ملفاتي» لطلاب خُطى كلّهم: على الجوّال تُحمَّل عند أول فتح (js/39) */
     if(tabId === "myfiles" && typeof khutaLoadGroup === "function"){
         khutaLoadGroup("myfiles").then(() => { if(typeof renderMyFilesTab === "function") renderMyFilesTab(); })
@@ -1250,9 +1287,16 @@ function toggleTheme(){
    التطبيق، حالة الاتصال، نسخة النظام، ونسخة احتياطية من بياناته.
    ============================================================ */
 
-// نسخة النظام المعروضة في الإعدادات — ارفعها يدوياً مع كل إصدار ملموس.
-// تُكتَب أيضاً داخل ملف النسخة الاحتياطية لمعرفة أي إصدار أنتجها.
-const APP_VERSION = "1.4.0";
+/* نسخة النظام المعروضة في الإعدادات، وتُكتب داخل ملف النسخة الاحتياطية.
+   ⚠️ قاعدة المالك المُلزِمة (٢٦ سبتمبر): «كل تحديث جديد يجب تغيير رقم
+   الإصدار». بقي الرقم 1.4.0 من ١٣ أغسطس حتى ٢٦ سبتمبر رغم عشرات
+   التحديثات — لم يرفعه أحد. الآن:
+     • كل دفعة للرابط الثابت تغيّر الموقع ترفعه: إصلاح ← الرقم الأخير
+       (2.0.0 → 2.0.1)، ميزة ← الأوسط (2.0.1 → 2.1.0)، إصدار كبير ← الأول.
+     • وأداة tools/تدقيق-الدمج.js تفشل إن تغيّر الموقع ولم يرتفع الرقم
+       (مقارنةً بآخر حفظ، وبالموقع الأساسي main)، أو لم يتغيّر CACHE_NAME
+       في sw.js — وإلا بقي العائدون على نسخة مخزّنة قديمة. */
+const APP_VERSION = "2.1.0";
 
 /* ---------- المظهر ---------- */
 function setThemeMode(mode){
@@ -1508,7 +1552,7 @@ function importKhutaBackup(event){
             return;
         }
 
-        const when = payload.exportedAt ? new Date(payload.exportedAt).toLocaleDateString(currentLang==='ar'?"ar-SA":"en-US") : "—";
+        const when = payload.exportedAt ? new Date(payload.exportedAt).toLocaleDateString(khutaLocale()) : "—";
         const ok = confirm(labT(
             `استعادة نسخة بتاريخ ${when} (${entries.length} عنصراً).\n\nسيستبدل هذا تقدّمك الحالي على هذا الجهاز. متأكد؟`,
             `Restore backup from ${when} (${entries.length} items).\n\nThis replaces your current progress on this device. Continue?`
@@ -1540,6 +1584,8 @@ function importKhutaBackup(event){
 /* ---------- رسم القسم بالكامل ---------- */
 function renderSettings(){
     renderThemeModeButtons();
+    if(typeof renderCalendarButtons === "function") renderCalendarButtons();
+    if(typeof renderPushState === "function") renderPushState();
     renderInstallState();
     renderConnectionStatus();
     renderPrivacyCard();   // بطاقة الخصوصية انتقلت من الملف الشخصي إلى هنا

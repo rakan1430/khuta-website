@@ -42,15 +42,35 @@ function toggleChatbot(){
         /* ⚠️ الترحيب يخاطب طالب قدرات ("يا بطل… أي سؤال كمي أو لفظي").
            والمعلّم ليس بطلاً يذاكر — ملاحظة المالك: "في المساعد الموجود على
            الجانب تظهر أشياء تخص القدرات". فلكلٍّ ترحيبه. */
-        addChatbotMessage(aiIsStaff()
-            ? (currentLang==='ar'
-                ? "أهلاً بك 👋 أقدر أشرح أي مسألة على السبورة أمام طلابك، أو أساعدك في صياغة سؤال اختبار، أو أدلّك على أي شيء في منصة المدرسة."
-                : "Hello 👋 I can explain any problem on the board for your class, help you word an exam question, or guide you around the school platform.")
-            : (currentLang==='ar'
-                ? "أهلاً يا بطل! 👋 أقدر أحل وأشرح لك أي سؤال كمي أو لفظي، أو أدلّك على أي شي في خُطى — بس قلّي وش تبي."
-                : "Hey champ! 👋 I can solve and explain any Quant or Verbal question, or guide you to anything in Khuta — just tell me what you need."), "bot");
+        addChatbotMessage(aiGreeting(), "bot");
         renderChatbotSuggestions();
     }
+    if(opening){
+        // المساعد الحيّ (js/42): رأس «أنت في…» واقتراحات القسم المفتوح الآن
+        if(typeof astUpdateHeader === "function") astUpdateHeader();
+        if(typeof astRenderChips === "function") astRenderChips();
+        if(window.innerWidth >= 760) setTimeout(() => document.getElementById("chatbot-input")?.focus({ preventScroll:true }), 80);
+    }
+}
+
+/** ترحيب حسب الدور — كلٌّ يرى ما يقدر المساعد يفعله له هو. */
+function aiGreeting(){
+    const role = (typeof astRole === "function") ? astRole() : (aiIsStaff() ? "teacher" : "khuta");
+    if(role === "teacher" || role === "admin") return labT(
+        "أهلاً بك 👋 أنا مساعدك داخل المنصة — لا أكتفي بالكلام:\n• أصيغ لك أسئلة اختيار من متعدد وأضعها في منشئ الاختبار\n• أعرض اختباراً سريعاً على السبورة أمام الفصل\n• أشرح أي مسألة على السبورة خطوة بخطوة\n• أوريك أي ميزة بجولة حيّة على الأزرار نفسها\n• وأفتح أي قسم أو أغيّر المظهر بكلمة",
+        "Hello 👋 I'm your in-app assistant — I don't just talk:\n• draft multiple-choice questions straight into the exam builder\n• run a quick quiz on the board for your class\n• explain any problem on the board step by step\n• show you any feature with a live tour\n• open any section or switch the theme on request");
+    if(role === "student") return labT(
+        "أهلاً 👋 أقدر أشرح لك أي درس أو مسألة (وعلى السبورة كمان)، أختبرك بأسئلة سريعة، أو أوديك لاختباراتك وواجباتك — قلّي وش تحتاج.",
+        "Hi 👋 I can explain any lesson or problem (on the board too), quiz you, or take you to your exams and homework — just ask.");
+    return labT(
+        "أهلاً يا بطل! 👋 أحل وأشرح لك أي سؤال كمي أو لفظي (وعلى السبورة كمان)، أختبرك بأسئلة سريعة، وأوديك لأي مكان في خُطى — بس قلّي.",
+        "Hey champ! 👋 I can solve and explain any Quant or Verbal question (on the board too), quiz you, and take you anywhere in Khuta — just ask.");
+}
+
+/** صفحة «الروابط» (وفيها واتساب خُطى) لطلاب خُطى وحدهم — لا تُذكر لمن لا يراها. */
+function aiHasLinksTab(){
+    const el = document.querySelector('.nav-item[data-tab="links"]');
+    return !!el && getComputedStyle(el).display !== "none";
 }
 
 /** هل صاحب الجلسة معلّم أو إدارة؟ (تُستعمل لتبديل نصوص المساعد والسبورة) */
@@ -60,6 +80,7 @@ function aiIsStaff(){
 }
 
 function renderChatbotSuggestions(){
+    if(typeof astRenderChips === "function"){ astRenderChips(); return; }
     const box = document.getElementById("chatbot-suggestions");
     // اقتراحات المعلّم من عمله هو، لا من رحلة طالب يذاكر للقدرات
     const picks = aiIsStaff()
@@ -76,18 +97,10 @@ function addChatbotMessage(text, who){
     const box = document.getElementById("chatbot-messages");
     const div = document.createElement("div");
     div.className = "chatbot-msg " + who;
-    div.textContent = text;
-    // مع كل رد للمساعد على سؤال فعلي: نعرض زر فتح السبورة ليشرحه المعلّم خطوة بخطوة
-    if(who === "bot" && window.__lastChatUserMsg){
-        const q = window.__lastChatUserMsg;
-        const link = document.createElement("button");
-        link.type = "button";
-        link.className = "chatbot-msg-board-link";
-        link.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i> ' + (currentLang==='ar' ? 'اشرحها على السبورة' : 'Explain on the board');
-        link.onclick = () => explainLastOnBoard(q);
-        div.appendChild(document.createElement("br"));
-        div.appendChild(link);
-    }
+    /* ⚠️ كان هنا زرّ «اشرحها على السبورة» تحت كل رد — حتى تحت «تمّ، فتحت
+       الواجبات». الآن المساعد نفسه يقرّر متى يشرح على السبورة (js/42). */
+    if(who === "bot" && typeof astFormat === "function") div.innerHTML = astFormat(text);
+    else div.textContent = text;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
@@ -119,42 +132,17 @@ const GEMINI_RETRY_COOLDOWN_MS = 30000;
 function isGeminiWorking(){ return (Date.now() - geminiLastFailAt) > GEMINI_RETRY_COOLDOWN_MS; }
 
 async function sendChatbotMessage(){
-    /* يُحفظ نص سؤال الطالب ليستعمله زر "اشرحها على السبورة" أسفل رد المساعد */
     const input = document.getElementById("chatbot-input");
     const text = input.value.trim();
     if(!text) return;
-    window.__lastChatUserMsg = text;
     addChatbotMessage(text, "user");
     input.value = "";
-
-    if(isGeminiWorking()){
-        addChatbotMessage("...", "bot typing-indicator");
-        try{
-            const reply = await askGemini(text);
-            removeTypingIndicator();
-            // إن ضمّن الرد وسم توجيه بصري، نفّذه ونعرض النص بعد إزالة الوسم
-            // منه فقط (الطالب لا يحتاج يرى الصياغة التقنية الداخلية)
-            const { cleaned, key } = extractNavigateTag(reply);
-            addChatbotMessage(cleaned, "bot");
-            if(key) aiGuideNavigate(key);
-            return;
-        }catch(e){
-            removeTypingIndicator();
-            const limitMsg = getAiLimitErrorMessage(e);
-            if(limitMsg){
-                // تسجيل دخول مطلوب / بلغ الحد — ليست مشكلة اتصال مؤقتة، فلا نرجع
-                // للمساعد المحلي (سيبدو مضللاً)، بل نوضّح السبب الحقيقي مباشرة.
-                // لا تحويل تلقائي مفاجئ لشاشة الدخول — زر حقيقي يفتحها فقط إن
-                // اختار الطالب ذلك بنفسه (كانت الرسالة تختفي فوراً قبل أن تُقرأ)
-                if(e.code === "AUTH_REQUIRED") addChatbotAuthPrompt(limitMsg);
-                else addChatbotMessage(limitMsg, "bot");
-                return;
-            }
-            geminiLastFailAt = Date.now(); // نتحوّل للمساعد المحلي مؤقتاً، ونعيد محاولة Gemini تلقائياً بعد فترة التهدئة
-            console.error("[خُطى] الذكاء الاصطناعي غير متاح مؤقتاً — تفاصيل الخطأ للمطوّر (تحقق من GEMINI_API_KEY ونشر gemini-proxy.js على Netlify):", e);
-            answerLocally(text, true);
-            return;
-        }
+    // المساعد الحيّ (js/42): أوامر فورية محلية، وإلا الذكاء بسياق الصفحة وأفعالها
+    if(typeof astHandleMessage === "function"){
+        if(isGeminiWorking()) return astHandleMessage(text);
+        const local = astLocalIntent(text);
+        if(local){ const msg = astAddBotMessage(local.reply); return astExecute(msg, local.actions); }
+        return answerLocally(text, false);
     }
     answerLocally(text, false);
 }
@@ -164,8 +152,11 @@ function answerLocally(text, viaFallback){
     // مطابقة صارمة أولاً (الكلمة المفتاحية كاملة)، ثم مطابقة بجذر الكلمة (أول
     // 4 أحرف على الأقل) لتغطية اختلاف اللواحق العربية— مثال: "موزونتي" تُطابق
     // كلمة "موزونة" رغم اختلاف اللاحقة، لأن نفس الجذر الأول موجود في الجملة
-    let match = FAQ_BOT.find(f => f.kw.some(k => lower.includes(normalizeArabic(k))));
-    if(!match){
+    // الأجوبة الجاهزة كلها عن رحلة القدرات — لا تُعرض لمعلّم أو إدارة
+    // («جدول» عندهم الجدول الدراسي، لا «كم ساعة أذاكر»)
+    const staffUser = aiIsStaff();
+    let match = staffUser ? null : FAQ_BOT.find(f => f.kw.some(k => lower.includes(normalizeArabic(k))));
+    if(!match && !staffUser){
         match = FAQ_BOT.find(f => f.kw.some(k => {
             const nk = normalizeArabic(k);
             return nk.length >= 4 && lower.includes(nk.slice(0, Math.max(4, nk.length - 2)));
@@ -178,12 +169,12 @@ function answerLocally(text, viaFallback){
             // نوضّح بصراحة أن هذا تعطّل مؤقت بالذكاء الاصطناعي، لا قصوراً دائماً
             // في المساعد — حتى لا يظن الطالب أن الميزة غير موجودة أصلاً
             addChatbotMessage(currentLang==='ar'
-                ? "😕 مساعدك الذكي غير متاح مؤقتاً الآن (مشكلة اتصال). جرّب ترسل سؤالك مرة ثانية بعد قليل، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط."
-                : "😕 Your smart assistant is temporarily unavailable (connection issue). Try sending your question again shortly, or reach us directly via WhatsApp from the Links page.", "bot");
+                ? "😕 مساعدك الذكي غير متاح مؤقتاً الآن (مشكلة اتصال). جرّب ترسل سؤالك مرة ثانية بعد قليل" + (aiHasLinksTab() ? "، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط." : ".")
+                : "😕 Your smart assistant is temporarily unavailable (connection issue). Try sending your question again shortly" + (aiHasLinksTab() ? ", or reach us directly via WhatsApp from the Links page." : "."), "bot");
         } else {
             addChatbotMessage(currentLang==='ar'
-                ? "ما عندي إجابة جاهزة لهذا السؤال تحديداً. جرّب صياغة أخرى، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط."
-                : "I don't have a ready answer for that specific question. Try rephrasing, or reach us directly via WhatsApp from the Links page.", "bot");
+                ? "ما عندي إجابة جاهزة لهذا السؤال تحديداً. جرّب صياغة أخرى" + (aiHasLinksTab() ? "، أو تواصل معنا مباشرة عبر واتساب من صفحة الروابط." : ".")
+                : "I don't have a ready answer for that specific question. Try rephrasing" + (aiHasLinksTab() ? ", or reach us directly via WhatsApp from the Links page." : "."), "bot");
         }
     }, 250);
 }
@@ -360,7 +351,7 @@ function renderSavedConversationsList(){
         return;
     }
     box.innerHTML = list.map(c => {
-        const dateStr = new Date(c.updatedAt || c.createdAt).toLocaleDateString(currentLang==='ar' ? 'ar-SA' : 'en-US', { day:"numeric", month:"short" });
+        const dateStr = new Date(c.updatedAt || c.createdAt).toLocaleDateString(khutaLocale(), { day:"numeric", month:"short" });
         const title = c.title || labT("محادثة بلا عنوان بعد…","Untitled conversation…");
         return `
         <div class="chat-history-row ${c.id===currentConversationId?'active':''}">
@@ -406,9 +397,7 @@ function startNewConversation(){
     closeKhutaBoard();
     const panel = document.getElementById("chatbot-panel");
     if(panel.style.display === "none" || panel.classList.contains("panel-closing")) toggleChatbot();
-    addChatbotMessage(currentLang==='ar'
-        ? "أهلاً يا بطل! 👋 محادثة جديدة — قلّي وش تبي."
-        : "Hey champ! 👋 New conversation — tell me what you need.", "bot");
+    addChatbotMessage(aiGreeting(), "bot");
     renderSavedConversationsList();
 }
 
@@ -483,8 +472,10 @@ function openKhutaBoard(tab, fullMode){
        وتراجع وحفظ باسم — فلم يُبنَ من جديد.) */
     const wantsPad = !tab && typeof isSchoolStaff === "function" && isSchoolStaff();
     switchBoardTab(wantsPad ? "pad" : (tab || "ai"));
-    // المعلّم يفتحها ليكتب أمام صفّه — فتُفتح ملء الشاشة من أول لحظة
-    togglePadMax(wantsPad);
+    // المعلّم يفتحها ليكتب أمام صفّه — فتُفتح ملء الشاشة من أول لحظة.
+    // ⚠️ على شاشة الصف أو الحاسوب فقط: على الجوال فُتحت أكبر من الشاشة واختفى
+    // زرّ الإغلاق (بلاغ المالك ٢٦ سبتمبر) — والجوال لا يُكتب عليه أمام صفّ.
+    togglePadMax(wantsPad && window.innerWidth > 900);
     if(typeof applyStaffBoardText === "function"){
         try{ applyStaffBoardText(typeof isSchoolStaff === "function" && isSchoolStaff()); }
         catch(e){ /* النصوص لا يجوز أن تُسقط فتح السبورة */ }
@@ -778,7 +769,7 @@ function renderSavedBoardsList(){
         <div class="pad-saved-row">
             <button type="button" class="pad-saved-open" onclick="openSavedBoard('${b.id}')" title="${labT("فتح","Open")}">
                 <b>${escapeHtml(b.name)}</b>
-                <span>${new Date(b.date).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US')}</span>
+                <span>${new Date(b.date).toLocaleDateString(khutaLocale())}</span>
             </button>
             <button type="button" class="btn-ghost pad-saved-del" onclick="deleteSavedBoard('${b.id}')" title="${labT("حذف","Delete")}"><i class="fa-solid fa-trash"></i></button>
         </div>`).join("");
@@ -1203,7 +1194,7 @@ function renderExamHistory(){
                 <span class="examhist-pct" style="color:${a.score.pct >= 70 ? 'var(--teal)' : a.score.pct >= 50 ? 'var(--gold)' : 'var(--rose)'}">${a.score.pct}%</span>
                 <span class="examhist-meta">
                     <b>${examTypeLabel(a)}</b>
-                    <span>${new Date(a.date).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US', {weekday:"short", day:"numeric", month:"short"})} · ${a.score.correctCount}/${a.score.total} · ${labT("أخطاء:","Wrong:")} ${a.wrong.length}</span>
+                    <span>${new Date(a.date).toLocaleDateString(khutaLocale(), {weekday:"short", day:"numeric", month:"short"})} · ${a.score.correctCount}/${a.score.total} · ${labT("أخطاء:","Wrong:")} ${a.wrong.length}</span>
                 </span>
                 <i class="fa-solid fa-chevron-down examhist-chev"></i>
             </button>
@@ -1307,7 +1298,7 @@ function renderSavedPlansList(){
         <div class="plan-row">
             <div class="plan-row-info">
                 <b>${escapeHtml(p.name)}</b>
-                <span>${new Date(p.date).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US')} · ${p.snapshot.khuta_plan_days ? p.snapshot.khuta_plan_days + " " + labT("يوم","days") : ""}</span>
+                <span>${new Date(p.date).toLocaleDateString(khutaLocale())} · ${p.snapshot.khuta_plan_days ? p.snapshot.khuta_plan_days + " " + labT("يوم","days") : ""}</span>
             </div>
             <button type="button" class="btn btn-sm btn-outline" onclick="applySavedPlan('${p.id}')">${labT("تفعيل","Activate")}</button>
             <button type="button" class="btn-ghost pad-saved-del" onclick="deleteSavedPlan('${p.id}')"><i class="fa-solid fa-trash"></i></button>
@@ -1537,6 +1528,8 @@ function togglePadMax(force){
     if(!win) return;
     const on = (force === undefined) ? !win.classList.contains("pad-max") : !!force;
     win.classList.toggle("pad-max", on);
+    // الخلفية تعرف أن النافذة ملء الشاشة فتُسقط حشوتها (انظر styles.css)
+    document.getElementById("khuta-board-overlay")?.classList.toggle("pad-max-open", on);
 
     const btn = document.getElementById("pad-max-btn");
     if(btn){

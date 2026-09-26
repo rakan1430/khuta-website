@@ -204,11 +204,12 @@ function renderExamShell(){
     if(!seReview && seExam.timed && seExam.duration_min) startSeTimer(seExam.duration_min);
 }
 
-/* ⚠️ ميلادي صراحةً: "ar-SA" وحدها تُعطي هجرياً، والمعلّم أدخل الموعد
-   بالميلادي — فيقرأ الطالب تاريخاً لا يطابق ما قاله له معلّمه. */
+/* ⚠️ التقويم من khutaLocale(): ميلادي افتراضاً (المعلّم يُدخل الموعد
+   بالميلادي)، وهجري لمن اختاره من الإعدادات. "ar-SA" وحدها كانت تُعطي
+   هجرياً بلا اختيار من أحد. */
 function seDueText(iso){
     try{
-        return new Date(iso).toLocaleString(currentLang === "ar" ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
+        return new Date(iso).toLocaleString(khutaLocale(),
             { dateStyle: "medium", timeStyle: "short" });
     }catch(e){ return ""; }
 }

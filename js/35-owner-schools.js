@@ -27,6 +27,8 @@ function ownerError(e){
         ["BAD_STAGE",             "نوع المدرسة غير معروف.", "Unknown school type."],
         ["BAD_LIMIT",             "الحدود أرقام موجبة، أو اتركها فارغة لتكون بلا حد.", "Limits must be positive, or empty for none."],
         ["EMAIL_IN_OTHER_SCHOOL", "هذا البريد عضو نشط في مدرسة أخرى. الحساب الواحد يتبع مدرسة واحدة — استعمل بريداً آخر أو أوقف عضويته هناك.", "This email is active in another school."],
+        ["BAD_PLATFORM_NAME",     "اسم المنصة ٤٠ حرفاً على الأكثر.", "Platform name: 40 characters max."],
+        ["NEEDS_GOOGLE",          "أعد تسجيل الدخول بحساب Google ثم احفظ.", "Sign in with Google again, then save."],
         ["NOT_FOUND",             "المدرسة غير موجودة — حدّث القائمة.", "School not found."],
     ];
     for(const [code, ar, en] of map){ if(raw.includes(code)) return owLabel(ar, en); }
@@ -177,6 +179,22 @@ function ownerSchoolCard(s){
         </details>
 
         <details style="margin-top:8px;">
+            <summary><b>${owLabel("اسم المنصة تحت شعار خُطى", "Platform name under the Khuta logo")}</b></summary>
+            <p class="hint" style="margin:8px 0;">${owLabel(
+                "يراه معلّمو المدرسة وإدارتها دائماً، وطلابها في «مدرستي» (وفي «القدرات» يبقى «رفيق القدرات»). اتركه فارغاً ليُشتقّ من اسم المدرسة",
+                "Shown to the school's staff always, and to its students in “My school”. Leave empty to derive it from the school name")}:
+                <b>${escapeHtml(owDerivedPlatformName(s.name_ar))}</b></p>
+            <div class="input-row">
+                <div class="form-group"><label>${owLabel("بالعربية", "Arabic")}</label>
+                    <input type="text" id="ow-pname-${id}" maxlength="40" value="${escapeHtml(s.platform_name_ar || "")}" placeholder="${escapeHtml(owDerivedPlatformName(s.name_ar))}"></div>
+                <div class="form-group"><label>${owLabel("بالإنجليزية", "English")}</label>
+                    <input type="text" id="ow-pname-en-${id}" maxlength="40" dir="ltr" value="${escapeHtml(s.platform_name_en || "")}" placeholder="School platform"></div>
+            </div>
+            <button type="button" class="btn btn-sm acc-btn" data-id="${id}" onclick="ownerSavePlatformName(this.dataset.id)">
+                <i class="fa-solid fa-floppy-disk"></i> ${owLabel("حفظ الاسم", "Save name")}</button>
+        </details>
+
+        <details style="margin-top:8px;">
             <summary><b>${owLabel("الاسم والحدود", "Name & limits")}</b></summary>
             <div class="input-row" style="margin-top:8px;">
                 <div class="form-group"><label>${owLabel("الاسم", "Name")}</label>
@@ -199,6 +217,26 @@ function ownerSchoolCard(s){
                 <i class="fa-solid fa-floppy-disk"></i> ${owLabel("حفظ", "Save")}</button>
         </details>
     </div>`;
+}
+
+/** نفس اشتقاق الواجهة (schoolPlatformName في js/05): «مدارس المتقدمة — فرع…» ← «منصة المتقدمة» */
+function owDerivedPlatformName(nameAr){
+    const core = String(nameAr || "").split(/[—–-]/)[0].trim().replace(/^(مدارس|مدرسة|مدرسه)\s+/, "").trim();
+    return core ? "منصة " + core : "منصة المدرسة";
+}
+
+async function ownerSavePlatformName(id){
+    if(!sb) return;
+    const v = el => ((document.getElementById(el) || {}).value || "").trim();
+    try{
+        const { error } = await sb.rpc("owner_set_platform_name", { p_school: id, p_name_ar: v(`ow-pname-${id}`), p_name_en: v(`ow-pname-en-${id}`) });
+        if(error) throw error;
+        showToast(owLabel("حُفظ اسم المنصة ✅ — يظهر لأعضاء المدرسة عند دخولهم التالي", "Platform name saved ✅"));
+        await loadOwnerSchools();
+    }catch(e){
+        console.error("[خُطى] تعذّر حفظ اسم المنصة:", e);
+        showToast(ownerError(e));
+    }
 }
 
 function owPreviewSlug(){

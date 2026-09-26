@@ -224,6 +224,14 @@ async function loadSchoolContext(){
             fullName: row.full_name, grade: row.grade, section: row.section,
             schoolName: row.school_name,
         };
+        /* اسم المنصة الذي يحدّده المالك لكل مدرسة (schools.platform_name_ar).
+           فارغ = يُشتقّ من اسم المدرسة («مدارس المتقدمة…» ← «منصة المتقدمة»).
+           فشل القراءة لا يوقف شيئاً: يبقى الاسم المشتقّ. */
+        try{
+            const { data: s } = await sb.from("schools").select("platform_name_ar, platform_name_en")
+                .eq("id", row.school_id).maybeSingle();
+            if(s){ schoolCtx.platformNameAr = s.platform_name_ar || null; schoolCtx.platformNameEn = s.platform_name_en || null; }
+        }catch(e){}
     }catch(e){ console.warn("[خُطى] تعذّر تحميل عضوية المدرسة:", e); }
     return schoolCtx;
 }
@@ -458,7 +466,8 @@ async function loadAccountRequests(){
             return;
         }
         box.innerHTML = data.map(r => {
-            const when = new Date(r.created_at).toLocaleDateString(currentLang==='ar'?'ar-SA':'en-US');
+            // بلا تاريخ (بيانات العرض التجريبي) ← فراغ لا «Invalid Date»
+            const when = r.created_at ? new Date(r.created_at).toLocaleDateString(khutaLocale()) : "";
             const cls = r.grade ? `${escapeHtml(gradeName(r.grade))}${r.section ? " / " + escapeHtml(r.section) : ""}` : "—";
             return `
             <div class="areq-card">
@@ -654,6 +663,9 @@ function applySchoolRoleUI(){
     /* طالب المدرسة وحده يُميَّز له قسم "منصة المدرسة" في القائمة — لأنه
        القسم الذي جاء من أجله، ولا ينبغي أن يضيع بين أقسام القدرات. */
     document.body.classList.toggle("is-school-student", role === "student");
+    // هوية المنصة في الأعلى، وترحيب بلا صاروخ للمعلّم والإدارة
+    try{ if(typeof applySchoolBrand === "function") applySchoolBrand(); }catch(e){}
+    try{ if(typeof updateWelcomeText === "function") updateWelcomeText(); }catch(e){}
 
     /* ⚠️ الوضع يُهيَّأ هنا لا في الإقلاع: قبل معرفة العضوية لا نعرف أي
        الأوضاع متاحة أصلاً. وهذا يجري لكل حساب — بلا عضوية يبقى وضع

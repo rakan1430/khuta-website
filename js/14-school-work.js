@@ -767,7 +767,7 @@ function workDueLine(w){
     const ar = currentLang === 'ar';
     let when = "";
     try{
-        when = new Date(w.due_at).toLocaleString(ar ? "ar-SA-u-ca-gregory-nu-latn" : "en-US",
+        when = new Date(w.due_at).toLocaleString(khutaLocale(),
             { dateStyle: "medium", timeStyle: "short" });
     }catch(e){}
     const left = new Date(w.due_at).getTime() - Date.now();

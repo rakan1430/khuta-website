@@ -2625,7 +2625,7 @@ body.dark-mode .chatbot-board-btn{
     background:var(--bg-alt); border:1.5px solid var(--border); color:var(--text-2);
     font-family:var(--font-body); font-weight:700; font-size:12.5px; transition:.2s;
 }
-.campaign-tab.active{ background:var(--gold); color:#fff; border-color:var(--gold); }
+.campaign-tab.active{ background:var(--gold-btn); color:#fff; border-color:var(--gold-btn); }
 .campaign-list{ display:flex; flex-direction:column; gap:8px; max-height:340px; overflow-y:auto; }
 .campaign-row{
     display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
@@ -2634,7 +2634,15 @@ body.dark-mode .chatbot-board-btn{
 .campaign-row-main{ flex:1; min-width:160px; }
 .campaign-row-main b{ display:block; font-size:13.5px; margin-bottom:3px; }
 .campaign-meta{ font-size:11px; color:var(--text-3); line-height:1.6; }
-.campaign-row-actions{ display:flex; gap:6px; flex-shrink:0; }
+.campaign-row-actions{ display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; align-items:center; }
+/* أرقام الوصول في تبويب «المستلمون» */
+.campaign-counts{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px; }
+.campaign-count{
+    display:flex; flex-direction:column; gap:2px; padding:10px 12px;
+    border:1px solid var(--border); border-radius:12px; background:var(--bg);
+}
+.campaign-count b{ font-size:20px; color:var(--gold-text); }
+.campaign-count span{ font-size:11.5px; color:var(--text-2); line-height:1.5; }
 #campaign-body{ font-family:var(--font-mono); font-size:12.5px; line-height:1.7; resize:vertical; }
 
 /* ============================================================
@@ -4194,3 +4202,293 @@ details.ss-sec[open] > summary.ss-head::after{ content:"−"; }
 /* الإجراءات الحساسة */
 .card-danger{ border:1px solid rgba(192,57,43,.35); }
 .btn-danger-outline{ color:var(--rose, #c0392b) !important; border-color:rgba(192,57,43,.5) !important; }
+
+/* ============================================================
+   المساعد الحيّ (js/42-assistant.js)
+   ============================================================ */
+.chatbot-panel{ width:370px; }
+.chatbot-messages{ max-height:min(46vh, 420px); }
+.ast-where{ font-size:10.5px; color:var(--gold-text); font-weight:700; margin-top:3px; }
+.ast-where:empty{ display:none; }
+.chatbot-suggestions button{ transition:.2s var(--ease); }
+.chatbot-suggestions button:hover{ border-color:var(--gold); color:var(--text-1); transform:translateY(-1px); }
+
+.ast-pills{ display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; white-space:normal; }
+.ast-pill{
+    display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:99px;
+    background:rgba(28,138,114,0.12); color:var(--teal-text); border:1px solid rgba(28,138,114,0.28);
+    animation:astPillIn .35s var(--ease) both;
+}
+.ast-pill.fail{ background:rgba(192,57,43,0.1); color:var(--danger); border-color:rgba(192,57,43,0.3); }
+@keyframes astPillIn{ from{ opacity:0; transform:translateY(4px) scale(.95); } }
+
+.ast-quiz-card{ margin-top:10px; padding:10px 12px; border-radius:12px; background:var(--surface); border:1px solid var(--border); white-space:normal; }
+.ast-quiz-card > b{ display:block; font-size:12.5px; color:var(--gold-text); margin-bottom:6px; }
+.ast-quiz-card ol{ margin:0; padding-inline-start:18px; max-height:220px; overflow-y:auto; font-size:12px; line-height:1.7; }
+.ast-quiz-card li{ margin-bottom:6px; }
+.ast-qc{ display:flex; flex-wrap:wrap; gap:4px 10px; color:var(--text-3); font-size:11px; }
+.ast-qc .ok{ color:var(--teal-text); font-weight:800; }
+.ast-quiz-btns{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.ast-quiz-btns .btn{ font-size:11.5px; }
+
+.ast-mic{
+    width:38px; height:38px; flex-shrink:0; border-radius:50%; border:1px solid var(--border); background:var(--bg-alt);
+    color:var(--text-2); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:.2s var(--ease);
+}
+.ast-mic[hidden]{ display:none; }
+.ast-mic:hover{ color:var(--gold-text); border-color:var(--gold); }
+.ast-mic.listening{ background:var(--danger); color:#fff; border-color:transparent; animation:astMic 1.1s ease-in-out infinite; }
+@keyframes astMic{ 0%,100%{ box-shadow:0 0 0 0 rgba(192,57,43,0.45); } 50%{ box-shadow:0 0 0 8px rgba(192,57,43,0); } }
+
+.ast-flash{ animation:astFlash 2s var(--ease); }
+@keyframes astFlash{ 0%{ box-shadow:0 0 0 0 rgba(201,150,46,0); } 25%{ box-shadow:0 0 0 4px rgba(201,150,46,0.55); } 100%{ box-shadow:0 0 0 0 rgba(201,150,46,0); } }
+
+/* الجولة الحيّة: البقعة تنزلق بين العناصر بدل أن تقفز */
+.ast-tour .ast-spot{ transition:top .45s var(--ease), left .45s var(--ease), width .45s var(--ease), height .45s var(--ease); }
+.ast-tour-card{ max-width:min(320px, calc(100vw - 24px)); transition:top .35s var(--ease), left .35s var(--ease); }
+.ast-tour-card .ai-guide-badge{ margin-bottom:6px; }
+.ast-tour-btns{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:12px; }
+
+/* اقتراح الجولة عند أول زيارة لقسم — فقاعة بجانب زر المساعد */
+.ast-nudge{
+    position:fixed; bottom:100px; inset-inline-end:26px; z-index:2400; max-width:min(320px, calc(100vw - 32px));
+    background:var(--surface-raised, var(--surface)); color:var(--text-1); border:1px solid var(--border); border-radius:16px;
+    padding:12px 14px; box-shadow:var(--shadow-lg); font-size:12.5px; line-height:1.7;
+    opacity:0; transform:translateY(10px) scale(.97); transition:.35s var(--ease); pointer-events:none;
+}
+.ast-nudge.show{ opacity:1; transform:none; pointer-events:auto; }
+.ast-nudge-btns{ display:flex; align-items:center; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.ast-nudge-btns .btn-ghost{ font-size:11.5px; }
+@media (max-width:992px){ .ast-nudge{ bottom:160px; inset-inline-end:16px; } }
+
+/* ---------- الاختبار السريع على السبورة ---------- */
+.ast-quiz{
+    position:fixed; inset:0; z-index:10050; display:flex; align-items:center; justify-content:center;
+    background:rgba(8,6,24,0.72); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    opacity:0; transition:opacity .3s var(--ease); padding:16px;
+}
+.ast-quiz.open{ opacity:1; }
+.astq-board{
+    position:relative; width:min(980px, 100%); max-height:100%; overflow-y:auto; border-radius:24px; color:#fff;
+    background:
+        radial-gradient(600px 300px at 85% 0%, rgba(129,84,255,0.18), transparent 60%),
+        linear-gradient(165deg, #1E1745, #171034);
+    border:1.5px solid rgba(210,195,255,0.22); box-shadow:0 30px 80px rgba(0,0,0,0.5), inset 0 2px 20px rgba(0,0,0,0.35);
+    padding:22px clamp(16px, 4vw, 40px) 26px; transform:translateY(12px) scale(.98); transition:transform .35s var(--ease);
+}
+.ast-quiz.open .astq-board{ transform:none; }
+.ast-quiz:fullscreen{ padding:3vh 3vw; background:#120c2c; }
+.ast-quiz:fullscreen .astq-board{ width:100%; height:100%; }
+.astq-head{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.astq-title{ font-size:clamp(15px, 2vw, 19px); color:#FFD98A; font-family:var(--font-display); }
+.astq-title i{ margin-inline-end:6px; }
+.astq-tools{ display:flex; align-items:center; gap:8px; }
+.astq-icon{ width:38px; height:38px; border-radius:50%; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.06); color:#fff; cursor:pointer; }
+.astq-icon:hover{ background:rgba(255,255,255,0.14); }
+.astq-timer-pick{ display:inline-flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,0.8); }
+.astq-timer-pick select{ background:rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.2); border-radius:99px; padding:5px 10px; font:inherit; }
+.astq-timer-pick option{ color:#111; }
+.astq-progress{ height:6px; border-radius:99px; background:rgba(255,255,255,0.1); overflow:hidden; }
+.astq-progress span{ display:block; height:100%; background:linear-gradient(90deg, #FFD98A, #B9F2DC); transition:width .5s var(--ease); }
+.astq-meta{ display:flex; justify-content:space-between; font-size:12.5px; color:rgba(255,255,255,0.65); margin:10px 0 6px; font-weight:700; }
+.astq-clock{ padding:2px 10px; border-radius:99px; background:rgba(255,255,255,0.1); font-variant-numeric:tabular-nums; }
+.astq-clock.low{ background:#C0392B; color:#fff; animation:astMic 1s ease-in-out infinite; }
+.astq-q{
+    font-size:clamp(19px, 3.2vw, 34px); line-height:1.6; font-weight:800; margin:14px 0 22px;
+    text-shadow:0 0 12px rgba(255,255,255,0.18); animation:labPaneIn .4s var(--ease) both;
+}
+.astq-choices{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:640px){ .astq-choices{ grid-template-columns:1fr; } }
+.astq-choice{
+    display:flex; align-items:center; gap:12px; text-align:start; padding:14px 16px; border-radius:16px; cursor:pointer;
+    background:rgba(255,255,255,0.06); border:1.5px solid rgba(255,255,255,0.16); color:#fff;
+    font:inherit; font-size:clamp(15px, 2.2vw, 22px); font-weight:700; transition:.25s var(--ease);
+    animation:labPaneIn .4s var(--ease) both;
+}
+.astq-choice:nth-child(2){ animation-delay:.05s; } .astq-choice:nth-child(3){ animation-delay:.1s; } .astq-choice:nth-child(4){ animation-delay:.15s; }
+.astq-choice:not(:disabled):hover{ background:rgba(255,217,138,0.12); border-color:rgba(255,217,138,0.55); transform:translateY(-2px); }
+.astq-letter{
+    flex-shrink:0; width:clamp(32px, 4vw, 44px); height:clamp(32px, 4vw, 44px); border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    background:rgba(255,217,138,0.16); color:#FFD98A; font-weight:800;
+}
+.astq-choice.right{ background:rgba(94,214,183,0.2); border-color:#5ED6B7; animation:astRight .5s var(--ease); }
+.astq-choice.right .astq-letter{ background:#5ED6B7; color:#0c3a2e; }
+.astq-choice.wrong{ background:rgba(255,120,120,0.16); border-color:#FF8A8A; animation:astWrong .4s; }
+.astq-choice.wrong .astq-letter{ background:#FF8A8A; color:#3a0c0c; }
+.astq-choice.dim{ opacity:.45; }
+.astq-choice:disabled{ cursor:default; }
+@keyframes astRight{ 50%{ transform:scale(1.03); } }
+@keyframes astWrong{ 20%,60%{ transform:translateX(-6px); } 40%,80%{ transform:translateX(6px); } }
+.astq-why{
+    margin-top:16px; padding:12px 16px; border-radius:14px; color:#B9F2DC; font-size:clamp(14px, 1.8vw, 17px); line-height:1.8;
+    background:linear-gradient(155deg, rgba(94,214,183,0.16), rgba(94,214,183,0.05)); border:1.5px solid rgba(94,214,183,0.4);
+    animation:labPaneIn .35s var(--ease) both;
+}
+.astq-foot{ display:flex; justify-content:center; gap:10px; margin-top:20px; }
+.astq-foot [hidden]{ display:none; }
+.astq-light-btn{ color:#fff !important; border-color:rgba(255,255,255,0.35) !important; background:transparent !important; }
+.astq-light-btn:hover{ background:rgba(255,255,255,0.1) !important; }
+.astq-end{ text-align:center; padding:24px 0 8px; }
+.astq-end-emoji{ font-size:64px; animation:astRight .8s var(--ease); }
+.astq-end-score{ font-size:clamp(40px, 7vw, 72px); font-weight:800; color:#FFD98A; font-variant-numeric:tabular-nums; }
+.astq-end p{ color:rgba(255,255,255,0.75); font-size:16px; margin:6px 0 18px; }
+.astq-end-btns{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+.astq-confetti{ position:absolute; inset:0; pointer-events:none; overflow:hidden; border-radius:24px; }
+.astq-confetti i{ position:absolute; top:-12px; width:8px; height:14px; border-radius:2px; animation:astFall linear forwards; }
+@keyframes astFall{ to{ transform:translateY(110vh) rotate(720deg); opacity:.2; } }
+@media (prefers-reduced-motion: reduce){
+    .astq-choice, .astq-q, .astq-why, .ast-pill{ animation:none; }
+    .astq-confetti{ display:none; }
+    .ast-tour .ast-spot, .ast-tour-card{ transition:none; }
+}
+
+/* ============================================================
+   أجهزة اللمس — تمرير سلس مع بقاء الزجاج والنجوم كما هي
+   ------------------------------------------------------------
+   بلاغ المالك (٢٦ سبتمبر): تقطيع عند النزول والصعود على الجوال والآيباد.
+   ⚠️ المحاولة الأولى أزالت الزجاج والنجوم والزخارف — ورفضها المالك بحقّ:
+   «كانت تحسّن شكل الموقع». والتداخل لم يُحلّ بها أصلاً.
+
+   القياس (تتبّع أداء كروم، جوال ٣٩٠، معالج مُبطّأ ٦×): عمل الرسم على
+   بطاقة الرسومات أثناء التمرير — الضبابية الحية كما هي ٢١٤٦ مللي، وبلا
+   ضبابية إطلاقاً ٣٠٥. أي أنها السبب المباشر للتقطيع. وأكثره من شيئين لا
+   يُريان بالعين:
+   ١) ضبابية البطاقة تُعاد حسابها مع كل إطار تمرير (البطاقة تتحرك فوق
+      خلفية ثابتة). وفوق خلفية ناعمة كهذه، الضبابية تكاد لا تغيّر شيئاً
+      سوى تشبّع اللون — فتُحاكى بلون شفاف محسوب مرة واحدة.
+   ٢) ضبابية الحقول والأزرار *داخل* البطاقة: ضبابية فوق ضبابية، لا أثر
+      لها بصرياً أبداً، وتكلّف ما تكلّفه.
+   النتيجة ٥٤٠ مللي (−٧٥٪)، والفرق في الصورة: ٠٪ من البكسلات في الفاتح،
+   و٠٫٥٪ في الداكن. النجوم تومض كما كانت، والزخارف كما كانت، والشريط
+   السفلي وشاشات النوافذ باقية بضبابيتها الحية. والحاسوب لم يُمسّ.
+   (html.touch-ui يضعه سكربت في <head>؛ الآيباد يُعرف بنقاط اللمس.)
+   ============================================================ */
+html.touch-ui .card, html.touch-ui .card *,
+html.touch-ui .overview-stat-card, html.touch-ui .xp-hero-card,
+html.touch-ui .link-card, html.touch-ui .weight-chip, html.touch-ui .intensity-chip{
+    -webkit-backdrop-filter:none; backdrop-filter:none;
+}
+/* لون الزجاج الداكن كما يظهر فعلاً بعد الضبابية والتشبّع (مُقاس بالبكسل) */
+html.touch-ui body.dark-mode .card{
+    background:linear-gradient(165deg, rgba(118,96,240,0.22) 0%, rgba(60,44,140,0.42) 45%, rgba(36,26,96,0.50) 100%);
+}
+html.touch-ui body.dark-mode .overview-stat-card{ background:linear-gradient(165deg, rgba(120,98,236,0.20), rgba(44,32,104,0.46)); }
+html.touch-ui body.dark-mode .xp-hero-card{ background:linear-gradient(135deg, rgba(120,98,236,0.26), rgba(46,34,108,0.48) 55%, rgba(201,150,46,0.18)); }
+/* البطاقة لا ترتفع عند اللمس: hover على اللمس «يعلق» بعد النقر فتقفز البطاقة */
+html.touch-ui .card:hover{ transform:none; }
+
+/* ============================================================
+   السبورة على الجوال: زرّ الإغلاق لا يخرج من الشاشة أبداً
+   ------------------------------------------------------------
+   بلاغ المالك (٢٦ سبتمبر): «عند فتح السبورة تفتح بشكل كبير جداً لدرجة أن
+   زر X يختفي تماماً… والحل بإغلاق الموقع». السبب:
+   ١) ارتفاعها بـvh، وvh على Safari هو ارتفاع الشاشة *بلا* شريطَي المتصفح —
+      أطول من الجزء الظاهر، فيخرج الرأس (وفيه X) فوق الشاشة.
+   ٢) الدفتر ملء الشاشة (للمعلّم) ‎100vw×100vh‎ داخل خلفية لها حشوة ومحاذاة
+      للأسفل: النافذة أكبر من مكانها، فيُدفع رأسها للأعلى خارج الشاشة.
+   العلاج: dvh (الجزء الظاهر فعلاً)، وسقف أعلى لا يتجاوز الشاشة، وخلفية بلا
+   حشوة حين تكون النافذة ملء الشاشة، وهامش المنطقة الآمنة أعلى الآيفون.
+   ============================================================ */
+.board-window{ max-height:calc(100dvh - 20px); }
+.board-window.full-mode{ height:90dvh; }
+@media (max-width:700px){
+    .board-window, .board-window.full-mode{ height:92vh; height:92dvh; }
+}
+@media (max-width:900px){
+    .lab-overlay.pad-max-open{ padding:0; align-items:stretch; }
+    .board-window.pad-max{
+        width:100%; max-width:100%; height:100vh; height:100dvh; max-height:100dvh;
+        border-radius:0; transform:none;
+    }
+    .board-window.pad-max .lab-window-head{ padding-top:max(12px, env(safe-area-inset-top)); }
+}
+
+/* ============================================================
+   ساعة الرأس — ساعات ودقائق في إطار يليق بخُطى (بلا ثوانٍ)
+   ------------------------------------------------------------
+   المالك: «شكل الساعة والدقائق ليس جميلاً… داخل إطار بشكل جميل يليق
+   بخُطى، وخانة الثواني احذفها — ذكرت لك هذا أكثر من مرة».
+   ============================================================ */
+/* ⚠️ التوسيط بصري لا حسابي (ملاحظة المالك: «الوقت كله متجه للزاوية العلوية
+   اليسرى»). قياس الحبر بخطّ El Messiri الحقيقي: الأرقام أعلى من المنتصف بـ٣
+   بكسل، و«ص/م» الصغيرة بجانبها تزيح كتلتها يساراً. العلاج: شبكة من ثلاثة
+   أعمدة — عمودان جانبيان متساويان (فارغ | ص/م) والأرقام في الوسط الحقيقي،
+   وحشوة أعلى أكبر قليلاً تعوّض ارتفاع الأرقام في سطر هذا الخط. */
+.live-clock{
+    display:inline-grid; grid-template-columns:1fr auto 1fr; align-items:center; column-gap:7px; direction:ltr;
+    padding:9px 14px 6px; border-radius:16px;
+    font-family:var(--font-display); font-size:23px; font-weight:700; line-height:1;
+    font-variant-numeric:tabular-nums; letter-spacing:.5px; color:var(--text-1);
+    background:linear-gradient(160deg, rgba(201,150,46,0.16), rgba(201,150,46,0.04));
+    border:1px solid rgba(201,150,46,0.38);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 14px rgba(201,150,46,0.12);
+}
+.live-clock::before{ content:""; }
+.live-clock .lc-hm{ display:inline-flex; align-items:center; justify-self:center; }
+.live-clock .lc-colon{ margin:0 2px; position:relative; top:-1px; color:var(--gold-text); animation:lcColon 2s ease-in-out infinite; }
+.live-clock .lc-ampm{ justify-self:start; position:relative; top:-2px; font-family:var(--font-body); font-size:11.5px; font-weight:800; color:var(--gold-text); letter-spacing:0; }
+@keyframes lcColon{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
+body.dark-mode .live-clock{
+    color:#FFF4DC;
+    background:linear-gradient(160deg, rgba(255,196,100,0.16), rgba(132,112,240,0.10));
+    border-color:rgba(255,208,124,0.42);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.10), 0 0 22px rgba(255,182,72,0.14);
+}
+@media (max-width:992px){ .live-clock{ font-size:19px; padding:8px 12px 5px; } }
+@media (prefers-reduced-motion: reduce){ .live-clock .lc-colon{ animation:none; } }
+/* اسم منصة المدرسة تحت شعار خُطى: عربي متّصل — بلا تباعد أحرف يقطّع الكلمة */
+body.brand-school .brand small{ letter-spacing:0; font-size:12.5px; font-weight:700; color:var(--gold-text); margin-top:4px; }
+
+/* ============ إشعار تحديث الشروط (js/43-notices.js) ============ */
+.legal-updated{ margin-top:18px; font-size:12px; color:var(--text-3); border-top:1px dashed var(--border); padding-top:10px; }
+.terms-notice{
+    position:fixed; inset:0; z-index:6500; display:flex; align-items:center; justify-content:center; padding:16px;
+    background:rgba(8,6,24,0); transition:background .35s var(--ease);
+}
+.terms-notice.show{ background:rgba(8,6,24,0.55); }
+.terms-notice-card{
+    width:min(440px, 100%); max-height:88vh; overflow-y:auto; text-align:center;
+    background:var(--surface-raised); color:var(--text-1); border:1px solid var(--border); border-radius:22px;
+    padding:24px 22px; box-shadow:var(--shadow-lg);
+    opacity:0; transform:translateY(14px) scale(.97); transition:.35s var(--ease);
+}
+.terms-notice.show .terms-notice-card{ opacity:1; transform:none; }
+.terms-notice-icon{ font-size:38px; margin-bottom:6px; }
+.terms-notice-card > b{ display:block; font-size:17px; margin-bottom:10px; font-family:var(--font-display); }
+.terms-notice-body{ text-align:start; font-size:13.5px; line-height:1.9; color:var(--text-2); margin-bottom:14px; }
+.terms-notice-links{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+
+/* ============ حالة الإشعارات على هذا الجهاز (renderPushState) ============ */
+.push-state{ font-size:13px; line-height:1.9; padding:12px 14px; border-radius:14px; margin-bottom:12px; border:1px solid var(--border); background:var(--bg-alt); }
+.push-state.ok{ border-color:rgba(26,131,108,0.35); background:rgba(26,131,108,0.08); color:var(--teal-text); font-weight:700; }
+.push-state.warn{ border-color:rgba(201,150,46,0.45); background:rgba(201,150,46,0.08); }
+.push-steps{ margin:8px 0 0; padding-inline-start:20px; }
+.push-steps li{ margin-bottom:4px; }
+
+/* ============ الشروط لكل فئة + نافذتها على الجوال ============ */
+.legal-window{ max-height:min(82vh, calc(100dvh - 24px)); }
+.legal-window .legal-body{ flex:1; min-height:0; }
+.legal-window .lab-window-title{ font-family:var(--font-display); }
+@media (max-width:700px){ .legal-window{ height:auto; max-height:calc(100dvh - 16px); } }
+.legal-for{ font-size:12.5px; padding:8px 12px; border-radius:10px; background:rgba(201,150,46,0.10); border:1px solid rgba(201,150,46,0.3); }
+.legal-preview{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px dashed var(--border); }
+.legal-preview button{ font:inherit; font-size:12px; padding:5px 10px; border-radius:99px; border:1px solid var(--border); background:var(--bg-alt); color:var(--text-2); cursor:pointer; }
+.legal-preview button.active{ background:var(--gold-btn); color:#fff; border-color:transparent; }
+
+/* ============ الإعدادات: صفوف مدمجة للاختيارات البسيطة ============ */
+.settings-rows{ padding:6px 20px; }
+.settings-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; }
+.settings-row + .settings-row{ border-top:1px solid var(--border); }
+.settings-row-label{ display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:14px; color:var(--text-1); }
+.settings-row-label i{ color:var(--gold-text); width:18px; text-align:center; }
+.settings-seg{ margin:0; flex-shrink:0; }
+.settings-seg button{ padding:7px 14px; font-size:13px; }
+@media (max-width:380px){ .settings-row{ flex-wrap:wrap; } }
+/* نافذة الشروط تُقرأ نصّاً طويلاً: سطح مصمت لا زجاج — على الزجاج البنفسجي
+   كان النصّ الداكن (الوضع الفاتح) يكاد لا يُقرأ فوق الصفحة الظاهرة خلفه */
+.lab-window.legal-window{ background:var(--surface-raised); border-color:var(--border); box-shadow:var(--shadow-lg); }
+.legal-window .lab-window-head{ border-bottom-color:var(--border); }
+.legal-window .lab-window-title{ color:var(--text-1); }
+.legal-window .lab-close-btn{ color:var(--text-1); border-color:var(--border); background:var(--bg-alt); }
+body.dark-mode .lab-window.legal-window{ background:linear-gradient(165deg, #2A2360, #17123A); border-color:rgba(210,195,255,0.28); }
+body.dark-mode .legal-window .lab-close-btn{ color:#fff; background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.2); }
