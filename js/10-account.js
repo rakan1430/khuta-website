@@ -492,60 +492,107 @@ function renderPrivacyCard(){
     box.checked = localStorage.getItem("khuta_marketing_consent") === "1";
 }
 
+/* ============================================================
+   شروط الاستخدام وسياسة الخصوصية
+   ------------------------------------------------------------
+   ⚠️ (٢٦ سبتمبر) أُعيدت كتابتهما بطلب المالك: «أعتقد أنها قديمة جداً الآن».
+   وكانت فعلاً غير صحيحة لا قديمة فقط: قالت «لا نجمع اسمك الحقيقي ولا رقم
+   هويتك» — ومنصة المدارس تحفظ الاسم الكامل، وتستعمل الهوية عند الاستيراد
+   (بصمة مشفّرة)، والدرجات والغياب. النصّ هنا يطابق ما يفعله الموقع اليوم.
+   ⚠️ عند تغيير أيّ منهما: ارفع TERMS_VERSION وTERMS_UPDATED، ثم يرسل المالك
+   الإشعار من «أدوات المشرف ← إشعار تحديث الشروط» (js/43-notices.js).
+   ============================================================ */
+const TERMS_VERSION = "2.0";
+const TERMS_UPDATED = { ar: "٢٦ سبتمبر ٢٠٢٦", en: "26 September 2026" };
+
 const LEGAL_DOCS = {
     terms: {
         titleAr: "شروط الاستخدام", titleEn: "Terms of Use",
         bodyAr: `
-            <h3>١. طبيعة الخدمة</h3>
-            <p>خُطى أداة مساعدة لتنظيم مذاكرة اختبار القدرات العامة (GAT). التطبيق <b>غير تابع لهيئة تقويم التعليم والتدريب (قياس)</b> ولا لأي جهة رسمية، ولا يمثّلها بأي شكل.</p>
-            <h3>٢. دقة المحتوى</h3>
-            <p>بيانات الجامعات وأوزان النسب الموزونة ومتطلبات القبول تقريبية وقد تتغيّر. <b>تحقّق دائماً من الموقع الرسمي للجامعة</b> قبل اتخاذ أي قرار فعلي. الاختبارات المحاكية والأسئلة هي للتدريب فقط ولا تعكس الاختبار الحقيقي حرفياً.</p>
-            <h3>٣. الذكاء الاصطناعي</h3>
-            <p>المساعد الذكي أداة مساعدة قد تُخطئ. لا تعتمد على إجاباته وحدها في قرار مصيري، وراجع دائماً مصادرك الدراسية الأساسية.</p>
-            <h3>٤. حسابك</h3>
-            <p>أنت مسؤول عن الحفاظ على كلمة مرورك. التطبيق يعمل كاملاً بدون حساب (كضيف)، والحساب اختياري لمزامنة تقدّمك بين أجهزتك فقط.</p>
-            <h3>٥. الاستخدام المقبول</h3>
-            <p>يُمنع استخدام التطبيق لأي غرض غير قانوني، أو محاولة تعطيله، أو إساءة استخدام مواردة (مثل الإكثار المتعمّد من طلبات الذكاء الاصطناعي).</p>
-            <h3>٦. التغييرات</h3>
-            <p>قد تُحدَّث هذه الشروط مع تطوّر التطبيق. استمرارك في الاستخدام يعني موافقتك على النسخة المحدّثة.</p>`,
+            <h3>١. ما هي خُطى</h3>
+            <p>خُطى منصة تعليمية سعودية لها وجهان: <b>رفيق القدرات</b> لتنظيم مذاكرة اختبار القدرات العامة، و<b>منصة المدارس</b> التي تستعملها المدرسة لعملها اليومي مع طلابها (الملفات، الاختبارات، الواجبات، السجلّ، المكتبة، الجدول الدراسي). خُطى <b>غير تابعة</b> لهيئة تقويم التعليم والتدريب (قياس) ولا لوزارة التعليم، و<b>لا ترتبط بنظام نور</b>: ما يظهر منه (كالدرجات الرسمية والغياب) ترفعه المدرسة بنفسها من ملفاتها.</p>
+            <h3>٢. الحسابات</h3>
+            <p>تستطيع استعمال رفيق القدرات ضيفاً بلا حساب، أو بحساب (اسم مستخدم أو Google). أما منصة المدارس فحساباتها تنشئها إدارة المدرسة أو توافق عليها، وتستطيع إيقافها. أنت مسؤول عن سرّية دخولك، ومنه كلمة «الدخول السريع» على سبورة الفصل.</p>
+            <h3>٣. ما ترفعه وتكتبه</h3>
+            <p>أنت مسؤول عمّا ترفعه أو تكتبه (ملفات، أسئلة، روابط، مشاركات). يجب أن يكون تعليمياً ونظامياً، وألّا ينتهك حقوق غيرك أو خصوصيته. ملفات المعلّم المشارَكة تظهر لطلاب فصوله. المشاركات التي يبلّغ عنها خمسة تُخفى وتُراجع وقد تُحذف، ولنا حذف أي محتوى مخالف.</p>
+            <h3>٤. الاختبارات والواجبات والدرجات</h3>
+            <p>تصحيح الاختبارات الإلكترونية آلي حسب الإجابة التي حدّدها المعلّم، والمعلّم والمدرسة هما المسؤولان عن الأسئلة والدرجات ومواعيدها. الدرجات الرسمية تُعرض كما رفعتها المدرسة دون تعديل منّا. أي اعتراض على درجة يكون للمدرسة. ويُمنع تسريب أسئلة اختبار أو إجاباته أثناء وقته، أو أي محاولة للغشّ أو للالتفاف على المؤقّت.</p>
+            <h3>٥. المساعد الذكي</h3>
+            <p>المساعد أداة مساعدة قد تُخطئ. ما يصوغه من أسئلة أو شرح هو <b>مسودّة يراجعها المعلّم</b> قبل أن يحفظها أو يرسلها — المساعد لا يحفظ ولا يرسل شيئاً بنفسه. لا تعتمد عليه وحده في قرار مهم، ولا ترسل له بيانات شخصية حسّاسة. لاستعماله حدّ يومي وأسبوعي، وقد تحدّد المدرسة حدّاً لأعضائها.</p>
+            <h3>٦. دقّة المعلومات العامة</h3>
+            <p>بيانات الجامعات وأوزان النسب الموزونة ومتطلبات القبول تقريبية وقد تتغيّر — <b>تحقّق دائماً من الموقع الرسمي للجامعة</b>. والاختبارات المحاكية للتدريب لا تعكس الاختبار الحقيقي حرفياً.</p>
+            <h3>٧. الرسائل</h3>
+            <p>رسائل خُطى التذكيرية لا تصلك إلا إن وافقت عليها. رسائل إدارة مدرستك تصل طلابها ويمكن إيقافها برابط في أسفلها. ورسائل الخدمة (مثل إشعار تحديث هذه الشروط) تصل كل مستخدم.</p>
+            <h3>٨. الاستخدام المقبول</h3>
+            <p>يُمنع استعمال خُطى لأي غرض غير نظامي، أو الإساءة لأحد، أو محاولة تعطيلها أو تجاوز صلاحياتك، أو إساءة استعمال مواردها (كالإكثار المتعمّد من طلبات الذكاء الاصطناعي أو الرسائل).</p>
+            <h3>٩. التغييرات</h3>
+            <p>قد تُحدَّث هذه الشروط مع تطوّر خُطى. نُبلغك بالتحديث داخل الموقع، وبالبريد لمن له بريد. استمرارك في الاستعمال بعد الإبلاغ موافقة على النسخة المحدّثة.</p>
+            <p class="legal-updated">آخر تحديث: ${TERMS_UPDATED.ar} · النسخة ${TERMS_VERSION}</p>`,
         bodyEn: `
-            <h3>1. Nature of the service</h3>
-            <p>Khuta is a study-organization tool for the Saudi GAT exam. It is <b>not affiliated with Qiyas (ETEC)</b> or any official body.</p>
-            <h3>2. Content accuracy</h3>
-            <p>University data, weighted-score formulas, and admission requirements are approximate and subject to change. <b>Always verify with the university's official website.</b> Practice exams are for training only.</p>
-            <h3>3. AI assistant</h3>
-            <p>The AI assistant may make mistakes. Don't rely on it alone for important decisions.</p>
-            <h3>4. Your account</h3>
-            <p>You are responsible for your password. The app works fully without an account; accounts are optional and only sync progress across devices.</p>
-            <h3>5. Acceptable use</h3>
-            <p>Don't use the app for unlawful purposes, attempt to disrupt it, or abuse its resources.</p>
-            <h3>6. Changes</h3>
-            <p>These terms may be updated as the app evolves.</p>`,
+            <h3>1. What Khuta is</h3>
+            <p>Khuta is a Saudi learning platform with two sides: a <b>GAT study companion</b>, and a <b>school platform</b> schools use with their students (files, exams, homework, records, library, timetable). It is <b>not affiliated</b> with Qiyas (ETEC) or the Ministry of Education, and <b>is not connected to Noor</b>: official grades and attendance appear only if the school uploads them.</p>
+            <h3>2. Accounts</h3>
+            <p>The GAT companion works as a guest or with an account. School accounts are created or approved by the school, which can suspend them. Keep your sign-in private, including any classroom quick-login password.</p>
+            <h3>3. What you upload</h3>
+            <p>You are responsible for what you upload or write. It must be educational, lawful and respect others' rights and privacy. Posts reported five times are hidden, reviewed and may be removed.</p>
+            <h3>4. Exams, homework and grades</h3>
+            <p>Online exams are auto-graded against the teacher's answer key; teachers and the school are responsible for questions, grades and deadlines. Official grades are shown as uploaded by the school. Leaking questions or answers during an exam, or cheating, is prohibited.</p>
+            <h3>5. AI assistant</h3>
+            <p>The assistant may make mistakes. What it drafts is a draft the teacher reviews — it never saves or sends anything by itself. Don't share sensitive personal data with it. Usage limits apply.</p>
+            <h3>6. General information</h3>
+            <p>University data and weighted-score formulas are approximate — always verify officially. Practice exams are for training only.</p>
+            <h3>7. Messages</h3>
+            <p>Khuta reminders only with your consent. School messages reach its students and can be stopped from their footer. Service notices (like terms updates) reach everyone.</p>
+            <h3>8. Acceptable use</h3>
+            <p>No unlawful use, abuse, attempts to disrupt Khuta or exceed your permissions, or abuse of its resources.</p>
+            <h3>9. Changes</h3>
+            <p>We notify you of updates in the app, and by email where available. Continued use after notice means acceptance.</p>
+            <p class="legal-updated">Last updated: ${TERMS_UPDATED.en} · version ${TERMS_VERSION}</p>`,
     },
     privacy: {
         titleAr: "سياسة الخصوصية", titleEn: "Privacy Policy",
         bodyAr: `
-            <h3>ما الذي نجمعه فعلاً؟</h3>
-            <p><b>إن استخدمت التطبيق كضيف (بدون حساب):</b> لا نجمع عنك شيئاً إطلاقاً على خوادمنا. كل بياناتك (خطتك، تقدّمك، ملاحظاتك) محفوظة <b>داخل متصفحك أنت فقط</b> ولا تغادر جهازك.</p>
-            <p><b>إن أنشأت حساباً:</b> نحفظ اسم المستخدم، وكلمة مرور مشفّرة (لا نراها إطلاقاً)، وبيانات تقدّمك الدراسي (خطتك، ساعات مذاكرتك، نقاط الخبرة، نتائج اختباراتك) لمزامنتها بين أجهزتك.</p>
-            <p><b>البريد الإلكتروني اختياري بالكامل.</b> نستخدمه فقط لاسترجاع كلمة المرور، ولإرسال نتيجة اختبارك المحاكي، وللرسائل التذكيرية <b>إن وافقت عليها صراحةً فقط</b>.</p>
-            <h3>ما الذي لا نجمعه أبداً</h3>
-            <p>لا نجمع اسمك الحقيقي، ولا رقم هويتك، ولا رقم جوالك، ولا موقعك الجغرافي، ولا نبيع بياناتك لأي جهة إطلاقاً.</p>
-            <h3>خدمات خارجية نستخدمها</h3>
-            <p>Supabase (تخزين الحسابات والبيانات)، Netlify (استضافة الموقع)، Google Gemini (المساعد الذكي — تُرسَل أسئلتك له لتوليد الإجابة)، Brevo (إرسال البريد فقط لمن ربط بريده).</p>
+            <h3>ما نحفظه — حسب طريقة استعمالك</h3>
+            <p><b>ضيفاً بلا حساب:</b> خطتك وتقدّمك وملاحظاتك تبقى <b>في متصفحك أنت</b>. ولكي يعمل المجتمع (من يذاكر الآن، لوحة الصدارة) يُنشأ لك معرّف مجهول بلا أي معلومة شخصية.</p>
+            <p><b>بحساب خُطى:</b> اسم المستخدم أو بريد Google، وكلمة مرور مشفّرة لا نراها، وتقدّمك الدراسي (الخطة، ساعات المذاكرة، النقاط، نتائج الاختبارات المحاكية) لمزامنته بين أجهزتك، وملفاتك الخاصة في «ملفاتي» (لا يراها غيرك).</p>
+            <p><b>عضواً في مدرسة:</b> ما تدخله المدرسة عنك — الاسم الكامل والبريد والدور والصف والشعبة. ورقم الهوية عند استيراد الطلاب <b>لا يُحفظ</b>؛ تُحفظ منه بصمة مشفّرة للمطابقة فقط. ونحفظ أعمالك على المنصة (إجاباتك ودرجاتك ومواعيد تسليمك)، والدرجات الرسمية والغياب إن رفعتها المدرسة، والملفات التي يرفعها المعلّمون والطلاب، وسجلّاً بمن اطّلع على ملف الطالب من المدرسة.</p>
+            <h3>من يرى ماذا</h3>
+            <p>الطالب يرى بياناته. المعلّم يرى طلاب فصوله في مادته. الإدارة ترى مدرستها. المرشد الطلابي يرى مواطن الضعف ومن يحتاج متابعة. وليّ الأمر يرى أعمال ابنه فقط برابط خاص تصدره المدرسة (للقراءة، ويمكن إلغاؤه). ونحن نطّلع لتشغيل الخدمة ودعمها فقط. <b>لا نبيع بياناتك ولا نعرض إعلانات.</b></p>
+            <h3>المساعد الذكي والصوت</h3>
+            <p>ما ترسله للمساعد (نص، صورة، ملف) يُرسل إلى Google Gemini ليولّد الرد، ولا نحفظه عندنا؛ نحفظ <b>عدد</b> استعمالاتك فقط لتطبيق الحدّ. محادثاتك معه محفوظة في جهازك. والأسئلة التي يولّدها الاختبار المحاكي من ملف ترفعه قد يُضاف السليم منها — <b>بلا أي معلومة عنك</b> — إلى بنك أسئلة القدرات المشترك ليتدرّب عليه غيرك. والإدخال بالصوت يعالجه متصفحك وخدمة التعرّف على الكلام التابعة له (Google في كروم، Apple في سفاري) — لا يصلنا الصوت ولا نحفظه.</p>
+            <h3>البريد والإشعارات</h3>
+            <p>نرسل عبر Brevo: نتيجة اختبارك، والرسائل التذكيرية لمن وافق، ورسائل إدارة المدرسة لطلابها، ورسائل الخدمة للجميع. وإن فعّلت إشعارات الجوال نحفظ عنوان اشتراك جهازك في الإشعارات فقط.</p>
+            <h3>سجلّات تقنية</h3>
+            <p>نسجّل الأعطال البرمجية (نصّ الخطأ، الصفحة، نوع المتصفح) لإصلاحها، وعدد الزيارات مجمّعاً (زائر أو صاحب حساب فقط) — بلا اسم ولا عنوان IP.</p>
+            <h3>مدة الحفظ والحذف</h3>
+            <p>بيانات العام الدراسي في المدرسة تُحذف نهائياً بعد أسبوع من بدء العام التالي (مهلة للمدرسة لتصدير ما تحتاجه). تستطيع حذف حسابك وكل بياناته في أي وقت من ملفك الشخصي. والمشاركات المخفية بسبب البلاغات تُحذف بعد أسبوع.</p>
+            <h3>خدمات نعتمد عليها</h3>
+            <p>Supabase (قاعدة البيانات والحسابات والملفات)، Netlify (الاستضافة)، Google (الدخول بحساب Google، وGemini للمساعد)، Brevo (البريد).</p>
             <h3>حقوقك</h3>
-            <p>تقدر تحذف حسابك وكل بياناته في أي وقت من ملفك الشخصي. تقدر توقف الرسائل التذكيرية في أي لحظة. تقدر تستخدم التطبيق كاملاً بدون أي حساب من الأساس.</p>`,
+            <p>الاطّلاع على بياناتك، وحذف حسابك، وإيقاف الرسائل التذكيرية ورسائل المدرسة في أي وقت. وسجلّاتك المدرسية (الدرجات، الغياب) تديرها مدرستك — اطلب تصحيحها منها.</p>
+            <h3>ما لا نجمعه</h3>
+            <p>لا نجمع موقعك الجغرافي ولا رقم جوالك، ولا نتتبّعك خارج خُطى.</p>
+            <p class="legal-updated">آخر تحديث: ${TERMS_UPDATED.ar} · النسخة ${TERMS_VERSION}</p>`,
         bodyEn: `
-            <h3>What we actually collect</h3>
-            <p><b>As a guest (no account):</b> nothing at all reaches our servers. All your data stays in your own browser.</p>
-            <p><b>With an account:</b> username, an encrypted password (never visible to us), and your study progress, to sync across your devices.</p>
-            <p><b>Email is fully optional</b> — used only for password recovery, exam results, and reminders <b>only if you explicitly consent</b>.</p>
-            <h3>What we never collect</h3>
-            <p>No real name, national ID, phone number, or location. We never sell your data.</p>
-            <h3>Third-party services</h3>
-            <p>Supabase (accounts/data), Netlify (hosting), Google Gemini (AI assistant), Brevo (email delivery only).</p>
+            <h3>What we keep</h3>
+            <p><b>As a guest:</b> your plan and progress stay in your browser; an anonymous ID (no personal data) powers the community features.</p>
+            <p><b>With a Khuta account:</b> username or Google email, an encrypted password we can't see, your study progress to sync devices, and your private “My files”.</p>
+            <p><b>As a school member:</b> what the school enters — full name, email, role, grade and section. National IDs used when importing students are <b>not stored</b>, only an encrypted fingerprint for matching. We keep your platform work (answers, grades, deadlines), official grades and attendance if the school uploads them, uploaded files, and a log of who in the school opened a student's file.</p>
+            <h3>Who sees what</h3>
+            <p>Students see their own data; teachers their classes in their subject; the admin their school; the counselor weak areas; parents only their child via a revocable read-only link from the school. We access data only to run and support the service. <b>We never sell data or show ads.</b></p>
+            <h3>AI and voice</h3>
+            <p>What you send the assistant goes to Google Gemini to generate a reply; we don't keep it — only a usage count for limits. Valid questions generated from a file you upload for a practice exam may be added, with nothing about you, to a shared GAT question bank. Voice input is processed by your browser's speech service (Google in Chrome, Apple in Safari); we never receive audio.</p>
+            <h3>Email and notifications</h3>
+            <p>Via Brevo: exam results, reminders if you consent, school messages, and service notices. Push notifications store only your device's subscription address.</p>
+            <h3>Technical logs</h3>
+            <p>Error reports (message, page, browser type) and aggregate visit counts — no name or IP address.</p>
+            <h3>Retention</h3>
+            <p>A school year's data is deleted a week after the next year starts. Delete your account anytime from your profile.</p>
+            <h3>Providers</h3>
+            <p>Supabase, Netlify, Google (sign-in, Gemini), Brevo.</p>
             <h3>Your rights</h3>
-            <p>Delete your account and all data anytime from your profile. Stop reminder emails anytime. Use the app fully without an account.</p>`,
+            <p>Access your data, delete your account, stop reminders and school messages anytime. School records are managed by your school.</p>
+            <p class="legal-updated">Last updated: ${TERMS_UPDATED.en} · version ${TERMS_VERSION}</p>`,
     },
 };
 

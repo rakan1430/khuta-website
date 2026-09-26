@@ -668,6 +668,7 @@ function updateCampaignReach(){
 
 function campaignAudienceLabel(m){
     if(m.origin === "school") return "من إدارة مدرسة لطلابها";
+    if(m.audience === "service") return "كل المستخدمين — إشعار خدمة (بلا شرط موافقة)";
     if(m.audience === "khuta") return "طلاب خُطى";
     if(m.audience === "school"){
         const sc = campaignCounts && (campaignCounts.schools || []).find(x => x.id === m.school_id);

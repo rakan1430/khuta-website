@@ -120,6 +120,41 @@ if(tags[tags.length-1]!=='99-boot-flush.js') add('حرج','سطر صرف الم�
     });
 })();
 
+// ٨) رقم الإصدار — قاعدة المالك: «كل تحديث جديد يجب تغيير رقم الإصدار»
+//    (بقي 1.4.0 ستة أسابيع رغم عشرات التحديثات). يفشل إن تغيّر ما يصل
+//    المستخدم ولم يرتفع APP_VERSION، أو لم يتغيّر CACHE_NAME في sw.js.
+(function versionRule(){
+  const { execSync } = require('child_process');
+  const git = cmd => { try{ return execSync(`git -C "${ROOT}" ${cmd}`, { stdio:['ignore','pipe','ignore'] }).toString(); }catch(e){ return null; } };
+  const SITE = ['index.html','styles.css','sw.js','parent.html','js','netlify/functions'];
+  const verOf = src => { const m = src && src.match(/const APP_VERSION = "(\d+)\.(\d+)\.(\d+)"/); return m ? m.slice(1).map(Number) : null; };
+  const cacheOf = src => { const m = src && src.match(/CACHE_NAME = "([^"]+)"/); return m ? m[1] : null; };
+  const gt = (a, b) => { for(let i = 0; i < 3; i++){ if(a[i] !== b[i]) return a[i] > b[i]; } return false; };
+  const fmt = v => v ? v.join('.') : '؟';
+  const now = verOf(fs.readFileSync(path.join(ROOT,'js/05-boot-nav.js'),'utf8'));
+  const nowCache = cacheOf(fs.readFileSync(path.join(ROOT,'sw.js'),'utf8'));
+  if(!now){ add('حرج','APP_VERSION غير موجود بالصيغة "س.ص.ع"','js/05-boot-nav.js'); return; }
+  const checks = [
+    // [وصف، مرجع قديم، هل تغيّر الموقع منذه؟، مرجع الإصدار الجديد]
+    ['تعديلات لم تُحفظ بعد', 'HEAD', git(`status --porcelain -- ${SITE.join(' ')}`), null],
+    ['آخر حفظ (commit)', 'HEAD~1', git(`diff --name-only HEAD~1 HEAD -- ${SITE.join(' ')}`), 'HEAD'],
+    ['الموقع الأساسي (origin/main)', 'origin/main', git(`diff --name-only origin/main -- ${SITE.join(' ')}`), null],
+  ];
+  for(const [label, ref, changed, newRef] of checks){
+    if(changed === null || !changed.trim()) continue;
+    const oldSrc = git(`show ${ref}:js/05-boot-nav.js`);
+    if(oldSrc === null) continue;
+    const oldV = verOf(oldSrc);
+    const newV = newRef ? verOf(git(`show ${newRef}:js/05-boot-nav.js`)) : now;
+    if(oldV && newV && !gt(newV, oldV))
+      add('حرج', `الموقع تغيّر (${label}) ورقم الإصدار لم يرتفع: ${fmt(oldV)} → ${fmt(newV)}`, 'js/05-boot-nav.js — APP_VERSION');
+    const oldCache = cacheOf(git(`show ${ref}:sw.js`));
+    const newCache = newRef ? cacheOf(git(`show ${newRef}:sw.js`)) : nowCache;
+    if(oldCache && newCache && oldCache === newCache)
+      add('حرج', `الموقع تغيّر (${label}) وCACHE_NAME لم يتغيّر (${newCache}) — العائدون سيبقون على النسخة المخزّنة`, 'sw.js');
+  }
+})();
+
 const order={'حرج':0,'متوسط':1};
 findings.sort((a,b)=>order[a.sev]-order[b.sev]);
 const bySev={};

@@ -224,6 +224,14 @@ async function loadSchoolContext(){
             fullName: row.full_name, grade: row.grade, section: row.section,
             schoolName: row.school_name,
         };
+        /* اسم المنصة الذي يحدّده المالك لكل مدرسة (schools.platform_name_ar).
+           فارغ = يُشتقّ من اسم المدرسة («مدارس المتقدمة…» ← «منصة المتقدمة»).
+           فشل القراءة لا يوقف شيئاً: يبقى الاسم المشتقّ. */
+        try{
+            const { data: s } = await sb.from("schools").select("platform_name_ar, platform_name_en")
+                .eq("id", row.school_id).maybeSingle();
+            if(s){ schoolCtx.platformNameAr = s.platform_name_ar || null; schoolCtx.platformNameEn = s.platform_name_en || null; }
+        }catch(e){}
     }catch(e){ console.warn("[خُطى] تعذّر تحميل عضوية المدرسة:", e); }
     return schoolCtx;
 }

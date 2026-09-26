@@ -74,6 +74,11 @@ async function demo(page, role){
             ok("الساعة ساعات ودقائق فقط — بلا ثوانٍ", /^\d{2}:\d{2}$/.test(clk.hm) && !/\d{1,2}:\d{2}:\d{2}/.test(clk.text), JSON.stringify(clk));
             ok("الساعة في إطار (حدّ وزوايا)", parseFloat(clk.border) >= 1 && parseFloat(clk.radius) >= 10, JSON.stringify(clk));
             ok("ص/م بجانبها", /[صم]/.test(clk.text));
+            const ctr = await page.evaluate(() => {
+                const c = document.getElementById("live-clock").getBoundingClientRect(), d = document.querySelector("#live-clock .lc-hm").getBoundingClientRect();
+                return { dx: (d.left + d.width / 2) - (c.left + c.width / 2), dy: (d.top + d.height / 2) - (c.top + c.height / 2) };
+            });
+            ok("الأرقام في منتصف الإطار أفقياً (لا تميل يساراً)", Math.abs(ctr.dx) <= 1, JSON.stringify(ctr));
             const d1 = await page.$eval("#live-date", el => el.textContent);
             ok("التاريخ ميلادي افتراضاً", GREG_MONTHS.test(d1) && !HIJRI_MONTHS.test(d1), d1);
             ok("المفتاح المركزي ميلادي افتراضاً", await page.evaluate(() => khutaLocale().includes("ca-gregory")));
@@ -120,6 +125,15 @@ async function demo(page, role){
                 else ok(`${role}: بلا صاروخ`, !w.includes("🚀") && w.includes("أحمد"), w);
             }
             ok("عنوان التبويب يحمل اسم المنصة", (await page.title()).includes("منصة المتقدمة"));
+            // طالب المدرسة: الاسم يتبع الوضع — «مدرستي» اسم المنصة، «القدرات» خُطى كما هي
+            await page.evaluate(() => setKhutaMode("khuta"));
+            const inGat = await page.$eval("#brand-tag", el => el.textContent.trim());
+            ok("طالب المدرسة في «القدرات»: العبارة الأصلية", /رفيق القدرات/.test(inGat), inGat);
+            await page.evaluate(() => setKhutaMode("school"));
+            ok("…وفي «مدرستي»: اسم المنصة", (await page.$eval("#brand-tag", el => el.textContent.trim())) === "منصة المتقدمة");
+            await page.evaluate(() => { schoolCtx.platformNameAr = "منصة النخبة"; applySchoolBrand(); });
+            ok("اسم يحدّده المالك لهذه المدرسة يحلّ محلّ المشتقّ", (await page.$eval("#brand-tag", el => el.textContent.trim())) === "منصة النخبة");
+            await page.evaluate(() => { schoolCtx.platformNameAr = null; applySchoolBrand(); });
             await page.evaluate(() => setLang("en"));
             ok("تبديل اللغة لا يعيد «رفيق القدرات» لعضو المدرسة", (await page.$eval("#brand-tag", el => el.textContent.trim())) === "School platform");
             await page.evaluate(() => setLang("ar"));
@@ -153,6 +167,59 @@ async function demo(page, role){
                 const t = [...document.querySelectorAll(".chatbot-msg.bot")].pop().textContent;
                 return !t.includes("خطة") && !t.includes("صفحة الروابط");
             }));
+            await ctx.close();
+        }
+
+        console.log("\n٣ب) الشروط وسياسة الخصوصية وإشعار التحديث");
+        {
+            const { ctx, page, errs } = await openPage(browser, { base, ctx: { viewport: { width: 1366, height: 860 } } });
+            const priv = await page.evaluate(() => { openLegalModal("privacy"); return document.getElementById("legal-modal-body").textContent; });
+            ok("الخصوصية لم تعد تقول «لا نجمع اسمك الحقيقي»", !priv.includes("لا نجمع اسمك الحقيقي") && !priv.includes("ولا رقم هويتك"));
+            ok("وتذكر ما يُحفظ فعلاً: الاسم، بصمة الهوية المشفّرة، الدرجات، المساعد، الصوت", ["الاسم الكامل", "بصمة مشفّرة", "الدرجات الرسمية", "Gemini", "بالصوت", "بعد أسبوع"].every(w => priv.includes(w)));
+            ok("عليها تاريخ التحديث ورقم النسخة", priv.includes("آخر تحديث") && priv.includes(await page.evaluate(() => TERMS_VERSION)));
+            const terms = await page.evaluate(() => { closeLegalModal(); openLegalModal("terms"); return document.getElementById("legal-modal-body").textContent; });
+            ok("الشروط تذكر منصة المدارس ونور والمساعد", ["منصة المدارس", "نظام نور", "مسودّة يراجعها المعلّم"].every(w => terms.includes(w)));
+            await page.evaluate(() => closeLegalModal());
+            await page.waitForTimeout(450);
+
+            // مستخدم عائد، وقاعدة مزيّفة فيها إشعار
+            const fakeSb = () => {
+                window.__rpc = []; window.__posted = [];
+                sb = {
+                    from: t => ({ select(){ return this; }, eq(){ return this; }, order(){ return this; },
+                        limit: async () => ({ data: t === "site_notices" ? [{ version: "2.0", summary_ar: "تغيّرت الشروط\nسطر ثانٍ", published_at: "2026-09-26" }] : [], error: null }) }),
+                    rpc: async (n, a) => { window.__rpc.push([n, a]); return { data: { notice_id: 1, message_id: 77, reach: 17 }, error: null }; },
+                    auth: { getSession: async () => ({ data: { session: { access_token: "t" } } }) },
+                };
+                window.fetch = async (u, o) => { window.__posted.push(JSON.parse(o.body)); return { ok: true, json: async () => ({ sent: 17, failed: 0, total: 17 }) }; };
+            };
+            await page.evaluate(fakeSb);
+            await page.evaluate(() => { localStorage.setItem("khuta_intro_seen", "1"); localStorage.removeItem("khuta_terms_seen"); return checkTermsNotice(); });
+            await page.waitForTimeout(400);
+            ok("مستخدم عائد يرى إشعار التحديث", await page.evaluate(() => !!document.querySelector("#terms-notice.show") && document.querySelector(".terms-notice-body").innerHTML.includes("<br>")));
+            await page.click('#terms-notice [data-a="ok"]');
+            ok("«فهمت» يحفظ أنه قرأ هذه النسخة", await page.evaluate(() => localStorage.getItem("khuta_terms_seen") === "2.0" && !document.getElementById("terms-notice")));
+            await page.evaluate(() => checkTermsNotice());
+            await page.waitForTimeout(300);
+            ok("ولا يظهر له مرة ثانية", await page.evaluate(() => !document.getElementById("terms-notice")));
+            await page.evaluate(() => { ["khuta_intro_seen","khuta_name","khuta_plan_days","khuta_terms_seen"].forEach(k => localStorage.removeItem(k)); getSession = () => null; return checkTermsNotice(); });
+            await page.waitForTimeout(300);
+            ok("زائر جديد لا يُبلَّغ بـ«تحديث» (الشروط الحالية أول ما يقبله)", await page.evaluate(() => !document.getElementById("terms-notice") && localStorage.getItem("khuta_terms_seen") === "2.0"));
+
+            // لوحة المالك
+            await page.evaluate(() => { isAdmin = false; openTermsNoticePanel(); });
+            ok("اللوحة لا تُفتح لغير المالك", await page.evaluate(() => !document.getElementById("terms-panel")));
+            await page.evaluate(() => { isAdmin = true; openTermsNoticePanel(); });
+            ok("المالك: اللوحة بنسخة الشروط وملخّص جاهز", await page.evaluate(() => document.getElementById("tn-version").value === TERMS_VERSION && document.getElementById("tn-summary").value.length > 50));
+            page.once("dialog", d => d.accept());
+            await page.click("#tn-send");
+            await page.waitForTimeout(500);
+            const pub = await page.evaluate(() => ({ rpc: window.__rpc[0], post: window.__posted[0], out: document.getElementById("tn-result").textContent }));
+            ok("النشر عبر دالّة الخادم owner_publish_terms_notice", pub.rpc && pub.rpc[0] === "owner_publish_terms_notice" && pub.rpc[1].p_version === "2.0");
+            ok("ثم إرسال البريد برقم الرسالة وحده", pub.post && pub.post.type === "adminSendCampaign" && pub.post.messageId === 77 && !pub.post.recipients);
+            ok("والنتيجة تُعرض: نُشر وأُرسل لـ١٧", pub.out.includes("نُشر") && pub.out.includes("17"), pub.out);
+            ok("زرّ الإشعار في أدوات المشرف", await page.evaluate(() => !!document.querySelector('#admin-overlay [onclick="openTermsNoticePanel()"]')));
+            ok("بلا أخطاء", errs.length === 0, errs.join("\n"));
             await ctx.close();
         }
 
@@ -190,7 +257,7 @@ async function demo(page, role){
             await ctx.close();
         }
 
-        console.log("\n٥) أجهزة اللمس: ثبات أثناء التمرير");
+        console.log("\n٥) أجهزة اللمس: الزجاج والنجوم باقية، والضبابية الحية فقط تُحاكى");
         {
             const { ctx, page } = await openPage(browser, { base, ctx: { viewport: { width: 820, height: 1180 }, hasTouch: true, isMobile: false }, calendar: null });
             await page.evaluate(() => { setThemeMode("dark"); switchTab("settings"); });
@@ -198,16 +265,22 @@ async function demo(page, role){
                 // بطاقة عادية لا بطاقة لها لون خاص بمعرّفها (كلوحة تخصيص الرئيسية)
                 const card = [...document.querySelectorAll(".view-section.active .card")].find(c => !c.id && c.className.trim() === "card");
                 const cs = getComputedStyle(card);
+                const input = card.querySelector("button, input, select");
                 const decor = document.querySelector(".bg-decor");
                 const before = getComputedStyle(document.body, "::before");
-                return { touch: document.documentElement.classList.contains("touch-ui"), bf: cs.backdropFilter || cs.webkitBackdropFilter,
-                         decor: decor ? getComputedStyle(decor).display : "none", starsAnim: before.animationName, bg: cs.backgroundImage };
+                const nav = getComputedStyle(document.querySelector(".mobile-nav"));
+                return { touch: document.documentElement.classList.contains("touch-ui"), bf: cs.backdropFilter,
+                         inner: input ? getComputedStyle(input).backdropFilter : "none",
+                         decor: decor ? getComputedStyle(decor).display : "none", starsAnim: before.animationName, bg: cs.backgroundImage,
+                         navBf: nav.backdropFilter };
             });
             ok("الآيباد يُعرف جهاز لمس", r.touch);
-            ok("لا ضبابية خلفية على البطاقات", !r.bf || r.bf === "none", r.bf);
-            ok("الزخارف العائمة مخفية (سبب «التداخل» على الآيباد)", r.decor === "none", r.decor);
-            ok("النجوم ثابتة لا تومض", r.starsAnim === "none", r.starsAnim);
-            ok("البطاقة الداكنة بلون مصمت محسوب", /rgb\(41, 33, 83\)/.test(r.bg), r.bg);
+            ok("ضبابية البطاقة الحية تُحاكى بلون (سبب التقطيع)", !r.bf || r.bf === "none", r.bf);
+            ok("ولا ضبابية فوق ضبابية داخلها", !r.inner || r.inner === "none", r.inner);
+            ok("البطاقة ما زالت زجاجاً شفافاً (لا لوناً مصمتاً)", /rgba\(118, 96, 240, 0\.22\)/.test(r.bg), r.bg);
+            ok("النجوم ما زالت تومض", r.starsAnim && r.starsAnim !== "none", r.starsAnim);
+            ok("الزخارف ما زالت ظاهرة على الآيباد", r.decor !== "none", r.decor);
+            ok("الشريط السفلي باقٍ بضبابيته الحية", r.navBf && r.navBf !== "none", r.navBf);
             await ctx.close();
         }
         {

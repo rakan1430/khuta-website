@@ -212,6 +212,13 @@ function showIntroIfFirstVisit(onDone){
    ============================================================ */
 function schoolPlatformName(){
     if(typeof schoolCtx === "undefined" || !schoolCtx) return null;
+    /* طالب المدرسة له وضعان: في «مدرستي» اسم منصّته، وفي «القدرات» خُطى كما
+       هي (طلب المالك ٢٦ سبتمبر). المعلّم والإدارة في منصّة المدرسة دائماً. */
+    const staff = schoolCtx.role === "teacher" || schoolCtx.role === "admin";
+    const mode = (typeof khutaMode !== "undefined" && khutaMode) || (typeof defaultMode === "function" ? defaultMode() : "school");
+    if(!staff && mode !== "school") return null;
+    // الاسم الذي حدّده المالك لهذه المدرسة، وإلا يُشتقّ من اسمها
+    if(schoolCtx.platformNameAr) return { ar: schoolCtx.platformNameAr, en: schoolCtx.platformNameEn || "School platform" };
     const raw = String(schoolCtx.schoolName || (typeof TENANT !== "undefined" && TENANT.schoolName) || "").split(/[—–-]/)[0].trim();
     const core = raw.replace(/^(مدارس|مدرسة|مدرسه)\s+/, "").trim();
     return core ? { ar: "منصة " + core, en: "School platform" } : { ar: "منصة المدرسة", en: "School platform" };
@@ -1280,9 +1287,16 @@ function toggleTheme(){
    التطبيق، حالة الاتصال، نسخة النظام، ونسخة احتياطية من بياناته.
    ============================================================ */
 
-// نسخة النظام المعروضة في الإعدادات — ارفعها يدوياً مع كل إصدار ملموس.
-// تُكتَب أيضاً داخل ملف النسخة الاحتياطية لمعرفة أي إصدار أنتجها.
-const APP_VERSION = "1.4.0";
+/* نسخة النظام المعروضة في الإعدادات، وتُكتب داخل ملف النسخة الاحتياطية.
+   ⚠️ قاعدة المالك المُلزِمة (٢٦ سبتمبر): «كل تحديث جديد يجب تغيير رقم
+   الإصدار». بقي الرقم 1.4.0 من ١٣ أغسطس حتى ٢٦ سبتمبر رغم عشرات
+   التحديثات — لم يرفعه أحد. الآن:
+     • كل دفعة للرابط الثابت تغيّر الموقع ترفعه: إصلاح ← الرقم الأخير
+       (2.0.0 → 2.0.1)، ميزة ← الأوسط (2.0.1 → 2.1.0)، إصدار كبير ← الأول.
+     • وأداة tools/تدقيق-الدمج.js تفشل إن تغيّر الموقع ولم يرتفع الرقم
+       (مقارنةً بآخر حفظ، وبالموقع الأساسي main)، أو لم يتغيّر CACHE_NAME
+       في sw.js — وإلا بقي العائدون على نسخة مخزّنة قديمة. */
+const APP_VERSION = "2.0.0";
 
 /* ---------- المظهر ---------- */
 function setThemeMode(mode){

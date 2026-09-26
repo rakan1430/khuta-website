@@ -145,6 +145,14 @@ const sig = (bucket) => crypto.createHmac("sha256", "test-service-key").update(`
     ok("المالك يعيد إرسالها", r.status === 200 && db.brevo.length === 40);
     ok("رابط إيقاف رسائل خُطى بلا scope=school", !((db.brevo[0].headers || {})["List-Unsubscribe"] || "").includes("scope=school"));
 
+    console.log("\n٢ب) إشعار الخدمة (تحديث الشروط) — بلا رابط إلغاء");
+    db = freshDb(); db.messages[0].audience = "service";
+    r = await call({ type: "adminSendCampaign", accessToken: "tok-owner", messageId: 1 });
+    const svcMail = db.brevo[0] || {};
+    ok("يُرسل عبر المسار نفسه (المستلمون من القاعدة)", r.status === 200 && db.brevo.length === 20, JSON.stringify(r.body));
+    ok("بلا رابط إلغاء ولا رأس List-Unsubscribe — ليس اشتراكاً", !(svcMail.headers || {})["List-Unsubscribe"] && !String(svcMail.htmlContent).includes("unsubscribe"));
+    ok("والتذييل يقول إنها رسالة خدمة", String(svcMail.htmlContent).includes("رسالة خدمة"));
+
     console.log("\n٣) الحصّة اليومية");
     db = freshDb(); db.sentToday = 45;   // الحدّ 50 ← بقي 5، والرسالة لعشرين
     r = await call({ type: "adminSendCampaign", accessToken: "tok-owner", messageId: 1 });

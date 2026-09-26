@@ -178,8 +178,18 @@ function schoolFooter(bodyHtml, unsubscribeUrl, schoolName){
     </div>`;
 }
 
+/* إشعار خدمة (تحديث الشروط): يصل كل مستخدم له بريد، بلا شرط موافقة
+   التذكيرات — فلا رابط «إلغاء اشتراك»: ليس اشتراكاً. والتذييل يقول ذلك صراحةً. */
+function serviceFooter(bodyHtml){
+    return `${bodyHtml}
+    <div style="margin-top:28px; padding-top:16px; border-top:1px solid #eee; font-family:sans-serif; direction:rtl; text-align:right; font-size:11px; color:#999; line-height:1.8;">
+        هذه رسالة خدمة من <b>خُطى</b> تصل كل من له حساب فيها، لإبلاغه بتغيير في شروط الخدمة. ليست رسالة تسويقية، ولا تغيّر اختياراتك في الرسائل التذكيرية.
+    </div>`;
+}
+
 /** محتوى الرسالة لمستلم واحد، مع تذييلها ورؤوس الإلغاء. */
 function composeFor(message, recipient, schoolName, serviceKey){
+    if(message.audience === "service") return { html: serviceFooter(message.body_html) };
     const isSchool = message.origin === "school";
     const base = message.body_format === "text" ? schoolTextToHtml(message.body_html, schoolName) : message.body_html;
     if(!serviceKey || !recipient.uid) return { html: base };

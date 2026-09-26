@@ -4343,42 +4343,37 @@ details.ss-sec[open] > summary.ss-head::after{ content:"−"; }
 }
 
 /* ============================================================
-   أجهزة اللمس — ثبات أثناء التمرير (html.touch-ui، يضعه سكربت في <head>)
+   أجهزة اللمس — تمرير سلس مع بقاء الزجاج والنجوم كما هي
    ------------------------------------------------------------
-   بلاغ المالك (٢٦ سبتمبر): «عند النزول أو الصعود يبدو أحياناً الموقع في
-   التداخل ببعضه، أو اختفاء بعض العناصر وظهورها… في الهاتف والآيباد».
-   الأسباب، وكلها مما يعرف Safari على iOS/iPadOS بالتعثّر فيه:
-   ١) backdrop-filter على ٤٠+ نوعاً من العناصر، منها كل بطاقة وكل حقل إدخال.
-      أثناء التمرير بالزخم يُسقط Safari طبقات الضبابية ويعيدها فتومض البطاقة
-      أو تختفي لحظة.
-   ٢) خلفية الوضع الداكن: طبقتا نجوم مثبّتتان بملء الشاشة تتغيّر شفافيتهما
-      بلا توقف — فيُعاد حساب ضبابية كل بطاقة فوقها في كل إطار.
-   ٣) الرسوم الزخرفية العائمة (صاروخ، كتاب، قلم…) مثبّتة خلف بطاقات شبه
-      شفافة: على الآيباد (أعرض من ٧٦٨ فلم تكن مخفية) تنزلق خلف المحتوى
-      أثناء التمرير فتبدو فوق الحقول — هذا «التداخل».
-   العلاج هنا لأجهزة اللمس وحدها — الحاسوب يبقى بتصميمه الزجاجي كما هو:
-   لا ضبابية، ولا زخارف عائمة، ونجوم ثابتة، وأسطح بألوان مصمتة محسوبة
-   لتطابق شكلها الزجاجي فوق الخلفية (لا يتغيّر المظهر، يتغيّر الثبات).
+   بلاغ المالك (٢٦ سبتمبر): تقطيع عند النزول والصعود على الجوال والآيباد.
+   ⚠️ المحاولة الأولى أزالت الزجاج والنجوم والزخارف — ورفضها المالك بحقّ:
+   «كانت تحسّن شكل الموقع». والتداخل لم يُحلّ بها أصلاً.
+
+   القياس (تتبّع أداء كروم، جوال ٣٩٠، معالج مُبطّأ ٦×): عمل الرسم على
+   بطاقة الرسومات أثناء التمرير — الضبابية الحية كما هي ٢١٤٦ مللي، وبلا
+   ضبابية إطلاقاً ٣٠٥. أي أنها السبب المباشر للتقطيع. وأكثره من شيئين لا
+   يُريان بالعين:
+   ١) ضبابية البطاقة تُعاد حسابها مع كل إطار تمرير (البطاقة تتحرك فوق
+      خلفية ثابتة). وفوق خلفية ناعمة كهذه، الضبابية تكاد لا تغيّر شيئاً
+      سوى تشبّع اللون — فتُحاكى بلون شفاف محسوب مرة واحدة.
+   ٢) ضبابية الحقول والأزرار *داخل* البطاقة: ضبابية فوق ضبابية، لا أثر
+      لها بصرياً أبداً، وتكلّف ما تكلّفه.
+   النتيجة ٥٤٠ مللي (−٧٥٪)، والفرق في الصورة: ٠٪ من البكسلات في الفاتح،
+   و٠٫٥٪ في الداكن. النجوم تومض كما كانت، والزخارف كما كانت، والشريط
+   السفلي وشاشات النوافذ باقية بضبابيتها الحية. والحاسوب لم يُمسّ.
+   (html.touch-ui يضعه سكربت في <head>؛ الآيباد يُعرف بنقاط اللمس.)
    ============================================================ */
-html.touch-ui *, html.touch-ui *::before, html.touch-ui *::after{
-    -webkit-backdrop-filter:none !important; backdrop-filter:none !important;
+html.touch-ui .card, html.touch-ui .card *,
+html.touch-ui .overview-stat-card, html.touch-ui .xp-hero-card,
+html.touch-ui .link-card, html.touch-ui .weight-chip, html.touch-ui .intensity-chip{
+    -webkit-backdrop-filter:none; backdrop-filter:none;
 }
-html.touch-ui .bg-decor{ display:none !important; }
-html.touch-ui body.dark-mode{ background-attachment:scroll; }
-html.touch-ui body.dark-mode::before, html.touch-ui body.dark-mode::after{ animation:none; }
-html.touch-ui .card{ background:rgba(255,255,255,0.9); }
-/* ألوان البطاقة الزجاجية الداكنة كما تُرى فعلاً فوق خلفية المجرّة، مصمتة */
-html.touch-ui body.dark-mode .card,
-html.touch-ui body.dark-mode .overview-stat-card{ background:linear-gradient(165deg, #292153 0%, #1E1842 45%, #19133D 100%); }
-html.touch-ui body.dark-mode .xp-hero-card{ background:linear-gradient(135deg, #2B2257 0%, #1F1845 55%, #2A2130 100%); }
-/* ما يطفو فوق المحتوى المتحرّك يصير شبه مصمت، وإلا ظهر النصّ من تحته */
-html.touch-ui .mobile-nav, html.touch-ui .chatbot-panel, html.touch-ui .notif-panel,
-html.touch-ui .onboarding-card, html.touch-ui .sidebar{ background:rgba(255,255,255,0.97); }
-html.touch-ui .dark-mode .mobile-nav, html.touch-ui .dark-mode .chatbot-panel,
-html.touch-ui .dark-mode .onboarding-card{ background:rgba(20,24,52,0.97); }
-html.touch-ui body.dark-mode .notif-panel, html.touch-ui body.dark-mode .sidebar{ background:linear-gradient(180deg, #221C4E, #17123A); }
-html.touch-ui .lab-window{ background:linear-gradient(165deg, #2E2666, #1A143A); }
-html.touch-ui .lab-overlay.lab-open{ background:rgba(8,6,24,0.82); }
+/* لون الزجاج الداكن كما يظهر فعلاً بعد الضبابية والتشبّع (مُقاس بالبكسل) */
+html.touch-ui body.dark-mode .card{
+    background:linear-gradient(165deg, rgba(118,96,240,0.22) 0%, rgba(60,44,140,0.42) 45%, rgba(36,26,96,0.50) 100%);
+}
+html.touch-ui body.dark-mode .overview-stat-card{ background:linear-gradient(165deg, rgba(120,98,236,0.20), rgba(44,32,104,0.46)); }
+html.touch-ui body.dark-mode .xp-hero-card{ background:linear-gradient(135deg, rgba(120,98,236,0.26), rgba(46,34,108,0.48) 55%, rgba(201,150,46,0.18)); }
 /* البطاقة لا ترتفع عند اللمس: hover على اللمس «يعلق» بعد النقر فتقفز البطاقة */
 html.touch-ui .card:hover{ transform:none; }
 
@@ -4414,18 +4409,24 @@ html.touch-ui .card:hover{ transform:none; }
    المالك: «شكل الساعة والدقائق ليس جميلاً… داخل إطار بشكل جميل يليق
    بخُطى، وخانة الثواني احذفها — ذكرت لك هذا أكثر من مرة».
    ============================================================ */
+/* ⚠️ التوسيط بصري لا حسابي (ملاحظة المالك: «الوقت كله متجه للزاوية العلوية
+   اليسرى»). قياس الحبر بخطّ El Messiri الحقيقي: الأرقام أعلى من المنتصف بـ٣
+   بكسل، و«ص/م» الصغيرة بجانبها تزيح كتلتها يساراً. العلاج: شبكة من ثلاثة
+   أعمدة — عمودان جانبيان متساويان (فارغ | ص/م) والأرقام في الوسط الحقيقي،
+   وحشوة أعلى أكبر قليلاً تعوّض ارتفاع الأرقام في سطر هذا الخط. */
 .live-clock{
-    display:inline-flex; align-items:baseline; gap:7px; direction:ltr;
-    padding:7px 16px 8px; border-radius:16px;
+    display:inline-grid; grid-template-columns:1fr auto 1fr; align-items:center; column-gap:7px; direction:ltr;
+    padding:9px 14px 6px; border-radius:16px;
     font-family:var(--font-display); font-size:23px; font-weight:700; line-height:1;
     font-variant-numeric:tabular-nums; letter-spacing:.5px; color:var(--text-1);
     background:linear-gradient(160deg, rgba(201,150,46,0.16), rgba(201,150,46,0.04));
     border:1px solid rgba(201,150,46,0.38);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.35), 0 4px 14px rgba(201,150,46,0.12);
 }
-.live-clock .lc-hm{ display:inline-flex; align-items:baseline; }
-.live-clock .lc-colon{ margin:0 2px; color:var(--gold-text); animation:lcColon 2s ease-in-out infinite; }
-.live-clock .lc-ampm{ font-family:var(--font-body); font-size:11.5px; font-weight:800; color:var(--gold-text); letter-spacing:0; }
+.live-clock::before{ content:""; }
+.live-clock .lc-hm{ display:inline-flex; align-items:center; justify-self:center; }
+.live-clock .lc-colon{ margin:0 2px; position:relative; top:-1px; color:var(--gold-text); animation:lcColon 2s ease-in-out infinite; }
+.live-clock .lc-ampm{ justify-self:start; position:relative; top:-2px; font-family:var(--font-body); font-size:11.5px; font-weight:800; color:var(--gold-text); letter-spacing:0; }
 @keyframes lcColon{ 0%,100%{ opacity:1; } 50%{ opacity:.35; } }
 body.dark-mode .live-clock{
     color:#FFF4DC;
@@ -4433,7 +4434,26 @@ body.dark-mode .live-clock{
     border-color:rgba(255,208,124,0.42);
     box-shadow:inset 0 1px 0 rgba(255,255,255,0.10), 0 0 22px rgba(255,182,72,0.14);
 }
-@media (max-width:992px){ .live-clock{ font-size:19px; padding:6px 13px 7px; } }
+@media (max-width:992px){ .live-clock{ font-size:19px; padding:8px 12px 5px; } }
 @media (prefers-reduced-motion: reduce){ .live-clock .lc-colon{ animation:none; } }
 /* اسم منصة المدرسة تحت شعار خُطى: عربي متّصل — بلا تباعد أحرف يقطّع الكلمة */
 body.brand-school .brand small{ letter-spacing:0; font-size:12.5px; font-weight:700; color:var(--gold-text); margin-top:4px; }
+
+/* ============ إشعار تحديث الشروط (js/43-notices.js) ============ */
+.legal-updated{ margin-top:18px; font-size:12px; color:var(--text-3); border-top:1px dashed var(--border); padding-top:10px; }
+.terms-notice{
+    position:fixed; inset:0; z-index:6500; display:flex; align-items:center; justify-content:center; padding:16px;
+    background:rgba(8,6,24,0); transition:background .35s var(--ease);
+}
+.terms-notice.show{ background:rgba(8,6,24,0.55); }
+.terms-notice-card{
+    width:min(440px, 100%); max-height:88vh; overflow-y:auto; text-align:center;
+    background:var(--surface-raised); color:var(--text-1); border:1px solid var(--border); border-radius:22px;
+    padding:24px 22px; box-shadow:var(--shadow-lg);
+    opacity:0; transform:translateY(14px) scale(.97); transition:.35s var(--ease);
+}
+.terms-notice.show .terms-notice-card{ opacity:1; transform:none; }
+.terms-notice-icon{ font-size:38px; margin-bottom:6px; }
+.terms-notice-card > b{ display:block; font-size:17px; margin-bottom:10px; font-family:var(--font-display); }
+.terms-notice-body{ text-align:start; font-size:13.5px; line-height:1.9; color:var(--text-2); margin-bottom:14px; }
+.terms-notice-links{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
