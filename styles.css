@@ -4457,3 +4457,38 @@ body.brand-school .brand small{ letter-spacing:0; font-size:12.5px; font-weight:
 .terms-notice-card > b{ display:block; font-size:17px; margin-bottom:10px; font-family:var(--font-display); }
 .terms-notice-body{ text-align:start; font-size:13.5px; line-height:1.9; color:var(--text-2); margin-bottom:14px; }
 .terms-notice-links{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+
+/* ============ حالة الإشعارات على هذا الجهاز (renderPushState) ============ */
+.push-state{ font-size:13px; line-height:1.9; padding:12px 14px; border-radius:14px; margin-bottom:12px; border:1px solid var(--border); background:var(--bg-alt); }
+.push-state.ok{ border-color:rgba(26,131,108,0.35); background:rgba(26,131,108,0.08); color:var(--teal-text); font-weight:700; }
+.push-state.warn{ border-color:rgba(201,150,46,0.45); background:rgba(201,150,46,0.08); }
+.push-steps{ margin:8px 0 0; padding-inline-start:20px; }
+.push-steps li{ margin-bottom:4px; }
+
+/* ============ الشروط لكل فئة + نافذتها على الجوال ============ */
+.legal-window{ max-height:min(82vh, calc(100dvh - 24px)); }
+.legal-window .legal-body{ flex:1; min-height:0; }
+.legal-window .lab-window-title{ font-family:var(--font-display); }
+@media (max-width:700px){ .legal-window{ height:auto; max-height:calc(100dvh - 16px); } }
+.legal-for{ font-size:12.5px; padding:8px 12px; border-radius:10px; background:rgba(201,150,46,0.10); border:1px solid rgba(201,150,46,0.3); }
+.legal-preview{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px dashed var(--border); }
+.legal-preview button{ font:inherit; font-size:12px; padding:5px 10px; border-radius:99px; border:1px solid var(--border); background:var(--bg-alt); color:var(--text-2); cursor:pointer; }
+.legal-preview button.active{ background:var(--gold-btn); color:#fff; border-color:transparent; }
+
+/* ============ الإعدادات: صفوف مدمجة للاختيارات البسيطة ============ */
+.settings-rows{ padding:6px 20px; }
+.settings-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; }
+.settings-row + .settings-row{ border-top:1px solid var(--border); }
+.settings-row-label{ display:inline-flex; align-items:center; gap:9px; font-weight:700; font-size:14px; color:var(--text-1); }
+.settings-row-label i{ color:var(--gold-text); width:18px; text-align:center; }
+.settings-seg{ margin:0; flex-shrink:0; }
+.settings-seg button{ padding:7px 14px; font-size:13px; }
+@media (max-width:380px){ .settings-row{ flex-wrap:wrap; } }
+/* نافذة الشروط تُقرأ نصّاً طويلاً: سطح مصمت لا زجاج — على الزجاج البنفسجي
+   كان النصّ الداكن (الوضع الفاتح) يكاد لا يُقرأ فوق الصفحة الظاهرة خلفه */
+.lab-window.legal-window{ background:var(--surface-raised); border-color:var(--border); box-shadow:var(--shadow-lg); }
+.legal-window .lab-window-head{ border-bottom-color:var(--border); }
+.legal-window .lab-window-title{ color:var(--text-1); }
+.legal-window .lab-close-btn{ color:var(--text-1); border-color:var(--border); background:var(--bg-alt); }
+body.dark-mode .lab-window.legal-window{ background:linear-gradient(165deg, #2A2360, #17123A); border-color:rgba(210,195,255,0.28); }
+body.dark-mode .legal-window .lab-close-btn{ color:#fff; background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.2); }

@@ -283,9 +283,73 @@ function urlBase64ToUint8Array(base64String){
     return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
 }
 
+/* ============================================================
+   حالة الإشعارات على هذا الجهاز — بلاغ المالك (٢٦ سبتمبر): «التذكير
+   اليومي لا يعمل ويظهر: متصفحك لا يدعم إشعارات Push — جرّبت في سفاري
+   وكروم على الهاتف والآيباد».
+   السبب ليس عطلاً: على الآيفون والآيباد لا يسمح WebKit بإشعارات الويب
+   إلا لموقع **مُضاف للشاشة الرئيسية ومفتوح من أيقونته** (iOS 16.4+).
+   وكروم على الآيفون هو WebKit نفسه، فالحكم واحد. داخل تبويب المتصفح
+   لا يوجد PushManager أصلاً — فكانت الرسالة صحيحة تقنياً ومضلِّلة
+   تماماً: لا تقول للطالب إن الحلّ خطوتان.
+   ============================================================ */
+function isAppleMobile(){
+    const ua = navigator.userAgent || "";
+    return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+function isStandaloneApp(){
+    try{ return window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; }
+    catch(e){ return false; }
+}
+/** "on" | "ios-home" | "ios-old" | "denied" | "unsupported" | "off" */
+function pushSupportState(){
+    const has = ("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window);
+    if(isAppleMobile() && !has){
+        const m = (navigator.userAgent || "").match(/OS (\d+)_(\d+)/);
+        const old = m && (Number(m[1]) < 16 || (Number(m[1]) === 16 && Number(m[2]) < 4));
+        return old ? "ios-old" : (isStandaloneApp() ? "unsupported" : "ios-home");
+    }
+    if(!has) return "unsupported";
+    if(Notification.permission === "denied") return "denied";
+    if(Notification.permission === "granted" && localStorage.getItem("khuta_push_enabled") === "1") return "on";
+    return "off";
+}
+function renderPushState(){
+    const box = document.getElementById("push-state");
+    const btn = document.getElementById("push-enable-btn");
+    if(!box) return;
+    const st = pushSupportState();
+    const T = labT;
+    const msgs = {
+        "on": T("✅ التذكير اليومي مفعّل على هذا الجهاز.", "✅ Daily reminders are on for this device."),
+        "ios-home": T(`على الآيفون والآيباد تعمل الإشعارات فقط بعد إضافة خُطى للشاشة الرئيسية — هذا شرط من Apple لا من خُطى:
+<ol class="push-steps"><li>اضغط زر المشاركة <b>⬆️</b> في سفاري (أو كروم).</li><li>اختر <b>«إضافة إلى الشاشة الرئيسية»</b>.</li><li>افتح خُطى <b>من الأيقونة الجديدة</b>، ثم ارجع هنا واضغط «فعّل التذكير اليومي».</li></ol>`,
+            `On iPhone/iPad, notifications only work after adding Khuta to your Home Screen — an Apple rule:
+<ol class="push-steps"><li>Tap Share <b>⬆️</b> in Safari (or Chrome).</li><li>Choose <b>“Add to Home Screen”</b>.</li><li>Open Khuta <b>from the new icon</b>, then come back here and enable reminders.</li></ol>`),
+        "ios-old": T("جهازك يعمل بإصدار iOS أقدم من 16.4 — والإشعارات تحتاج 16.4 فأحدث. حدّث الجهاز من الإعدادات ← عام ← تحديث البرنامج.",
+            "Your device runs iOS older than 16.4, which notifications require. Update from Settings → General → Software Update."),
+        "denied": T("رفضتَ إذن الإشعارات سابقاً على هذا الجهاز. فعّله من إعدادات المتصفح أو الجهاز (الإشعارات ← خُطى) ثم ارجع هنا.",
+            "You blocked notifications on this device earlier. Allow them in your browser/device settings, then come back."),
+        "unsupported": T("هذا المتصفح لا يدعم الإشعارات. جرّب كروم أو إيدج أو فايرفوكس على الكمبيوتر أو أندرويد.",
+            "This browser doesn't support notifications. Try Chrome, Edge or Firefox on a computer or Android."),
+        "off": "",
+    };
+    box.innerHTML = msgs[st] || "";
+    box.style.display = msgs[st] ? "" : "none";
+    box.className = "push-state " + (st === "on" ? "ok" : st === "off" ? "" : "warn");
+    if(btn) btn.style.display = (st === "off" || st === "on") ? "" : "none";
+    if(btn && st === "on"){
+        const label = btn.querySelector("span");
+        if(label) label.textContent = T("أعد تفعيل التذكير على هذا الجهاز", "Re-enable reminders on this device");
+    }
+}
+
 async function subscribeToPushNotifications(){
-    if(!("serviceWorker" in navigator) || !("PushManager" in window)){
-        showToast(currentLang==='ar' ? "متصفحك لا يدعم إشعارات Push" : "Your browser doesn't support push notifications");
+    const st = pushSupportState();
+    if(st !== "off" && st !== "on"){
+        renderPushState();
+        if(typeof switchTab === "function" && !document.getElementById("view-settings")?.classList.contains("active")) switchTab("settings");
+        setTimeout(() => document.getElementById("push-state")?.scrollIntoView({ behavior:"smooth", block:"center" }), 250);
         return;
     }
     const session = getSession();
@@ -297,6 +361,7 @@ async function subscribeToPushNotifications(){
         const permission = await Notification.requestPermission();
         if(permission !== "granted"){
             showToast(currentLang==='ar' ? "لم تُمنح صلاحية الإشعارات" : "Notification permission not granted");
+            renderPushState();
             return;
         }
         const registration = await navigator.serviceWorker.ready;
@@ -312,6 +377,7 @@ async function subscribeToPushNotifications(){
         if(error){ console.error("[خُطى] تعذّر حفظ اشتراك الإشعارات:", error); return; }
         localStorage.setItem("khuta_push_enabled", "1");
         showToast(currentLang==='ar' ? "🔔 فُعِّلت إشعاراتك اليومية" : "🔔 Your daily reminders are on");
+        renderPushState();
     }catch(e){
         console.error("[خُطى] تعذّر تفعيل إشعارات Push:", e);
         showToast(currentLang==='ar' ? "تعذّر تفعيل الإشعارات" : "Couldn't enable notifications");

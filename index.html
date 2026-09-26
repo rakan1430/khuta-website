@@ -790,9 +790,12 @@
 <!-- ===================== شروط الاستخدام وسياسة الخصوصية ===================== -->
 <div id="legal-modal" class="lab-overlay" style="display:none;">
     <div class="lab-window legal-window">
-        <div class="lab-head">
-            <b id="legal-modal-title">شروط الاستخدام</b>
-            <button type="button" class="lab-close" onclick="closeLegalModal()" aria-label="إغلاق"><i class="fa-solid fa-xmark"></i></button>
+        <!-- ⚠️ كانت "lab-head" و"lab-close": صنفان بلا أي تنسيق في styles.css،
+             فلم يظهر زرّ الإغلاق على الجوال (بلاغ المالك ٢٦ سبتمبر). الآن
+             صنفا نوافذ المختبر نفسها، كالسبورة. -->
+        <div class="lab-window-head">
+            <b id="legal-modal-title" class="lab-window-title">شروط الاستخدام</b>
+            <button type="button" class="lab-close-btn" onclick="closeLegalModal()" aria-label="إغلاق" title="إغلاق"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="legal-modal-body" class="legal-body"></div>
     </div>
@@ -2771,21 +2774,32 @@
                 <p class="card-sub" data-i18n="settings.sub">كل تفضيلاتك في مكان واحد، مرتّبة حسب الغرض</p>
             </div>
 
-            <h3 class="settings-group-head"><i class="fa-solid fa-palette"></i> <span><b data-i18n="settings.grpLook">المظهر والعرض</b><em data-i18n="settings.grpLookSub">الوضع، لون التطبيق، وحجم الخط</em></span></h3>
-            <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-circle-half-stroke" style="color:var(--gold-text);"></i> <span data-i18n="settings.modeTitle">الوضع الليلي</span></h2>
-                <p class="card-sub" data-i18n="settings.modeSub">فاتح للنهار، وداكن مريح للعين في مذاكرة الليل</p>
-                <div class="lang-switch" style="margin-top:12px;">
-                    <button type="button" id="settings-mode-light-btn" onclick="setThemeMode('light')"><i class="fa-solid fa-sun"></i> <span data-i18n="settings.modeLight">فاتح</span></button>
-                    <button type="button" id="settings-mode-dark-btn" onclick="setThemeMode('dark')"><i class="fa-solid fa-moon"></i> <span data-i18n="settings.modeDark">داكن</span></button>
+            <h3 class="settings-group-head"><i class="fa-solid fa-palette"></i> <span><b data-i18n="settings.grpLook">المظهر والعرض</b><em data-i18n="settings.grpLookSub">الوضع، التقويم، اللغة، اللون، وحجم الخط</em></span></h3>
+            <!-- ⚠️ كانت ثلاث بطاقات كاملة (عنوان كبير + وصف + أزرار) لثلاثة
+                 اختيارات بسيطة — ملاحظة المالك: «تبدو كبيرة بشكل مبالغ وتأخذ
+                 مساحة وهي إعداد بسيط». الآن صفوف مدمجة في بطاقة واحدة.
+                 المعرّفات نفسها باقية (settings-mode-*، settings-cal-*، lang-*-btn). -->
+            <div class="card settings-rows" id="settings-quick-card">
+                <div class="settings-row">
+                    <span class="settings-row-label"><i class="fa-solid fa-circle-half-stroke"></i> <span data-i18n="settings.rowMode">المظهر</span></span>
+                    <div class="lang-switch settings-seg">
+                        <button type="button" id="settings-mode-light-btn" onclick="setThemeMode('light')"><i class="fa-solid fa-sun"></i> <span data-i18n="settings.modeLight">فاتح</span></button>
+                        <button type="button" id="settings-mode-dark-btn" onclick="setThemeMode('dark')"><i class="fa-solid fa-moon"></i> <span data-i18n="settings.modeDark">داكن</span></button>
+                    </div>
                 </div>
-            </div>
-            <div class="card" id="settings-calendar-card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-calendar-days" style="color:var(--gold-text);"></i> <span data-i18n="settings.calTitle">التقويم</span></h2>
-                <p class="card-sub" data-i18n="settings.calSub">يُطبَّق على كل تاريخ في الموقع: رأس الصفحة، الجدول، مواعيد الاختبارات والواجبات</p>
-                <div class="lang-switch" style="margin-top:12px;">
-                    <button type="button" id="settings-cal-gregory-btn" class="active" onclick="setCalendar('gregory')"><span data-i18n="settings.calGregory">ميلادي</span></button>
-                    <button type="button" id="settings-cal-hijri-btn" onclick="setCalendar('hijri')"><span data-i18n="settings.calHijri">هجري</span></button>
+                <div class="settings-row" id="settings-calendar-card" title="يُطبَّق على كل تاريخ في الموقع">
+                    <span class="settings-row-label"><i class="fa-solid fa-calendar-days"></i> <span data-i18n="settings.calTitle">التقويم</span></span>
+                    <div class="lang-switch settings-seg">
+                        <button type="button" id="settings-cal-gregory-btn" class="active" onclick="setCalendar('gregory')"><span data-i18n="settings.calGregory">ميلادي</span></button>
+                        <button type="button" id="settings-cal-hijri-btn" onclick="setCalendar('hijri')"><span data-i18n="settings.calHijri">هجري</span></button>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-row-label"><i class="fa-solid fa-language"></i> <span data-i18n="settings.grpLang">اللغة</span></span>
+                    <div class="lang-switch settings-seg">
+                        <button id="lang-ar-btn" class="active" onclick="setLang('ar')">العربية</button>
+                        <button id="lang-en-btn" onclick="setLang('en')">English</button>
+                    </div>
                 </div>
             </div>
             <div class="card">
@@ -2808,16 +2822,6 @@
                         <button id="fontsize-medium-btn" class="active" onclick="setFontSize('medium')" data-i18n="theme.fontMedium">متوسط (افتراضي)</button>
                         <button id="fontsize-large-btn" onclick="setFontSize('large')" data-i18n="theme.fontLarge">كبير</button>
                     </div>
-                </div>
-            </div>
-
-            <h3 class="settings-group-head"><i class="fa-solid fa-language"></i> <span><b data-i18n="settings.grpLang">اللغة</b><em data-i18n="settings.grpLangSub">لغة عرض الموقع بالكامل</em></span></h3>
-            <div class="card">
-                <h2 style="margin-bottom:4px;"><i class="fa-solid fa-language" style="color:var(--gold-text);"></i> <span data-i18n="lang.title">لغة الموقع</span></h2>
-                <p class="card-sub" data-i18n="lang.sub">اختر لغة عرض الموقع</p>
-                <div class="lang-switch" style="margin-top:10px;">
-                    <button id="lang-ar-btn" class="active" onclick="setLang('ar')">العربية</button>
-                    <button id="lang-en-btn" onclick="setLang('en')">English</button>
                 </div>
             </div>
 
@@ -2890,7 +2894,8 @@
             <div class="card">
                 <h2 style="margin-bottom:4px;"><i class="fa-solid fa-bell" style="color:var(--gold-text);"></i> <span data-i18n="push.title">التذكير اليومي</span></h2>
                 <p class="card-sub" style="margin-bottom:14px;" data-i18n="push.desc">إشعار حقيقي يصلك حتى لو أغلقت الموقع تماماً، إن لم تكمل جلستك اليوم.</p>
-                <button type="button" class="btn btn-block" onclick="subscribeToPushNotifications()"><i class="fa-solid fa-bell"></i> <span data-i18n="push.enable">فعّل التذكير اليومي</span></button>
+                <div id="push-state" class="push-state" style="display:none;"></div>
+                <button type="button" id="push-enable-btn" class="btn btn-block" onclick="subscribeToPushNotifications()"><i class="fa-solid fa-bell"></i> <span data-i18n="push.enable">فعّل التذكير اليومي</span></button>
             </div>
 
             <h3 class="settings-group-head"><i class="fa-solid fa-shield-halved"></i> <span><b data-i18n="settings.grpPrivacy">الخصوصية والرسائل</b><em data-i18n="settings.grpPrivacySub">ما يصلك على بريدك، وسياساتنا</em></span></h3>

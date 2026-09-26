@@ -1296,7 +1296,7 @@ function toggleTheme(){
      • وأداة tools/تدقيق-الدمج.js تفشل إن تغيّر الموقع ولم يرتفع الرقم
        (مقارنةً بآخر حفظ، وبالموقع الأساسي main)، أو لم يتغيّر CACHE_NAME
        في sw.js — وإلا بقي العائدون على نسخة مخزّنة قديمة. */
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.1.0";
 
 /* ---------- المظهر ---------- */
 function setThemeMode(mode){
@@ -1585,6 +1585,7 @@ function importKhutaBackup(event){
 function renderSettings(){
     renderThemeModeButtons();
     if(typeof renderCalendarButtons === "function") renderCalendarButtons();
+    if(typeof renderPushState === "function") renderPushState();
     renderInstallState();
     renderConnectionStatus();
     renderPrivacyCard();   // بطاقة الخصوصية انتقلت من الملف الشخصي إلى هنا

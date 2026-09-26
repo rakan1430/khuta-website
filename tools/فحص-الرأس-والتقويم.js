@@ -173,14 +173,30 @@ async function demo(page, role){
         console.log("\n٣ب) الشروط وسياسة الخصوصية وإشعار التحديث");
         {
             const { ctx, page, errs } = await openPage(browser, { base, ctx: { viewport: { width: 1366, height: 860 } } });
-            const priv = await page.evaluate(() => { openLegalModal("privacy"); return document.getElementById("legal-modal-body").textContent; });
-            ok("الخصوصية لم تعد تقول «لا نجمع اسمك الحقيقي»", !priv.includes("لا نجمع اسمك الحقيقي") && !priv.includes("ولا رقم هويتك"));
-            ok("وتذكر ما يُحفظ فعلاً: الاسم، بصمة الهوية المشفّرة، الدرجات، المساعد، الصوت", ["الاسم الكامل", "بصمة مشفّرة", "الدرجات الرسمية", "Gemini", "بالصوت", "بعد أسبوع"].every(w => priv.includes(w)));
-            ok("عليها تاريخ التحديث ورقم النسخة", priv.includes("آخر تحديث") && priv.includes(await page.evaluate(() => TERMS_VERSION)));
-            const terms = await page.evaluate(() => { closeLegalModal(); openLegalModal("terms"); return document.getElementById("legal-modal-body").textContent; });
-            ok("الشروط تذكر منصة المدارس ونور والمساعد", ["منصة المدارس", "نظام نور", "مسودّة يراجعها المعلّم"].every(w => terms.includes(w)));
-            await page.evaluate(() => closeLegalModal());
+            // الشروط لكل فئة — المالك: «يصعب أن يرى طالب خُطى شروط الخدمة التي يراها المدير»
+            const doc = (kind, aud) => page.evaluate(([k, a]) => legalBody(k, a, "ar"), [kind, aud]);
+            const kPriv = await doc("privacy", "khuta"), kTerms = await doc("terms", "khuta");
+            ok("الخصوصية لم تعد تقول «لا نجمع اسمك الحقيقي» لأي فئة", await page.evaluate(() => Object.keys(LEGAL_AUDIENCES).every(a => !legalBody("privacy", a, "ar").includes("لا نجمع اسمك الحقيقي"))));
+            ok("طالب القدرات: ما يخصّه (الضيف، Gemini، الصوت، بنك الأسئلة، الحذف)", ["ضيفاً", "Gemini", "بالصوت", "بنك الأسئلة", "حذف حسابك"].every(w => kPriv.includes(w)));
+            ok("طالب القدرات لا يرى شيئاً من المدرسة ولا الإدارة", !["بصمة مشفّرة", "وليّ أمرك", "إدارة المدرسة", "نور", "الدخول السريع"].some(w => (kPriv + kTerms).includes(w)), (kPriv + kTerms).match(/بصمة مشفّرة|وليّ أمرك|إدارة المدرسة|نور|الدخول السريع/g));
+            const sTerms = await doc("terms", "student"), sPriv = await doc("privacy", "student");
+            ok("طالب المدرسة: الاختبارات والواجبات، ومن يرى بياناته، وبصمة الهوية", sTerms.includes("الاختبارات والواجبات") && sPriv.includes("من يرى بياناتك") && sPriv.includes("بصمة مشفّرة"));
+            ok("طالب المدرسة لا يرى مسؤوليات المعلّم والإدارة ولا المجتمع", !["مسؤوليتك كمعلّم", "مسؤولية إدارة المدرسة", "لوحة الصدارة", "بيانات الطلاب بين يديك"].some(w => (sTerms + sPriv).includes(w)));
+            const tTerms = await doc("terms", "teacher"), tPriv = await doc("privacy", "teacher");
+            ok("المعلّم: مسؤوليته، سرّية بيانات طلابه، سجلّ اطّلاعه، المساعد مسودّة", tTerms.includes("مسؤوليتك كمعلّم") && tPriv.includes("بيانات الطلاب بين يديك") && tTerms.includes("مسودّة تراجعها"));
+            ok("المعلّم لا يرى مسؤوليات الإدارة ولا ما ترفعه", !tTerms.includes("مسؤولية إدارة المدرسة") && !tPriv.includes("ما ترفعه الإدارة"));
+            const aTerms = await doc("terms", "admin"), aPriv = await doc("privacy", "admin");
+            ok("الإدارة: مسؤوليتها، الاستيراد ونور، الحذف بعد الترقية", aTerms.includes("مسؤولية إدارة المدرسة") && aTerms.includes("صدّر ما تحتاجه") && aPriv.includes("ما ترفعه الإدارة"));
+            ok("كل نسخة تقول لمن هي، وعليها تاريخ ورقم النسخة", [kTerms, sTerms, tTerms, aTerms].every(t => t.includes("هذه النسخة لـ") && t.includes("آخر تحديث")));
+            ok("الأقسام مرقّمة بلا قفز", /١\. .*٢\. .*٣\./s.test(sTerms.replace(/<[^>]+>/g, "")));
+            // غير المالك لا يستعرض نسخ غيره
+            const peek = await page.evaluate(() => { isAdmin = false; schoolCtx = null; openLegalModal("terms", "admin"); return document.getElementById("legal-modal-body").innerHTML; });
+            ok("غير المالك لا يستطيع فتح نسخة الإدارة", peek.includes("طالب القدرات") && !peek.includes("مسؤولية إدارة المدرسة") && !peek.includes("legal-preview"));
+            const own = await page.evaluate(() => { isAdmin = true; openLegalModal("terms", "admin"); const h = document.getElementById("legal-modal-body").innerHTML; isAdmin = false; return h; });
+            ok("المالك يستعرض النسخ الأربع", own.includes("legal-preview") && own.includes("مسؤولية إدارة المدرسة"));
+            await page.keyboard.press("Escape");
             await page.waitForTimeout(450);
+            ok("Escape يغلق نافذة الشروط", await page.evaluate(() => document.getElementById("legal-modal").style.display === "none"));
 
             // مستخدم عائد، وقاعدة مزيّفة فيها إشعار
             const fakeSb = () => {
@@ -220,6 +236,44 @@ async function demo(page, role){
             ok("والنتيجة تُعرض: نُشر وأُرسل لـ١٧", pub.out.includes("نُشر") && pub.out.includes("17"), pub.out);
             ok("زرّ الإشعار في أدوات المشرف", await page.evaluate(() => !!document.querySelector('#admin-overlay [onclick="openTermsNoticePanel()"]')));
             ok("بلا أخطاء", errs.length === 0, errs.join("\n"));
+            await ctx.close();
+        }
+
+        console.log("\n٣ج) الجوال: زرّ إغلاق الشروط، وإشعارات الآيفون، والإعدادات المدمجة");
+        {
+            const IOS = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1";
+            const { ctx, page, errs } = await openPage(browser, { base, ctx: { viewport: { width: 390, height: 664 }, isMobile: true, hasTouch: true, userAgent: IOS } });
+            await page.evaluate(() => openLegalModal("privacy"));
+            await page.waitForTimeout(500);
+            const x = await page.evaluate(() => { const b = document.querySelector("#legal-modal .lab-close-btn"); const r = b.getBoundingClientRect(); const cs = getComputedStyle(b);
+                return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, w: r.width, vis: cs.visibility, op: cs.opacity, bg: getComputedStyle(document.querySelector("#legal-modal .legal-window")).backgroundColor }; });
+            ok("زرّ ✕ ظاهر داخل الشاشة على الجوال", x.top >= 0 && x.bottom <= 664 && x.left >= 0 && x.right <= 390 && x.w >= 32 && x.vis === "visible", JSON.stringify(x));
+            ok("نافذة الشروط بسطح مصمت يُقرأ عليه", /rgb\(255, 255, 255\)/.test(x.bg), x.bg);
+            await page.click("#legal-modal .lab-close-btn");
+            await page.waitForTimeout(450);
+            ok("✕ يغلقها", await page.evaluate(() => document.getElementById("legal-modal").style.display === "none"));
+            // الآيفون في تبويب سفاري: لا PushManager — والحلّ خطوتان، لا «متصفحك لا يدعم»
+            await page.evaluate(() => { delete window.PushManager; switchTab("settings"); });
+            const st = await page.evaluate(() => { window.__toasts = []; const o = showToast; showToast = m => { window.__toasts.push(m); o(m); }; return pushSupportState(); });
+            ok("الآيفون في المتصفح: الحالة «أضفه للشاشة الرئيسية»", st === "ios-home", st);
+            await page.evaluate(() => subscribeToPushNotifications());
+            await page.waitForTimeout(300);
+            const box = await page.evaluate(() => ({ text: document.getElementById("push-state").textContent, shown: document.getElementById("push-state").style.display !== "none", toasts: window.__toasts }));
+            ok("يشرح الخطوات بدل «متصفحك لا يدعم»", box.shown && box.text.includes("إضافة إلى الشاشة الرئيسية") && !box.toasts.some(t => t.includes("لا يدعم")), JSON.stringify(box));
+            ok("ويُخفي زرّ التفعيل الذي لن يعمل هنا", await page.evaluate(() => document.getElementById("push-enable-btn").style.display === "none"));
+            const old = await page.evaluate(() => { Object.defineProperty(navigator, "userAgent", { value: "Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15", configurable: true }); return pushSupportState(); });
+            ok("iOS أقدم من 16.4: يقول حدّث الجهاز", old === "ios-old", old);
+            // الإعدادات المدمجة
+            const q = await page.evaluate(() => { const c = document.getElementById("settings-quick-card"); return { rows: c.querySelectorAll(".settings-row").length, h: c.getBoundingClientRect().height,
+                oldLangCard: !!document.querySelector('[data-i18n="lang.title"]'), ids: ["settings-mode-dark-btn","settings-cal-hijri-btn","lang-en-btn"].every(i => c.querySelector("#" + i)) }; });
+            ok("المظهر والتقويم واللغة صفوف مدمجة في بطاقة واحدة", q.rows === 3 && q.ids && !q.oldLangCard, JSON.stringify(q));
+            ok("والبطاقة صغيرة (< ٢٤٠ بكسل على الجوال)", q.h < 240, String(q.h));
+            ok("بلا أخطاء", errs.length === 0, errs.join("\n"));
+            await ctx.close();
+        }
+        {
+            const { ctx, page } = await openPage(browser, { base, ctx: { viewport: { width: 1366, height: 860 } } });
+            ok("الحاسوب (كروم): الإشعارات متاحة — زرّ التفعيل ظاهر", await page.evaluate(() => { switchTab("settings"); return pushSupportState() === "off" && document.getElementById("push-enable-btn").style.display !== "none"; }));
             await ctx.close();
         }
 

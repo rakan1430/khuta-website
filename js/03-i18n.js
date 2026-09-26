@@ -204,7 +204,7 @@ ar:{
 "school.membersSub":"إيقاف العضو يمنع دخوله فوراً ويُبقي ملفاته وسجلّه — أأمن من الحذف.",
 
 "settings.title":"الإعدادات","settings.sub":"كل تفضيلاتك في مكان واحد، مرتّبة حسب الغرض",
-"settings.grpLook":"المظهر والعرض","settings.grpLookSub":"الوضع، لون التطبيق، وحجم الخط",
+"settings.grpLook":"المظهر والعرض","settings.grpLookSub":"الوضع، التقويم، اللغة، اللون، وحجم الخط","settings.rowMode":"المظهر",
 "settings.grpLang":"اللغة","settings.grpLangSub":"لغة عرض الموقع بالكامل",
 "settings.grpAccount":"الحساب والمزامنة","settings.grpAccountSub":"الدخول، المزامنة بين أجهزتك، وكلمة المرور",
 "settings.grpNotif":"الإشعارات والتذكير","settings.grpNotifSub":"تذكيرك بجلستك اليومية",
@@ -535,7 +535,7 @@ en:{
 "school.membersSub":"Disabling a member blocks sign-in immediately and keeps their files and record - safer than deleting.",
 
 "settings.title":"Settings","settings.sub":"All your preferences in one place, grouped by purpose",
-"settings.grpLook":"Appearance & display","settings.grpLookSub":"Mode, app colour, and text size",
+"settings.grpLook":"Appearance & display","settings.grpLookSub":"Mode, calendar, language, colour and font size","settings.rowMode":"Appearance",
 "settings.grpLang":"Language","settings.grpLangSub":"Display language for the whole site",
 "settings.grpAccount":"Account & sync","settings.grpAccountSub":"Sign-in, syncing across devices, and password",
 "settings.grpNotif":"Notifications & reminders","settings.grpNotifSub":"Your daily study session reminder",
