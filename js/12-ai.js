@@ -42,15 +42,29 @@ function toggleChatbot(){
         /* ⚠️ الترحيب يخاطب طالب قدرات ("يا بطل… أي سؤال كمي أو لفظي").
            والمعلّم ليس بطلاً يذاكر — ملاحظة المالك: "في المساعد الموجود على
            الجانب تظهر أشياء تخص القدرات". فلكلٍّ ترحيبه. */
-        addChatbotMessage(aiIsStaff()
-            ? (currentLang==='ar'
-                ? "أهلاً بك 👋 أقدر أشرح أي مسألة على السبورة أمام طلابك، أو أساعدك في صياغة سؤال اختبار، أو أدلّك على أي شيء في منصة المدرسة."
-                : "Hello 👋 I can explain any problem on the board for your class, help you word an exam question, or guide you around the school platform.")
-            : (currentLang==='ar'
-                ? "أهلاً يا بطل! 👋 أقدر أحل وأشرح لك أي سؤال كمي أو لفظي، أو أدلّك على أي شي في خُطى — بس قلّي وش تبي."
-                : "Hey champ! 👋 I can solve and explain any Quant or Verbal question, or guide you to anything in Khuta — just tell me what you need."), "bot");
+        addChatbotMessage(aiGreeting(), "bot");
         renderChatbotSuggestions();
     }
+    if(opening){
+        // المساعد الحيّ (js/42): رأس «أنت في…» واقتراحات القسم المفتوح الآن
+        if(typeof astUpdateHeader === "function") astUpdateHeader();
+        if(typeof astRenderChips === "function") astRenderChips();
+        if(window.innerWidth >= 760) setTimeout(() => document.getElementById("chatbot-input")?.focus({ preventScroll:true }), 80);
+    }
+}
+
+/** ترحيب حسب الدور — كلٌّ يرى ما يقدر المساعد يفعله له هو. */
+function aiGreeting(){
+    const role = (typeof astRole === "function") ? astRole() : (aiIsStaff() ? "teacher" : "khuta");
+    if(role === "teacher" || role === "admin") return labT(
+        "أهلاً بك 👋 أنا مساعدك داخل المنصة — لا أكتفي بالكلام:\n• أصيغ لك أسئلة اختيار من متعدد وأضعها في منشئ الاختبار\n• أعرض اختباراً سريعاً على السبورة أمام الفصل\n• أشرح أي مسألة على السبورة خطوة بخطوة\n• أوريك أي ميزة بجولة حيّة على الأزرار نفسها\n• وأفتح أي قسم أو أغيّر المظهر بكلمة",
+        "Hello 👋 I'm your in-app assistant — I don't just talk:\n• draft multiple-choice questions straight into the exam builder\n• run a quick quiz on the board for your class\n• explain any problem on the board step by step\n• show you any feature with a live tour\n• open any section or switch the theme on request");
+    if(role === "student") return labT(
+        "أهلاً 👋 أقدر أشرح لك أي درس أو مسألة (وعلى السبورة كمان)، أختبرك بأسئلة سريعة، أو أوديك لاختباراتك وواجباتك — قلّي وش تحتاج.",
+        "Hi 👋 I can explain any lesson or problem (on the board too), quiz you, or take you to your exams and homework — just ask.");
+    return labT(
+        "أهلاً يا بطل! 👋 أحل وأشرح لك أي سؤال كمي أو لفظي (وعلى السبورة كمان)، أختبرك بأسئلة سريعة، وأوديك لأي مكان في خُطى — بس قلّي.",
+        "Hey champ! 👋 I can solve and explain any Quant or Verbal question (on the board too), quiz you, and take you anywhere in Khuta — just ask.");
 }
 
 /** هل صاحب الجلسة معلّم أو إدارة؟ (تُستعمل لتبديل نصوص المساعد والسبورة) */
@@ -60,6 +74,7 @@ function aiIsStaff(){
 }
 
 function renderChatbotSuggestions(){
+    if(typeof astRenderChips === "function"){ astRenderChips(); return; }
     const box = document.getElementById("chatbot-suggestions");
     // اقتراحات المعلّم من عمله هو، لا من رحلة طالب يذاكر للقدرات
     const picks = aiIsStaff()
@@ -76,18 +91,10 @@ function addChatbotMessage(text, who){
     const box = document.getElementById("chatbot-messages");
     const div = document.createElement("div");
     div.className = "chatbot-msg " + who;
-    div.textContent = text;
-    // مع كل رد للمساعد على سؤال فعلي: نعرض زر فتح السبورة ليشرحه المعلّم خطوة بخطوة
-    if(who === "bot" && window.__lastChatUserMsg){
-        const q = window.__lastChatUserMsg;
-        const link = document.createElement("button");
-        link.type = "button";
-        link.className = "chatbot-msg-board-link";
-        link.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i> ' + (currentLang==='ar' ? 'اشرحها على السبورة' : 'Explain on the board');
-        link.onclick = () => explainLastOnBoard(q);
-        div.appendChild(document.createElement("br"));
-        div.appendChild(link);
-    }
+    /* ⚠️ كان هنا زرّ «اشرحها على السبورة» تحت كل رد — حتى تحت «تمّ، فتحت
+       الواجبات». الآن المساعد نفسه يقرّر متى يشرح على السبورة (js/42). */
+    if(who === "bot" && typeof astFormat === "function") div.innerHTML = astFormat(text);
+    else div.textContent = text;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
 }
@@ -119,42 +126,17 @@ const GEMINI_RETRY_COOLDOWN_MS = 30000;
 function isGeminiWorking(){ return (Date.now() - geminiLastFailAt) > GEMINI_RETRY_COOLDOWN_MS; }
 
 async function sendChatbotMessage(){
-    /* يُحفظ نص سؤال الطالب ليستعمله زر "اشرحها على السبورة" أسفل رد المساعد */
     const input = document.getElementById("chatbot-input");
     const text = input.value.trim();
     if(!text) return;
-    window.__lastChatUserMsg = text;
     addChatbotMessage(text, "user");
     input.value = "";
-
-    if(isGeminiWorking()){
-        addChatbotMessage("...", "bot typing-indicator");
-        try{
-            const reply = await askGemini(text);
-            removeTypingIndicator();
-            // إن ضمّن الرد وسم توجيه بصري، نفّذه ونعرض النص بعد إزالة الوسم
-            // منه فقط (الطالب لا يحتاج يرى الصياغة التقنية الداخلية)
-            const { cleaned, key } = extractNavigateTag(reply);
-            addChatbotMessage(cleaned, "bot");
-            if(key) aiGuideNavigate(key);
-            return;
-        }catch(e){
-            removeTypingIndicator();
-            const limitMsg = getAiLimitErrorMessage(e);
-            if(limitMsg){
-                // تسجيل دخول مطلوب / بلغ الحد — ليست مشكلة اتصال مؤقتة، فلا نرجع
-                // للمساعد المحلي (سيبدو مضللاً)، بل نوضّح السبب الحقيقي مباشرة.
-                // لا تحويل تلقائي مفاجئ لشاشة الدخول — زر حقيقي يفتحها فقط إن
-                // اختار الطالب ذلك بنفسه (كانت الرسالة تختفي فوراً قبل أن تُقرأ)
-                if(e.code === "AUTH_REQUIRED") addChatbotAuthPrompt(limitMsg);
-                else addChatbotMessage(limitMsg, "bot");
-                return;
-            }
-            geminiLastFailAt = Date.now(); // نتحوّل للمساعد المحلي مؤقتاً، ونعيد محاولة Gemini تلقائياً بعد فترة التهدئة
-            console.error("[خُطى] الذكاء الاصطناعي غير متاح مؤقتاً — تفاصيل الخطأ للمطوّر (تحقق من GEMINI_API_KEY ونشر gemini-proxy.js على Netlify):", e);
-            answerLocally(text, true);
-            return;
-        }
+    // المساعد الحيّ (js/42): أوامر فورية محلية، وإلا الذكاء بسياق الصفحة وأفعالها
+    if(typeof astHandleMessage === "function"){
+        if(isGeminiWorking()) return astHandleMessage(text);
+        const local = astLocalIntent(text);
+        if(local){ const msg = astAddBotMessage(local.reply); return astExecute(msg, local.actions); }
+        return answerLocally(text, false);
     }
     answerLocally(text, false);
 }
@@ -406,9 +388,7 @@ function startNewConversation(){
     closeKhutaBoard();
     const panel = document.getElementById("chatbot-panel");
     if(panel.style.display === "none" || panel.classList.contains("panel-closing")) toggleChatbot();
-    addChatbotMessage(currentLang==='ar'
-        ? "أهلاً يا بطل! 👋 محادثة جديدة — قلّي وش تبي."
-        : "Hey champ! 👋 New conversation — tell me what you need.", "bot");
+    addChatbotMessage(aiGreeting(), "bot");
     renderSavedConversationsList();
 }
 

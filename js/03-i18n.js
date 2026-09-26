@@ -330,7 +330,7 @@ ar:{
 "tpl.publish":"نشر خطتي الحالية كقالب","tpl.formTitle":"عنوان القالب","tpl.formTitlePh":"مثال: خطة مكثفة لمدة 30 يوماً",
 "tpl.previewLabel":"معاينة تفاصيل خطتك (تُنقل تلقائياً لمن يستخدم القالب)",
 "tpl.formDesc":"ملاحظات إضافية (اختياري) — أي تفاصيل يدوية تريد إضافتها","tpl.confirmPublish":"نشر",
-"bot.title":"مساعدك الذكي","bot.disclaimer":"مدعوم بالذكاء الاصطناعي 🤖","bot.placeholder":"اكتب سؤالك...",
+"bot.title":"مساعدك الذكي","bot.disclaimer":"مدعوم بالذكاء الاصطناعي 🤖","bot.placeholder":"اسألني أو اطلب: افتح الواجبات، الوضع الداكن…",
 "fab.title":"اسأل مساعدك","fab.subtitle":"ذكاء اصطناعي حقيقي",
 },
 en:{
@@ -661,7 +661,7 @@ en:{
 "tpl.publish":"Publish my current plan as a template","tpl.formTitle":"Template title","tpl.formTitlePh":"e.g. Intensive 30-day plan",
 "tpl.previewLabel":"Preview of your plan details (auto-transfers to anyone who uses this template)",
 "tpl.formDesc":"Extra notes (optional) — any manual details you'd like to add","tpl.confirmPublish":"Publish",
-"bot.title":"Your smart assistant","bot.disclaimer":"Powered by AI 🤖","bot.placeholder":"Type your question...",
+"bot.title":"Your smart assistant","bot.disclaimer":"Powered by AI 🤖","bot.placeholder":"Ask, or say: open homework, dark mode…",
 "fab.title":"Ask your assistant","fab.subtitle":"Real AI, ask anything",
 }
 };

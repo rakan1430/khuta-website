@@ -1329,6 +1329,7 @@
             <div class="chatbot-head-titles">
                 <b data-i18n="bot.title">مساعدك الذكي</b>
                 <div class="chatbot-head-sub"><i class="fa-solid fa-sparkles"></i> <span data-i18n="bot.disclaimer">مدعوم بالذكاء الاصطناعي 🤖</span></div>
+                <div class="ast-where" id="ast-where" aria-live="polite"></div>
             </div>
             <button type="button" class="btn-ghost" style="padding:6px;" onclick="toggleChatbot()" title="إغلاق المحادثة" aria-label="إغلاق المحادثة"><i class="fa-solid fa-xmark"></i></button>
         </div>
@@ -1340,6 +1341,7 @@
     <div class="chatbot-suggestions" id="chatbot-suggestions"></div>
     <div class="field-inline" style="padding:10px;">
         <input type="text" id="chatbot-input" placeholder="اكتب سؤالك..." data-i18n-ph="bot.placeholder" onkeydown="if(event.key==='Enter') sendChatbotMessage()">
+        <button type="button" class="ast-mic" id="ast-mic" hidden title="تحدّث بصوتك" aria-label="تحدّث بصوتك"><i class="fa-solid fa-microphone"></i></button>
         <button type="button" class="btn btn-sm" onclick="sendChatbotMessage()" title="أرسل" aria-label="أرسل"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
 </div>
@@ -3162,6 +3164,7 @@
 <script>khutaEager("js/39-my-files.js")</script>
 <script>khutaEager("js/40-counselor.js")</script>
 <script>khutaEager("js/41-school-messages.js")</script>
+<script src="js/42-assistant.js" defer></script>
 <!-- ⚠️ يبقى الأخير دائماً: يصرف أحداث المصادقة بعد اكتمال كل التعريفات -->
 <script src="js/99-boot-flush.js" defer></script>
 </body>
